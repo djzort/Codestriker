@@ -584,6 +584,11 @@ sub view_topic ($$) {
 
     # Display header information
     generate_header($topic, $document_title, $email, "", "");
+
+    my $create_topic_url = $query->url() . build_create_topic_url();
+    print $query->a({href=>"$create_topic_url"}, "Create a new topic");
+    print $query->p;
+
     my $escaped_title = CGI::escapeHTML($document_title);
     print $query->h2("$escaped_title");
 
