@@ -140,7 +140,8 @@ sub process($$$) {
 
 	    # Handle the processing of the side-by-side view separately.
 	    if ($new == $UrlBuilder::BOTH_FILES &&
-		($data =~ /^\s/o || $data =~ /^\-/o || $data =~ /^\+/o)) {
+		($data =~ /^\s/o || $data =~ /^\-/o || $data =~ /^\+/o ||
+		 $data =~ /^$/o)) {
 		$render->display_coloured_data($old_linenumber,
 					       $new_linenumber,
 					       $offset, $_,
@@ -153,14 +154,7 @@ sub process($$$) {
 		next;
 	    }
 
-	    if (/^\s(.*)$/o) {
-		# An unchanged line, output it and anything pending.
-		$render->flush_monospaced_lines(\$linenumber,
-						$max_line_length, $new);
-		print $render->render_monospaced_line($linenumber, $1, $offset,
-						      $max_line_length, "");
-		$linenumber++;
-	    } elsif (/^\-(.*)$/o) {
+	    if (/^\-(.*)$/o) {
 		# A removed line.
 		$render->add_minus_monospace_line($1, $offset);
 	    } elsif (/^\+(.*)$/o) {
@@ -181,7 +175,16 @@ sub process($$$) {
 		$patch_line = $_;
 		last;
 	    } else {
-		error_return("Unable to handle patch line: $_");
+		# An unchanged line, output it and anything pending, and remove the
+		# leading space for alignment reasons.
+		my $linedata = $_;
+		$linedata =~ s/^\s//;
+		chop $linedata;
+		$render->flush_monospaced_lines(\$linenumber,
+						$max_line_length, $new);
+		print $render->render_monospaced_line($linenumber, $linedata, $offset,
+						      $max_line_length, "");
+		$linenumber++;
 	    }
 	}
 
