@@ -12,7 +12,6 @@ use strict;
 use warnings;
 
 use Codestriker::DB::DBI;
-use Codestriker::Model::File;
 
 sub new {
     my ($class, $topicid) = @_;
@@ -103,6 +102,9 @@ sub get_topic_metrics {
 	    $select_topic_metrics->execute($self->{topicid}); 
 
 	    @stored_metrics = @{$select_topic_metrics->fetchall_arrayref()};
+
+	    # Close the connection, and check for any database errors.
+	    Codestriker::DB::DBI->release_connection($dbh, 1);
 	}
 
 	# Match the configured metrics to the metrics in the database. If 
@@ -237,7 +239,8 @@ sub get_user_metrics {
 	    my $dbh = Codestriker::DB::DBI->get_connection();
 
 
-	    # Get all of the user outputs for this topic regardless of the user.
+	    # Get all of the user outputs for this topic regardless of
+	    # the user.
 	    my $selected_all_user_metrics = 
 		$dbh->prepare_cached('SELECT DISTINCT metric_name ' .
 				     'FROM topicusermetric ' .
@@ -253,8 +256,8 @@ sub get_user_metrics {
 				     'FROM topicusermetric ' .
 				     'WHERE topicid = ? and email = ? ' .
 				     'ORDER BY metric_name');
-						    
-	    $select_user_metrics->execute($self->{topicid}, $username); 
+
+	    $select_user_metrics->execute($self->{topicid}, $username);
 
 	    my @user_stored_metrics =
 		@{$select_user_metrics->fetchall_arrayref()};
@@ -277,6 +280,8 @@ sub get_user_metrics {
 		}
 	    }
 
+	    # Close the connection, and check for any database errors.
+	    Codestriker::DB::DBI->release_connection($dbh, 1);
 	}
 
 	foreach my $metric_schema (@Codestriker::metrics_schema) {
@@ -428,7 +433,6 @@ sub store {
     my ($self) = @_;
 
     $self->_store_topic_metrics();
-
     $self->_store_user_metrics();
 }
 
@@ -436,7 +440,7 @@ sub store {
 sub _store_user_metrics {
     my ($self) = @_;
 
-    foreach my $user ( %{$self->{usermetrics}} ) {
+    foreach my $user (keys %{$self->{usermetrics}}) {
 	$self->get_user_metrics($user);
     }
 
@@ -457,7 +461,7 @@ sub _store_user_metrics {
 						    value) ' .
 			     'VALUES (?, ?, ?, ? )');
 
-    foreach my $user (keys %{$self->{usermetrics}} ) {
+    foreach my $user (keys %{$self->{usermetrics}}) {
 	my @metrics = $self->get_user_metrics($user);
 
 	foreach my $metric (@metrics) {
@@ -470,6 +474,8 @@ sub _store_user_metrics {
 	}
     }
 
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 }
 
 # Stores the topic metrics to the database.
@@ -484,8 +490,8 @@ sub _store_topic_metrics {
 
     my $insert_topic_metric =
 	$dbh->prepare_cached('INSERT INTO topicmetric (topicid, 
-						        metric_name, 
-							value) ' .
+						       metric_name, 
+						       value) ' .
 			     'VALUES (?, ?, ? )');
     my $update_topic_metric =
 	$dbh->prepare_cached('UPDATE topicmetric SET value = ? ' .
@@ -523,6 +529,9 @@ sub _store_topic_metrics {
 
 	$metric->{in_database} = 1;
     }
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 }
 
 1;

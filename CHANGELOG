@@ -3,6 +3,11 @@
 
 Version 1.8.0
 
+* Added in the ability for the topic's properties to be changed,
+  including the title, author, bug ids, reviewers, cc, repository,
+  project, description and state.  Updated the topic listeners to now
+  take the old and new topic objects as arguments.
+
 * Introduction of per-user and per-topic metrics functionality from
   Jason Remillard.  In the process, the UI has been changed (more
   needs to go here later), plus some general refactoring (more info

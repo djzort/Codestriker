@@ -29,17 +29,8 @@ sub topic_create($$) {
     return '';    
 }
 
-sub topic_delete($$) {
-    my ($self, $topic) = @_;
-
-    # Default version of function that does nothing, and allowed the
-    # event to continue.
-        
-    return '';     
-}
-
-sub topic_state_change($$$) {
-    my ($self, $topic, $newstate) = @_;
+sub topic_changed($$$) {
+    my ($self, $topic_orig, $topic) = @_;
 
     # Default version of function that does nothing, and allowed the
     # event to continue.

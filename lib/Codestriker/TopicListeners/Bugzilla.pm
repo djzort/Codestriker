@@ -57,13 +57,15 @@ sub topic_create($$) {
     return '';
 }
 
-sub topic_state_change($$$) {
-    my ($self,$topic,$newstate) = @_;
+sub topic_changed($$$) {
+    my ($self, $topic_orig, $topic) = @_;
 
     # If Codestriker is linked to a bug database, and this topic is associated
     # with some bugs, update them with an appropriate message.
-    if ($topic->{bug_ids} ne "" && $Codestriker::bug_db ne "") {
+    if ($topic->{bug_ids} ne "" && $Codestriker::bug_db ne "" &&
+	$topic_orig->{topic_state} ne $topic->{topic_state}) {
 
+	my $newstate = $topic->{topic_state};
 	my $query = new CGI;
         my $url_builder = Codestriker::Http::UrlBuilder->new($query);
         my $topic_url =
@@ -85,14 +87,6 @@ sub topic_state_change($$$) {
     }
     
     return '';
-}
-
-sub topic_delete($$) {
-    my ($self,$topic) = @_;
-    
-    $self->topic_state_change($topic,"Deleted");
-        
-    return '';     
 }
 
 1;

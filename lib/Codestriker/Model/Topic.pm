@@ -35,15 +35,77 @@ sub new {
     $self->{project_id} = "";
     $self->{project_name} = "";
     $self->{comments} = [];
-    $self->{metrics} = Codestriker::Model::Metrics->new();
+    $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
 
     bless $self, $class;
 
-    if ( defined( $topicid)) {
+    if (defined($topicid)) {
 	$self->read($topicid);
     }
    
     return $self;
+}
+
+# Delete the specified participant type from the topic.
+sub _delete_participants($$$) {
+    my ($self, $dbh, $type) = @_;
+
+    my $delete_participants =
+	$dbh->prepare_cached('DELETE FROM participant ' .
+			     'WHERE topicid = ? AND type = ?');
+    my $success = defined $delete_participants;
+
+    $success &&= $delete_participants->execute($self->{topicid}, $type);
+    return $success;
+}
+
+# Insert the specified participants into the topic.
+sub _insert_participants($$$$$) {
+    my ($self, $dbh, $type, $participants, $timestamp) = @_;
+
+    my $insert_participant =
+	$dbh->prepare_cached('INSERT INTO participant (email, topicid, type,' .
+			     'state, modified_ts, version) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?)');
+    my $success = defined $insert_participant;
+
+    my @participants = split /, /, $participants;
+    for (my $i = 0; $i <= $#participants; $i++) {
+	$success &&= $insert_participant->execute($participants[$i],
+						  $self->{topicid}, $type, 0,
+						  $timestamp, 0);
+    }
+    
+    return $success;
+}
+
+# Delete the bugids associated with a particular topic.
+sub _delete_bug_ids($$) {
+    my ($self, $dbh) = @_;
+
+    my $delete_topicbug =
+	$dbh->prepare_cached('DELETE FROM topicbug WHERE topicid = ?');
+    my $success = defined $delete_topicbug;
+
+    $success &&= $delete_topicbug->execute($self->{topicid});
+    return $success;
+}
+
+# Insert the comma-separated list of bug_ids into the topic.
+sub _insert_bug_ids($$$) {
+    my ($self, $dbh, $bug_ids) = @_;
+
+    my $insert_bugs =
+	$dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
+			     'VALUES (?, ?)');
+    my $success = defined $insert_bugs;
+
+    my @bug_ids = split /, /, $bug_ids;
+    for (my $i = 0; $i <= $#bug_ids; $i++) {
+	$success &&= $insert_bugs->execute($self->{topicid}, $bug_ids[$i]);
+    }
+
+    return $success;
 }
 
 # Create a new topic with all of the specified properties.
@@ -70,10 +132,6 @@ sub create($$$$$$$$$$$$) {
     $self->{repository} = $repository;
     $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
                             
-    my @bug_ids = split /, /, $bug_ids;
-    my @reviewers = split /, /, $reviewers;
-    my @cc = split /, /, $cc;
-
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
@@ -83,16 +141,7 @@ sub create($$$$$$$$$$$$) {
 			     'description, document, state, creation_ts, ' .
 			     'modified_ts, version, repository, projectid) ' .
 			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    my $insert_bugs =
-	$dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
-			     'VALUES (?, ?)');
-    my $insert_participant =
-	$dbh->prepare_cached('INSERT INTO participant (email, topicid, type,' .
-			     'state, modified_ts, version) ' .
-			     'VALUES (?, ?, ?, ?, ?, ?)');
-
-    my $success = defined $insert_topic && defined $insert_bugs &&
-	defined $insert_participant;
+    my $success = defined $insert_topic;
 
     # Create all of the necessary rows.  It is assumed state 0 is the initial
     # state.
@@ -102,24 +151,19 @@ sub create($$$$$$$$$$$$) {
 					$description, $document, 0,
 					$timestamp, $timestamp, 0,
 					$repository_string, $projectid);
-					
-    for (my $i = 0; $i <= $#bug_ids; $i++) {
-	$success &&= $insert_bugs->execute($topicid, $bug_ids[$i]);
-    }
+	
+    # Insert the associated bug records.
+    $success &&= $self->_insert_bug_ids($dbh, $bug_ids);
 
-    for (my $i = 0; $i <= $#reviewers; $i++) {
-	$success &&=
-	    $insert_participant->execute($reviewers[$i], $topicid,
-					 $Codestriker::PARTICIPANT_REVIEWER, 0,
-					 $timestamp, 0);
-    }
-    
-    for (my $i = 0; $i <= $#cc; $i++) {
-	$success &&=
-	    $insert_participant->execute($cc[$i], $topicid,
-					 $Codestriker::PARTICIPANT_CC, 0,
-					 $timestamp, 0);
-    }
+    # Insert the reviewers and cc participants.
+    $success &&=
+	$self->_insert_participants($dbh,
+				    $Codestriker::PARTICIPANT_REVIEWER,
+				    $reviewers, $timestamp);
+    $success &&=
+	$self->_insert_participants($dbh,
+				    $Codestriker::PARTICIPANT_CC,
+				    $cc, $timestamp);
 
     # Create the appropriate delta rows.
     $success &&= Codestriker::Model::File->create($dbh, $topicid, $deltas_ref);
@@ -160,6 +204,7 @@ sub read($$) {
 
     my $success = defined $select_topic && defined $select_bugs &&
 	defined $select_participants;
+    my $rc = $Codestriker::OK;
 
     # Retrieve the topic information.
     $success &&= $select_topic->execute($topicid);
@@ -177,7 +222,7 @@ sub read($$) {
 
 	if (!defined $id) {
 	    $success = 0;
-	    die("Topic id \"$topicid\" no longer exists.");
+	    $rc = $Codestriker::INVALID_TOPIC;
 	}
     }
 
@@ -234,8 +279,10 @@ sub read($$) {
 	} else {
 	    $self->{repository} = $repository;
 	}
-	}
     }
+
+    return $success ? $Codestriker::OK : $rc;
+}
 
 # Reads from the db if needed, and returns the list of comments for
 # this topic. If the list of comments have already been returned, the
@@ -314,42 +361,24 @@ sub check_for_stale($$) {
 }
 
 
-# Update the state of the specified topic. 
-sub change_state($$) {
-    my ($self, $new_state) = @_;
+# Update the properties of the specified topic. This is not implemented
+# very efficiently, however it is not expected to be called very often.
+sub update($$$$$$$$$$) {
+    my ($self, $new_title, $new_author, $new_reviewers, $new_cc,
+	$new_repository, $new_bug_ids, $new_projectid, $new_description,
+	$new_state) = @_;
 
-    my $modified_ts = Codestriker->get_timestamp(time);
-
-    # Map the new state to its number.
-    my $new_stateid;
-    for ($new_stateid = 0; $new_stateid <= $#Codestriker::topic_states;
-	 $new_stateid++) {
-	last if ($Codestriker::topic_states[$new_stateid] eq $new_state);
-    }
-    if ($new_stateid > $#Codestriker::topic_states) {
-	die "Unable to change topic to invalid state: \"$new_state\"";
-    }
-	
-    # Obtain a database connection.
+    # First check that the version matches the current topic version in the
+    # database.
     my $dbh = Codestriker::DB::DBI->get_connection();
-
-    # Check that the version reflects the current version in the DB.  Note due
-    # to a weird MySQL bug, we need to also retrieve the creation_ts and store
-    # the same value when updating the record, otherwise it gets set to the
-    # current time!
     my $select_topic =
 	$dbh->prepare_cached('SELECT version, creation_ts ' .
 			     'FROM topic WHERE id = ?');
-    my $update_topic =
-	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
-			     'creation_ts = ?, modified_ts = ? WHERE id = ?');
-    my $success = defined $select_topic && defined $update_topic;
+    my $success = defined $select_topic;
     my $rc = $Codestriker::OK;
 
-    # Retrieve the current topic data.
-    $success &&= $select_topic->execute($self->{topicid});
-
     # Make sure that the topic still exists, and is therefore valid.
+    $success &&= $select_topic->execute($self->{topicid});
     my ($current_version, $creation_ts);
     if ($success && 
 	! (($current_version, $creation_ts) =
@@ -361,24 +390,96 @@ sub change_state($$) {
     $success &&= $select_topic->finish();
 
     # Check the version number.
-    if ($self->{version} != $current_version) {
+    if ($success && $self->{version} != $current_version) {
 	$success = 0;
 	$rc = $Codestriker::STALE_VERSION;
     }
 
+    # Get the modified date to the current time.
+    my $modified_ts = Codestriker->get_timestamp(time);
+
+    # Map the new state to its number.
+    my $new_stateid;
+    for ($new_stateid = 0; $new_stateid <= $#Codestriker::topic_states;
+	 $new_stateid++) {
+	last if ($Codestriker::topic_states[$new_stateid] eq $new_state);
+    }
+    if ($new_stateid > $#Codestriker::topic_states) {
+	die "Unable to change topic to invalid state: \"$new_state\"";
+    }
+
+    # Update the topic object's properties.
+    $self->{title} = $new_title;
+    $self->{author} = $new_author;
+    $self->{repository} = $new_repository;
+    $self->{project_id} = $new_projectid;
+    $self->{description} = $new_description;
+    $self->{modified_ts} = $modified_ts;
+    $self->{topic_state} = $new_state;
+
+    # Now update the database with the new properties.  Note due to a weird
+    # MySQL bug, we need to also retrieve the creation_ts and store
+    # the same value when updating the record, otherwise it gets set to the
+    # current time!
+    my $update_topic =
+	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
+			     'creation_ts = ?, modified_ts = ?, ' .
+			     'title = ?, author = ?, ' .
+			     'repository = ?, projectid = ?, ' .
+			     'description = ? WHERE id = ?');
+    $success &&= defined $update_topic;
+
     # If the state hasn't changed, don't do anything, otherwise update the
     # topic.
-    if ($new_state ne $self->{topic_state}) {
+    if ($success) {
     	$self->{version} = $self->{version} + 1;
 	$success &&= $update_topic->execute($self->{version}, $new_stateid,
 					    $creation_ts, $modified_ts,
+					    $new_title, $new_author,
+					    $new_repository, $new_projectid,
+					    $new_description,
 					    $self->{topicid});
     }
-    
-    $self->{modified_ts} = $modified_ts;
-    $self->{topic_state} = $new_state;
-    
+
+    # Now delete all bugs associated with this topic, and recreate them again
+    # if they have changed.
+    if ($success && $self->{bug_ids} ne $new_bug_ids) {
+	$success &&= $self->_delete_bug_ids($dbh);
+	$success &&= $self->_insert_bug_ids($dbh, $new_bug_ids);
+	$self->{bug_ids} = $new_bug_ids;
+    }
+
+    # Now delete all reviewers associated with this topic, and recreate
+    # them again, if they have changed.
+    if ($success && $self->{reviewers} ne $new_reviewers) {
+	$success &&=
+	    $self->_delete_participants($dbh,
+					$Codestriker::PARTICIPANT_REVIEWER);
+	$success &&=
+	    $self->_insert_participants($dbh,
+					$Codestriker::PARTICIPANT_REVIEWER,
+					$new_reviewers, $modified_ts);
+	$self->{reviewers} = $new_reviewers;
+    }
+
+    # Now delete all CCs associated with this topic, and recreate
+    # them again, if they have changed.
+    if ($success && $self->{cc} ne $new_cc) {
+	$success &&=
+	    $self->_delete_participants($dbh, $Codestriker::PARTICIPANT_CC);
+	$success &&=
+	    $self->_insert_participants($dbh, $Codestriker::PARTICIPANT_CC,
+					$new_cc, $modified_ts);
+	$self->{cc} = $new_cc;
+    }
+	
     Codestriker::DB::DBI->release_connection($dbh, $success);
+
+    if ($success == 0 && $rc == $Codestriker::OK) {
+	# Unexpected DB error.
+	die $dbh->errstr;
+    }
+
     return $rc;
 }
 
@@ -575,10 +676,6 @@ sub delete($) {
 			     'WHERE topicid = ?');
     my $delete_file =
 	$dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
-    my $delete_participant =
-	$dbh->prepare_cached('DELETE FROM participant WHERE topicid = ?');
-    my $delete_topicbug =
-	$dbh->prepare_cached('DELETE FROM topicbug WHERE topicid = ?');
 
     my $delete_delta =
 	$dbh->prepare_cached('DELETE FROM delta WHERE topicid = ?');
@@ -591,8 +688,7 @@ sub delete($) {
 
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&
-	defined $delete_file && defined $delete_participant &&
-	defined $delete_topicbug && defined $delete_delta && 
+	defined $delete_file && defined $delete_delta && 
 	defined $topic_metrics && defined $user_metrics;
 
     # Now do the deed.
@@ -607,11 +703,14 @@ sub delete($) {
     $success &&= $delete_topic->execute($self->{topicid});
     $success &&= $delete_comments->execute($self->{topicid});
     $success &&= $delete_file->execute($self->{topicid});
-    $success &&= $delete_participant->execute($self->{topicid});
-    $success &&= $delete_topicbug->execute($self->{topicid});
     $success &&= $delete_delta->execute($self->{topicid});
     $success &&= $topic_metrics->execute($self->{topicid});
     $success &&= $user_metrics->execute($self->{topicid});
+    $success &&= $self->_delete_bug_ids($dbh);
+    $success &&=
+	$self->_delete_participants($dbh, $Codestriker::PARTICIPANT_REVIEWER);
+    $success &&=
+	$self->_delete_participants($dbh, $Codestriker::PARTICIPANT_CC);
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

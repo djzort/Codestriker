@@ -27,7 +27,8 @@ sub process($$$) {
 
     my $vars = {};
 
-    my @users_metrics = Codestriker::Model::MetricStats::get_basic_user_metrics();
+    my @users_metrics =
+	Codestriker::Model::MetricStats::get_basic_user_metrics();
 
     # Anti-spam the email addresses.
     foreach my $user (@users_metrics) {
@@ -37,7 +38,8 @@ sub process($$$) {
     $vars->{user_metrics} = \@users_metrics;
 
     # Get the comment metrics.
-    my @comment_metrics = Codestriker::Model::MetricStats::get_comment_metrics();
+    my @comment_metrics =
+	Codestriker::Model::MetricStats::get_comment_metrics();
     $vars->{comment_metrics} = \@comment_metrics;
     $vars->{comment_metrics_month_names} = $comment_metrics[0]->{monthnames};
 
@@ -61,15 +63,16 @@ sub process_download($$$) {
 
     my $columns = Codestriker::Model::MetricStats::get_download_headers();
 
-    print join "\t", @{$columns->{base}},@{$columns->{state}}, @{$columns->{topic}}, @{$columns->{user}};
+    print join "\t", @{$columns->{base}},@{$columns->{state}},
+               @{$columns->{topic}}, @{$columns->{user}};
     print "\n";
 
     my @topicids = Codestriker::Model::MetricStats::get_topic_ids();
 
     foreach my $id (@topicids) {
 	my @line = Codestriker::Model::MetricStats::get_raw_metric_data($id->[0], $columns);
-	print join "\t",@line;
-	print  "\n";
+	print join "\t", @line;
+	print "\n";
     }
 }
 

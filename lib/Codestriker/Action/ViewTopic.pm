@@ -55,7 +55,8 @@ sub process($$$) {
 
     $http_response->generate_header($topic->{topicid}, $topic->{document_title}, 
     			            $topic->{author},
-				    "", "", $mode, $tabwidth, $topic->{repository},
+				    "", "", $mode, $tabwidth,
+				    $topic->{repository},
 				    "", "", 0, 1);
 
     # Retrieve the repository object, if repository functionality is enabled.
@@ -111,7 +112,6 @@ sub process($$$) {
 
     $vars->{'document_reviewers'} = 
     	Codestriker->filter_email($topic->{reviewers});
-    $vars->{'repository'} = $topic->{repository};
     $vars->{'project_name'} = $topic->{project_name};
     $vars->{'number_of_lines'} = $#document + 1;
 
@@ -209,7 +209,8 @@ sub process($$$) {
 						$max_digit_width, $topicid,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
-						\@revisions, \@binary, -1, $brmode);
+						\@revisions, \@binary, -1,
+						$brmode);
 
     # Display the data that is being reviewed.
     $render->start();
@@ -236,17 +237,23 @@ sub process($$$) {
     $http_response->generate_footer();
 }
 
-# This function is used by all of the three topic pages to fill out the common template
-# items that are required by all three.
+# This function is used by all of the three topic pages to fill out the
+# common template items that are required by all three.
 sub ProcessTopicHeader($$$) {
     my ($vars, $topic, $url_builder) = @_;
 
     # Handle the links in the three topic tabs.
-    $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url($topic->{topicid});
+    $vars->{'view_topicinfo_url'} =
+	$url_builder->view_topicinfo_url($topic->{topicid});
     $vars->{'view_topic_url'} =
-	$url_builder->view_url($topic->{topicid}, -1, 0); ## XX mode, last param
+         ## XX mode, last param
+	$url_builder->view_url($topic->{topicid}, -1, 0);
 
-    $vars->{'view_comments_url'} = $url_builder->view_comments_url($topic->{topicid});
+    $vars->{'view_comments_url'} =
+	$url_builder->view_comments_url($topic->{topicid});
+
+    $vars->{'view_topic_properties_url'} =
+	$url_builder->view_topic_properties_url($topic->{topicid});
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();

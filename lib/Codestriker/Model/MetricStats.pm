@@ -94,6 +94,9 @@ sub get_basic_user_metrics {
 	}
     }
 
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
+
     return @users_metrics;
 }
 
@@ -106,6 +109,9 @@ sub get_topic_ids {
     # Get the list of authors.
     my $topicid_list  = $dbh->selectall_arrayref(
 	    'SELECT id FROM topic ORDER BY creation_ts');
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     return @$topicid_list;
 
@@ -185,6 +191,9 @@ sub get_download_headers {
 	topic=>\@topic_metric_headers,
 	user=>\@topic_user_metric_headers
     };
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     return $headers;
 }
@@ -271,6 +280,9 @@ sub get_raw_metric_data {
 
 	push @row, $count;
     } 
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     return @row;
 }
@@ -435,6 +447,9 @@ sub _get_monthly_metrics {
 	    }
 	}
     }
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     return @metrics;
 }

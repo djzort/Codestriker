@@ -165,6 +165,15 @@ sub view_comments_url ($$) {
     return $self->{query}->url() . "?action=list_comments&topic=$topic";
 }
 
+# Create the URL for viewing the topic properties.
+sub view_topic_properties_url ($$) {
+    my ($self, $topic) = @_;
+
+    return $self->{query}->url() .
+	"?action=view_topic_properties&topic=$topic";
+}
+
+# Create the URL for viewing the topic metrics.
 sub view_topicinfo_url ($$) {
     my ($self, $topic) = @_;
 

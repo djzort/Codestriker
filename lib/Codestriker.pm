@@ -150,7 +150,7 @@ $Codestriker::COMMENT_SUBMITTED = 0;
   },
   {
   name=>"studied time",
-  description=>"The time in hours spent closly scrutinized at or near optimum checking rate",
+  description=>"The time in hours spent closely scrutinized at or near optimum checking rate",
   scope=>"participant",
   enabled=>0,
   filter=>"hours"

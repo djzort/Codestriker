@@ -218,7 +218,7 @@ sub process($$$) {
     {        
 	$feedback .= "The topic length of $new_topic_length lines is too long. " . 
                      "Topics cannot exceed $Codestriker::maximum_topic_size_lines " . 
-                     "lines long. Plesae remove content from topic, or break the topic " .
+                     "lines long. Please remove content from topic, or break the topic " .
                      "into several independent topics.\n";
                      
         _forward_create_topic($error_vars, $feedback);
@@ -227,12 +227,12 @@ sub process($$$) {
     }
     
     # Create the topic in the model.
-    my $topic = Codestriker::Model::Topic->new();
+    my $topic = Codestriker::Model::Topic->new($topicid);
     $topic->create($topicid, $email, $topic_title,
-		      $bug_ids, $reviewers, $cc,
-		      $topic_description, $topic_text,
-		      $repository, $projectid,
-		      \@deltas);
+		   $bug_ids, $reviewers, $cc,
+		   $topic_description, $topic_text,
+		   $repository, $projectid,
+		   \@deltas);
                                                                   
     # tell all of the topic listener classes that a topic has 
     # just been created.

@@ -1,125 +1,21 @@
-[%# Screen for displaying the heading information of a topic.  The
-    actual view topic data is still generated directly from the perl
-    script, as it is complex HTML that doesn't need to be
-    customised. #%]
+[%# Screen for displaying the metric information of a topic. #%]
 
 [% USE AutomagicLinks %]
 
-[% PROCESS viewtopicheader.html.tmpl version = version topicview=0 topiccomments=0 topicinfo=1 %]
-
-<script language="JavaScript">
-<!-- script to hit user with are you sure if they are deleting a topic.
-
-/* This function will hit the user with a "are you sure" message box if they
-   ask to delete the topic. Otherwise, just let them change the state. It
-   is called when the submit button is pressed. 
-*/
-function DeleteTopicConfirm()
-{
-    var stateIndex = document.form.topic_state.options.selectedIndex;
-    var stateSelection = document.form.topic_state.options[stateIndex].value;
-    
-    // Confirm with the user if they are deleting.
-    if (stateSelection == 'Delete')
-    {
-    	return confirm('This topic and all of its comments will be permanently ' + 
-                       'removed. Are you sure you want to delete this topic?');
-    }
-    
-    return 1;
-}
-
--->
-</script>
-
-<pre>[% description | html_entity | $AutomagicLinks %]</pre>
-
-[%# Create a table illustrating the title, author, creation date, bug
-    ids, reviewers, number of lines and the current state. #%]
-<p>
-
-[%# Display the form for changing the topic state #%]
+[% PROCESS viewtopicheader.html.tmpl version = version topicview = 0
+   topicproperties = 0 topiccomments = 0 topicinfo = 1 topictitle = 1
+   help = "x390.html#VIEW_TOPIC" %]
+ 
+[%# Create a form to allow the topic's metrics to be changed #%]
 <form method="post" enctype="application/x-www-form-urlencoded" name="form">
 
-<input type="hidden" name="action" value="change_topic">
+<input type="hidden" name="action" value="edit_topic_metrics">
 <input type="hidden" name="topic" value="[% topic %]">
 <input type="hidden" name="mode" value="[% mode %]">
 <input type="hidden" name="version" value="[% topic_version %]">
 
-<table cellpadding="2" cellspacing="2" border="0" width="80%">
-
-[% SET type = 0 %]
-
-<tr class="tt[% type mod 2 %]">
- [% type = type + 1 %]
- <td>Author:</td>
- <td colspan="5">[% author | html_entity %]</td>
-</tr>
-
-[% IF bug_string != '' %]
-<tr class="tt[% type mod 2 %]">
- <td>Bug IDs:</td>
- <td colspan="5">[% bug_string %]</td>
-</tr>
-[% END %]
-
-<tr class="tt[% type mod 2 %]">
- <td>Reviewers:</td>
- <td colspan="5"><input type="text" size="50" value="[% document_reviewers | html_entity %]"></td>
-</tr>
-
-<tr class="tt[% type mod 2 %]">
- <td>State:
-<FONT SIZE="-2"><A TABINDEX="1" HREF="javascript:alert('
-When a topic is created, it is initialised in state \'open\'.\n
-Once a topic has been reviewed, and the code has been committed,\n
-the state should be updated to \'committed\'.  If the code\n
-in this review is not be committed, perhaps because a\n
-new review will superceed this one, or because it was rejected,\n
-the state should be changed to \'closed\'.\n
-\n
-If a topic is linked to Bugzilla bugs, each time the topic\n
-state is changed, an appropriate comment will be appended to\n
-all associated bugs, as a form of tracking.\n
-\n
-The topic states are also useful as a form of filtering, when\n
-retrieving lists of topics from the search page.
-')">(What's this?)</A></FONT>
-</td>
- <td colspan="5">
-   [%# Now display the option button for changing the topic state #%]
-   <select name="topic_state">
-   [% FOREACH state = states %]
-       [% IF state == default_state %]
-           <option selected value="[% state %]">[% state %]
-       [% ELSE %]           
-           <option value="[% state %]">[% state %]
-       [% END %]
-   [% END %]
-   [%# Render a "delete" button, for deleting topics, if enabled #%]
-   [% IF delete_enabled != 0 %]
-   	<option value="Delete">Delete Topic ... 
-   [% END %]
-   </select>
- </td>
-</tr>
-
-
-[% IF repository != '' %]
-<tr class="tt[% type mod 2 %]">
- <td>Repository:</td>
- <td colspan="5">[% repository %]</td>
-</tr>
-[% END %]
-
-[% IF projects_enabled != 0 %]
-<tr class="tt[% type mod 2 %]">
- <td>Project:</td>
- <td colspan="5">[% project_name | html_entity %]</td>
-</tr>
-[% END %]
-
-[% # Topic metrics sections %]
+[%# Display the topic metrics #%]
+<table cellpadding="2" cellspacing="2" border="0">
 <tr class="tt1">
  <td>&nbsp;</td><td colspan="5"></td>
 </tr>
@@ -256,7 +152,8 @@ retrieving lists of topics from the search page.
 
 <p>
 [%# Render the submit button #%]
-<input type="submit" name="button" value="Save" onClick="return DeleteTopicConfirm();"> 
+<input type="submit" name="button" value="Save" 
+       onClick="return DeleteTopicConfirm();"> 
 
 </form>
 

@@ -1,0 +1,218 @@
+[%# Screen for displaying the properties of a topic, such as the
+    title, author, creation date, reviewers, Cc, number of lines,
+    repository, project, description and state.  Most of these
+    properties can be modified on this page.  #%]
+
+[% PROCESS viewtopicheader.html.tmpl version = version topicview = 0
+   topiccomments = 0 topicinfo = 0 topicproperties = 1 topictitle = 0
+   help = "x380.html#VIEW-TOPIC" %]
+
+<script language="JavaScript">
+<!--
+//
+// This function will hit the user with a "are you sure" message box if they
+//  ask to delete the topic. Otherwise, just let them change the state. It
+//  is called when the submit button is pressed. 
+//
+function DeleteTopicConfirm()
+{
+    var stateIndex = document.form.topic_state.options.selectedIndex;
+    var stateSelection = document.form.topic_state.options[stateIndex].value;
+    
+    // Confirm with the user if they are deleting.
+    if (stateSelection == 'Delete')
+    {
+    	return confirm('This topic and all of its comments will be ' +
+                       'permanently removed. Are you sure you want ' +
+                       'to delete this topic?');
+    }
+    
+    return 1;
+}
+-->
+</script>
+
+[%# Create a form to allow the topic's properties to be changed #%]
+<form method="post" enctype="application/x-www-form-urlencoded" name="form">
+
+<input type="hidden" name="action" value="edit_topic_properties">
+<input type="hidden" name="topic" value="[% topicid %]">
+<input type="hidden" name="mode" value="[% mode %]">
+<input type="hidden" name="version" value="[% topic_version %]">
+
+[%# Create a table illustrating the title, author, creation date, bug
+    ids, reviewers, number of lines and the current state, most of
+    which can be edited. #%]
+
+
+<table cellpadding="2" cellspacing="2" border="0">
+
+<tr class="tth">
+  <td><b>Title:</b></td>
+  <td>
+    <input type="text" name="topic_title" 
+           value="[% title | html_entity %]" size="70" maxlength="70">
+  </td>
+</th>
+
+[% SET type = 0 %]
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Author:</td>
+  <td>
+    <input type="text" name="email" value="[% author | html_entity %]" 
+           size="50" maxlength="80">
+  </td>
+</tr>
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Created:</td>
+  <td>[% document_creation_time | html_entity %]</td>
+</tr>
+
+[% IF bug_ids != '' %]
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Bug IDs:</td>
+  <td>
+    <input type="text" name="bug_ids" value="[% bug_ids %]"
+           size="30" maxlength="50">
+  </td>
+</tr>
+[% END %]
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Reviewers:</td>
+  <td>
+    <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
+           size="50" maxlength="150">
+  </td>
+</tr>
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Cc:</td>
+  <td>
+    <input type="text" name="cc" value="[% cc | html_entity %]" 
+           size="50" maxlength="150">
+  </td>
+</tr>
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Number of lines:</td>
+  <td>[% number_of_lines %]
+    [%# Give them a nudge, that the topic is too large. #%] 
+    [% IF number_of_lines > suggested_topic_size_lines && suggested_topic_size_lines > 0 %]
+      <FONT color=red>-- over suggested topic size limit of [% suggested_topic_size_lines %] lines.</FONT>
+  [% END %]
+  
+ </td>
+</tr>
+
+[% IF topic_repository != '' %]
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Repository:</td>
+  <td>
+    <select name="repository">
+       [% FOREACH entry = repositories %]
+          [% IF entry == topic_repository %]
+	      <option selected value="[% entry %]">[% entry %]
+	  [% ELSE %]
+	      <option value="[% entry %]">[% entry %]
+	  [% END %]
+       [% END %]
+    </select>
+  </td>
+</tr>
+[% END %]
+
+[% IF projects_enabled != 0 %]
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Project:</td>
+  <td>
+    <select name="projectid">
+       [% FOREACH project = projects %]
+          [% IF project.id == topic_projectid %]
+	      <option selected value="[% project.id %]">[% project.name | html_entity %]
+	  [% ELSE %]
+	      <option value="[% project.id %]">[% project.name | html_entity %]
+	  [% END %]
+       [% END %]
+    </select>
+ </td>
+</tr>
+[% END %]
+
+<tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td valign="top">Description:</td>
+  <td>
+    <textarea name="topic_description" rows="12" cols="70" 
+              wrap="hard">[% description | html_entity %]</textarea>
+  </td>
+</tr>
+
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
+ <td>State:
+   <FONT SIZE="-2"><A HREF="javascript:alert('
+When a topic is created, it is initialised in state \'open\'.\n
+Once a topic has been reviewed, and the code has been committed,\n
+the state should be updated to \'committed\'.  If the code\n
+in this review is not be committed, perhaps because a\n
+new review will superceed this one, or because it was rejected,\n
+the state should be changed to \'closed\'.\n
+\n
+If a topic is linked to Bugzilla bugs, each time the topic\n
+state is changed, an appropriate comment will be appended to\n
+all associated bugs, as a form of tracking.\n
+\n
+The topic states are also useful as a form of filtering, when\n
+retrieving lists of topics from the search page.
+')">(What's this?)</A></FONT>
+  </td>
+  <td>
+    [%# Now display the option button for changing the topic state #%]
+    <select name="topic_state">
+    [% FOREACH state = states %]
+       [% IF state == default_state %]
+           <option selected value="[% state %]">[% state %]
+       [% ELSE %]           
+           <option value="[% state %]">[% state %]
+       [% END %]
+    [% END %]
+    [%# Render a "delete" button, for deleting topics, if enabled #%]
+    [% IF delete_enabled != 0 %]
+   	   <option value="Delete">Delete Topic ... 
+    [% END %]
+    </select>
+ </td>
+</tr>
+
+<tr class="tth"><td colspan="2">&nbsp</td></tr>
+
+
+[%# Render the submit button #%]
+<tr>
+  <td colspan="2">
+    <input type="submit" name="button" value="Update Topic" 
+           onClick="return DeleteTopicConfirm();">
+  </td>
+</tr>
+
+</table>   
+</form>
+
+[% PROCESS trailer.html.tmpl %]
+
+</body>
+</html>
+
+
+

@@ -35,9 +35,72 @@ sub new {
 sub topic_create($$) { 
     my ($self, $topic) = @_;
     
-    $self->_send_topic_email($topic, "Created", 1);
+    # Send an email to the document author and all contributors with the
+    # relevant information.  The person who wrote the comment is indicated
+    # in the "From" field, and is BCCed the email so they retain a copy.
+    my $from = $topic->{author};
+    my $to = $topic->{reviewers};
+    my $cc = $topic->{cc};
+    my $bcc = $topic->{author};
+
+    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc);
 
     return '';
+}
+
+sub topic_changed($$$) {
+    my ($self, $topic_orig, $topic) = @_;
+
+    # Any topic property changes need to be sent to all parties involved
+    # for now, including parties which have been removed from the topic.
+    # Eventually, email sending can be controlled by per-user preferences,
+    # but in any case, in real practice, topic properties should not be
+    # changed that often.
+
+    # Record the list of email addresses already handled.
+    my %handled_addresses = ();
+
+    # The from (and bcc) is always the current author.
+    my $from = $topic->{author};
+    my $bcc = $from;
+    $handled_addresses{$from} = 1;
+
+    # The to are the current reviewers.
+    my $to = $topic->{reviewers};
+    foreach my $email (split /, /, $to) {
+	$handled_addresses{$email} = 1;
+    }
+
+    # The CC consist of the current CC, plus "removed" email addresses handled
+    # below.
+    my $cc = $topic->{cc};
+    foreach my $email (split /, /, $cc) {
+	$handled_addresses{$email} = 1;
+    }
+
+    # Now add any removed email addresses, and add them to the email's CC.
+    my @other_emails = ();
+    if (! exists $handled_addresses{$topic_orig->{author}}) {
+	push @other_emails, $topic_orig->{author};
+    }
+    foreach my $email (split /, /, $topic_orig->{reviewers}) {
+	if (! exists $handled_addresses{$email}) {
+	    push @other_emails, $email;
+	}
+    }
+    foreach my $email (split /, /, $topic_orig->{cc}) {
+	if (! exists $handled_addresses{$email}) {
+	    push @other_emails, $email;
+	}
+    }
+    my $other_emails = join ', ', @other_emails;
+    if (defined $other_emails && $other_emails ne "") {
+	$cc .= ", " if $cc ne "";
+	$cc .= $other_emails;
+    }
+
+    # Send off the email to the revelant parties.
+    $self->_send_topic_email($topic, "Modified", 1, $from, $to, $cc, $bcc);
 }
 
 sub comment_create($$$) {
@@ -130,16 +193,8 @@ sub comment_create($$$) {
 # This is a private helper function that is used to send topic emails. Topic 
 # emails include topic creation, state changes, and deletes.
 sub _send_topic_email {
-    my ($self, $topic, $event_name, $include_url) = @_;
+    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc) = @_;
   
-    # Send an email to the document author and all contributors with the
-    # relevant information.  The person who wrote the comment is indicated
-    # in the "From" field, and is BCCed the email so they retain a copy.
-    my $from = $topic->{author};
-    my $to   = $topic->{reviewers};
-    my $bcc =  $topic->{author};
-    my $cc = $topic->{cc};
-    
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $topic_url = $url_builder->view_url_extended($topic->{topicid}, -1, 
@@ -158,8 +213,7 @@ sub _send_topic_email {
 	"$topic->{description}\n";
 
     # Send the email notification out.
-    $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc,
-		    $subject, $body);
+    $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
 }
 
 sub comment_state_change($$$) {
@@ -167,8 +221,6 @@ sub comment_state_change($$$) {
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    print STDERR  "$comment->{data} for topic $topic->{title} is going to $newstate\n";
     
     return '';    
 }
