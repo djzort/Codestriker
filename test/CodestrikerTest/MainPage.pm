@@ -5,6 +5,8 @@ use strict;
 use warnings;
 
 use CodestrikerTest::Page;
+use CodestrikerTest::Config;
+use CodestrikerTest::Util;
 use HTML::TokeParser;
 use Date::Calc;
 use Test::More;
@@ -19,6 +21,55 @@ sub new
 
     return $self;
 
+}
+
+# creates a new topic, and navigates into it.
+sub MakeAndNavigateToNewTopic
+{
+    my ($self,%params) = @_;
+
+    unless ( exists( $params{topic_title}  ) )
+    {
+        my $titleName = MakeNewTopicName();
+        $params{topic_title} = $titleName;
+    }
+
+    unless ( exists( $params{topic_description} ) )
+    {
+        $params{topic_description} = "description";
+    }
+
+    unless ( exists( $params{email} ) )
+    {
+        $params{email} = $CodestrikerTest::Config::email_adddress[0];
+    }
+
+    unless ( exists( $params{reviewers} ) )
+    {
+        $params{reviewers} = $CodestrikerTest::Config::email_adddress[1];
+    }
+     
+    unless ( exists( $params{topic_file} ) )
+    {
+        $params{topic_file} = 'newtopic.t';
+    }
+
+    my $newTopic = $self->GetNewTopicPage();
+
+    ok( $newTopic , "get new topic page");
+
+    my $confirmPage = $newTopic->CreateNewTopic( %params );
+
+    ok( $confirmPage->TopicCreated(),"test topic created" );
+
+    # refresh
+    ok( $self->Get(),"refresh main page to get link to the new topic");
+
+    my $topic_content = $self->GetLink($params{topic_title});
+
+    ok( $topic_content,"get topic content page");
+
+    return $topic_content;
 }
 
 # Returns the number of 

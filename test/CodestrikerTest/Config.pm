@@ -10,20 +10,28 @@ use File::Copy;
 our $main_url;
 our @email_adddress;
 our $title;
+our $version;
 our $run_quick;
 our $check_help_links;
 our $codestriker_config_file;
+our $codestriker_config_file_content;
+
 
 sub RestoreDefaultConfiguration
 {
-    if ( -f "codestriker.conf" )
-    {
-        copy("codestriker.conf",$codestriker_config_file) or die "$!";
-    }
-    else
-    {
-        copy($codestriker_config_file,"codestriker.conf") or die "$!";
-    }
+    unlink($codestriker_config_file);
+    $codestriker_config_file_content  = "";
+}
+
+sub SetConfigOption
+{
+    my ($option) = @_;
+
+    open(FILE,">$codestriker_config_file") or die "$!";
+
+    print FILE $option;
+
+    close FILE;
 }
 
 BEGIN
@@ -43,6 +51,8 @@ BEGIN
     die $@ if $@;
 
     close CONFIG_FILE;
+
+    $title = "Codestriker $version";
 
     # Restore the default config file that is stored in the current directory.
     RestoreDefaultConfiguration();

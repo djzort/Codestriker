@@ -130,3 +130,5 @@ sub TestField
         ok( $properties->CompareProperties( %orginal_prop),"verify that $field set $value failed");
     }
 }
+
+0;

@@ -299,6 +299,12 @@ sub initialise($$) {
 	die("Couldn't find configuration file: \"$config\".\n<BR>" .
 	    "Please fix the \$config setting in codestriker.pl.");
     }
+
+    # look for the extra file for the test scripts.
+    if ( -f "$BASEDIR/codestriker_test.conf")
+    {
+	do "$BASEDIR/codestriker_test.conf";
+    }
 }
 
 # Returns the current time in a format suitable for a DBI timestamp value.

@@ -185,6 +185,16 @@ sub DumpLinks
     }
 }
 
+# Returns the content of the page
+sub GetPageContent
+{
+    my ($self) = @_;
+
+    $self->_ParsePageHTML();
+
+    $self->{response}->content;
+}
+
 # returns the collection of link objects. The link objects are hashes
 # with keys for _TEXT , and href;
 sub GetLinks

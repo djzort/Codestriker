@@ -861,6 +861,11 @@ sub delete($) {
     my $delete_comments =
 	$dbh->prepare_cached('DELETE FROM commentdata ' .
 			     'WHERE commentstateid = ?');
+
+    my $delete_commentstate_metric =
+	$dbh->prepare_cached('DELETE FROM commentstatemetric ' .
+			     'WHERE commentstateid = ?');
+
     my $delete_commentstate =
 	$dbh->prepare_cached('DELETE FROM commentstate ' .
 			     'WHERE topicid = ?');
@@ -890,7 +895,7 @@ sub delete($) {
 	defined $delete_file && defined $delete_delta && 
 	defined $topic_metrics && defined $user_metrics &&
 	defined $topic_history && defined $topic_view_history &&
-	defined $commentstate_history;
+	defined $commentstate_history && $delete_commentstate_metric;
 
     # Now do the deed.
     $success &&= $select->execute($self->{topicid});
@@ -898,6 +903,7 @@ sub delete($) {
 	while (my ($commentstateid) = $select->fetchrow_array()) {
 	    $success &&= $delete_comments->execute($commentstateid);
 	    $success &&= $commentstate_history->execute($commentstateid);
+            $success &&= $delete_commentstate_metric->execute($commentstateid);
 	}
 	$success &&= $select->finish();
     }
