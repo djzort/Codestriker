@@ -49,7 +49,9 @@ sub process($$$) {
     $vars->{'projects'} = \@projects;
 
     my $template = Codestriker::Http::Template->new("search");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 1;

@@ -105,7 +105,7 @@ sub process($$$) {
     my $vars = {};
     $vars->{'version'} = $Codestriker::VERSION;
     my $header = Codestriker::Http::Template->new("header");
-    $header->process($vars) || die $header->error();
+    $header->process($vars);
 
     my $max_digit_width = length($#filedata);
 
@@ -173,9 +173,11 @@ sub process($$$) {
 
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");
-    $trailer->process() || die $trailer->error();
+    $trailer->process();
 
     print $query->end_html();
+
+    $http_response->generate_footer();
 }
 
 # Read the specified repository file and revision into memory.  Return true if

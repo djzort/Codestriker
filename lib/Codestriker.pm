@@ -25,7 +25,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.1.1";
+$Codestriker::VERSION = "1.7.1.2";
 
 # The maximum size of a diff file to accept.
 $Codestriker::DIFF_SIZE_LIMIT = 500 * 1024;

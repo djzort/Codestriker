@@ -38,8 +38,6 @@ sub process($$$) {
     my $sbody = $http_input->get('sbody') || 0;
     my $feedback = $http_input->get('feedback');
     
-    # Perform some error checking here on the parameters.
-
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
     my (@id, @title, @author, @ts, @state, @bugid, @email, @type, @version);
@@ -52,8 +50,15 @@ sub process($$$) {
 				     \@email, \@type, \@version);
 
     # Display the data, with each topic title linked to the view topic screen.
+    # If only a single project id is being searched over, set that id in the
+    # cookie.
+    my @project_ids = ();
+    if ($sproject ne "") {
+	@project_ids = split ',', $sproject;
+    }
+    my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
-				    "", "", 0, 0);
+				    $projectid_cookie, "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -161,7 +166,9 @@ sub process($$$) {
     # Record the search parameters.
 
     my $template = Codestriker::Http::Template->new("listtopics");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 # Append an element into an array if it doesn't exist already.  Note this is

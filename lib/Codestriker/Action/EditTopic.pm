@@ -149,7 +149,9 @@ sub process($$$) {
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("edittopic");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 1;

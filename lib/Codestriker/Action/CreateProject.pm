@@ -42,7 +42,9 @@ sub process($$$) {
     $vars->{'search_url'} = $url_builder->search_url();
 
     my $template = Codestriker::Http::Template->new("createproject");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 1;

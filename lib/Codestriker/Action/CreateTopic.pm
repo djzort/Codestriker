@@ -67,7 +67,9 @@ sub process($$$) {
     $vars->{'projects'} = \@projects;
 
     my $template = Codestriker::Http::Template->new("createtopic");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 1;

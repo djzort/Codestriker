@@ -102,7 +102,9 @@ sub process($$$) {
 
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("displaycomments");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 1;

@@ -34,6 +34,7 @@ sub process($$$) {
     my $cc = $http_input->get('cc');
     my $fh = $http_input->get('fh');
     my $topic_file = $http_input->get('fh_filename');
+    my $fh_mime_type = $http_input->get('fh_mime_type');
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
@@ -99,7 +100,9 @@ sub process($$$) {
     # If there is a problem with the input, redirect to the create screen
     # with the message.
     if ($feedback ne "") {
-	return _forward_create_topic($error_vars, $feedback);
+	_forward_create_topic($error_vars, $feedback);
+	$http_response->generate_footer();
+	return;
     }
 
     # Set the repository to the default if it is not entered.
@@ -152,7 +155,9 @@ sub process($$$) {
 	# temporary files, and direct control to the create screen again.
 	unlink $temp_topic_filename if $temp_topic_filename ne "";
 	unlink $temp_error_filename if $temp_error_filename ne "";
-	return _forward_create_topic($error_vars, $feedback);
+	_forward_create_topic($error_vars, $feedback);
+	$http_response->generate_footer();
+	return;
     }
 
     # Try to parse the topic text into its diff chunks.
@@ -182,7 +187,9 @@ sub process($$$) {
 	    # back to the create topic page.
 	    unlink $temp_topic_filename if $temp_topic_filename ne "";
 	    unlink $temp_error_filename if $temp_error_filename ne "";
-	    return _forward_create_topic($error_vars, $feedback);
+	    _forward_create_topic($error_vars, $feedback);
+	    $http_response->generate_footer();
+	    return;
 	}
     }
 
@@ -226,8 +233,10 @@ sub process($$$) {
     # Send the email notification out.
     if (!Codestriker::Smtp::SendEmail->doit(1, $topicid, $from, $to, $cc, $bcc,
 					    $subject, $body)) {
-	return _forward_create_topic($error_vars,
-				     "Failed to send topic creation email");
+	_forward_create_topic($error_vars,
+			      "Failed to send topic creation email");
+	$http_response->generate_footer();
+	return;
     }
 
     # If Codestriker is linked to a bug database, and this topic is associated
@@ -258,7 +267,9 @@ sub process($$$) {
     $vars->{'cc'} = (defined $cc) ? $cc : "";
 
     my $template = Codestriker::Http::Template->new("submittopic");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 # Direct output to the create topic screen again, with the appropriate feedback
@@ -272,9 +283,7 @@ sub _forward_create_topic($$) {
     $vars->{'projects'} = \@projects;
     
     my $template = Codestriker::Http::Template->new("createtopic");
-    $template->process($vars) || die $template->error();
-
-    return 0;
+    $template->process($vars);
 }
 
 1;

@@ -188,7 +188,7 @@ sub process($$$) {
 
     # Fire the template on the topic heading information.
     my $template = Codestriker::Http::Template->new("viewtopic");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
 
     # The rest of the output is non-template driven, as it is quite
     # complex.
@@ -258,9 +258,11 @@ sub process($$$) {
     
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");
-    $trailer->process() || die $trailer->error();
+    $trailer->process();
 
     print $query->end_html();
+
+    $http_response->generate_footer();
 }
 
 1;

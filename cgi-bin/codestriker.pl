@@ -19,6 +19,8 @@ use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
 use lib "../lib";
+use lib ".";
+
 use Codestriker;
 use Codestriker::Http::Input;
 use Codestriker::Http::Response;

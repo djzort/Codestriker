@@ -125,9 +125,17 @@ sub process($) {
 	$self->{comments} = "";
     }
 
-    # Record the file handler for a topic text upload, if any.
+    # Record the file handler for a topic text upload, if any.  Also record the
+    # mime type of the file if it has been set, default to text/plain
+    # otherwise.
     $self->{fh_filename} = $query->param('topic_file');
     $self->{fh} = $query->upload('topic_file');
+    $self->{fh_mime_type} = 'text/plain';
+    if (defined $self->{fh_filename} &&
+	defined $query->uploadInfo($self->{fh_filename})) {
+	$self->{fh_mime_type} =
+	    $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
+    }
 
     # Set parameter values from the cookie if they are not set.
     $self->_set_property_from_cookie('context', $DEFAULT_CONTEXT);

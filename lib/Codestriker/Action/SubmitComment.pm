@@ -171,7 +171,9 @@ sub process($$$) {
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
     my $template = Codestriker::Http::Template->new("submitcomment");
-    $template->process($vars) || die $template->error();
+    $template->process($vars);
+
+    $http_response->generate_footer();
 }
 
 # Given a topic and topic line number, try to determine the line

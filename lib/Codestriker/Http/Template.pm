@@ -34,7 +34,8 @@ sub new($$) {
 	    
 	    # Where to compile the templates.
 	    COMPILE_DIR => 'data/'
-	    });
+	    })
+	|| die Template->error();
 
     return bless $self, $type;
 }
@@ -46,12 +47,20 @@ sub get_template($) {
     return $self->{template};
 }
 
-# Process the template.
+# Process the template.  Note the results are stored into a variable, which is
+# then output to STDOUT.  This is required, as if the HTTP response is a 
+# compressed stream (which is tied to STDOUT), for some reason, this doesn't
+# play well with TT's default STDOUT writing.  Storing it to a temporary
+# variable does the trick.
 sub process($$) {
     my ($self, $vars) = @_;
 
-    $self->{template}->process($self->{name} . ".html.tmpl", $vars) ||
-	die $self->{template}->error();
+    my $data;
+    my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
+					$vars, \$data);
+    die $self->{template}->error() if ($rc == 0);
+    print $data;
+    return $rc;
 }
 
 1;

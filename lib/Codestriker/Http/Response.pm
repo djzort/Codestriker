@@ -114,7 +114,7 @@ sub generate_header($$$$$$$$$$$$) {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -expires=>'+1d',
 				 -cache_control=>'no-store',
-				 -pragma=>'no-cache'
+				 -pragma=>'no-cache',
 				 -content_encoding=>'x-gzip',
 				 -vary=>'Accept-Encoding');
 	}
@@ -206,21 +206,21 @@ END
 			     -onLoad=>"gotoAnchor('$load_anchor', $reload)");
 
     # Write a comment indicating if this was compressed or not.
+    $self->{output_compressed} = $output_compressed;
     print "\n<!-- Source was" . (!$output_compressed ? " not" : "") .
 	" sent compressed. -->\n";
 }
 
-# Generate the footer of the HTML output.
+# Close the response, which only requires work if we are dealing with
+# compressed streams.
 sub generate_footer($) {
     my ($self) = @_;
 
-    my $query = $self->{query};
-
-    # Fix for bug relating to IE 5 + caching of documents, see:
-    # http://support.microsoft.com/default.aspx?scid=kb;EN-US;q222064
-#    print "</BODY><HEAD>\n" .
-#	'<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">' .
-#	"</HEAD></HTML>\n";
+    if ($self->{output_compressed}) {
+	select(STDOUT);
+	close(GZIP);
+	untie *GZIP;
+    }
 }
 
 # Generate an error page response if bad input was passed in.
@@ -235,6 +235,8 @@ sub error($$) {
 
     print $query->p, "<FONT COLOR='red'>$error_message</FONT>", $query->p;
     print $query->end_html();
+
+    $self->generate_footer();
     exit;
 }
 

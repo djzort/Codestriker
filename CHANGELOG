@@ -1,6 +1,14 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.1.2
+
+* Compressed output (see $use_compression in codestriker.conf) is now
+  working correctly.
+
+* Set the project id in the cookie for the ListTopics screen, if the
+  search is only being conducted over a single project.
+
 Version 1.7.1.1
 
 * Problem for creating new projects for MySQL fixed.
