@@ -168,6 +168,11 @@ used as filtering criteria in the search screen.
  </TD>
 </TR>
 
+[% ELSE %]
+
+[%# Set the projectid to the default projectid. #%]
+<INPUT TYPE="hidden" NAME="projectid" VALUE="[% projects.0.id %]">
+
 [% END %]
 
 [%# The bug ids input field #%]
