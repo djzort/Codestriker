@@ -274,6 +274,11 @@ sub get_metric_schema {
 		$metric->{enabled} = 0;
 	    }
 	}
+
+	# This metric is not a "built it" metric. Meaning that it 
+	# comes out of the db, rather than being generated on the fly
+	# from other parts of the db (like the topic history).
+	$metric->{builtin} = 0;
     }
 
     return @metrics_schema;
@@ -359,6 +364,21 @@ sub format_date_timestamp($$) {
 		      
     } else {
 	return $timestamp;
+    }
+}
+
+# Given a database formatted timestamp, return the time as a time_t. The
+# number of seconds since the baseline time of the system.
+sub convert_date_timestamp_time($$) {
+    my ($type, $timestamp) = @_;
+
+    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
+	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+	return Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
+		      
+    } else {
+	print STDERR "Unable to convert timestamp \"$timestamp\" to time_t.\n";
+	return 0;
     }
 }
 

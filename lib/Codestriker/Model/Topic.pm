@@ -333,6 +333,30 @@ sub get_metrics {
     return $self->{metrics};
 }
 
+# Returns the size of the topic text in lines. If the topic is a diff topic
+# it attempts to only count the lines that have changed, and not count the
+# context around the lines.
+sub get_topic_size_in_lines {
+
+    my ($self) = @_;
+
+    my @document = split /\n/, $self->{document};
+
+    my $diff_lines = scalar( grep /^[+-][^+-][^+-]/, @document );
+
+    my $looks_like_a_unified_diff = 
+	scalar( grep /^diff /, @document ) && 
+	scalar( grep /^\-\-\- /, @document ) && 
+	scalar( grep /^\+\+\+ /, @document ) && 
+	scalar( grep /^@@ /, @document ) && 
+	$diff_lines;
+
+    if ( $looks_like_a_unified_diff ) {
+	return $diff_lines;
+    }
+
+    return scalar( @document );
+}
 
 # This function is used to create a new topic id. The function insures 
 # that the new topic id is difficult to guess, and is not taken in the 

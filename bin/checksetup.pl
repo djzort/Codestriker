@@ -262,7 +262,7 @@ my $topichistory_table =
 		    col(name=>"projectid", type=>$INT32),
 		    col(name=>"reviewers", type=>$TEXT),
 		    col(name=>"cc", type=>$TEXT, mandatory=>0),
-		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
+		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255, mandatory=>0)
 		   ],
 	indexes => [dbindex(name=>"th_idx", column_names=>["topicid"])]);
 	
@@ -270,7 +270,7 @@ my $topichistory_table =
 my $topicviewhistory_table =
   table(name => "topicviewhistory",
 	columns => [col(name=>"topicid", type=>$INT32),
-		    col(name=>"email", type=>$VARCHAR, length=>255),
+		    col(name=>"email", type=>$VARCHAR, length=>255, mandatory=>0),
 		    col(name=>"creation_ts", type=>$DATETIME)
 		   ],
 	indexes => [dbindex(name=>"tvh_idx", column_names=>["topicid"])]);

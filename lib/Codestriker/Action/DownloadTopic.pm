@@ -21,8 +21,12 @@ sub process($$$) {
     # Retrieve the parameters for this action.
     my $query = $http_response->get_query();
     my $topicid = $http_input->get('topic');
+    my $email = $http_input->get('email');
 
     my $topic = Codestriker::Model::Topic->new($topicid);
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain',

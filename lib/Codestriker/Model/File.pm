@@ -140,12 +140,10 @@ sub get_deltas($$$) {
     # The delta object needs to know if there are only delta objects
     # in this file so it can figure out if the delta is a new file.
     foreach my $delta (@results) {
-	if (scalar(@results) == 1)
-        {
+	if (scalar(@results) == 1) {
         	$delta->{only_delta_in_file} = 1;
         }
-        else
-        {
+        else {
         	$delta->{only_delta_in_file} = 0;
         }
     }

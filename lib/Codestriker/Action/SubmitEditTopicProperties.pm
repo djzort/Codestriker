@@ -29,6 +29,7 @@ sub process($$$) {
     my $topic_description = $http_input->get('topic_description');
     my $reviewers = $http_input->get('reviewers');
     my $email = $http_input->get('email');
+    my $author = $http_input->get('author');
     my $cc = $http_input->get('cc');
     my $topic_state = $http_input->get('topic_state');
     my $bug_ids = $http_input->get('bug_ids');
@@ -63,7 +64,7 @@ sub process($$$) {
     if ($topic_description eq "") {
 	$feedback .= "Topic description cannot be empty.\n";
     }
-    if ($email eq "") {
+    if ($author eq "") {
 	$feedback .= "Author cannot be empty.\n";
     }
     if ($reviewers eq "") {
@@ -81,7 +82,7 @@ sub process($$$) {
 	}
 	else {
 	    # The input looks good, update the database.
-	    $rc = $topic->update($topic_title, $email, $reviewers, $cc,
+	    $rc = $topic->update($topic_title, $author, $reviewers, $cc,
 				 $repository_url, $bug_ids, $projectid,
 				 $topic_description, $topic_state);
 	    if ($rc == $Codestriker::INVALID_TOPIC) {
@@ -98,9 +99,11 @@ sub process($$$) {
 
     }
 
+    if ( $topic_state ne "Delete") {
     # Indicate to the topic listeners that the topic has changed.
     Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
 							$topic);
+    }
 
     # Direct control to the appropriate action class, depending on the result
     # of the above operation, and what screens are enabled.

@@ -44,13 +44,14 @@ sub process($$$) {
     # in twice.
     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
 
-    for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex)
-    {
-	my @usermetrics = @{$http_input->{"reviewer_metric,$userindex"}};
+    for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex) {
+	if (defined($http_input->get('reviewer_metric,$userindex'))) {
+	    my @usermetrics = @{$http_input->get("reviewer_metric,$userindex")};
 
 	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex],
 						   @usermetrics);
 	$metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);
+	}
     }
     
     my @author_metrics = @{$http_input->get('author_metric')};

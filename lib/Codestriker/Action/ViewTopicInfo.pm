@@ -47,7 +47,6 @@ sub process($$$) {
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $topic->{description};
-    my @document = split /\n/, $topic->{document};
 
     # Retrieve the comment details for this topic.
     my @topic_comments = $topic->read_comments();
@@ -125,7 +124,7 @@ sub process($$$) {
     $vars->{'projects'} = \@projects;
     $vars->{'topic_projectid'} = $topic->{project_id};
 
-    $vars->{'number_of_lines'} = $#document + 1;
+    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
 
     $vars->{'suggested_topic_size_lines'} =
 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
@@ -159,7 +158,7 @@ sub process($$$) {
     my @author_metrics = $topic->get_metrics()->get_user_metrics($topic->{author});
     $vars->{author_metrics} = \@author_metrics;
     
-    my @reviewer_list = split /, /, $topic->{reviewers};
+    my @reviewer_list = $topic->get_metrics()->get_complete_list_of_topic_participants();
 
     # Remove the author from the list just in case somebody put themselves in twice.
     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
@@ -183,10 +182,16 @@ sub process($$$) {
     my @total_metrics = $topic->get_metrics()->get_user_metrics_totals(@reviewer_list, $topic->{author});
     $vars->{total_metrics} = \@total_metrics;
 
+    my @topic_history = $topic->get_metrics()->get_topic_history();
+    $vars->{activity_list} = \@topic_history;
+
     my $template = Codestriker::Http::Template->new("viewtopicinfo");
     $template->process($vars);
 
     $http_response->generate_footer();
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
 1;

@@ -57,6 +57,7 @@ sub process($) {
     $self->{action} = $query->param('action');
     $self->{comments} = $query->param('comments');
     $self->{email} = $query->param('email');
+    $self->{author} = $query->param('author');
     $self->{topic_text} = $query->param('topic_text');
     $self->{topic_title} = $query->param('topic_title');
     $self->{topic_description} = $query->param('topic_description');
@@ -185,6 +186,7 @@ sub process($) {
     $self->_untaint_digits('topic');
     $self->_untaint_digits('projectid');
     $self->_untaint_email('email');
+    $self->_untaint_email('author');
     $self->_untaint_emails('reviewers');
     $self->_untaint_emails('cc');
     $self->_untaint_filename('filename');

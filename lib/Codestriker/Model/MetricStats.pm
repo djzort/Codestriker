@@ -14,6 +14,9 @@ use warnings;
 
 use Codestriker::DB::DBI;
 
+our $total_participants_header = 'Total Participants';
+our $topic_size_lines_header = 'Topic Size In Lines';
+
 # Returns the list of users that have participated in a Codestriker topics.
 #
 # 
@@ -26,6 +29,7 @@ use Codestriker::DB::DBI;
 # }
 
 sub get_basic_user_metrics {
+    # Gather basic user metrics for the past 16 weeks.
     my $last_n_days = 16*7;
 
     my $date = Codestriker->get_timestamp(time-($last_n_days*24*60*60));
@@ -49,17 +53,23 @@ sub get_basic_user_metrics {
 	my $metrics = 
 	{
 	    name=>$name,
-	    date_last_authored=>Codestriker->format_date_timestamp($date),
+	    date_last_authored=>
+		int((time() - Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
 	    date_last_participated=>'',
-	    total_topics=>$count
+	    total_codestriker_time => 
+		calculate_topic_view_time_for_user($date,$name),
+	    total_topics=>$count,
 	};
 
 	push(@users_metrics, $metrics);
     }
  
-    # Get the list of participants from all these topics.
+    # Get the list of participants from all these topics. You need to 
+    # submit at least one comment to be counted.
     my $participant_list = $dbh->selectall_arrayref(
-	    'SELECT commentdata.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
+	    'SELECT commentdata.author, 
+		    MAX(topic.modified_ts), 
+		    COUNT(DISTINCT topic.id)
 	     FROM commentdata, commentstate, topic 
 	     WHERE topic.modified_ts >= ? AND 
 		   topic.id = commentstate.topicid AND 
@@ -75,7 +85,8 @@ sub get_basic_user_metrics {
 	foreach my $user (@users_metrics) {
 	    if ($user->{name} eq $name) {
 		$user->{date_last_participated} = 
-		    Codestriker->format_date_timestamp($date);
+		    int((time() - 
+		    Codestriker->convert_date_timestamp_time($date))/(60*60*24));
 		$user->{total_topics} += $count;
 		$found = 1;
 	    }
@@ -86,11 +97,15 @@ sub get_basic_user_metrics {
 	    {
 		name=>$name,
 		date_last_authored=>'',
-		date_last_participated=>Codestriker->format_date_timestamp($date),
-		total_topics=>$count
+		date_last_participated=>
+		    int((time() - 
+		    Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
+		total_topics=>$count,
+		total_codestriker_time => 
+		    calculate_topic_view_time_for_user($date,$name),
 	    };
 
-	    push( @users_metrics, $metrics);
+	    push(@users_metrics, $metrics);
 	}
     }
 
@@ -98,6 +113,32 @@ sub get_basic_user_metrics {
     Codestriker::DB::DBI->release_connection($dbh, 1);
 
     return @users_metrics;
+}
+
+# Given the username, and the oldest date, calculate the total amount of 
+# codestriker time that was recorded in hours.
+sub calculate_topic_view_time_for_user {
+    my ($date,$user) = @_;
+
+    # get the total time for this user.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $select_topic = $dbh->prepare_cached('SELECT creation_ts ' .
+					    'FROM topicviewhistory ' .
+					    'WHERE creation_ts > ? AND ' .
+					    'email = ? ' .
+					    'ORDER BY creation_ts');
+
+    $select_topic->execute($date,$user);
+
+    my $total_time = 
+	Codestriker::Model::Metrics->calculate_topic_view_time($select_topic);
+
+    Codestriker::DB::DBI->release_connection($dbh);
+
+    $total_time = sprintf("%1.1f",$total_time / (60*60));
+
+    return $total_time;
 }
 
 
@@ -171,6 +212,15 @@ sub get_download_headers {
 	push @topic_metric_headers, $metric->[0];
     }
 
+    # Do the built in topic metrics.
+
+    for(my $state = 0; $state < scalar(@Codestriker::topic_states); ++$state) {
+	push @topic_metric_headers, 
+	    'Time In ' . $Codestriker::topic_states[$state];
+    }
+
+    push @topic_metric_headers, $topic_size_lines_header;
+
     my @topic_user_metric_headers;
 
     # User topic metrics counts.
@@ -183,6 +233,10 @@ sub get_download_headers {
     foreach my $metric (@$user_topic_metrics) {
 	push @topic_user_metric_headers, $metric->[0];
     }
+    
+    # Do the built in user metrics.
+    push @topic_user_metric_headers, 'Codestriker Time';
+    push @topic_user_metric_headers, $total_participants_header;
     
     my $headers = 
     {
@@ -208,17 +262,27 @@ sub get_raw_metric_data {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my @basic_topic_info = $dbh->selectrow_array('
-	    SELECT topic.id, topic.author, topic.title, topic.state, topic.creation_ts, project.name 
+	    SELECT topic.id, 
+		   topic.author, 
+		   topic.title, 
+		   topic.state, 
+		   topic.creation_ts, 
+		   project.name 
 	    FROM topic, project
-	    WHERE topic.id = ? AND topic.projectid = project.id',{}, $topicid);
+	    WHERE topic.id = ? AND 
+		  topic.projectid = project.id',{}, $topicid);
 
 
     if ($basic_topic_info[3] < @Codestriker::topic_states) {
-	$basic_topic_info[3] = @Codestriker::topic_states[$basic_topic_info[3]];
+	$basic_topic_info[3] = 
+	    @Codestriker::topic_states[$basic_topic_info[3]];
     }
 
     $basic_topic_info[4] =
 	Codestriker->format_date_timestamp($basic_topic_info[4]);
+
+    $basic_topic_info[1] =
+	Codestriker->filter_email($basic_topic_info[1]);
 
     my @row;
 
@@ -244,42 +308,48 @@ sub get_raw_metric_data {
 	push @row, $count;
     } 
 
+    my $topic = Codestriker::Model::Topic->new($basic_topic_info[0]);     
 
-    # Get the topic metrics.
-    my $topic_metrics = $dbh->selectall_arrayref(
-	    'SELECT metric_name, sum(value)
-	     FROM topicmetric 
-	     WHERE topicid = ?
-	     GROUP BY metric_name
-	    ',{}, $topicid);
+    my $metrics = $topic->get_metrics();
+
+    my @topic_metrics = $metrics->get_topic_metrics();
     
     for (my $index = 0; $index < scalar(@{$headers->{topic}}); ++$index) {
-	my $count = 0;
+	my $count = "";
 
-	foreach my $row ( @$topic_metrics ) {
-	    $count = $row->[1] if ($row->[0] eq $headers->{topic}->[$index]);
+	foreach my $metric ( @topic_metrics ) {
+	    $count = $metric->{value} 
+		if ($metric->{name} eq $headers->{topic}->[$index]);
+	}
+
+	if ($headers->{topic}->[$index] eq $topic_size_lines_header ) {
+	    $count = $topic->get_topic_size_in_lines();
 	}
 
 	push @row, $count;
     } 
 
-    # Get the user metrics.
-    my $user_metrics = $dbh->selectall_arrayref(
-	    'SELECT metric_name, sum(value)
-	     FROM topicusermetric 
-	     WHERE topicid = ?
-	     GROUP BY metric_name
-	    ',{}, $topicid);
+    # Get the list of users for this review.
+    my @users = $metrics->get_complete_list_of_topic_participants();
+    
+    my @user_metrics = $metrics->get_user_metrics_totals( @users );
     
     for (my $index = 0; $index < scalar(@{$headers->{user}}); ++$index) {
-	my $count = 0;
+	my $count = "";
 
-	foreach my $row ( @$user_metrics ) {
-	    $count = $row->[1] if ($row->[0] eq $headers->{user}->[$index]);
+	foreach my $metric ( @user_metrics ) {
+	    $count = $metric->{value} 
+		if ($metric->{name} eq $headers->{user}->[$index]);
+	}
+
+	if ($headers->{user}->[$index] eq $total_participants_header) {
+	    # Add the total number of participants in the topic.
+	    $count = scalar(@users);
 	}
 
 	push @row, $count;
     } 
+
 
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh, 1);
@@ -307,7 +377,7 @@ sub get_comment_metrics {
     my @metrics = _get_monthly_metrics(12, $query);
 
     foreach my $metric (@metrics) {
-	if ( $metric->{name} < @Codestriker::comment_states) {
+	if ($metric->{name} < @Codestriker::comment_states) {
 	    $metric->{name} = $Codestriker::comment_states[$metric->{name}];
 	}
     }

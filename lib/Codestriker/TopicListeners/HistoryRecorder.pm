@@ -67,6 +67,30 @@ sub topic_create($$) {
 sub topic_changed($$$$) {
     my ($self, $user, $topic_orig, $topic) = @_;
 
+    # This code is here to handle the case of a topic being created
+    # in the older (pre 1.8.0) versions of codestriker that have
+    # been created without any topic history. See if topichistory
+    # row exists for the old topic, if not add it in first.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $exists =
+	$dbh->prepare_cached('SELECT COUNT(version) '. 
+			     'FROM topichistory ' .
+			     'WHERE ? = topicid and ? = version');
+
+    $exists->execute($topic->{topicid},$topic_orig->{version});
+
+    my $old_topic_has_history = ($exists->fetchrow_array())[0];
+
+    # Release the database connection.
+    Codestriker::DB::DBI->release_connection($dbh,1);
+
+    if ( $old_topic_has_history == 0)
+    {
+        $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
+    }
+
+
     $self->_insert_topichistory_entry($user, $topic);
 
     return '';
@@ -87,7 +111,7 @@ sub topic_viewed($$$) {
     my $success = defined $insert;
     my $creation_ts = Codestriker->get_timestamp(time);
     if (! defined $user || $user eq "") {
-	$user = "unknown";
+	$user = "";
     }
 
     $success &&= $insert->execute($topic->{topicid}, $user, $creation_ts);

@@ -49,7 +49,6 @@ sub process($$$) {
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $topic->{description};
-    my @document = split /\n/, $topic->{document};
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
@@ -114,7 +113,7 @@ sub process($$$) {
     $vars->{'document_reviewers'} = 
     	Codestriker->filter_email($topic->{reviewers});
     $vars->{'project_name'} = $topic->{project_name};
-    $vars->{'number_of_lines'} = $#document + 1;
+    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
 
     $vars->{'suggested_topic_size_lines'} =
 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
@@ -202,7 +201,9 @@ sub process($$$) {
 
     print $query->p if ($mode == $Codestriker::NORMAL_MODE);
 
-    # Number of characters the line number should take.
+    # Number of characters the line number should take, need the real lines
+    # not the number of changed lines.
+    my @document = split /\n/, $topic->{document};
     my $max_digit_width = length($#document+1);
 
     # Build the render which will be used to build this page.
@@ -278,6 +279,7 @@ sub ProcessTopicHeader($$$) {
 
     $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
     $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
+
 }
 
 1;

@@ -123,6 +123,9 @@ sub process($$$) {
     $template->process($vars);
 
     $http_response->generate_footer();
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
 1;

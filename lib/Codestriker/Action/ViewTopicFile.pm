@@ -25,6 +25,7 @@ sub process($$$) {
     my $topicid = $http_input->get('topic');
     my $mode = $http_input->get('mode');
     my $tabwidth = $http_input->get('tabwidth');
+    my $email = $http_input->get('email');
     my $fn = $http_input->get('fn');
     my $new = $http_input->get('new');
     my $parallel = $http_input->get('parallel');
@@ -170,6 +171,9 @@ sub process($$$) {
     print $query->end_html();
 
     $http_response->generate_footer();
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
 # Read the specified repository file and revision into memory.  Return true if

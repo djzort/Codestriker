@@ -45,10 +45,6 @@ sub process($$$) {
 					    \@offsets,
 					    \@binary);
 
-    # Retrieve line-by-line versions of the data and description.
-    my @document_description = split /\n/, $topic->{description};
-    my @document = split /\n/, $topic->{document};
-
     # Retrieve the comment details for this topic.
     my @topic_comments = $topic->read_comments();
 
@@ -128,7 +124,7 @@ sub process($$$) {
     $vars->{'projects'} = \@projects;
     $vars->{'topic_projectid'} = $topic->{project_id};
 
-    $vars->{'number_of_lines'} = $#document + 1;
+    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
 
     $vars->{'suggested_topic_size_lines'} =
 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
@@ -136,7 +132,6 @@ sub process($$$) {
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
-
     # Prepare the data for displaying the state update option.
     # Make sure the old mode setting is no longer used.
     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
@@ -147,19 +142,15 @@ sub process($$$) {
     $vars->{'topic_version'} = $topic->{version};
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic->{topic_state};
-
-    # Obtain the topic description, with "Bug \d\d\d" links rendered to links
-    # to the bug tracking system.
-    my $data = "";
-    for (my $i = 0; $i <= $#document_description; $i++) {
-	$data .= $document_description[$i] . "\n";
-    }
-    $vars->{'description'} = $data;
+    $vars->{'description'} = $topic->{description};
     
     my $template = Codestriker::Http::Template->new("viewtopicproperties");
     $template->process($vars);
 
     $http_response->generate_footer();
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
 1;
