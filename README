@@ -409,6 +409,16 @@ To avoid errors, you'll need to comment out the "PerlTaintCheck On"
 line in your httpd.conf file, and remove the -T switch from the
 cgi-bin/codestriker.pl file.
 
+Troubleshooting
+---------------
+
+If you have any problems, be sure to check first if it isn't a
+well-known Perl problem.  The Bugzilla trouble-shooting page at
+http://www.bugzilla.org/docs216/html/troubleshooting.html documents
+them well.  If it doesn't match, send me an email, along with any
+relevant information (including relevant contents of your apache error
+log file), and I'll be happy to help you out.
+
 Future plans
 ------------
 
