@@ -22,7 +22,7 @@ Topic title:
 The topic title should be a concise but informative\n
 summary of the code change.  The title used in the\n
 subject of sent emails, and in the topic list screen.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 <BR>
 <INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70>
 <P>
@@ -34,7 +34,7 @@ The topic description should contain enough information\n
 for a reviewer to understand broadly what the code change\n
 achieves. This information is sent with the new topic\n
 notification email to all reviewers.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 <BR>
 <TEXTAREA NAME="topic_description" ROWS=12 COLS=70 WRAP="hard">[% topic_description | html_entity %]</TEXTAREA>
 <P>
@@ -68,7 +68,7 @@ but will be treated simply as \'new files\'.\n\n
 
 This should be left blank if you are reviewing files\n
 directly from a repository.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
@@ -84,7 +84,7 @@ supports it, the text can be fetched by querying the\n
 repository given start and end tags, and a module name.\n
 The start tag, end tag, and module is ignored if text\n
 is uploaded.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
@@ -92,7 +92,7 @@ is uploaded.
 <TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
 This is the version number or tag that identifies the new\n
 version of the file that you want reviewed.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
 <TD>
 <INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
@@ -105,7 +105,7 @@ Module:
 This is the path to the file or module relative to the repository\n
 root that should be inspected. It is ignored if text\n
 is uploaded.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
@@ -125,7 +125,7 @@ this is correctly set, this provides the\n
 ability to view the entire contents of a file\n
 with and/or without a proposed change, which\n
 an aid in the reviewing process.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><SELECT NAME="repository">
        [% FOREACH entry = repositories %]
@@ -148,7 +148,7 @@ an aid in the reviewing process.
 <FONT SIZE="-2"><A HREF="javascript:alert('
 Topics are associated with a specific project, which can be\n
 used as filtering criteria in the search screen.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><SELECT NAME="projectid">
        [% FOREACH project = projects %]
@@ -186,7 +186,7 @@ is changed, a comment will be inserted automatically to the\n
 associated bugs for cross referencing.  When a bug is viewed,\n
 it can be easily determined what code fixes have been applied\n
 to it.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
@@ -199,7 +199,7 @@ to it.
 This is your email address.  All comments made against a topic\n
 will be sent to this address.  The new topic notification email\n
 will also be sent to this address.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80></TD>
 </TR>
@@ -211,7 +211,7 @@ will also be sent to this address.
 This is a comma separated list of email addresses, which are the\n
 people who need to review this code.  When the topic is created,\n
 the new topic notification  email will be sent to these addresses.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
@@ -223,7 +223,7 @@ the new topic notification  email will be sent to these addresses.
 This is a comma separated list of email addresses, which are\n
 not intended to be reviewers, but typically a mailing list\n
 to notify a number of people about the creation of a new topic.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>

@@ -51,7 +51,13 @@ Version 1.8.2
 
 * Modified Codestriker CSS so that monospace fonts use "monospace"
   rather than Courier so the user's settings in the browser are
-  honoured, from Kannan Goundan.
+  honoured, from Kannan Goundan <kannan@letterboxes.org>.
+
+* Standardised all inline help links to (?) rather than
+  (What's this?).
+
+* Make sure filenames are properly quoted in the CVS repository
+  methods, so that filenames with spaces are handled correctly.
 
 Version 1.8.1
 

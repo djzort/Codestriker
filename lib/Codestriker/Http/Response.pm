@@ -58,8 +58,12 @@ sub generate_header {
     $self->{header_generated} = 1;
     my $query = $self->{query};
 
-    # Set the topic parameter.
+    # Set the topic and title parameters.
     $topic = $params{topic};
+    $topic_title = $params{topic_title};
+
+    # Some screens don't have $topic set, if so, set it to a blank value.
+    $topic = "" if ! defined($topic);
 
     # Set the cookie in the HTTP header for the $email, $cc, $reviewers and
     # $tabwidth parameters.

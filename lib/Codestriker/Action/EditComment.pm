@@ -47,7 +47,7 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header(topic=>$topicid,
-				    topic_title=>$topic->{title},
+				    topic_title=>"Edit Comment: $topic->{title}",
 				    email=>$email, 
     				    mode=>$mode,
 				    tabwidth=>$tabwidth,

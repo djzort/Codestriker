@@ -54,7 +54,8 @@ sub process($$$) {
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
 
-    $http_response->generate_header(topic=>$topic->{topicid}, topic_title=>$topic->{document_title}, 
+    $http_response->generate_header(topic=>$topic->{topicid},
+				    topic_title=>"Topic Text: $topic->{title}",
 				    mode=>$mode, tabwidth=>$tabwidth,
 				    reload=>0, cache=>1);
 

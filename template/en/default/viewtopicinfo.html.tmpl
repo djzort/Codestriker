@@ -52,7 +52,9 @@
 	onmouseout="(window.status=''); return true">[% name %]
 
     [% IF description != '' %]
-    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">?</A>
+    <FONT SIZE="-2">
+    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
+    </FONT>
     [% END %]
     </td>
 [% END %]
@@ -88,7 +90,9 @@
     <td onmouseover="(window.status='[% description %]'); return true" 
 	onmouseout="(window.status=''); return true">[% name %]
     [% IF description != '' %]
-    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">?</A>
+    <FONT SIZE="-2">
+    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
+    </FONT>
     [% END %]
     </td>
 

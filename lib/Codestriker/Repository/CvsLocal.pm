@@ -30,7 +30,7 @@ sub retrieve ($$$\$) {
 
     # Open a pipe to the local CVS repository.
     open(CVS, "\"$Codestriker::cvs\" -q -d " . $self->{prefix} . $self->{cvsroot} .
-	 " co -p -r $revision $filename |")
+	 " co -p -r $revision \"$filename\" |")
 	|| die "Can't execute CVS command: $!";
     for (my $i = 1; <CVS>; $i++) {
 	chop;

@@ -78,8 +78,10 @@ sub process($$$) {
 	$feedback .= "Please choose one topic text method, and try again.\n";
     }
     
-    $http_response->generate_header(topic_title=>"Create new topic", email=>$email, reviewers=>$reviewers,
-				    cc=>$cc, repository=>$repository_url, projectid=>$projectid,
+    $http_response->generate_header(topic_title=>"Create New Topic",
+				    email=>$email, reviewers=>$reviewers,
+				    cc=>$cc, repository=>$repository_url,
+				    projectid=>$projectid,
 				    reload=>0, cache=>0);
 
     # Set the error_vars in case of any errors that will require forwarding

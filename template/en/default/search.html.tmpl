@@ -17,7 +17,7 @@
  <TD>Author: <FONT SIZE="-2"><A HREF="javascript:alert('
 Constrain the search on topic author, which may be wildcarded\n
 as joe* or joe*company*.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><INPUT TYPE="text" NAME="sauthor" SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
@@ -26,7 +26,7 @@ as joe* or joe*company*.
  <TD>Reviewer: <FONT SIZE="-2"><A HREF="javascript:alert('
 Constrain the search on topic reviewer, which may be wildcarded\n
 as paul* or paul*company*.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><INPUT TYPE="text" NAME="sreviewer" SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
@@ -35,7 +35,7 @@ as paul* or paul*company*.
  <TD>Cc: <FONT SIZE="-2"><A HREF="javascript:alert('
 Constrain the search on topic CC, which may be wildcarded\n
 as group* or group*company*.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><INPUT TYPE="text" NAME="scc"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
@@ -45,7 +45,7 @@ as group* or group*company*.
  <TD>Bug ID: <FONT SIZE="-2"><A HREF="javascript:alert('
 Constrain the search on the topic bugid.  This field\n
 cannot be wildcarded.
-')">(What's this?)</A></FONT>
+')">(?)</A></FONT>
 </TD>
  <TD><INPUT TYPE="text" NAME="sbugid"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
@@ -58,7 +58,7 @@ Constrain the search on the topic\'s state.  Multiple\n
 fields can be selected here by holding down the control\n
 button while selecting.  State \'Any\' indicates the\n
 returned topics can be in any state.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><SELECT NAME="state_group" SIZE=3 MULTIPLE>
        [% FOREACH state = states %]
            [% IF state == 'Open' %]
@@ -78,7 +78,7 @@ Constrain the search on topic project membership.\n
 Multiple fields can be selected here by holding down the\n
 control button while selecting.  State \'Any\' indicates the\n
 returned topics can in any project.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
        [% FOREACH project = projects %]
            [% IF project.name == 'Any' %]
@@ -96,7 +96,7 @@ returned topics can in any project.
  <TD>Contains text: <FONT SIZE="-2"><A HREF="javascript:alert('
 Constrain the search on text contained in the title, description,\n
 comment, body and filename topic attributes.  Text can be wildcarded.
-')">(What's this?)</A></FONT></TD>
+')">(?)</A></FONT></TD>
  <TD><INPUT TYPE="text" NAME="stext"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
 <TR>

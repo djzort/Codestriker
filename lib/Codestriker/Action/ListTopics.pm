@@ -81,7 +81,7 @@ sub process($$$) {
 	@project_ids = split ',', $sproject;
     }
     my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
-    $http_response->generate_header(topic_title=>"Topic list", 
+    $http_response->generate_header(topic_title=>"Topic List", 
 				    projectid=>$projectid_cookie, 
                                     topicsort=>join(',',@sort_order),
                                     reload=>0, cache=>0);

@@ -18,7 +18,7 @@ use Codestriker::Model::MetricStats;
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
-    $http_response->generate_header( reload=>0, cache=>0);
+    $http_response->generate_header(reload=>0, cache=>0);
 
     my $query = $http_response->get_query();
 

@@ -18,7 +18,8 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-    $http_response->generate_header( topic_title=>"Create new topic", reload=>0, cache=>1);
+    $http_response->generate_header(topic_title=>"Create New Topic",
+				    reload=>0, cache=>1);
 
     # Obtain a URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

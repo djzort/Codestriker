@@ -81,13 +81,16 @@ sub process($$$) {
     # Output the new file, with the deltas applied.
     my $title;
     if ($parallel) {
-	$title = "Parallel view of $filename v$revision";
+	$title = "View File: Parallel view of $filename v$revision";
     } else {
-	$title = $new ? "New $filename" : "$filename v$revision";
+	$title = $new ? "View File: New $filename" :
+	    "View File: $filename v$revision";
     }
 
-    $http_response->generate_header(topic=>$topicid, topic_title=>$title, mode=>$mode,
-				    tabwidth=>$tabwidth, repository=>$topic->{repository}, 
+    $http_response->generate_header(topic=>$topicid, topic_title=>$title,
+				    mode=>$mode,
+				    tabwidth=>$tabwidth,
+				    repository=>$topic->{repository}, 
                                     reload=>0, cache=>1);
 
     # Render the HTML header.
