@@ -186,7 +186,7 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	    $previous_url .= '#' . $previous;
 	    $overlib_html .= "<a href=\"javascript:window.location=\\'$previous_url\\'; ";
 	    if ($self->{fview} == -1 || $self->{fview} == $previous_fview) {
-		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
+		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
 }
 	    $overlib_html .= "void(0);\">Previous</a>";
 	}
@@ -201,7 +201,7 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	    $next_url .= '#' . $next;
 	    $overlib_html .= "<a href=\"javascript:window.location=\\'$next_url\\'; ";
 	    if ($self->{fview} == -1 || $self->{fview} == $next_fview) {
-		$overlib_html .= "overlib(comment_text[$next_index], STICKY, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
+		$overlib_html .= "overlib(comment_text[$next_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
 	    }
 	    $overlib_html .= "void(0);\">Next</a>";
 	}
@@ -900,7 +900,7 @@ sub render_comment_link {
 	    last if $anchor eq $comment_locations[$index];
 	}
 
-	$params->{onmouseover} = "return overlib(comment_text[$index],STICKY);";
+	$params->{onmouseover} = "return overlib(comment_text[$index],STICKY,DRAGGABLE,ALTCUT);";
 	$params->{onmouseout} = "return nd();";
     } else {
 	if (defined $no_comment_class) {

@@ -56,7 +56,7 @@ function view_topic_on_load_handler()
         var comment_number = comment_hash[anchor];
         if (comment_number != null) {
             // We have a comment on this line, bring up the tooltip.
-            overlib(comment_text[comment_number], STICKY,
+            overlib(comment_text[comment_number], STICKY, DRAGGABLE, ALTCUT,
                     FIXX, getEltPageLeft(getElt('c' + comment_number)),
                     FIXY, getEltPageTop(getElt('c' + comment_number)));
         }

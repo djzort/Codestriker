@@ -215,6 +215,8 @@ sub generate_header {
 
     my $overlib_js = $codestriker_css;
     $overlib_js =~ s/codestriker.css/overlib.js/;
+    my $overlib_draggable_js = $codestriker_css;
+    $overlib_draggable_js =~ s/codestriker.css/overlib_draggable.js/;
     my $xbdhtml_js = $codestriker_css;
     $xbdhtml_js =~ s/codestriker.css/xbdhtml.js/;
     my $codestriker_js = $codestriker_css;
@@ -229,6 +231,7 @@ sub generate_header {
     print "<base href=\"$query->url()\"/>\n";
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"$codestriker_css\" />\n";
     print "<script src=\"$overlib_js\" type=\"text/javascript\"></script>\n";
+    print "<script src=\"$overlib_draggable_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$xbdhtml_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$codestriker_js\" type=\"text/javascript\"></script>\n";
 
