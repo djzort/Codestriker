@@ -53,9 +53,9 @@ sub process($$$) {
     }
     
     # Only show open topics if codestriker.pl was run without parameters.
-    if ( defined($http_input->{query}->param) == 0)
+    if (defined($http_input->{query}->param) == 0)
     {
-    	$sstate=0; 
+    	$sstate = 0; 
     }
 
     # Query the model for the specified data.

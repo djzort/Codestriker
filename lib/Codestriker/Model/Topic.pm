@@ -394,13 +394,19 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
+    # If there are wildcards in the author, reviewer or CC fields, replace
+    # them with the appropriate SQL wildcards.
+    $sauthor =~ s/\*/%/g if $sauthor ne "";
+    $sreviewer =~ s/\*/%/g if $sreviewer ne "";
+    $scc =~ s/\*/%/g if $scc ne "";
+
     # Build up the query conditions.
-    my $author_part = $sauthor ne "" ? "topic.author = ?" : "";
+    my $author_part = $sauthor ne "" ? "topic.author LIKE ?" : "";
     my $reviewer_part = $sreviewer ne "" ?
-	"participant.email = ? AND " .
+	"participant.email LIKE ? AND " .
 	"type = $Codestriker::PARTICIPANT_REVIEWER" : "";
     my $cc_part = $scc ne "" ?
-	"participant.email = ? AND type = $Codestriker::PARTICIPANT_CC" : "";
+	"participant.email LIKE ? AND type = $Codestriker::PARTICIPANT_CC" : "";
     my $bugid_part = $sbugid ne "" ? "topicbug.bugid = ?" : "";
 
     # Build up the state condition.
@@ -492,7 +498,8 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 				    \@values, \$first_condition);
 	    for (my $i = 0; $i <= $#text_cond; $i++) {
 		# Replace '*' wildcards with SQL wildcards, and make sure the
-		# expression is wildcard-wrapped.
+		# expression is wildcard-wrapped given this is a "contains"
+		# text search term.
 		my $wildcard = $stext;
 		$wildcard =~ s/\*/%/g;
 		if (! ($wildcard =~ /^%/o) ) {

@@ -12,7 +12,7 @@ package Codestriker::Action::SubmitSearch;
 use strict;
 
 # If the input is valid, redirect the user to the appropriate topic view
-#  screen.
+# screen.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 

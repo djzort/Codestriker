@@ -195,7 +195,6 @@ sub process($) {
     $self->_untaint_filename('end_tag');
     $self->_untaint_filename('module');
 
-    $self->_untaint_email('sauthor');
     $self->_untaint_digits('scontext');
     $self->_untaint_comma_digits('sstate');
     $self->_untaint_comma_digits('sproject');
