@@ -26,6 +26,16 @@ Version 1.7.8
   bugtracking system, if one has been specified in the Codestriker
   configuration.
 
+* In the view comments screen with context displayed, very long topic
+  lines would push the "filename:linenumber", "Parallel" and "Add
+  Comment" links way off to the far right of the page, requiring
+  horizontal scrolling to see them.  Rework the display so that they
+  are always pushed to the left, regardless of the length of the topic
+  lines.
+
+* Added "Check All"/"Clear All" links in the view comments page for
+  convenience.
+
 Version 1.7.7
 
 * The table of contents links on the view topic page didn't include
