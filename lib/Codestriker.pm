@@ -17,7 +17,11 @@ use Time::Local;
 use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
 	      $cvsviewer $cvsrep $cvscmd $codestriker_css
 	      $default_topic_create_mode $default_tabwidth
+	      $db $dbuser $dbpasswd
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states );
+
+# Version of Codestriker.
+$Codestriker::VERSION = "1.5.0d1";
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

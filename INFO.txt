@@ -1,0 +1,38 @@
+Creating the codestriker database.
+
+/usr/local/pgsql/bin/postmaster -D /usr/local/pgsql/data
+
+
+/usr/local/pgsql/bin/createuser --username=postgres -d -A codestriker
+/usr/local/pgsql/bin/createdb --username=codestriker codestrikerdb
+
+/usr/local/pgsql/bin/dropdb --username=codestriker codestrikerdb
+
+
+/usr/local/pgsql/bin/psql -U codestriker codestrikerdb
+
+----------------------------------------------------------------------
+
+mysqladmin create codestrikerdb
+
+mysqladmin drop codestrikerdb
+
+mysql -u root mysql
+
+GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES
+ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
+
+FLUSH PRIVILEGES;
+
+mysql -u codestriker -D codestrikerdb -p
+
+mysql> CREATE TABLE test (
+    ->       id INT NOT NULL,
+    ->       last_name CHAR(30) NOT NULL,
+    ->       first_name CHAR(30) NOT NULL,
+    ->       PRIMARY KEY (id),
+    ->       INDEX name (last_name,first_name));
+
+show index from version;
+describe version;
+show tables;

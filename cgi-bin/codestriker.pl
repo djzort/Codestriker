@@ -35,6 +35,7 @@ use Codestriker::Action::ViewFile;
 use Codestriker::Action::ViewSearch;
 use Codestriker::Action::SubmitSearch;
 use Codestriker::Action::ListTopics;
+use Codestriker::Action::DownloadTopic;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -81,11 +82,14 @@ sub main() {
 						   $http_response);
     } elsif ($action eq "list_topics") {
 	Codestriker::Action::ListTopics->process($http_input, $http_response);
+    } elsif ($action eq "download") {
+	Codestriker::Action::DownloadTopic->process($http_input,
+						    $http_response);
     } else {
 	# Default action is to list topics that are in state open.
 	Codestriker::Action::ListTopics->process($http_input, $http_response);
     }
 	
     # Output the HTML footer, and return.
-    $http_response->generate_footer();
+    $http_response->generate_footer() unless $action eq "download";
 }

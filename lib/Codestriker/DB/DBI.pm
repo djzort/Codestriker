@@ -12,13 +12,14 @@ package Codestriker::DB::DBI;
 
 use strict;
 use DBI;
+use Codestriker;
 
 # Retrieve a connection to the codestriker database.
 sub get_connection($) {
     my ($type) = @_;
 
-    return DBI->connect('DBI:Pg:dbname=codestrikerdb', 'codestriker', '',
-			{AutoCommit=>0, RaiseError=>1})
+    return DBI->connect($Codestriker::db, $Codestriker::dbuser,
+			$Codestriker::dbpasswd, {AutoCommit=>0, RaiseError=>1})
 	|| die "Couldn't connect to database: " . DBI->errstr;
 }
 

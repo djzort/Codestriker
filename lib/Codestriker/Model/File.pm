@@ -27,7 +27,7 @@ sub create($$$$) {
     # Create the appropriate prepared statements.
     my $insert_file =
 	$dbh->prepare_cached('INSERT INTO FILE (topicid, sequence, filename,' .
-			     'topicoffset, revision, diff, binaryfile) ' .
+			     ' topicoffset, revision, diff, binaryfile) ' .
 			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert_file;
 
