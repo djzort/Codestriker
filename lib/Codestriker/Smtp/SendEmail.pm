@@ -9,6 +9,7 @@
 
 package Codestriker::Smtp::SendEmail;
 
+use Net::SMTP;
 use Sys::Hostname;
 use strict;
 
@@ -22,12 +23,24 @@ $EMAIL_HR = "--------------------------------------------------------------";
 sub doit($$$$$$$$$) {
     my ($type, $new, $topicid, $from, $to, $cc, $bcc, $subject, $body) = @_;
     
-    open(MAIL, "| $Codestriker::sendmail -t") || return 0;
+    my $smtp = Net::SMTP->new($Codestriker::mailhost);
+    $smtp->mail($from);
+    $smtp->ok() || die "Couldn't set sender to \"$from\" $!";
 
-    print MAIL "From: $from\n";
-    print MAIL "To: $to\n";
-    print MAIL "Cc: $cc\n" if ($cc ne "");
-    print MAIL "Bcc: $bcc\n" if ($bcc ne "");
+    # $to has to be defined.
+    my $recipients = $to;
+    $recipients .= ", $cc" if $cc ne "";
+    $recipients .= ", $bcc" if $bcc ne "";
+    my @receiver = split /, /, $recipients;
+    for (my $i = 0; $i <= $#receiver; $i++) {
+	$smtp->recipient($receiver[$i]);
+	$smtp->ok() || die "Couldn't send email to \"$receiver[$i]\" $!";
+    }
+
+    $smtp->data();
+    $smtp->datasend("From: $from\n");
+    $smtp->datasend("To: $to\n");
+    $smtp->datasend("Cc: $cc\n") if $cc ne "";
 
     # If the message is new, create the appropriate message id, otherwise
     # construct a message which refers to the original message.  This will
@@ -35,25 +48,24 @@ sub doit($$$$$$$$$) {
     my $message_id = "<Codestriker-" . hostname() . "-${topicid}>";
 
     if ($new) {
-	print MAIL "Message-Id: $message_id\n";
+	$smtp->datasend("Message-Id: $message_id\n");
     } else {
-	print MAIL "References: $message_id\n";
-	print MAIL "In-Reply-To: $message_id\n";
+	$smtp->datasend("References: $message_id\n");
+	$smtp->datasend("In-Reply-To: $message_id\n");
     }
 
-    print MAIL "Subject: $subject\n";
+    $smtp->datasend("Subject: $subject\n");
 
     # Insert a blank line for the body.
-    print MAIL "\n";
-    print MAIL "$body";
-    print MAIL ".\n";
-    
-    # Check if there were any error messages from sendmail.
-    if (! close MAIL) {
-	return 0;
-    } else {
-	return 1;
-    }
+    $smtp->datasend("\n");
+    $smtp->datasend($body);
+    $smtp->dataend();
+    $smtp->ok() || die "Couldn't send email $!";
+
+    $smtp->quit();
+    $smtp->ok() || die "Couldn't send email $!";
+
+    return 1;
 }
 
 1;

@@ -33,6 +33,10 @@ my $modules = [
         version => '0' 
     }, 
     { 
+        name => 'Net::SMTP', 
+        version => '0' 
+    }, 
+    { 
         name => 'DBI', 
         version => '1.13' 
     }, 

@@ -1,3 +1,8 @@
+Version 1.6.1
+
+* Modified to use Net::SMTP to allow Codestriker to run under Windows,
+  and to not hardwire the mail sending program to "sendmail".
+
 Version 1.6.0
 
 * Modified to use the "Template Toolkit" so that the HTML pages can be
