@@ -30,8 +30,12 @@ sub process($$$) {
 
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain',
+			 -content_type=>'text/plain',
 			 -attachment=>"topic${topicid}.txt",
-			 -filename=>"topic${topicid}.txt");
+			 -filename=>"topic${topicid}.txt",
+			 -content_disposition=>"filename=\"topic${topicid}.txt\";",
+			 -pragma=>"Cache",
+			 -cache_control=>"Cache");
     print $topic->{document};
 }
 
