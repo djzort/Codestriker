@@ -238,10 +238,10 @@ sub get_cc();
 sub get_tabwidth();
 sub get_mode();
 sub tabadjust($$);
-sub build_edit_url($$$);
+sub build_edit_url($$$$);
 sub build_download_url($);
 sub build_view_url($$$);
-sub build_view_url_extended($$$$$);
+sub build_view_url_extended($$$$$$);
 sub build_view_file_url($$$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$$$);
@@ -873,9 +873,10 @@ sub tabadjust ($$) {
 }	
 
 # Create the URL for viewing a topic with a specified tabwidth.
-sub build_view_url_extended ($$$$$) {
-    my ($topic, $line, $mode, $tabwidth, $email) = @_;
-    return $url_prefix . "?topic=$topic&action=view&mode=$mode" .
+sub build_view_url_extended ($$$$$$) {
+    my ($topic, $line, $mode, $tabwidth, $email, $prefix) = @_;
+    return ($prefix ne "" ? $prefix : $url_prefix) .
+	"?topic=$topic&action=view&mode=$mode" .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
@@ -884,7 +885,7 @@ sub build_view_url_extended ($$$$$) {
 # Create the URL for viewing a topic.
 sub build_view_url ($$$) {
     my ($topic, $line, $mode) = @_;
-    return build_view_url_extended($topic, $line, $mode, "", "");
+    return build_view_url_extended($topic, $line, $mode, "", "", "");
 }
 
 # Create the URL for downloading the topic text.
@@ -899,10 +900,11 @@ sub build_create_topic_url () {
 }	    
 
 # Create the URL for editing a topic.
-sub build_edit_url ($$$) {
-    my ($line, $topic, $context) = @_;
-    return $url_prefix. "?line=$line&topic=$topic&action=edit" .
-	((defined $context && $context ne "") ? "&context=$context" : "");
+sub build_edit_url ($$$$) {
+    my ($line, $topic, $context, $prefix) = @_;
+    return ($prefix ne "" ? $prefix : $url_prefix) .
+	"?line=$line&topic=$topic&action=edit" .
+	    ((defined $context && $context ne "") ? "&context=$context" : "");
 }
 
 # Create the URL for viewing a new file.
@@ -988,8 +990,8 @@ sub edit_topic ($$$$$) {
     # or decrease it appropriately.
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
-    my $inc_context_url = build_edit_url($line, $topic, $inc_context);
-    my $dec_context_url = build_edit_url($line, $topic, $dec_context);
+    my $inc_context_url = build_edit_url($line, $topic, $inc_context, "");
+    my $dec_context_url = build_edit_url($line, $topic, $dec_context, "");
     print "Context: (" .
 	$query->a({href=>"$inc_context_url"},"increase") . " | " .
 	$query->a({href=>"$dec_context_url"},"decrease)");
@@ -1028,11 +1030,11 @@ sub edit_topic ($$$$$) {
 						  -size=>50,
 						  -default=>"$default_email",
 						  -override=>1,
-						  -maxlength=>80)));
+						  -maxlength=>100)));
     print $query->Tr($query->td("Cc: "),
 		     $query->td($query->textfield(-name=>'cc',
 						  -size=>50,
-						  -maxlength=>80)));
+						  -maxlength=>150)));
     print $query->end_table(), $query->p;
     print $query->submit(-value=>'submit');
     print $query->end_form();
@@ -1132,11 +1134,11 @@ sub view_topic ($$$) {
     if ($mode == $NORMAL_MODE) {
 	$change_tabwidth_url =
 	    build_view_url_extended($topic, -1, $NORMAL_MODE,
-				    $newtabwidth, "");
+				    $newtabwidth, "", "");
     } else {
 	$change_tabwidth_url =
 	    build_view_url_extended($topic, -1, $COLOURED_MODE,
-				    $newtabwidth, "");
+				    $newtabwidth, "", "");
     }
 
     print "Tab width set to $tabwidth (";
@@ -1217,7 +1219,7 @@ sub view_topic ($$$) {
 	    $reading_diff_block = 0;
 	}
 
-	my $url = build_edit_url($i, $topic, "");
+	my $url = build_edit_url($i, $topic, "", "");
 
 	# Display the data.
 	if ($mode == $COLOURED_MODE) {
@@ -1254,7 +1256,7 @@ sub view_topic ($$$) {
     # Now display all comments in reverse order.  Put an anchor in for the
     # first comment.
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
-	my $edit_url = build_edit_url($comment_linenumber[$i], $topic, "");
+	my $edit_url = build_edit_url($comment_linenumber[$i], $topic, "", "");
 	if ($i == $#comment_linenumber) {
 	    print $query->a({name=>"comments"},$query->hr);
 	} else {
@@ -1707,7 +1709,7 @@ sub render_linenumber($$$$$) {
     my $link_title = get_comment_digest($offset);
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
-    my $edit_url = build_edit_url($offset, $topic, "");
+    my $edit_url = build_edit_url($offset, $topic, "", "");
     $edit_url = "javascript:fetch('$edit_url')" if ($prefix ne "");
     if ($link_title ne "") {
 	return $query->a(
@@ -1781,7 +1783,7 @@ sub submit_comments ($$$$$$) {
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
-    my $topic_url = build_edit_url($line, $topic, "");
+    my $topic_url = build_edit_url($line, $topic, "", $query->url());
     open(MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
     print MAIL "From: $email\n";
     print MAIL "To: $document_author\n";
@@ -1859,7 +1861,7 @@ sub submit_comments ($$$$$$) {
     # Redirect the browser to view the topic back at the same line number where
     # they were adding comments to.
     my $redirect_url =
-	build_view_url_extended($topic, $line, $mode, "", $email);
+	build_view_url_extended($topic, $line, $mode, "", $email, "");
     print $query->redirect(-URI=>"$redirect_url");
     return;
 }
@@ -1909,14 +1911,14 @@ sub create_topic () {
 						  -size=>50,
 						  -default=>"$default_reviewers",
 						  -override=>1,
-						  -maxlength=>100)));
+						  -maxlength=>150)));
     my $default_cc = get_cc();
     print $query->Tr($query->td("Cc: "),
 		     $query->td($query->textfield(-name=>'cc',
 						  -size=>50,
 						  -default=>"$default_cc",
 						  -override=>1,
-						  -maxlength=>80)));
+						  -maxlength=>150)));
     print $query->end_table();
     print $query->p, $query->submit(-value=>'submit');
     print $query->end_form();
@@ -2042,7 +2044,9 @@ sub submit_topic ($$$$$$$$) {
     process_document($dirname);
 
     # Send the author, reviewers and the cc an email with the same information.
-    my $topic_url = build_view_url($dirname, -1, $default_topic_create_mode);
+    my $topic_url = build_view_url_extended($dirname, -1,
+					    $default_topic_create_mode, "", "",
+					    $query->url());
     open (MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
     print MAIL "From: $email\n";
     print MAIL "To: $reviewers\n";
@@ -2240,7 +2244,7 @@ sub render_monospaced_line ($$$$$$$) {
     my $line_cell = "";
     if ($offset != -1) {
 	# A line corresponding to the review.
-	my $edit_url = build_edit_url($offset, $topic, "");
+	my $edit_url = build_edit_url($offset, $topic, "", "");
 	if (defined $comment_exists{$offset}) {
 	    my $link_title = get_comment_digest($offset);
 	    my $js_title = $link_title;
