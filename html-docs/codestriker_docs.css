@@ -1,0 +1,25 @@
+/* CSS for codestriker documentation */
+
+/* Body background color */
+body { background-color: #ffffff }
+
+/* Tagline background color */
+tr.tagline { background-color: #000000 }
+
+/* Top-level section link */
+.section_link { background-color: #ffffff; font-family: Helvetica, Arial;
+	        font-size: medium }
+
+/* Top-level section link that has been selected */
+.selected_section_link { background-color: #aaffaa;
+			 font-family: Helvetica, Arial;
+			 font-size: medium;
+			 font-weight: bold }
+
+/* Style for content text */
+.content { background-color: #cccccc; font-family: Helvetica, Arial; 
+           font-size: large }
+
+/* Style for footer bars */
+.footer { background-color: #aaffaa; font-family: Helvetica, Arial }
+

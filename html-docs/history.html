@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Codestriker: History</title>
+    <link rel="stylesheet" href="codestriker_docs.css" type="text/css" />
+  </head>
+  <body>
+    <table width="100%" cellspacing="0" cellpadding="0" border="0">
+      <tr class="tagline">
+        <td>
+	  <img alt="Codestriker Logo" src="tagline.png" 
+	       width="397" height="114" />
+        </td>
+      </tr>
+    </table>
+    <table>
+      <tr valign="top">
+        <td width="20%">
+	  <table class="section_link">
+            <tr><td><a href="index.html">Home</a></td></tr>
+	    <tr><td><a href="http://sourceforge.net/project/showfiles.php?group_id=41136&amp;package_id=33315">Download</a></td></tr>
+	    <tr><td><a href="http://sourceforge.net/news/?group_id=41136">News</a></td></tr>
+	    <tr><td><a href="codestriker.html">Manual</a></td></tr>
+	    <tr><td><a href="contact.html">Contact Us</a></td></tr>
+	    <tr><td><a href="team.html">The Team</a></td></tr>
+	    <tr><td class="selected_section_link">History</td></tr>
+	    <tr><td><a href="http://sourceforge.net/tracker/?atid=429863&amp;group_id=41136&amp;func=browse">Request Feature</a></td></tr>
+	    <tr><td><a href="http://sourceforge.net/tracker/?func=browse&amp;group_id=41136&amp;atid=429860">Report Bug</a></td></tr>
+	    <tr><td><a href="http://www.sourceforge.net/projects/codestriker">Project Page</a></td></tr>
+	    <tr><td><a href="http://cvs.sourceforge.net/viewcvs.py/codestriker">Source Code</a></td></tr>
+	    <tr><td><a href="screenshot.png">Screen Shot</a></td></tr>
+	  </table>
+	</td>
+        <td width="80%">
+	  <table cellspacing="0" cellpadding="10" border="0">
+	    <tr>
+	      <td class="content">
+	        <p>
+		  I was working in a large multi-national networking
+		  company, where in my particular group, code reviews
+		  were conducted over email, in a similar manner to
+		  what is done on the Linux kernel mailing list.
+		  People submitted proposed changes in an email to a
+		  group address, nominated a particular reviewer, who
+		  then sent their comments back as a reply with their
+		  comments inline.
+		</p>
+		<p>
+		  For the purposes of reviewing small changes, this
+		  process seemed to work quite well.  Our group then
+		  received a series of seminars in regards to
+		  performing <em>effective code inspections</em>,
+		  which was a highly formalised process involving
+		  significant preparation time, sit-down meetings and
+		  formal roles, such as author, reviewer, and
+		  recorder.  This sounded highly promising, but the
+		  huge amount of up-front work tended to turn people
+		  off the process.  When the process was used, we
+		  found a number of defects that most likely would
+		  have been missed in an informal email review, and
+		  would have surfaced later as a defect discovered at
+		  a customer site.
+		</p>
+		<p>
+		  Later, I joined a startup company, where a lot of
+		  new code was being written.  We also used email
+		  initially for the purposes of code reviewing,
+		  however this had a number of limitations.  As
+		  before, I found I constantly had to refer to the
+		  existing source code files to understand the context
+		  of the changes.  In addition, I found that once more
+		  than one person was performing a review of a
+		  proposed change, it became cumbersome to merge their
+		  comments together.  Also, the reviewers were unaware
+		  of their colleague's comments until they sent their
+		  email, which could result in duplicate work.
+		</p>
+		<p>
+		  Codestriker was born to fill this gap back in
+		  December 2001, when version 1.0 was released on
+		  SourceForge.  Because it was a quick-and-dirty
+		  concept, I wrote a simple single-file CGI Perl
+		  script, which accepted a text file which constituted
+		  the review (usually the output from <em>cvs diff
+		  -uN</em>), sent notification emails to the reviewers
+		  indicating they had a review to do.  The reviewers
+		  saw a page displaying the text file, where each line
+		  had a hyperlink allowing them to add a comment to
+		  it.  Any comments submitted were sent by email to
+		  the author and the reviewers.  The list of comments
+		  already made were also displayed at the bottom of
+		  the page, and a line which already had a comment had
+		  a red hyperlink.  No database was involved, data was
+		  recorded using simple files.  The most important
+		  thing was the process was still light-weight enough
+		  that nobody was put off by a slightly more
+		  structured process.
+		</p>
+		<p>
+		  Eventually, the single-file script kept growing to
+		  include the coloured display of diff files, and
+		  integration with CVS so that changes could be more
+		  readily understood within the context of the whole
+		  file.  More and more features became available,
+		  including the use of a database for persistence, and
+		  Codestriker eventually became the modularised Perl
+		  web application that it is today.
+		</p>
+	      </td>
+	    </tr>
+	  </table>
+	</td>
+      </tr>
+      <tr>
+        <td colspan="2" class="footer">&nbsp;</td>
+      </tr>
+    </table>
+
+    <p>
+      <a href="http://sourceforge.net">
+        <img src="http://sourceforge.net/sflogo.php?group_id=41136" 
+             width="88" height="31" border="0" alt="SourceForge Logo" />
+      </a>
+    </p>
+  </body>
+</html>
