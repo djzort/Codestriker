@@ -101,12 +101,12 @@ comment, body and filename topic attributes.  Text can be wildcarded.
 </TR>
 <TR>
  <TD>&nbsp;</TD>
- <TD>in: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-     <INPUT TYPE="checkbox" NAME="text_group" VALUE="title" CHECKED>title
-     <INPUT TYPE="checkbox" NAME="text_group" VALUE="description">description
-     <INPUT TYPE="checkbox" NAME="text_group" VALUE="comment">comment
-     <INPUT TYPE="checkbox" NAME="text_group" VALUE="body">body
-     <INPUT TYPE="checkbox" NAME="text_group" VALUE="filename">filename
+ <TD>in: &nbsp;&nbsp;
+     [% IF enable_title %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="title" CHECKED>title&nbsp; [% END %]
+     [% IF enable_description %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="description">description&nbsp; [% END %]
+     [% IF enable_comment %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="comment">comment&nbsp; [% END %]
+     [% IF enable_body %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="body">body&nbsp; [% END %]
+     [% IF enable_filename %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="filename">filename[% END %]
  </TD>
 </TR>
 </TABLE>

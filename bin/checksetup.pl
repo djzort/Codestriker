@@ -315,7 +315,7 @@ my $topicfile_table =
   table(name => "topicfile",
 	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
 		    col(name=>"sequence", type=>$INT16, pk=>1),
-		    col(name=>"filename", type=>$TEXT),
+		    col(name=>"filename", type=>$VARCHAR, length=>1024),
 		    col(name=>"topicoffset", type=>$INT32),
 		    col(name=>"revision", type=>$VARCHAR, length=>100),
 		    col(name=>"binaryfile", type=>$INT16),

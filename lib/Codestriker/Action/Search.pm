@@ -54,6 +54,24 @@ sub process($$$) {
     }
     $vars->{'projects'} = \@projects;
 
+    if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	# Oracle only supports searching over the topic title and filename
+	# as the other fields are clobs.
+	$vars->{'enable_title'} = 1;
+	$vars->{'enable_description'} = 0;
+	$vars->{'enable_comment'} = 0;
+	$vars->{'enable_body'} = 0;
+	$vars->{'enable_filename'} = 1;
+    }
+    else {
+	# All other fields can be searched over.
+	$vars->{'enable_title'} = 1;
+	$vars->{'enable_description'} = 1;
+	$vars->{'enable_comment'} = 1;
+	$vars->{'enable_body'} = 1;
+	$vars->{'enable_filename'} = 1;
+    }
+
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars);
 

@@ -496,6 +496,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
+    my $using_oracle = ($Codestriker::db =~ /^DBI:Oracle/i);
 
     # If there are wildcards in the author, reviewer or CC fields, replace
     # them with the appropriate SQL wildcards.
@@ -546,11 +547,11 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Since Oracle < 9i can't handle LEFT OUTER JOIN, determine what tables
     # are required in this query and add them in.
-    if ($Codestriker::db =~ /^DBI:Oracle/i) {
+    if ($using_oracle) {
 	my @fromlist = ("topic", "topicbug", "participant");
 	if ($stext ne "" && $scomments) {
 	    push @fromlist, "commentstate";
-	    push @fromlist, "commentata";
+	    push @fromlist, "commentdata";
 	}
 	if ($stext ne "" && $sfilename) {
 	    push @fromlist, "topicfile";
@@ -562,7 +563,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     }
 
     # Add the join to topicbug and participant.
-    if ($Codestriker::db =~ /^DBI:Oracle/i) {
+    if ($using_oracle) {
 	$query .= "topic.id = topicbug.topicid(+) AND " .
 	    "topic.id = participant.topicid(+) ";
     }
@@ -573,9 +574,9 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Join with the comment table if required - GACK!
     if ($stext ne "" && $scomments) {
-	if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	if ($using_oracle) {
 	    $query .=
-		'topic.id = commentstate.topicid(+) AND '.
+		' AND topic.id = commentstate.topicid(+) AND '.
 		'commentstate.id = commentdata.commentstateid(+) ';
 	}
 	else {
@@ -589,8 +590,8 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Join with the file table if required.
     if ($stext ne "" && $sfilename) {
-	if ($Codestriker::db =~ /^DBI:Oracle/i) {
-	    $query .= 'topic.id = topicfile.topicid(+) ';
+	if ($using_oracle) {
+	    $query .= ' AND topic.id = topicfile.topicid(+) ';
 	}
 	else {
 	    $query .= 'LEFT OUTER JOIN topicfile ON ' .
@@ -600,7 +601,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Combine the "AND" conditions together.  Note for Oracle, the 'WHERE'
     # keyword has already been used.
-    my $first_condition = ($Codestriker::db =~ /^DBI:Oracle/i) ? 0 : 1;
+    my $first_condition = $using_oracle ? 0 : 1;
     my @values = ();
     $query = _add_condition($query, $author_part, $sauthor, \@values,
 			    \$first_condition);
@@ -629,7 +630,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     if ($stext ne "") {
 	$stext =~ tr/[A-Z]/[a-z]/; # make it lower case.
 	my @text_cond = ();
-	my @text_values = ();
+	
 	push @text_cond, $text_title_part if $stitle;
 	push @text_cond, $text_description_part if $sdescription;
 	push @text_cond, $text_body_part if $sbody;
@@ -645,6 +646,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 		# expression is wildcard-wrapped given this is a "contains"
 		# text search term.
 		my $wildcard = $stext;
+		
 		$wildcard =~ s/\*/%/g;
 		if (! ($wildcard =~ /^%/o) ) {
 		    $wildcard = "%${wildcard}";

@@ -59,7 +59,7 @@ sub get_basic_user_metrics {
  
     # Get the list of participants from all these topics.
     my $participant_list = $dbh->selectall_arrayref(
-	    'SELECT comment.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
+	    'SELECT commentdata.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
 	     FROM commentdata, commentstate, topic 
 	     WHERE topic.modified_ts >= ? AND 
 		   topic.id = commentstate.topicid AND 

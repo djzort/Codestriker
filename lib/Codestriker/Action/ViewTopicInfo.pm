@@ -54,9 +54,9 @@ sub process($$$) {
 
     $http_response->generate_header($topic->{topicid},
 				    $topic->{document_title}, 
-    			            $topic->{author},
+    			            "",
 				    "", "", $mode, $tabwidth,
-				    $topic->{repository}, "", "", 0, 1);
+				    "", "", "", 0, 1);
 
     # Create the hash for the template variables.
     my $vars = {};
