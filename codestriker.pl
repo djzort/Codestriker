@@ -193,7 +193,7 @@ sub submit_topic($$$$$$$$);
 sub view_file($$$);
 sub error_return($);
 sub display_context($$$);
-sub escapeHTML ($);
+sub myescapeHTML($);
 sub read_document_file($$);
 sub read_comment_file($);
 sub read_filetable_file($);
@@ -448,6 +448,7 @@ sub generate_header($$$$$$) {
 	$title .= ": \"$topic_title\"";
     }
     print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
+			     -charset=>'ISO-8859-1',
 			     -title=>"$title",
 			     -bgcolor=>"$bg_colour",
 			     -style=>{src=>"$codestriker_css"},
@@ -488,7 +489,7 @@ sub get_time_string($) {
 }
 
 # Routine to convert text into an HTML version, but with hyperlinks rendered.
-sub escapeHTML ($) {
+sub myescapeHTML($) {
     my ($text) = @_;
 
     # Split the text into words, and for any URL, convert it appropriately.
@@ -760,7 +761,11 @@ sub get_comment_digest($) {
 		# Need to remove the newlines for the data.
 		my $data = $comment_data[$i];
 		$data =~ s/\n/ /mg; # Remove newline characters
-		$data = CGI::escapeHTML($data);
+
+		if ($CGI::VERSION < 2.59) {
+		    # Gggrrrr...
+		    $data = CGI::escapeHTML($data);
+		}
 		$digest .= "$data ------- ";
 	    }
 	}
@@ -831,7 +836,7 @@ sub edit_topic ($$$$$) {
 	if ($comment_linenumber[$i] == $line) {
 	    print $query->hr, "$comment_author[$i] $comment_date[$i]";
 	    print $query->br, "\n";
-	    print $query->pre(escapeHTML($comment_data[$i])), $query->p;
+	    print $query->pre(myescapeHTML($comment_data[$i])), $query->p;
 	}
     }
     
@@ -916,7 +921,7 @@ sub view_topic ($$$) {
 	$data .= $document_description[$i] . "\n";
     }
 
-    $data = escapeHTML($data);
+    $data = myescapeHTML($data);
 
     # Replace occurances of bug strings with the appropriate links.
     if ($bugtracker ne "") {
@@ -1072,7 +1077,7 @@ sub view_topic ($$$) {
 	print $query->a({href=>"$edit_url"},
 			"line $comment_linenumber[$i]"), ": ";
 	print "$comment_author[$i] $comment_date[$i]", $query->br, "\n";
-	print $query->pre(escapeHTML($comment_data[$i])), $query->p;
+	print $query->pre(myescapeHTML($comment_data[$i])), $query->p;
     }
 }
 
