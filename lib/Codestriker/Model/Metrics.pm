@@ -193,9 +193,9 @@ sub get_complete_list_of_topic_participants {
 	    where topicid = ?',{}, $self->{topicid});
     
     push @metric_user_list, $dbh->selectrow_array(
-	    'SELECT distinct author from comment, commentstate ' .
+	    'SELECT distinct author from commentdata, commentstate ' .
 	    'where commentstate.topicid = ? and 
-		   commentstate.id = comment.commentstateid ',
+		   commentstate.id = commentdata.commentstateid ',
 		   {}, $self->{topicid});
 
     push @metric_user_list, $dbh->selectrow_array(
