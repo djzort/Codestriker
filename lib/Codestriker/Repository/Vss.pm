@@ -41,10 +41,11 @@ sub retrieve ($$$\$) {
     # Retrieve a read-only copy of the file into a temporary
     # directory.  Make sure the command output is put into
     # a temporary file, rather than stdout/stderr.
+    my $varg = ($revision =~ /^\d+$/) ? "-V$revision" : "\"-VL$revision\"";
     my $command_output = "$tempdir\\___output.txt";
     system("\"$Codestriker::vss\" get \"$filename\"" .
 	   " -y" . $self->{username} . "," . $self->{password} .
-	   " -VL${revision} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
+	   " $varg -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
 
     $filename =~ /\/([^\/]+)$/o;
     my $basefilename = $1;
@@ -106,7 +107,7 @@ sub getDiff ($$$$$) {
     # Execute the VSS command to retrieve all of the entries in this label.
     open(VSS, "\"$Codestriker::vss\" dir \"$module_name\"" .
 	 " -y" . $self->{username} . "," . $self->{password} .
-	 " -R -VL${tag} -I- |")
+	 " -R \"-VL${tag}\" -I- |")
 	|| die "Can't open connection to VSS repository: $!";
 
     # Collect the list of filename and revision numbers into a list.
@@ -154,7 +155,7 @@ sub getDiff ($$$$$) {
 	if ($start_tag ne '' && $end_tag ne '') {
 	    system("\"$Codestriker::vss\" diff \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
-		   " -I- -DU3000X5 -VL${start_tag}~L${end_tag}" .
+		   " -I- -DU3000X5 \"-VL${start_tag}~L${end_tag}\"" .
 		   " -O\"$command_output\"");
 	    if (open(VSS, $command_output)) {
 		while (<VSS>) {
@@ -168,7 +169,7 @@ sub getDiff ($$$$$) {
 	    # a temporary file, rather than stdout/stderr.
 	    system("\"$Codestriker::vss\" get \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
-		   " -VL${tag} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
+		   " \"-VL${tag}\" -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
 
 	    $files[$i] =~ /\/([^\/]+)$/o;
 	    my $basefilename = $1;

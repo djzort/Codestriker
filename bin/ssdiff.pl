@@ -55,59 +55,69 @@ else {
 
 # Now execute an 'ss dir' command to determine what files are a part
 # of this project.
-open(VSS, "\"$ss\" dir \"$ss_project\" -y${ss_username},{$ss_password}" .
-     " -R -I- |") || die "Unable to run ss diff command: $!";
+open(VSS, "\"$ss\" dir -y${ss_username},${ss_password}" .
+     " -R -I- \"$ss_project\" |") || die "Unable to run ss diff command: $!";
 
 # Collect the list of filename and revision numbers into a list.
 my @files = ();
-my @versions = ();
 my $current_dir = '';
+my $top_dir;
 while (<VSS>) {
     if (/^(\$\/.*):$/o) {
 	# Entering a new top-level directory.
 	$current_dir = $1;
+	$top_dir = $1 unless defined $top_dir;
     } elsif (/^\$[^\/]/o) {
 	# Sub-directory entry which can be skipped.
     } elsif (/^\d+ item/o) {
 	# Item count line which can be skipped.
     } elsif (/^\s*$/o) {
 	# Skip blank lines.
-    } elsif (/^(.*);(\d+)$/o) {
-	# Actual file entry with version number.
+    } elsif (/^(.*)$/o) {
+	# Actual file entry.
 	push @files, "$current_dir/$1";
-	push @versions, $2;
     }
 }
 close VSS;
 
+my $top_dir_length = length($top_dir);
+
 # Now for each text file, we need to run an 'ss diff' command to see
-# what contents have changed.  It is assumed that the user has run this
-# command from a checkedout area that matches the $ss_project parameter.
+# what contents have changed.
 for (my $i = 0; $i <= $#files; $i++) {
     # Determine if the file is a text file, and if not, skip it.
+    # Also determine its version number.
     open(VSS, "\"$ss\" properties \"$files[$i]\"" .
 	 " -y${ss_username},${ss_password} -I- |")
 	    || die "Unable to run ss properties on $files[$i]\n";
     my $text_type = 0;
+    my $version;
     while (<VSS>) {
 	if (/Type:\s*Text/o) {
 	    $text_type = 1;
-	    last;
+	} elsif (/^  Version:\s+(\d+)\s/o) {
+	    $version = $1;
 	}
     }
     close(VSS);
     next if $text_type == 0;
+    die "Couldn't get version for $files[$i]\n" unless defined $version;
 
     # Now need to construct the path to the real file from the SS path.
     # First we need to remove the project part from the full "path".
-    $files[$i] =~ /$ss_project\/(.*)$/;
-    my $real_file = $1;
+    my $real_file = substr($files[$i], $top_dir_length+1);
     if (! defined $real_file) {
-	die "Can't extract filename from $files[$i] for project $ss_project\n";
+	die "Can't extract filename from $files[$i] top_dir $top_dir\n";
     }
 
     # Translate the forward slashes to back slashes.
     $real_file =~ s/\//\\/g;
+
+    # If there are no slashes in the filename, we need to add .\ in the
+    # front.  Don't ask!
+    if ($real_file !~ /\\/o) {
+	$real_file = ".\\" . $real_file;
+    }
 
     print STDERR "Diffing $real_file against $files[$i]\n";
 
@@ -115,18 +125,19 @@ for (my $i = 0; $i <= $#files; $i++) {
     # command will wrap the lines.
     my $command_output = "$tempdir\\___output.txt";
     system("\"$ss\" diff -y${ss_username},${ss_password} -I-" .
-	   " -DU3000 -O\"$command_output\" \"$files[$i]\" \"$real_file\"");
+	   " -DU3000X5 -O\"$command_output\" \"$files[$i]\" \"$real_file\"");
     if (open(VSS, $command_output)) {
 	# Because ss doesn't include the version number of the file we are
 	# diffing against, we have to do so here.
 	my $first_line = <VSS>;
 	chop $first_line;
-	print STDOUT "$first_line;$versions[$i]\n";
+	print STDOUT "$first_line;$version\n";
 	while (<VSS>) {
 	    print STDOUT $_;
 	}
 	close VSS;
     }
+    unlink $command_output;
 }
 
 

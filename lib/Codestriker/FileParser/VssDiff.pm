@@ -96,6 +96,7 @@ sub parse ($$$) {
 		    # trailing context.
 		    if ($leading_context_line_count > 0) {
 			$chunk->{old_linenumber} -= $leading_context_line_count;
+			$chunk->{new_linenumber} -= $leading_context_line_count;
 			$chunk->{text} = $leading_context . $chunk->{text};
 		    }
 		    if ($trailing_context_line_count > 0) {
