@@ -149,7 +149,10 @@ sub _insert_commentstatehistory_entry($$$$$) {
     $success &&= $get_count->execute($comment->{id});
     my ($count) = $get_count->fetchrow_array() if $success;
     $success &&= $get_count->finish();
-    $success &&= $insert->execute($comment->{id}, 0, $count+1,
+
+    # The value of -100 signifies that this is a new record which
+    # doesn't need any data migration.
+    $success &&= $insert->execute($comment->{id}, -100, $count+1,
 				  $metric_name, $metric_value,
 				  $comment->{db_modified_ts}, $user);
     
