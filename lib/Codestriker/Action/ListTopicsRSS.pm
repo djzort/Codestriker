@@ -25,49 +25,23 @@ sub process($$$) {
 	$http_response->error("This function has been disabled");
     }
 
-    # Obtain a new URL builder object.
-    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+    # Query the model for the specified data.
 
-    # Check that the appropriate fields have been filled in.
     my $mode = $http_input->get('mode');
-    my $sauthor = $http_input->get('sauthor') || "";
-    my $sreviewer = $http_input->get('sreviewer') || "";
-    my $scc = $http_input->get('scc') || "";
-    my $sbugid = $http_input->get('sbugid') || "";
-    my $stext = $http_input->get('stext') || "";
-    my $sstate = $http_input->get('sstate');
-    my $sproject = $http_input->get('sproject');
-    my $stitle = $http_input->get('stitle') || 0;
-    my $sdescription = $http_input->get('sdescription') || 0;
-    my $scomments = $http_input->get('scomments') || 0;
-    my $sbody = $http_input->get('sbody') || 0;
-    my $sfilename = $http_input->get('sfilename') || 0;
-    my $feedback = $http_input->get('feedback');
-    my $projectid = $http_input->get('projectid');
 
-    # If $sproject has been set to -1, then retrieve the value of the projectid
-    # from the cookie as the project search value.  This is done to facilate
-    # integration with other systems, which jump straight to this URL, and
-    # set the cookie explicitly.
-    if ($sproject eq "-1") {
-	$sproject = (defined $projectid) ? $projectid : "";
-    }
-    
-    # Only show open topics if codestriker.pl was run without parameters.
-    if (defined($http_input->{query}->param) == 0 || !defined($sstate)) {
-    	$sstate = 0; 
-    }
-
-    # handle the sort order of the topics.
-    my @sort_order = Codestriker::Action::ListTopics::get_topic_sort_order($http_input);
+    my ( $sauthor, $sreviewer, $scc, $sbugid,
+         $sstate, $sproject, $stext,
+         $stitle, $sdescription,
+	 $scomments, $sbody, $sfilename,
+         $sort_order) = Codestriker::Action::ListTopics::get_topic_list_query_params($http_input);
 
     # Query the model for the specified data.
     my @topics = Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
 				     $scomments, $sbody, $sfilename,
-                                     \@sort_order);
-
+                                     $sort_order);
+   
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
     # cookie.
@@ -76,8 +50,15 @@ sub process($$$) {
 	@project_ids = split ',', $sproject;
     }
 
-    # Dump the raw topic data as text/plain.
-    print $query->header();
+    # Print the header. Should really be application/rss+xml, except when 
+    # people click on the link they get a pop-up asking for an application
+    # that knows how to show application/rss+xml. Very confusing, so we 
+    # will just say it is xml, (which it is of coarse). The link tag in
+    # the template lists it as application/rss+xml.
+    print $query->header(-type=>'application/xml');
+
+    # Obtain a new URL builder object.
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     my $rss = new XML::RSS(version => '2.0');
 
@@ -105,8 +86,8 @@ sub process($$$) {
 	my $description = $topic->{description};
 	my $title        = $topic->{title};
 
+        # Change to 1 to send out the list of files changes in the RSS description.
         if (0) {
-            # Send out the list of files changes in the RSS description.
             my (@filenames, @revisions, @offsets, @binary);
             $topic->get_filestable(
     		        \@filenames,
