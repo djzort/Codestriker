@@ -52,37 +52,34 @@ sub process($$$) {
 
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, "", 0, 1);
-    
+
+    # Create the hash for the template variables.
+    my $vars = {};
+    $vars->{'topicid'} = $topic;
+
+    # Create the necessary template variables for generating the heading part
+    # of the view topic display.
+
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Display the "Create a new topic", "Search" and "Open topics" links.
-    my $create_topic_url = $url_builder->create_topic_url();
-    my $search_url = $url_builder->search_url();
+    # Obtains the "Create a new topic", "Search" and "Open topics" URLs.
+    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
+    $vars->{'search_url'} = $url_builder->search_url();
     my @topic_states = (0);
-    my $list_url = $url_builder->list_topics_url("", "", "", "", "", "", "",
-						 "", "", \@topic_states);
-    print $query->a({href=>$create_topic_url}, "Create new topic") . " | ";
-    print $query->a({href=>$list_url}, "List open topics") . " | ";
-    print $query->a({href=>$search_url}, "Search") . "\n";
-    print $query->p;
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", \@topic_states);
 
     # Display the "update" message if the topic state has been changed.
-    if ($http_input->get('updated')) {
-	print "<font color=\"red\">Topic state has been updated.</font>\n" .
-	    $query->p;
-    }
+    $vars->{'updated'} = $http_input->get('updated') ? 1 : 0;
 
-    # Display the view topic summary information, the title, bugs it relates
+    # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
-    my $escaped_title = CGI::escapeHTML($document_title);
-    print $query->h2("$escaped_title"), "\n";
-
-    print $query->start_table();
-    print $query->Tr($query->td("Author: "),
-		     $query->td($document_author)), "\n";
-    print $query->Tr($query->td("Created: "),
-		     $query->td($document_creation_time)), "\n";
+    $vars->{'escaped_title'} = CGI::escapeHTML($document_title);
+    $vars->{'document_author'} = $document_author;
+    $vars->{'document_creation_time'} = $document_creation_time;
+    
     if ($document_bug_ids ne "") {
 	my @bugs = split ', ', $document_bug_ids;
 	my $bug_string = "";
@@ -92,45 +89,22 @@ sub process($$$) {
 			  $bugs[$i]);
 	    $bug_string .= ', ' unless ($i == $#bugs);
 	}
-	print $query->Tr($query->td("Bug IDs: "),
-			 $query->td($bug_string));
+	$vars->{'bug_string'} = $bug_string;
+    } else {
+	$vars->{'bug_string'} = "";
     }
-    print $query->Tr($query->td("Reviewers: "),
-		     $query->td($document_reviewers)), "\n";
-    if (defined $document_cc && $document_cc ne "") {
-	print $query->Tr($query->td("Cc: "),
-			 $query->td($document_cc)), "\n";
-    }
-    print $query->Tr($query->td("Number of lines: "),
-		     $query->td($#document + 1)), "\n";
 
-    # Display the current topic state, and a simple form for changing it.
-    print $query->start_form();
-    $query->param(-name=>'action', -value=>'change_topic_state');
-    print $query->hidden(-name=>'action', -default=>'change_topic_state');
-    print $query->hidden(-name=>'topic', -default=>"$topic");
-    print $query->hidden(-name=>'mode', -default=>"$mode");
-    print $query->hidden(-name=>'version', -default=>"$version");
-    my $state_cell =
-	$query->popup_menu(-name=>'topic_state',
-			   -values=>\@Codestriker::topic_states,
-			   -default=>$topic_state)
-	. $query->submit(-name=>'button', -value=>'Update');
-    print $query->Tr($query->td("State: "),
-		     $query->td($state_cell)) . "\n";
-    my $delete_text =
-	"return confirm('Are you sure you want to delete this topic?')";
-    my $delete_button = $query->submit(-name=>'button',
-				       -onClick=>"$delete_text",
-				       -value=>'Delete');
-    print $query->Tr($query->td($delete_button));
-    print $query->end_form();
-    print $query->end_table(), "\n";
+    $vars->{'document_reviewers'} = $document_reviewers;
+    $vars->{'number_of_lines'} = $#document + 1;
 
+    # Prepare the data for displaying the state update option.
+    $vars->{'mode'} = $mode;
+    $vars->{'version'} = $version;
+    $vars->{'states'} = \@Codestriker::topic_states;
+    $vars->{'default_state'} = $topic_state;
 
-    # Output the topic description, with "Bug \d\d\d" links rendered to links
+    # Obtain the topic description, with "Bug \d\d\d" links rendered to links
     # to the bug tracking system.
-    print "<PRE>\n";
     my $data = "";
     for (my $i = 0; $i <= $#document_description; $i++) {
 	$data .= $document_description[$i] . "\n";
@@ -142,27 +116,22 @@ sub process($$$) {
     if ($Codestriker::bugtracker ne "") {
 	$data =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${Codestriker::bugtracker}$3">$1$2$4<\/A>/mg;
     }
-    print $data;
-    print "</PRE>\n";
+    $vars->{'description'} = $data;
 
-    # Display how many comments there are, with an internal link to them.
-    my $number_comments = $#comment_linenumber + 1;
-    my $url = $url_builder->view_url($topic, -1, $mode);
-    if ($number_comments == 1) {
-	print "Only one ", $query->a({href=>"${url}#comments"},
-				     "comment");
-	print " submitted.\n", $query->p;
-    } elsif ($number_comments > 1) {
-	print "$number_comments ", $query->a({href=>"${url}#comments"},
-					     "comments");
-	print " submitted.\n", $query->p;
-    }
+    # Obtains how many comments there are, and the internal link to them.
+    $vars->{'number_comments'} = $#comment_linenumber + 1;
+    $vars->{'comment_url'} =
+	$url_builder->view_url($topic, -1, $mode) . "#comments";
 
-    # Display the link to download the actual document text.
-    my $download_url = $url_builder->download_url($topic);
-    print $query->a({href=>"$download_url"},"Download"), " topic text.\n";
+    # Obtain the link to download the actual document text.
+    $vars->{'download_url'} = $url_builder->download_url($topic);
 
-    print $query->p, $query->hr, $query->p;
+    # Fire the template on the topic heading information.
+    my $template = Codestriker::Http::Template->new("viewtopic");
+    $template->process($vars) || die $template->error();
+
+    # The rest of the output is non-template driven, as it is quite
+    # complex.
 
     # Give the user the option of swapping between diff view modes.
     my $normal_url = $url_builder->view_url($topic, -1,

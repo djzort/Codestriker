@@ -1,3 +1,9 @@
+Version 1.6.0
+
+* Modified to use the "Template Toolkit" so that the HTML pages can be
+  easily customised without modifying any perl code.  The templates
+  live in template/en/default, where they can be modified in-place.
+
 Version 1.5.7
 
 * Set the attachment field in the HTTP header when downloading the

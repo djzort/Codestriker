@@ -1,0 +1,43 @@
+[%# Screen for show a list of topics. #%]
+
+[%# Show the top-level links for "Create new topic" and "Search" #%]
+<p>
+    <a href="[% create_topic_url %]">Create new topic</a> | 
+    <a href="[% search_url %]">Search</a>
+</p>
+
+[%# Display the heading and create the table #%]
+<h1>Topic list</h1>
+<table width="100%">
+
+    [%# Display the table header #%]
+    <tr class="tlh">
+        <th>Title</th>
+        <th>Author</th>
+        <th>Reviewer</th>
+        <th>Cc</th>
+        <th>Created</th>
+        <th>Bug IDs</th>
+        <th>State</th>
+    </tr>
+
+    [%# Display each topic row, alternating the background colour #%]
+    [% FOREACH topic = topics %]
+    [% FLUSH IF loop.count() % 10 == 1 %]
+
+    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+        <td><a href="[% topic.view_topic_url %]">[% topic.title %]</a></td>
+        <td>[% topic.author %]</td>
+        <td>[% topic.reviewer %]</td>
+        <td>[% topic.cc %]</td>
+        <td>[% topic.created %]</td>
+        <td>[% topic.bugids %]</td>
+        <td>[% topic.state %]</td>
+    </tr>
+
+    [% END %]
+</table>
+</body>
+</html>
+
+

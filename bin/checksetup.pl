@@ -25,6 +25,105 @@ use Codestriker::DB::DBI;
 # Initialise Codestriker, load up the configuration file.
 Codestriker->initialise();
 
+# Indicate which modules are required for codestriker (this code is
+# completely stolen more-or-less verbatim from Bugzilla)
+my $modules = [ 
+    { 
+        name => 'CGI::Carp', 
+        version => '0' 
+    }, 
+    { 
+        name => 'DBI', 
+        version => '1.13' 
+    }, 
+    { 
+        name => 'Template', 
+        version => '2.07' 
+    }
+];
+
+my %missing = ();
+foreach my $module (@{$modules}) {
+    unless (have_vers($module->{name}, $module->{version})) { 
+        $missing{$module->{name}} = $module->{version};
+    }
+}
+
+# vers_cmp is adapted from Sort::Versions 1.3 1996/07/11 13:37:00 kjahds,
+# which is not included with Perl by default, hence the need to copy it here.
+# Seems silly to require it when this is the only place we need it...
+sub vers_cmp {
+  if (@_ < 2) { die "not enough parameters for vers_cmp" }
+  if (@_ > 2) { die "too many parameters for vers_cmp" }
+  my ($a, $b) = @_;
+  my (@A) = ($a =~ /(\.|\d+|[^\.\d]+)/g);
+  my (@B) = ($b =~ /(\.|\d+|[^\.\d]+)/g);
+  my ($A,$B);
+  while (@A and @B) {
+    $A = shift @A;
+    $B = shift @B;
+    if ($A eq "." and $B eq ".") {
+      next;
+    } elsif ( $A eq "." ) {
+      return -1;
+    } elsif ( $B eq "." ) {
+      return 1;
+    } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
+      return $A <=> $B if $A <=> $B;
+    } else {
+      $A = uc $A;
+      $B = uc $B;
+      return $A cmp $B if $A cmp $B;
+    }
+  }
+  @A <=> @B;
+}
+
+# This was originally clipped from the libnet Makefile.PL, adapted here to
+# use the above vers_cmp routine for accurate version checking.
+sub have_vers {
+  my ($pkg, $wanted) = @_;
+  my ($msg, $vnum, $vstr);
+  no strict 'refs';
+  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)");
+
+  eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
+
+  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
+  $vnum = -1 if $@;
+
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
+    $vstr = "not found";
+  }
+  elsif (vers_cmp($vnum,"0") > -1) {
+    $vstr = "found v$vnum";
+  }
+  else {
+    $vstr = "found unknown version";
+  }
+
+  my $vok = (vers_cmp($vnum,$wanted) > -1);
+  print ((($vok) ? "ok: " : " "), "$vstr\n");
+  return $vok;
+}
+
+# Output any modules which may be missing.
+if (%missing) {
+    print "\n\n";
+    print "Codestriker requires some Perl modules which are either missing\n",
+    "from your system, or the version on your system is too old.\n",
+    "They can be installed by running (as root) the following:\n";
+    foreach my $module (keys %missing) {
+        print "   perl -MCPAN -e 'install \"$module\"'\n";
+        if ($missing{$module} > 0) {
+            print "   Minimum version required: $missing{$module}\n";
+        }
+    }
+    print "\n";
+    exit;
+}
+
+
 # Obtain a database connection.
 my $dbh = Codestriker::DB::DBI->get_connection();
 

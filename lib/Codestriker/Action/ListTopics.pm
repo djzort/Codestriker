@@ -10,6 +10,7 @@
 package Codestriker::Action::ListTopics;
 
 use strict;
+use Codestriker::Http::Template;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -44,25 +45,19 @@ sub process($$$) {
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
 				    0, 0);
 
+    # Create the hash for the template variables.
+    my $vars = {};
+
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Display the "Create a new topic" and "Search" links.
-    my $create_topic_url = $url_builder->create_topic_url();
-    my $search_url = $url_builder->search_url();
-    print $query->a({href=>$create_topic_url}, "Create new topic") . " | ";
-    print $query->a({href=>$search_url}, "Search") . "\n";
-    print $query->p;
+    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
+    $vars->{'search_url'} = $url_builder->search_url();
 
-    # Display the table header.
-    print $query->h1("Topic list"), $query->p;
-    print $query->start_table({-width=>'100%'});
-    print $query->Tr({-class=>'tlh'},
-		     $query->th("Title"), $query->th("Author"),
-		     $query->th("Reviewer"), $query->th("Cc"),
-		     $query->th("Created"), $query->th("Bug IDs"),
-		     $query->th("State"));
-
+    # The list of topics.
+    my @topics;
+    
     # For each topic, collect all the reviewers, CC, and bugs, and display it
     # as a row in the table.  Each bug should be linked appropriately.
     for (my $index = 0, my $row = 0; $index <= $#id; $row++) {
@@ -112,21 +107,21 @@ sub process($$$) {
 	my $bugid_text = join ', ', @accum_bugs;
 	$bugid_text = "&nbsp;" if $bugid_text eq "";
 
-	# Alternate the row colours.
-	my $view_topic_url = $url_builder->view_url($accum_id, -1, "");
-	my $class = $row % 2 == 0 ? 'tl1' : 'tl2';
-	print $query->Tr({-class=>$class},
-			 $query->td($query->a({href=>$view_topic_url},
-					      $accum_title)),
-			 $query->td($accum_author),
-			 $query->td($reviewer_text),
-			 $query->td($cc_text),
-			 $query->td($accum_ts),
-			 $query->td($bugid_text),
-			 $query->td($accum_state)) . "\n";
+	# Add this row to the list of topics.
+	my $topic = {};
+	$topic->{'view_topic_url'} = $url_builder->view_url($accum_id, -1, "");
+	$topic->{'title'} = $accum_title;
+	$topic->{'author'} = $accum_author;
+	$topic->{'reviewer'} = $reviewer_text;
+	$topic->{'cc'} = $cc_text;
+	$topic->{'created'} = $accum_ts;
+	$topic->{'bugids'} = $bugid_text;
+	$topic->{'state'} = $accum_state;
+	push @topics, $topic;
     }
-
-    print $query->end_table();
+    $vars->{'topics'} = \@topics;
+    my $template = Codestriker::Http::Template->new("listtopics");
+    $template->process($vars) || die $template->error();
 }
 
 # Append an element into an array if it doesn't exist already.  Note this is

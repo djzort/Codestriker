@@ -1,0 +1,63 @@
+[%# Screen for the create topic form. #%]
+
+<H1>Create new topic</H1>
+
+<P>
+
+<FORM METHOD="POST" ENCTYPE="multipart/form-data">
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_topic">
+
+[%# The topic title input field #%]
+Topic title:<BR>
+<INPUT TYPE="text" NAME="topic_title"  SIZE=70 MAXLENGTH=70>
+<P>
+
+[%# The topic description input field #%]
+Topic description: <BR>
+<TEXTAREA NAME="topic_description" ROWS=5 COLS=70 WRAP="hard"></TEXTAREA>
+<P>
+
+[%# The topic text input field #%]
+Topic text: <BR>
+<TEXTAREA NAME="topic_text" ROWS=15 COLS=70></TEXTAREA>
+<P>
+
+<TABLE>
+
+[%# The topic text upload button #%]
+<TR>
+ <TD>Topic text upload: </TD>
+ <TD><INPUT TYPE="file" NAME="topic_file"  SIZE=40 MAXLENGTH=200></TD>
+</TR>
+
+[%# The bug ids input field #%]
+<TR>
+ <TD>Bug IDs: </TD>
+ <TD><INPUT TYPE="text" NAME="bug_ids"  SIZE=30 MAXLENGTH=50></TD>
+</TR>
+
+[%# The email input field #%]
+<TR>
+ <TD>Your email address: </TD>
+ <TD><INPUT TYPE="text" NAME="email"  SIZE=50 MAXLENGTH=80></TD>
+</TR>
+
+[%# The reviewers input field #%]
+<TR>
+ <TD>Reviewers: </TD>
+ <TD><INPUT TYPE="text" NAME="reviewers"  SIZE=50 MAXLENGTH=150></TD>
+</TR>
+
+[%# The Cc input field #%]
+<TR>
+ <TD>Cc: </TD>
+ <TD><INPUT TYPE="text" NAME="cc"  SIZE=50 MAXLENGTH=150></TD>
+</TR>
+</TABLE>
+
+<P>
+<INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
+
+</FORM>
+</BODY>
+</HTML>

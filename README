@@ -42,6 +42,15 @@ been tested with PostgreSQL and MySQL, and should work fine for other
 databases, as it uses the Perl DBI.  Make sure you update
 codestriker.conf appropriately for your setup.
 
+Codestriker now uses the "Template Toolkit" for its HTML pages, so
+that the output can be easily customised for different sites, without
+modifying any perl code.  This also allows for the pages to be
+translated (ie localised) into different languages.  Make sure the
+"Template" perl module is installed on your system (checksetup.pl will
+do this automatically).
+
+The templates live in template/en/default.
+
 ----------------------------------------------------------------------
 
 For MySQL, it is necessary to download the mysql, mysql-devel and

@@ -1,0 +1,74 @@
+[%# Screen for search topics. #%]
+
+<H1>Topic search</H1>
+
+<P>
+
+<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_search">
+
+<TABLE>
+
+[%# The author input field #%]
+<TR>
+ <TD>Author: </TD>
+ <TD><INPUT TYPE="text" NAME="sauthor" SIZE=50 MAXLENGTH=100></TD>
+</TR>
+
+[%# The reviewer input field #%]
+<TR>
+ <TD>Reviewer: </TD>
+ <TD><INPUT TYPE="text" NAME="sreviewer" SIZE=50 MAXLENGTH=100></TD>
+</TR>
+
+[%# The Cc input field #%]
+<TR>
+ <TD>Cc: </TD>
+ <TD><INPUT TYPE="text" NAME="scc"  SIZE=50 MAXLENGTH=100></TD>
+</TR>
+
+[%# The Bug id input field #%]
+<TR>
+ <TD>Bug ID: </TD>
+ <TD><INPUT TYPE="text" NAME="sbugid"  SIZE=50 MAXLENGTH=100></TD>
+</TR>
+
+[%# The state multi-select #%]
+<TR>
+ <TD>State: </TD>
+ <TD><SELECT NAME="state_group" SIZE=3 MULTIPLE>
+       [% FOREACH state = states %]
+           [% IF state == 'Open' %]
+               <OPTION SELECTED VALUE="[% state %]">[% state %]
+           [% ELSE %]           
+               <OPTION VALUE="[% state %]">[% state %]
+           [% END %]
+       [% END %]
+     </SELECT>
+ </TD>
+</TR>
+
+[%# The contains text input field and checkbox #%]
+<TR>
+ <TD>Contains text: </TD>
+ <TD><INPUT TYPE="text" NAME="stext"  SIZE=50 MAXLENGTH=100></TD>
+</TR>
+<TR>
+ <TD>&nbsp;</TD>
+ <TD>in: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     <INPUT TYPE="checkbox" NAME="text_group" VALUE="title" CHECKED>title
+     <INPUT TYPE="checkbox" NAME="text_group" VALUE="description">description
+     <INPUT TYPE="checkbox" NAME="text_group" VALUE="comment">comment
+     <INPUT TYPE="checkbox" NAME="text_group" VALUE="body">body
+ </TD>
+</TR>
+</TABLE>
+
+<INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
+<INPUT TYPE="hidden" NAME=".cgifields" VALUE="state_group">
+<INPUT TYPE="hidden" NAME=".cgifields" VALUE="text_group">
+
+</FORM>
+</BODY>
+</HTML>
