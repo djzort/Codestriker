@@ -2,7 +2,8 @@ Version 1.4.4:
 
 * Can now view coloured diff mode either in monospace font (requires
   more real-estate) or in variable-width font (harder to read code).
-  The choice can be made dynamically.
+  The choice can be made dynamically. [Note the monospaced diff mode
+  can be set for $default_topic_create_mode in codestriker.conf]
 
 * Added a <BASE> tag which reduces the HTML size.  Also used cookies
   more intelligently so that the dreaded edit topic and other URLs
