@@ -327,6 +327,11 @@ sub codestriker_create_topic
     my $topic_description = join("\n", @log);
     my $bug_ids = $topic_description;
 
+    # Truncate the title if necessary.
+    if (length($topic_title) > 57) {
+        $topic_title = substr($topic_title, 0, 57) . "...";
+    }
+
     # Check for any matching Bug id text.
     my @bugs = ();
     $bug_ids =~ s/.*[Bb][Uu][Gg]:?(\d+)\b.*/$1 /g;
