@@ -20,6 +20,7 @@ use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
 	      $db $dbuser $dbpasswd
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
+	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
 	      );
 
 # Version of Codestriker.

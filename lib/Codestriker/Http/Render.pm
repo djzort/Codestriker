@@ -10,7 +10,7 @@
 package Codestriker::Http::Render;
 
 use strict;
-
+use DBI;
 use CGI::Carp 'fatalsToBrowser';
 
 # Colour to use when displaying the line number that a comment is being made
@@ -74,7 +74,48 @@ sub new ($$$$$$$\%\@\@$) {
     # be initialised.
     $self->{diff_current_filename} = "";
 
+    # If required, open the LXR database and read all the identifiers into
+    # a massive hashtable (gasp!).
+    my %idhash = ();
+    if ($Codestriker::lxr_db ne "") {
+	my $dbh = DBI->connect($Codestriker::lxr_db, $Codestriker::lxr_user,
+			       $Codestriker::lxr_passwd,
+			       {AutoCommit=>0, RaiseError=>1})
+	    || die "Couldn't connect to database: " . DBI->errstr;
+	my $select_ids = $dbh->prepare_cached('SELECT symname FROM symbols');
+	$select_ids->execute();
+	while (my ($identifier) = $select_ids->fetchrow_array()) {
+	    $idhash{$identifier} = 1;
+	}
+	$dbh->disconnect;
+    }
+    $self->{idhashref} = \%idhash;
+
     bless $self, $type;
+}
+
+# Parse the line and product the appropriate hyperlinks to LXR.
+sub lxr_data($$) {
+    my ($self, $data) = @_;
+
+    # Break the string into potential identifiers, and look them up to see
+    # if they can be hyperlinked to an LXR lookup.
+    my $idhashref = $self->{idhashref};
+    my @data_tokens = split /([A-Za-z][A-Za-z0-9_]+)/, $data;
+    my $newdata = "";
+    for (my $i = 0; $i <= $#data_tokens; $i++) {
+	my $token = $data_tokens[$i];
+	if ($token =~ /^[A-Za-z]/ && 
+	    defined $$idhashref{$token}) {
+	    $newdata .=
+		"<A HREF=\"${Codestriker::lxr_idlookup_base_url}$token\">" .
+		"$token</A>";
+	} else {
+	    $newdata .= $token;
+	}
+    }
+    
+    return $newdata;
 }
 
 # Display a line for non-coloured data.
@@ -84,8 +125,8 @@ sub display_data ($$$$$$$$$$$) {
 	$reading_diff_block, $diff_linenumbers_found, $cvsmatch,
 	$block_description) = @_;
 
-    # Escape the data.
-    $data = CGI::escapeHTML($data);
+    # Escape the data and add LXR links to it.
+    $data = $self->lxr_data(CGI::escapeHTML($data));
 
     # Add the appropriate amount of spaces for alignment before rendering
     # the line number.
@@ -292,6 +333,9 @@ sub render_coloured_cell($$)
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
     $data = tabadjust($self, $self->{tabwidth}, $data, 1);
     $data =~ s/\s/&nbsp;/g;
+
+    # Add LXR links to the output.
+    $data = $self->lxr_data($data);
 
     # Unconditionally add a &nbsp; at the start for better alignment.
     return "&nbsp;$data";
@@ -712,7 +756,9 @@ sub render_monospaced_line ($$$$$$) {
     }
 
     $data = tabadjust($self, $self->{tabwidth}, $data, 0);
-    my $newdata = CGI::escapeHTML($data);
+
+    # Add LXR links to the output.
+    my $newdata = $self->lxr_data(CGI::escapeHTML($data));
 
     if ($class ne "") {
 	# Add the appropriate number of spaces to justify the data to a length
