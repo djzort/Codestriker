@@ -1,4 +1,4 @@
-Codestriker v1.5.1
+Codestriker v1.5.2
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 (see the CHANGELOG file for details on changes).
@@ -216,8 +216,8 @@ script, as an extra security precaution.
 Future plans
 ------------
 
-Some basic things like the option to delete a topic, and some more
-functionality on the view topic screen.
+Stronger links with Bugzilla, so changes to a topic that is related to
+a bug will appear as a comment in the appropriate Bugzilla page.
 
 Please mail me any other suggestions you have to
 codestriker-user@lists.sourceforge.net.  Contributions are most
