@@ -1,0 +1,69 @@
+codestriker/CHANGELOG		38	1
+codestriker/bin/codestriker.pl.base		6	2
+codestriker/cgi-bin/.cvsignore			
+codestriker/cgi-bin/codestriker.pl		7	3
+codestriker/cgi-bin/data/var/www/codestriker			
+codestriker-1.7.7/cgi-bin/data/var/www/codestriker-1.7.7			
+codestriker/html/book1.html		62	57
+codestriker/html/c12.html		6	1
+codestriker-1.7.7/html/c282.html			
+codestriker/html/c286.html			
+codestriker-1.7.7/html/c41.html			
+codestriker/html/c45.html			
+codestriker-1.7.7/html/c569.html			
+codestriker/html/c573.html			
+codestriker-1.7.7/html/c674.html			
+codestriker/html/c678.html			
+codestriker-1.7.7/html/c679.html			
+codestriker-1.7.7/html/c682.html			
+codestriker/html/c685.html			
+codestriker/html/c689.html			
+codestriker/html/codestriker.html		62	57
+codestriker-1.7.7/html/x188.html			
+codestriker/html/x192.html			
+codestriker-1.7.7/html/x218.html			
+codestriker/html/x222.html			
+codestriker-1.7.7/html/x275.html			
+codestriker/html/x279.html			
+codestriker-1.7.7/html/x287.html			
+codestriker/html/x291.html			
+codestriker-1.7.7/html/x314.html			
+codestriker/html/x318.html			
+codestriker-1.7.7/html/x338.html			
+codestriker/html/x342.html			
+codestriker/html/x38.html		6	6
+codestriker-1.7.7/html/x386.html			
+codestriker/html/x390.html			
+codestriker/html/x41.html			
+codestriker-1.7.7/html/x499.html			
+codestriker/html/x503.html			
+codestriker-1.7.7/html/x533.html			
+codestriker/html/x537.html			
+codestriker-1.7.7/html/x635.html			
+codestriker/html/x639.html			
+codestriker-1.7.7/html/x86.html			
+codestriker/html/x90.html			
+codestriker/lib/Codestriker/Action/ChangeTopicState.pm		0	1
+codestriker/lib/Codestriker/Action/EditTopic.pm		1	2
+codestriker/lib/Codestriker/Action/ListComments.pm		1	5
+codestriker/lib/Codestriker/Action/ListTopics.pm		2	5
+codestriker/lib/Codestriker/Action/SubmitTopic.pm		27	18
+codestriker/lib/Codestriker/Action/ViewTopic.pm		2	11
+codestriker/lib/Codestriker/Http/Input.pm		9	2
+codestriker/lib/Codestriker/Http/Response.pm		0	21
+codestriker/lib/Codestriker/Http/Template.pm		6	3
+codestriker/lib/Codestriker/Http/UrlBuilder.pm		2	2
+codestriker/lib/Codestriker/Template			
+codestriker/lib/Codestriker.pm		2	1
+codestriker/template/en/default/createproject.html.tmpl		4	3
+codestriker/template/en/default/createtopic.html.tmpl		14	13
+codestriker/template/en/default/displaycomments.html.tmpl		67	8
+codestriker/template/en/default/editproject.html.tmpl		4	3
+codestriker/template/en/default/edittopic.html.tmpl		6	6
+codestriker/template/en/default/listcomments.html.tmpl		4	2
+codestriker/template/en/default/listprojects.html.tmpl		3	3
+codestriker/template/en/default/listtopics.html.tmpl		16	16
+codestriker/template/en/default/search.html.tmpl		3	3
+codestriker/template/en/default/submitcomment.html.tmpl		1	1
+codestriker/template/en/default/submittopic.html.tmpl		3	3
+codestriker/template/en/default/viewtopic.html.tmpl		9	7

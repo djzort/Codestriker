@@ -1,0 +1,5 @@
+/cvsroot/codestriker/codestriker/lib/Codestriker/Action/CreateTopic.pm,v	1.20	6	2
+/cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitNewTopic.pm,v	1.4	22	0
+/cvsroot/codestriker/codestriker/lib/Codestriker/Http/Input.pm,v	1.27	2	0
+/cvsroot/codestriker/codestriker/lib/Codestriker/Http/Response.pm,v	1.18	49	1
+/cvsroot/codestriker/codestriker/template/en/default/createtopic.html.tmpl,v	1.25	15	1

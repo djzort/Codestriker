@@ -1,0 +1,69 @@
+codestriker/.cvsignore			
+codestriker/CHANGELOG		38	1
+codestriker/CVS			
+codestriker/INFO.txt			
+codestriker/Makefile			
+codestriker/bin/CVS			
+codestriker/cgi-bin/CVS			
+codestriker/cgi-bin/codestriker.pl		1	1
+codestriker/cgi-bin/data/var/www/codestriker			
+codestriker-1.7.7/cgi-bin/data/var/www/codestriker-1.7.7			
+codestriker/doc			
+codestriker/html/CVS			
+codestriker-1.7.7/html/book1.html			
+codestriker-1.7.7/html/c12.html			
+codestriker-1.7.7/html/c282.html			
+codestriker-1.7.7/html/c41.html			
+codestriker-1.7.7/html/c569.html			
+codestriker-1.7.7/html/c674.html			
+codestriker-1.7.7/html/c679.html			
+codestriker-1.7.7/html/c682.html			
+codestriker-1.7.7/html/codestriker.html			
+codestriker-1.7.7/html/x188.html			
+codestriker-1.7.7/html/x218.html			
+codestriker-1.7.7/html/x275.html			
+codestriker-1.7.7/html/x287.html			
+codestriker-1.7.7/html/x314.html			
+codestriker-1.7.7/html/x338.html			
+codestriker-1.7.7/html/x38.html			
+codestriker-1.7.7/html/x386.html			
+codestriker-1.7.7/html/x499.html			
+codestriker-1.7.7/html/x533.html			
+codestriker-1.7.7/html/x635.html			
+codestriker-1.7.7/html/x86.html			
+codestriker/lib/CVS			
+codestriker/lib/Codestriker/Action/CVS			
+codestriker/lib/Codestriker/Action/ChangeTopicState.pm		0	1
+codestriker/lib/Codestriker/Action/EditTopic.pm		1	2
+codestriker/lib/Codestriker/Action/ListComments.pm		1	5
+codestriker/lib/Codestriker/Action/ListTopics.pm		1	2
+codestriker/lib/Codestriker/Action/SubmitTopic.pm		27	18
+codestriker/lib/Codestriker/Action/ViewTopic.pm		2	11
+codestriker/lib/Codestriker/BugDB/CVS			
+codestriker/lib/Codestriker/CVS			
+codestriker/lib/Codestriker/DB/CVS			
+codestriker/lib/Codestriker/FileParser/CVS			
+codestriker/lib/Codestriker/Http/CVS			
+codestriker/lib/Codestriker/Http/Input.pm		9	2
+codestriker/lib/Codestriker/Http/Response.pm		4	0
+codestriker/lib/Codestriker/Http/Template.pm		4	1
+codestriker/lib/Codestriker/Model/CVS			
+codestriker/lib/Codestriker/Repository/CVS			
+codestriker/lib/Codestriker/Smtp/CVS			
+codestriker/lib/Codestriker/Template			
+codestriker/lib/Codestriker.pm		2	1
+codestriker/template/CVS			
+codestriker/template/en/CVS			
+codestriker/template/en/default/CVS			
+codestriker/template/en/default/createproject.html.tmpl		3	2
+codestriker/template/en/default/createtopic.html.tmpl		13	12
+codestriker/template/en/default/displaycomments.html.tmpl		37	7
+codestriker/template/en/default/editproject.html.tmpl		3	2
+codestriker/template/en/default/edittopic.html.tmpl		5	5
+codestriker/template/en/default/listcomments.html.tmpl		4	2
+codestriker/template/en/default/listprojects.html.tmpl		2	2
+codestriker/template/en/default/listtopics.html.tmpl		14	14
+codestriker/template/en/default/search.html.tmpl		2	2
+codestriker/template/en/default/submitcomment.html.tmpl		1	1
+codestriker/template/en/default/submittopic.html.tmpl		3	3
+codestriker/template/en/default/viewtopic.html.tmpl		8	6

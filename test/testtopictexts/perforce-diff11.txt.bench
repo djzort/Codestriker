@@ -1,0 +1,6 @@
+//depot/codestriker.conf	2	2	4
+//depot/lib/Codestriker.pm	2	1	2
+//depot/lib/Codestriker/Action/EditProject.pm	2		
+//depot/lib/Codestriker/Action/RepositoryFactory.pm	1		
+//depot/lib/Codestriker/Action/SubmitEditTopicProperties.pm	2	5	5
+//depot/lib/Codestriker/Action/ViewTopic.pm	2	2	2
