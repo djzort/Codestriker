@@ -1,0 +1,255 @@
+Index: codestriker/lib/Codestriker/Http/Render.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Render.pm,v
+retrieving revision 1.29
+diff -u -b -r1.29 Render.pm
+--- codestriker/lib/Codestriker/Http/Render.pm	7 Jan 2004 07:08:24 -0000	1.29
++++ codestriker/lib/Codestriker/Http/Render.pm	26 Mar 2004 03:49:15 -0000
+@@ -286,6 +286,8 @@
+ 			     $query->td({-class=>$cell_class}, $cell),
+ 			     "\n");
+     	}
++
++        print $query->end_table(), "\n";
+     }
+ }
+ 
+Index: codestriker/template/en/default/createtopic.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/createtopic.html.tmpl,v
+retrieving revision 1.28
+diff -u -b -r1.28 createtopic.html.tmpl
+--- codestriker/template/en/default/createtopic.html.tmpl	22 Mar 2004 09:28:10 -0000	1.28
++++ codestriker/template/en/default/createtopic.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -130,9 +130,9 @@
+  <TD COLSPAN="3"><SELECT NAME="repository">
+        [% FOREACH entry = repositories %]
+           [% IF entry == default_repository %]
+-	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]
++	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]</OPTION>
+ 	  [% ELSE %]
+-	      <OPTION VALUE="[% entry %]">[% entry %]
++	      <OPTION VALUE="[% entry %]">[% entry %]</OPTION>
+ 	  [% END %]
+        [% END %]
+       </SELECT>
+@@ -153,9 +153,9 @@
+  <TD COLSPAN="3"><SELECT NAME="projectid">
+        [% FOREACH project = projects %]
+           [% IF project.id == default_projectid %]
+-	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
++	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
+ 	  [% ELSE %]
+-	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
++	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
+ 	  [% END %]
+        [% END %]
+       </SELECT>
+Index: codestriker/template/en/default/listtopics.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/listtopics.html.tmpl,v
+retrieving revision 1.19
+diff -u -b -r1.19 listtopics.html.tmpl
+--- codestriker/template/en/default/listtopics.html.tmpl	22 Mar 2004 09:28:10 -0000	1.19
++++ codestriker/template/en/default/listtopics.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -72,9 +72,9 @@
+   <select name="topic_state">
+      [% FOREACH state = states %]
+      [% IF state == default_state %]
+-     <option selected value="[% state %]">[% state %]
++     <option selected value="[% state %]">[% state %]</option>
+      [% ELSE %]
+-     <option value="[% state %]">[% state %]
++     <option value="[% state %]">[% state %]</option>
+      [% END %]
+      [% END %]
+   </select>
+Index: codestriker/template/en/default/metricsreport.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/metricsreport.html.tmpl,v
+retrieving revision 1.4
+diff -u -b -r1.4 metricsreport.html.tmpl
+--- codestriker/template/en/default/metricsreport.html.tmpl	22 Mar 2004 09:28:10 -0000	1.4
++++ codestriker/template/en/default/metricsreport.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -14,7 +14,7 @@
+ 
+ 
+ <table cellpadding="5%" >
+-    <tr class="tlh"><td>
++    <tr class="tlh"><td></td>
+ 	<td>last topic authored (days)</td>
+ 	<td>last topic reviewed (days)</td>
+ 	<td>total Codestriker time (hours)</td>
+@@ -24,11 +24,11 @@
+     [% FOREACH user_metrics %]
+ 
+     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+-	<td>[% name | html %]
+-	<td>[% date_last_authored %]
+-	<td>[% date_last_participated %]
+-	<td>[% total_codestriker_time %]
+-	<td>[% total_topics %]
++	<td>[% name | html %]</td>
++	<td>[% date_last_authored %]</td>
++	<td>[% date_last_participated %]</td>
++	<td>[% total_codestriker_time %]</td>
++	<td>[% total_topics %]</td>
+     </tr>
+ 
+     [% END %]
+Index: codestriker/template/en/default/search.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/search.html.tmpl,v
+retrieving revision 1.18
+diff -u -b -r1.18 search.html.tmpl
+--- codestriker/template/en/default/search.html.tmpl	22 Mar 2004 09:28:10 -0000	1.18
++++ codestriker/template/en/default/search.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -62,9 +62,9 @@
+  <TD><SELECT NAME="state_group" SIZE=3 MULTIPLE>
+        [% FOREACH state = states %]
+            [% IF state == 'Open' %]
+-               <OPTION SELECTED VALUE="[% state %]">[% state %]
++               <OPTION SELECTED VALUE="[% state %]">[% state %]</OPTION>
+            [% ELSE %]           
+-               <OPTION VALUE="[% state %]">[% state %]
++               <OPTION VALUE="[% state %]">[% state %]</OPTION>
+            [% END %]
+        [% END %]
+      </SELECT>
+@@ -82,9 +82,9 @@
+  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
+        [% FOREACH project = projects %]
+            [% IF project.name == 'Any' %]
+-               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
++               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
+            [% ELSE %]           
+-               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
++               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
+            [% END %]
+        [% END %]
+      </SELECT>
+Index: codestriker/template/en/default/viewtopiccomments.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopiccomments.html.tmpl,v
+retrieving revision 1.6
+diff -u -b -r1.6 viewtopiccomments.html.tmpl
+--- codestriker/template/en/default/viewtopiccomments.html.tmpl	22 Mar 2004 09:28:10 -0000	1.6
++++ codestriker/template/en/default/viewtopiccomments.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -104,26 +104,26 @@
+ 
+ Show comments authored by: &nbsp;
+   <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
+-     <OPTION value="1"> Everybody     
++     <OPTION value="1"> Everybody </OPTION>
+      [% FOREACH user = users %]
+-     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]
++     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]</OPTION>
+      [% END %]
+   </SELECT>
+      
+ with: 
+   <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
+-     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any
++     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any </OPTION>
+      [% FOREACH state = states %]
+-     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
++     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %] </OPTION>
+      [% END %]
+   </SELECT>
+   
+ state and
+ 
+   <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
+-     <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context
+-     <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines
+-     <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines
++     <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context</OPTION>
++     <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines</OPTION>
++     <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines</OPTION>
+   </SELECT>
+ .
+ 
+@@ -194,7 +194,7 @@
+ Change state: &nbsp;
+   <SELECT name="comment_state">
+      [% FOREACH state = states %]
+-     <OPTION value="[% state %]">[% state %]
++     <OPTION value="[% state %]">[% state %]</OPTION>
+      [% END %]
+   </SELECT>
+   <INPUT TYPE="submit" NAME="button" VALUE="Update">
+Index: codestriker/template/en/default/viewtopicinfo.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopicinfo.html.tmpl,v
+retrieving revision 1.6
+diff -u -b -r1.6 viewtopicinfo.html.tmpl
+--- codestriker/template/en/default/viewtopicinfo.html.tmpl	22 Mar 2004 09:28:10 -0000	1.6
++++ codestriker/template/en/default/viewtopicinfo.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -147,9 +147,6 @@
+ 
+ </table>
+ 
+-</td></tr>
+-</table>
+-
+ <p>
+ [%# Render the submit button #%]
+ <input type="submit" name="button" value="Save" 
+Index: codestriker/template/en/default/viewtopicproperties.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopicproperties.html.tmpl,v
+retrieving revision 1.4
+diff -u -b -r1.4 viewtopicproperties.html.tmpl
+--- codestriker/template/en/default/viewtopicproperties.html.tmpl	22 Mar 2004 09:28:10 -0000	1.4
++++ codestriker/template/en/default/viewtopicproperties.html.tmpl	26 Mar 2004 03:49:15 -0000
+@@ -54,7 +54,7 @@
+     <input type="text" name="topic_title" 
+            value="[% title | html_entity %]" size="70" maxlength="70">
+   </td>
+-</th>
++</tr>
+ 
+ <tr class="tt1">
+   <td>Author:</td>
+@@ -102,9 +102,9 @@
+     <select name="repository">
+        [% FOREACH entry = repositories %]
+           [% IF entry == topic_repository %]
+-	      <option selected value="[% entry %]">[% entry %]
++	      <option selected value="[% entry %]">[% entry %]</OPTION>
+ 	  [% ELSE %]
+-	      <option value="[% entry %]">[% entry %]
++	      <option value="[% entry %]">[% entry %]</OPTION>
+ 	  [% END %]
+        [% END %]
+     </select>
+@@ -119,9 +119,9 @@
+     <select name="projectid">
+        [% FOREACH project = projects %]
+           [% IF project.id == topic_projectid %]
+-	      <option selected value="[% project.id %]">[% project.name | html_entity %]
++	      <option selected value="[% project.id %]">[% project.name | html_entity %]</OPTION>
+ 	  [% ELSE %]
+-	      <option value="[% project.id %]">[% project.name | html_entity %]
++	      <option value="[% project.id %]">[% project.name | html_entity %]</OPTION>
+ 	  [% END %]
+        [% END %]
+     </select>
+@@ -160,14 +160,14 @@
+     <select name="topic_state">
+     [% FOREACH state = states %]
+        [% IF state == default_state %]
+-           <option selected value="[% state %]">[% state %]
++           <option selected value="[% state %]">[% state %]</option>
+        [% ELSE %]           
+-           <option value="[% state %]">[% state %]
++           <option value="[% state %]">[% state %]</option>
+        [% END %]
+     [% END %]
+     [%# Render a "delete" button, for deleting topics, if enabled #%]
+     [% IF delete_enabled != 0 %]
+-   	   <option value="Delete">Delete Topic ... 
++   	   <option value="Delete">Delete Topic ... </option>
+     [% END %]
+     </select>
+  </td>

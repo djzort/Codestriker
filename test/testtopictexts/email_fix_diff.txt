@@ -1,0 +1,73 @@
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.34
+diff -u -b -r1.34 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	9 Feb 2004 20:36:10 -0000	1.34
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	18 Feb 2004 04:23:24 -0000
+@@ -55,9 +55,9 @@
+     my @comments = $topic->read_comments();
+ 
+     $http_response->generate_header($topic->{topicid}, $topic->{document_title}, 
+-    			            $topic->{author},
++    			            "",
+ 				    "", "", $mode, $tabwidth,
+-				    $topic->{repository},
++				    "",
+ 				    "", "", 0, 1);
+ 
+     # Retrieve the repository object, if repository functionality is enabled.
+Index: codestriker/lib/Codestriker/Action/ViewTopicInfo.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicInfo.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 ViewTopicInfo.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	5 Feb 2004 21:36:05 -0000	1.3
++++ codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	18 Feb 2004 04:23:24 -0000
+@@ -54,9 +54,9 @@
+ 
+     $http_response->generate_header($topic->{topicid},
+ 				    $topic->{document_title}, 
+-    			            $topic->{author},
++    			            "",
+ 				    "", "", $mode, $tabwidth,
+-				    $topic->{repository}, "", "", 0, 1);
++				    "", "", "", 0, 1);
+ 
+     # Create the hash for the template variables.
+     my $vars = {};
+Index: codestriker/lib/Codestriker/Action/ViewTopicProperties.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicProperties.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 ViewTopicProperties.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	5 Feb 2004 21:36:05 -0000	1.1
++++ codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	18 Feb 2004 04:23:24 -0000
+@@ -54,9 +54,9 @@
+ 
+     $http_response->generate_header($topic->{topicid},
+ 				    $topic->{document_title}, 
+-    			            $topic->{author},
++    			            "",
+ 				    "", "", $mode, $tabwidth,
+-				    $topic->{repository}, "", "", 0, 1);
++				    "", "", "", 0, 1);
+ 
+     # Retrieve the repository object, if repository functionality is enabled.
+     my $repository;
+Index: codestriker/lib/Codestriker/Model/MetricStats.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/MetricStats.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 MetricStats.pm
+--- codestriker/lib/Codestriker/Model/MetricStats.pm	17 Feb 2004 11:38:09 -0000	1.4
++++ codestriker/lib/Codestriker/Model/MetricStats.pm	18 Feb 2004 04:23:24 -0000
+@@ -59,7 +59,7 @@
+  
+     # Get the list of participants from all these topics.
+     my $participant_list = $dbh->selectall_arrayref(
+-	    'SELECT comment.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
++	    'SELECT commentdata.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
+ 	     FROM commentdata, commentstate, topic 
+ 	     WHERE topic.modified_ts >= ? AND 
+ 		   topic.id = commentstate.topicid AND 

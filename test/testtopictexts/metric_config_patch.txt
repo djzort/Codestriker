@@ -1,0 +1,160 @@
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.40
+diff -u -b -r1.40 codestriker.conf
+--- codestriker/codestriker.conf	21 Jan 2004 21:44:46 -0000	1.40
++++ codestriker/codestriker.conf	7 Feb 2004 03:04:13 -0000
+@@ -213,3 +213,44 @@
+ # Allows you to override the default title of "Codestriker %version%".
+ # $title = "Codestriker $Codestriker::VERSION";
+ 
++
++# This options configures the metric support in codestriker. You have the following
++# options:
++#
++# $metric_config = "none", "basic", "all", "metric name, metric name, etc"
++#
++# "none" - turns off all extra metric support in the application. The metric page will 
++# only display and manage data that is strictly required to perform the review. 
++# Codestriker will not require any addition data input from the reviewers and authors.
++# This is the default. However, you still get basic data like how many topics 
++# are being created and how problems are being found.
++#
++# "basic" - Turns on the metrics that are considered to be essential for a metric 
++# program. It will require that reviewers and authors enter the time spent reviewing 
++# the topic, the time spent in the review meeting, and the time spent preparing for
++# the review. The metric selection assumes that you are following a formal review
++# process with a preparation meeting, and a defect review meeting. 
++#   
++#   kickoff time - time spent preparing for the review
++#   checking time - time spent actually reviewing the topic.
++#   logging meeting duration - the time spent in the logging meeting.
++#
++# "all" - Turns on all of the metrics that one could possibly want to track. The
++# list of metrics is from the book "Software Inspection" by Gilb and Graham.
++# You should probably not use this unless you are using a formal process that
++# is well established. You may want to enable this temporally to get a idea of the 
++# types of metrics that are supported. 
++#
++# "name,name" - Lastly, you can pick and chose what metrics you would like to enable.
++# just list the metric names in a comma separated list. You can see all of the build in
++# metrics in the lib/Codestriker.pm file. For example, if you don't hold a kick off
++# meeting, and but do hold a logging meeting, the basic option will not quit fit. You 
++# should set the $metric_confg = "checking time,logging meeting duration".
++#
++# If you don't like our choices of metrics, the names, descriptions, etc feel free to 
++# edit the lib/Codestriker.pm. It contains documentations on how to add your own 
++# metrics into codestriker. It is easy to do, and does not require any coding.
++
++$metric_config = "none";
++
++
+Index: codestriker/lib/Codestriker.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker.pm,v
+retrieving revision 1.44
+diff -u -b -r1.44 Codestriker.pm
+--- codestriker/lib/Codestriker.pm	5 Feb 2004 21:36:05 -0000	1.44
++++ codestriker/lib/Codestriker.pm	7 Feb 2004 03:04:14 -0000
+@@ -22,7 +22,7 @@
+ 	      $lxr_map $allow_comment_email $default_topic_br_mode
+ 	      $allow_delete $allow_searchlist 
+               $allow_projects $antispam_email $VERSION $title $BASEDIR
+-	      @metrics_schema
++	      $metric_config
+ 	      );
+ 
+ # Version of Codestriker.
+@@ -80,14 +80,15 @@
+ @Codestriker::short_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+ 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+ 
++$metric_config = "";
+ 
+-
+-# name => The short name of the metric. This name will be used in the SQL table, in the data download, and in the input tables.
++# name => The short name of the metric. This name will be used in the SQL table, in the 
++# data download, in the input tables, and perhaps in the .conf file.
+ #
+-# description => The long description of the item. Displayed as online help.
++# description => The long description of the item. Displayed as online help (?)
+ #
+-# enabled=> If 1, the metrics are enabled by default on new installs of codestriker. After 
+-#             the system has been configured, it is up to the local admin. 
++# enabled=> If 1, the metrics are enabled by default in "basic" configs. Otherwise
++#           the $metric_config option on the .conf will override this.
+ #
+ # Scope => This will be "topic", "reviewer","author".
+ #	    A "topic" metric that has a 1 to 1 relationship with the topic itself.
+@@ -101,7 +102,7 @@
+ # filter => The type of data being stored. "hours" or "count". Data will not be stored to 
+ #           the database if it does not pass the format expected for the filter type.
+ 
+-@metrics_schema = 
++our @metrics_schema = 
+ ( 
+   # planning time
+   {
+@@ -243,6 +244,36 @@
+ 
+ );
+ 
++# Return the schema for the codestriker metric support. It insures that the 
++# settings in the conf file are applied to the schema.
++sub get_metric_schema {
++
++    # Make each of the metrics schema's are enabled according to the .conf file.
++    foreach my $metric ( @metrics_schema ) {
++	if ($metric_config eq "" || $metric_config eq "none") {
++	    $metric->{enabled} = 0;	
++	}
++	elsif ( $metric_config eq "basic") {
++	    # leave the default enabled values.
++	}
++	elsif ( $metric_config eq "all") {
++	    $metric->{enabled} = 1;	
++	}
++	else {
++	    # Make sure it matches the entire thing.
++	    my $regex = "(^|,)$metric->{name}(,|\$)";
++
++	    if ($metric_config =~ /$regex/) {
++		$metric->{enabled} = 1;	
++	    }
++	    else {
++		$metric->{enabled} = 0;
++	    }
++	}
++    }
++
++    return @metrics_schema;
++}
+ 
+ # Initialise codestriker, by loading up the configuration file and exporting
+ # those values to the rest of the system.
+Index: codestriker/lib/Codestriker/Model/Metrics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Metrics.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 Metrics.pm
+--- codestriker/lib/Codestriker/Model/Metrics.pm	5 Feb 2004 21:37:08 -0000	1.3
++++ codestriker/lib/Codestriker/Model/Metrics.pm	7 Feb 2004 03:04:14 -0000
+@@ -111,7 +111,7 @@
+ 	# the configured metric is found in the database, it is removed 
+ 	# from the stored_metric list to find any data that is in the 
+ 	# database, but is not configured.
+-	foreach my $metric_schema (@Codestriker::metrics_schema) {
++	foreach my $metric_schema (Codestriker::get_metric_schema()) {
+ 	    if ($metric_schema->{scope} eq 'topic') {
+ 		my $metric =
+ 		    { # This is the topic metric.
+@@ -284,7 +284,7 @@
+ 	    Codestriker::DB::DBI->release_connection($dbh, 1);
+ 	}
+ 
+-	foreach my $metric_schema (@Codestriker::metrics_schema) {
++	foreach my $metric_schema (Codestriker::get_metric_schema()) {
+ 	    if ($metric_schema->{scope} ne 'topic') {
+ 		my $metric = 
+ 		{ 

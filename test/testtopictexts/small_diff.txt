@@ -1,0 +1,11 @@
+--- getdiffs.sh	Sat Aug 30 21:09:59 2003
++++ getlatest.sh	Mon Oct 13 20:52:49 2003
+@@ -1,3 +1,7 @@
+ 
+-cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/codestriker diff -u -b  codestriker
++cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/codestriker update -P  codestriker
++#cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/codestriker co codestriker
+ 
++chown -R www-data codestriker
++chgrp -R www-data codestriker
++chmod -R g+w codestriker

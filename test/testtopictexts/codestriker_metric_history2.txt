@@ -1,0 +1,552 @@
+Index: codestriker/lib/Codestriker/Action/EditComment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/EditComment.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 EditComment.pm
+--- codestriker/lib/Codestriker/Action/EditComment.pm	9 Mar 2004 21:41:30 -0000	1.3
++++ codestriker/lib/Codestriker/Action/EditComment.pm	16 Mar 2004 04:33:19 -0000
+@@ -42,7 +42,7 @@
+     my @document_description = split /\n/, $topic->{description};
+ 
+     # Retrieve the diff hunk for this file and line number.
+-    my $delta = Codestriker::Model::File->get_delta($topicid, $fn, $line, $new);
++    my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn, $line, $new);
+ 
+     # Display the header of this page.
+     $http_response->generate_header($topicid, $topic->{title}, $email, "", "",
+Index: codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 SubmitEditTopicProperties.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm	9 Mar 2004 21:41:30 -0000	1.3
++++ codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm	16 Mar 2004 04:33:20 -0000
+@@ -99,11 +99,9 @@
+ 
+     }
+ 
+-    if ( $topic_state ne "Delete") {
+     # Indicate to the topic listeners that the topic has changed.
+     Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
+ 							$topic);
+-    }
+ 
+     # Direct control to the appropriate action class, depending on the result
+     # of the above operation, and what screens are enabled.
+Index: codestriker/lib/Codestriker/Action/SubmitNewComment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitNewComment.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 SubmitNewComment.pm
+--- codestriker/lib/Codestriker/Action/SubmitNewComment.pm	7 Jan 2004 07:08:24 -0000	1.1
++++ codestriker/lib/Codestriker/Action/SubmitNewComment.pm	16 Mar 2004 04:33:20 -0000
+@@ -88,129 +88,5 @@
+     $http_response->generate_footer();
+ }
+ 
+-# Given a topic and topic line number, try to determine the line
+-# number of the new file it corresponds to.  For topic lines which
+-# were made against '+' lines or unchanged lines, this will give an
+-# accurate result.  For other situations, the number returned will be
+-# approximate.  The results are returned in $filename_ref,
+-# $linenumber_ref and $accurate_ref references.  This is a deprecated method
+-# which is only used for data migration purposes (within checksetup.pl and
+-# import.pl).
+-sub _get_file_linenumber ($$$$$$$$)
+-{
+-    my ($type, $topic, $topic_linenumber, $filenumber_ref,
+-	$filename_ref, $linenumber_ref, $accurate_ref, $new_ref) = @_;
+-
+-    # Find the appropriate file that $topic_linenumber refers to.
+-    my (@filename, @revision, @offset, @binary);
+-    Codestriker::Model::File->get_filetable($topic, \@filename, \@revision,
+-					    \@offset, \@binary);
+-    # No filetable.
+-    return 0 if ($#filename == -1);
+-
+-    my $diff_limit = -1;
+-    my $index;
+-    for ($index = 0; $index <= $#filename; $index++) {
+-	last if ($offset[$index] > $topic_linenumber);
+-    }
+-
+-    # Check if the comment was made against a diff header.
+-    if ($index <= $#offset) {
+-	my $diff_header_size;
+-	if ($revision[$index] eq $Codestriker::ADDED_REVISION ||
+-	    $revision[$index] eq $Codestriker::REMOVED_REVISION) {
+-	    # Added or removed file.
+-	    $diff_header_size = 6;
+-	}
+-	elsif ($revision[$index] eq $Codestriker::PATCH_REVISION) {
+-	    # Patch file
+-	    $diff_header_size = 3;
+-	}
+-	else {
+-	    # Normal CVS diff header.
+-	    $diff_header_size = 7;
+-	}
+-
+-	if ( ($topic_linenumber >=
+-	      $offset[$index] - $diff_header_size) &&
+-	     ($topic_linenumber <= $offset[$index]) ) {
+-	    $$filenumber_ref = $index;
+-	    $$filename_ref = $filename[$index];
+-	    $$linenumber_ref = 1;
+-	    $$accurate_ref = 0;
+-	    $$new_ref = 0;
+-	    return 1;
+-	}
+-    }
+-    $index--;
+-
+-    # Couldn't find a matching linenumber.
+-    if ($index < 0 || $index > $#filename) {
+-	$$filenumber_ref = -1;
+-	$$filename_ref = "";
+-	return 1;
+-    }
+-
+-    # Retrieve the diff text corresponding to this file.
+-    my ($tmp_offset, $tmp_revision, $diff_text);
+-    Codestriker::Model::File->get($topic, $index, \$tmp_offset,
+-				  \$tmp_revision, \$diff_text);
+-
+-    # Go through the patch file until we reach the topic linenumber of
+-    # interest.
+-    my $new = 0;
+-    my $accurate_line = 0;
+-    my $oldfile_linenumber = 0;
+-    my $newfile_linenumber = 0;
+-    my $current_topic_linenumber;
+-    my @lines = split /\n/, $diff_text;
+-    for (my $i = 0, $current_topic_linenumber = $offset[$index];
+-	 $i <= $#lines && $current_topic_linenumber <= $topic_linenumber;
+-	 $i++, $current_topic_linenumber++) {
+-	$_ = $lines[$i];
+-	if (/^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@.*$/o) {
+-	    # Matching diff header, record what the current linenumber is now
+-	    # in the new file.
+-	    $oldfile_linenumber = $1 - 1;
+-	    $newfile_linenumber = $2 - 1;
+-	    $accurate_line = 0;
+-	    $new = 0;
+-	}
+-	elsif (/^\s.*$/o) {
+-	    # A line with no change.
+-	    $oldfile_linenumber++;
+-	    $newfile_linenumber++;
+-	    $accurate_line = 1;
+-	    $new = 1;
+-	}
+-	elsif (/^\+.*$/o) {
+-	    # A line corresponding to the new file.
+-	    $newfile_linenumber++;
+-	    $accurate_line = 1;
+-	    $new = 1;
+-	}
+-	elsif (/^\-.*$/o) {
+-	    # A line corresponding to the old file.
+-	    $oldfile_linenumber++;
+-	    $accurate_line = 0;
+-	    $new = 0;
+-	}
+-    }
+-
+-    if ($current_topic_linenumber >= $topic_linenumber) {
+-	# The topic linenumber was found.
+-	$$filenumber_ref = $index;
+-	$$filename_ref = $filename[$index];
+-	$$linenumber_ref = $new ? $newfile_linenumber : $oldfile_linenumber;
+-	$$accurate_ref = $accurate_line;
+-	$$new_ref = $new;
+-    }
+-    else {
+-	# The topic linenumber was not found.
+-	$$filenumber_ref = -1;
+-	$$filename_ref = "";
+-    }
+-    return 1;
+-}
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.37
+diff -u -b -r1.37 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	9 Mar 2004 21:41:30 -0000	1.37
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	16 Mar 2004 04:33:20 -0000
+@@ -41,7 +41,7 @@
+ 
+     # Retrieve the changed files which are a part of this review.
+     my (@filenames, @revisions, @offsets, @binary);
+-    Codestriker::Model::File->get_filetable($topicid,
++    $topic->get_filestable(
+     		\@filenames,
+                 \@revisions,
+                 \@offsets,
+@@ -218,7 +218,7 @@
+     $render->start();
+ 
+     # Retrieve the delta set comprising this review.
+-    my @deltas = Codestriker::Model::File->get_delta_set($topicid);
++    my @deltas = Codestriker::Model::Delta->get_delta_set($topicid);
+ 
+     # Render the deltas.
+     my $old_filename = "";
+Index: codestriker/lib/Codestriker/Action/ViewTopicComments.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicComments.pm,v
+retrieving revision 1.5
+diff -u -b -r1.5 ViewTopicComments.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicComments.pm	9 Mar 2004 21:41:30 -0000	1.5
++++ codestriker/lib/Codestriker/Action/ViewTopicComments.pm	16 Mar 2004 04:33:20 -0000
+@@ -107,7 +107,7 @@
+ 	$comment->{state} = $Codestriker::comment_states[$state];
+ 
+         if ($show_context ne "" && $show_context > 0) {
+-                my $delta = Codestriker::Model::File->get_delta($topicid, 
++                my $delta = Codestriker::Model::Delta->get_delta($topicid, 
+                                 $comment->{filenumber}, 
+                                 $comment->{fileline} , 
+                                 $comment->{filenew});
+Index: codestriker/lib/Codestriker/Action/ViewTopicFile.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicFile.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 ViewTopicFile.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicFile.pm	9 Mar 2004 21:41:30 -0000	1.3
++++ codestriker/lib/Codestriker/Action/ViewTopicFile.pm	16 Mar 2004 04:33:20 -0000
+@@ -43,7 +43,7 @@
+ 	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+ 
+     # Retrieve the deltas corresponding to this file.
+-    my @deltas = Codestriker::Model::File->get_deltas($topicid, $fn);
++    my @deltas = Codestriker::Model::Delta::get_deltas($topicid, $fn);
+     my $filename = $deltas[0]->{filename};
+     my $revision = $deltas[0]->{revision};
+ 
+Index: codestriker/lib/Codestriker/Action/ViewTopicInfo.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicInfo.pm,v
+retrieving revision 1.5
+diff -u -b -r1.5 ViewTopicInfo.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	9 Mar 2004 21:41:30 -0000	1.5
++++ codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	16 Mar 2004 04:33:20 -0000
+@@ -37,14 +37,6 @@
+     # Retrieve the appropriate topic details.           
+     my $topic = Codestriker::Model::Topic->new($topicid);     
+ 
+-    # Retrieve the changed files which are a part of this review.
+-    my (@filenames, @revisions, @offsets, @binary);
+-    Codestriker::Model::File->get_filetable($topicid,
+-					    \@filenames,
+-					    \@revisions,
+-					    \@offsets,
+-					    \@binary);
+-
+     # Retrieve line-by-line versions of the data and description.
+     my @document_description = split /\n/, $topic->{description};
+ 
+Index: codestriker/lib/Codestriker/Action/ViewTopicProperties.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicProperties.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 ViewTopicProperties.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	9 Mar 2004 21:41:30 -0000	1.3
++++ codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	16 Mar 2004 04:33:20 -0000
+@@ -37,14 +37,6 @@
+     # Retrieve the appropriate topic details.           
+     my $topic = Codestriker::Model::Topic->new($topicid);     
+ 
+-    # Retrieve the changed files which are a part of this review.
+-    my (@filenames, @revisions, @offsets, @binary);
+-    Codestriker::Model::File->get_filetable($topicid,
+-					    \@filenames,
+-					    \@revisions,
+-					    \@offsets,
+-					    \@binary);
+-
+     # Retrieve the comment details for this topic.
+     my @topic_comments = $topic->read_comments();
+ 
+Index: codestriker/lib/Codestriker/Model/Delta.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Delta.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 Delta.pm
+--- codestriker/lib/Codestriker/Model/Delta.pm	18 Feb 2004 21:17:20 -0000	1.3
++++ codestriker/lib/Codestriker/Model/Delta.pm	16 Mar 2004 04:33:20 -0000
+@@ -33,6 +33,37 @@
+     return $self;
+ }
+ 
++# Retrieve the ordered list of deltas that comprise this review.
++sub get_delta_set($$) {
++    my ($type, $topicid) = @_;
++    return get_deltas($topicid, -1);
++}
++
++# Retrieve the delta for the specific filename and linenumber.
++sub get_delta($$$) {
++    my ($type, $topicid, $filenumber, $linenumber, $new) = @_;
++
++    # Grab all the deltas for this file, and grab the delta with the highest
++    # starting line number lower than or equal to the specific linenumber,
++    # and matching the same file number.
++    my @deltas = $type->get_deltas($topicid, $filenumber);
++    my $found_delta = undef;
++    for (my $i = 0; $i <= $#deltas; $i++) {
++	my $delta = $deltas[$i];
++	my $delta_linenumber = $new ?
++	    $delta->{new_linenumber} : $delta->{old_linenumber};
++	if ($delta_linenumber <= $linenumber) {
++	    $found_delta = $delta;
++	} else {
++	    # Passed the delta of interest, return the previous one found.
++	    return $found_delta;
++	}
++    }
++
++    # Return the matching delta found, if any.
++    return $found_delta;
++}
++
+ # Retrieve the ordered list of deltas applied to a specific file. class factory
+ # method, returns a list of delta objects.
+ sub get_deltas($$) {
+@@ -71,11 +102,24 @@
+ 	}
+     }
+     
++    # The delta object needs to know if there are only delta objects
++    # in this file so it can figure out if the delta is a new file.
++    foreach my $delta (@results) {
++	if (scalar(@results) == 1) {
++        	$delta->{only_delta_in_file} = 1;
++        }
++        else {
++        	$delta->{only_delta_in_file} = 0;
++        }
++    }
++
++    
+     Codestriker::DB::DBI->release_connection($dbh, $success);
+     die $dbh->errstr unless $success;
+     
+     return @results;
+ }
++
+ 
+ # This function looks at the delta, and will return 1 if the delta looks like
+ # it is a delta for a completly new file. This happens when a new file is added
+Index: codestriker/lib/Codestriker/Model/File.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/File.pm,v
+retrieving revision 1.21
+diff -u -b -r1.21 File.pm
+--- codestriker/lib/Codestriker/Model/File.pm	9 Mar 2004 21:41:30 -0000	1.21
++++ codestriker/lib/Codestriker/Model/File.pm	16 Mar 2004 04:33:20 -0000
+@@ -125,55 +125,5 @@
+     die $dbh->errstr unless $success;
+ }
+ 
+-# Retrieve the ordered list of deltas that comprise this review.
+-sub get_delta_set($$) {
+-    my ($type, $topicid) = @_;
+-    return $type->get_deltas($topicid, -1);
+-}
+-
+-# Retrieve the ordered list of deltas applied to a specific file.
+-sub get_deltas($$$) {
+-    my ($type, $topicid, $filenumber) = @_;
+-
+-    my @results = Codestriker::Model::Delta::get_deltas($topicid, $filenumber);
+-
+-    # The delta object needs to know if there are only delta objects
+-    # in this file so it can figure out if the delta is a new file.
+-    foreach my $delta (@results) {
+-	if (scalar(@results) == 1) {
+-        	$delta->{only_delta_in_file} = 1;
+-        }
+-        else {
+-        	$delta->{only_delta_in_file} = 0;
+-        }
+-    }
+-
+-    return @results;
+-}
+-
+-# Retrieve the delta for the specific filename and linenumber.
+-sub get_delta($$$) {
+-    my ($type, $topicid, $filenumber, $linenumber, $new) = @_;
+-
+-    # Grab all the deltas for this file, and grab the delta with the highest
+-    # starting line number lower than or equal to the specific linenumber,
+-    # and matching the same file number.
+-    my @deltas = $type->get_deltas($topicid, $filenumber);
+-    my $found_delta = undef;
+-    for (my $i = 0; $i <= $#deltas; $i++) {
+-	my $delta = $deltas[$i];
+-	my $delta_linenumber = $new ?
+-	    $delta->{new_linenumber} : $delta->{old_linenumber};
+-	if ($delta_linenumber <= $linenumber) {
+-	    $found_delta = $delta;
+-	} else {
+-	    # Passed the delta of interest, return the previous one found.
+-	    return $found_delta;
+-	}
+-    }
+-
+-    # Return the matching delta found, if any.
+-    return $found_delta;
+-}
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Model/Topic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Topic.pm,v
+retrieving revision 1.29
+diff -u -b -r1.29 Topic.pm
+--- codestriker/lib/Codestriker/Model/Topic.pm	9 Mar 2004 21:41:30 -0000	1.29
++++ codestriker/lib/Codestriker/Model/Topic.pm	16 Mar 2004 04:33:21 -0000
+@@ -301,6 +301,37 @@
+     return @{$self->{comments}};
+ }
+ 
++
++# Retrieve the changed files which are a part of this review. It will only pull them
++# from the database once.
++sub get_filestable
++{
++    my ($self,$filenames, $revisions, $offsets, $binary) = @_;
++
++    if (exists ($self->{filetable})) {
++
++    	( $filenames, $revisions, $offsets,$binary ) = @{$self->{filetable}};
++    }
++    else {
++
++        Codestriker::Model::File->get_filetable($self->{topicid},
++    		    $filenames,
++                    $revisions,
++                    $offsets,
++                    $binary);
++
++        $self->{filetable} = [ 
++    		    $filenames,
++                    $revisions,
++                    $offsets,
++                    $binary ];
++
++    }
++
++}
++
++
++
+ # Determine if the specified topic id exists in the table or not.
+ sub exists($) {
+     my ($topicid) = @_;
+@@ -340,23 +371,20 @@
+ 
+     my ($self) = @_;
+ 
+-    my @document = split /\n/, $self->{document};
++    my @deltas = Codestriker::Model::Delta->get_delta_set($self->{topicid});
+ 
+-    my $diff_lines = scalar( grep /^[+-][^+-][^+-]/, @document );
++    my $line_count = 0;
+ 
+-    my $looks_like_a_unified_diff = 
+-	scalar( grep /^diff /, @document ) && 
+-	scalar( grep /^\-\-\- /, @document ) && 
+-	scalar( grep /^\+\+\+ /, @document ) && 
+-	scalar( grep /^@@ /, @document ) && 
+-	$diff_lines;
++    foreach my $delta (@deltas)
++    {
++        my @document = split /\n/, $delta->{text};
+ 
+-    if ( $looks_like_a_unified_diff ) {
+-	return $diff_lines;
++        $line_count += scalar( grep /^[+-][^+-][^+-]/, @document );
+     }
+ 
+-    return scalar( @document );
++    return $line_count;
+ }
++
+ 
+ # This function is used to create a new topic id. The function insures 
+ # that the new topic id is difficult to guess, and is not taken in the 
+Index: codestriker/lib/Codestriker/TopicListeners/Email.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/TopicListeners/Email.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 Email.pm
+--- codestriker/lib/Codestriker/TopicListeners/Email.pm	9 Feb 2004 07:57:42 -0000	1.4
++++ codestriker/lib/Codestriker/TopicListeners/Email.pm	16 Mar 2004 04:33:21 -0000
+@@ -121,7 +121,7 @@
+ 					  $query->url());
+ 
+     # Retrieve the diff hunk for this file and line number.
+-    my $delta = Codestriker::Model::File->get_delta(
++    my $delta = Codestriker::Model::Delta->get_delta(
+                     $comment->{topicid}, 
+                     $comment->{filenumber}, 
+ 		    $comment->{fileline}, 
+Index: codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm,v
+retrieving revision 1.7
+diff -u -b -r1.7 HistoryRecorder.pm
+--- codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm	9 Mar 2004 21:41:31 -0000	1.7
++++ codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm	16 Mar 2004 04:33:21 -0000
+@@ -68,19 +68,21 @@
+     my ($self, $user, $topic_orig, $topic) = @_;
+ 
+     # This code is here to handle the case of a topic being created
+-    # in the older (pre 1.8.0) versions of codestriker that have
+-    # been created without any topic history. See if topichistory
+-    # row exists for the old topic, if not add it in first.
++    # in the older (pre 1.8.0) versions of codestriker. The older 
++    # topics have been created without any topic history. See if 
++    # topichistory row exists for the old topic, if not add it in first.
++
++    if (Codestriker::Model::Topic::exists($topic->{topicid}))
++    {
+     my $dbh = Codestriker::DB::DBI->get_connection();
+ 
+-    my $exists =
+-	$dbh->prepare_cached('SELECT COUNT(version) '. 
++        my @array = $dbh->selectrow_array('SELECT COUNT(version) '. 
+ 			     'FROM topichistory ' .
+-			     'WHERE ? = topicid and ? = version');
++			     'WHERE ? = topicid and ? = version',
++                              {},
++                              $topic->{topicid},$topic_orig->{version});
+ 
+-    $exists->execute($topic->{topicid},$topic_orig->{version});
+-
+-    my $old_topic_has_history = ($exists->fetchrow_array())[0];
++        my $old_topic_has_history = $array[0];
+ 
+     # Release the database connection.
+     Codestriker::DB::DBI->release_connection($dbh,1);
+@@ -90,8 +92,13 @@
+         $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
+     }
+ 
+-
+     $self->_insert_topichistory_entry($user, $topic);
++    }
++    else
++    {
++        # The Topic change is a topic delete, so we don't want to add a
++        # history event to a topic that no longer exists. 
++    }
+ 
+     return '';
+ }

@@ -1,0 +1,1369 @@
+Index: codestriker/bin/checksetup.pl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/bin/checksetup.pl,v
+retrieving revision 1.39
+diff -u -b -r1.39 checksetup.pl
+--- codestriker/bin/checksetup.pl	4 Mar 2004 09:43:47 -0000	1.39
++++ codestriker/bin/checksetup.pl	8 Mar 2004 03:22:33 -0000
+@@ -262,7 +262,7 @@
+ 		    col(name=>"projectid", type=>$INT32),
+ 		    col(name=>"reviewers", type=>$TEXT),
+ 		    col(name=>"cc", type=>$TEXT, mandatory=>0),
+-		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
++		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255,mandatory=>0)
+ 		   ],
+ 	indexes => [dbindex(name=>"th_idx", column_names=>["topicid"])]);
+ 	
+@@ -270,7 +270,7 @@
+ my $topicviewhistory_table =
+   table(name => "topicviewhistory",
+ 	columns => [col(name=>"topicid", type=>$INT32),
+-		    col(name=>"email", type=>$VARCHAR, length=>255),
++		    col(name=>"email", type=>$VARCHAR, length=>255, mandatory=>0),
+ 		    col(name=>"creation_ts", type=>$DATETIME)
+ 		   ],
+ 	indexes => [dbindex(name=>"tvh_idx", column_names=>["topicid"])]);
+Index: codestriker/lib/Codestriker.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker.pm,v
+retrieving revision 1.46
+diff -u -b -r1.46 Codestriker.pm
+--- codestriker/lib/Codestriker.pm	24 Feb 2004 21:48:42 -0000	1.46
++++ codestriker/lib/Codestriker.pm	8 Mar 2004 03:22:33 -0000
+@@ -274,6 +274,11 @@
+ 		$metric->{enabled} = 0;
+ 	    }
+ 	}
++
++	# This metric is not not a "built it" metric. Meaning that it 
++	# comes out of the db, rather than being generated on the fly
++	# from other parts of the db (like the topic history).
++	$metric->{builtin} = 0;
+     }
+ 
+     return @metrics_schema;
+@@ -361,6 +366,20 @@
+ 	return $timestamp;
+     }
+ }
++
++# Given a database formatted timestamp, return the time as a time_t. The
++# number of seconds since the baseline time of the system.
++sub convert_date_timestamp_time($$) {
++    my ($type, $timestamp) = @_;
++
++    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
++	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
++	return Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
++		      
++    } else {
++	return 0;
++    }
++}
+ 
+ 
+ # Given an email string, replace it in a non-SPAM friendly form.
+Index: codestriker/lib/Codestriker/Action/DownloadTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/DownloadTopic.pm,v
+retrieving revision 1.7
+diff -u -b -r1.7 DownloadTopic.pm
+--- codestriker/lib/Codestriker/Action/DownloadTopic.pm	7 Jan 2004 07:08:24 -0000	1.7
++++ codestriker/lib/Codestriker/Action/DownloadTopic.pm	8 Mar 2004 03:22:33 -0000
+@@ -21,8 +21,12 @@
+     # Retrieve the parameters for this action.
+     my $query = $http_response->get_query();
+     my $topicid = $http_input->get('topic');
++    my $email = $http_input->get('email');
+ 
+     my $topic = Codestriker::Model::Topic->new($topicid);
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ 
+     # Dump the raw topic data as text/plain.
+     print $query->header(-type=>'text/plain',
+Index: codestriker/lib/Codestriker/Action/EditComment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/EditComment.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 EditComment.pm
+--- codestriker/lib/Codestriker/Action/EditComment.pm	7 Jan 2004 09:41:31 -0000	1.2
++++ codestriker/lib/Codestriker/Action/EditComment.pm	8 Mar 2004 03:22:33 -0000
+@@ -123,6 +123,9 @@
+     $template->process($vars);
+ 
+     $http_response->generate_footer();
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ }
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Action/SubmitEditTopicMetrics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditTopicMetrics.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 SubmitEditTopicMetrics.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditTopicMetrics.pm	5 Feb 2004 21:36:05 -0000	1.1
++++ codestriker/lib/Codestriker/Action/SubmitEditTopicMetrics.pm	8 Mar 2004 03:22:33 -0000
+@@ -44,13 +44,14 @@
+     # in twice.
+     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
+ 
+-    for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex)
+-    {
+-	my @usermetrics = @{$http_input->{"reviewer_metric,$userindex"}};
++    for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex) {
++	if (defined($http_input->get('reviewer_metric,$userindex'))) {
++	    my @usermetrics = @{$http_input->get("reviewer_metric,$userindex")};
+ 
+ 	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex],
+ 						   @usermetrics);
+ 	$metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);
++	}
+     }
+     
+     my @author_metrics = @{$http_input->get('author_metric')};
+Index: codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 SubmitEditTopicProperties.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm	9 Feb 2004 07:57:38 -0000	1.2
++++ codestriker/lib/Codestriker/Action/SubmitEditTopicProperties.pm	8 Mar 2004 03:22:33 -0000
+@@ -29,6 +29,7 @@
+     my $topic_description = $http_input->get('topic_description');
+     my $reviewers = $http_input->get('reviewers');
+     my $email = $http_input->get('email');
++    my $author = $http_input->get('author');
+     my $cc = $http_input->get('cc');
+     my $topic_state = $http_input->get('topic_state');
+     my $bug_ids = $http_input->get('bug_ids');
+@@ -63,7 +64,7 @@
+     if ($topic_description eq "") {
+ 	$feedback .= "Topic description cannot be empty.\n";
+     }
+-    if ($email eq "") {
++    if ($author eq "") {
+ 	$feedback .= "Author cannot be empty.\n";
+     }
+     if ($reviewers eq "") {
+@@ -81,7 +82,7 @@
+ 	}
+ 	else {
+ 	    # The input looks good, update the database.
+-	    $rc = $topic->update($topic_title, $email, $reviewers, $cc,
++	    $rc = $topic->update($topic_title, $author, $reviewers, $cc,
+ 				 $repository_url, $bug_ids, $projectid,
+ 				 $topic_description, $topic_state);
+ 	    if ($rc == $Codestriker::INVALID_TOPIC) {
+@@ -98,9 +99,11 @@
+ 
+     }
+ 
++    if ( $topic_state ne "Delete") {
+     # Indicate to the topic listeners that the topic has changed.
+     Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
+ 							$topic);
++    }
+ 
+     # Direct control to the appropriate action class, depending on the result
+     # of the above operation, and what screens are enabled.
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.36
+diff -u -b -r1.36 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	29 Feb 2004 21:35:39 -0000	1.36
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	8 Mar 2004 03:22:33 -0000
+@@ -49,7 +49,6 @@
+ 
+     # Retrieve line-by-line versions of the data and description.
+     my @document_description = split /\n/, $topic->{description};
+-    my @document = split /\n/, $topic->{document};
+ 
+     # Retrieve the comment details for this topic.
+     my @comments = $topic->read_comments();
+@@ -114,7 +113,7 @@
+     $vars->{'document_reviewers'} = 
+     	Codestriker->filter_email($topic->{reviewers});
+     $vars->{'project_name'} = $topic->{project_name};
+-    $vars->{'number_of_lines'} = $#document + 1;
++    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
+ 
+     $vars->{'suggested_topic_size_lines'} =
+ 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
+@@ -202,7 +201,9 @@
+ 
+     print $query->p if ($mode == $Codestriker::NORMAL_MODE);
+ 
+-    # Number of characters the line number should take.
++    # Number of characters the line number should take, need the real lines
++    # not the number of changed lines.
++    my @document = split /\n/, $topic->{document};
+     my $max_digit_width = length($#document+1);
+ 
+     # Build the render which will be used to build this page.
+@@ -278,6 +279,7 @@
+ 
+     $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
+     $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
++
+ }
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Action/ViewTopicComments.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicComments.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 ViewTopicComments.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicComments.pm	10 Feb 2004 09:40:22 -0000	1.4
++++ codestriker/lib/Codestriker/Action/ViewTopicComments.pm	8 Mar 2004 03:22:33 -0000
+@@ -156,6 +156,9 @@
+     $template->process($vars);
+ 
+     $http_response->generate_footer();
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ }
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Action/ViewTopicFile.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicFile.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 ViewTopicFile.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicFile.pm	21 Jan 2004 21:44:47 -0000	1.2
++++ codestriker/lib/Codestriker/Action/ViewTopicFile.pm	8 Mar 2004 03:22:34 -0000
+@@ -25,6 +25,7 @@
+     my $topicid = $http_input->get('topic');
+     my $mode = $http_input->get('mode');
+     my $tabwidth = $http_input->get('tabwidth');
++    my $email = $http_input->get('email');
+     my $fn = $http_input->get('fn');
+     my $new = $http_input->get('new');
+     my $parallel = $http_input->get('parallel');
+@@ -170,6 +171,9 @@
+     print $query->end_html();
+ 
+     $http_response->generate_footer();
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ }
+ 
+ # Read the specified repository file and revision into memory.  Return true if
+Index: codestriker/lib/Codestriker/Action/ViewTopicInfo.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicInfo.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 ViewTopicInfo.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	19 Feb 2004 11:10:17 -0000	1.4
++++ codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	8 Mar 2004 03:22:34 -0000
+@@ -47,7 +47,6 @@
+ 
+     # Retrieve line-by-line versions of the data and description.
+     my @document_description = split /\n/, $topic->{description};
+-    my @document = split /\n/, $topic->{document};
+ 
+     # Retrieve the comment details for this topic.
+     my @topic_comments = $topic->read_comments();
+@@ -125,7 +124,7 @@
+     $vars->{'projects'} = \@projects;
+     $vars->{'topic_projectid'} = $topic->{project_id};
+ 
+-    $vars->{'number_of_lines'} = $#document + 1;
++    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
+ 
+     $vars->{'suggested_topic_size_lines'} =
+ 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
+@@ -159,7 +158,7 @@
+     my @author_metrics = $topic->get_metrics()->get_user_metrics($topic->{author});
+     $vars->{author_metrics} = \@author_metrics;
+     
+-    my @reviewer_list = split /, /, $topic->{reviewers};
++    my @reviewer_list = $topic->get_metrics()->get_complete_list_of_topic_participants();
+ 
+     # Remove the author from the list just in case somebody put themselves in twice.
+     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
+@@ -183,10 +182,16 @@
+     my @total_metrics = $topic->get_metrics()->get_user_metrics_totals(@reviewer_list, $topic->{author});
+     $vars->{total_metrics} = \@total_metrics;
+ 
++    my @topic_history = $topic->get_metrics()->get_topic_history();
++    $vars->{activity_list} = \@topic_history;
++
+     my $template = Codestriker::Http::Template->new("viewtopicinfo");
+     $template->process($vars);
+ 
+     $http_response->generate_footer();
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ }
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Action/ViewTopicProperties.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicProperties.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 ViewTopicProperties.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	19 Feb 2004 11:10:17 -0000	1.2
++++ codestriker/lib/Codestriker/Action/ViewTopicProperties.pm	8 Mar 2004 03:22:34 -0000
+@@ -45,10 +45,6 @@
+ 					    \@offsets,
+ 					    \@binary);
+ 
+-    # Retrieve line-by-line versions of the data and description.
+-    my @document_description = split /\n/, $topic->{description};
+-    my @document = split /\n/, $topic->{document};
+-
+     # Retrieve the comment details for this topic.
+     my @topic_comments = $topic->read_comments();
+ 
+@@ -128,7 +124,7 @@
+     $vars->{'projects'} = \@projects;
+     $vars->{'topic_projectid'} = $topic->{project_id};
+ 
+-    $vars->{'number_of_lines'} = $#document + 1;
++    $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
+ 
+     $vars->{'suggested_topic_size_lines'} =
+ 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
+@@ -136,7 +132,6 @@
+     $vars->{'list_url'} =
+ 	$url_builder->list_topics_url("", "", "", "", "", "", "",
+ 				      "", "", "", [ 0 ], undef);
+-
+     # Prepare the data for displaying the state update option.
+     # Make sure the old mode setting is no longer used.
+     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
+@@ -147,19 +142,15 @@
+     $vars->{'topic_version'} = $topic->{version};
+     $vars->{'states'} = \@Codestriker::topic_states;
+     $vars->{'default_state'} = $topic->{topic_state};
+-
+-    # Obtain the topic description, with "Bug \d\d\d" links rendered to links
+-    # to the bug tracking system.
+-    my $data = "";
+-    for (my $i = 0; $i <= $#document_description; $i++) {
+-	$data .= $document_description[$i] . "\n";
+-    }
+-    $vars->{'description'} = $data;
++    $vars->{'description'} = $topic->{description};
+     
+     my $template = Codestriker::Http::Template->new("viewtopicproperties");
+     $template->process($vars);
+ 
+     $http_response->generate_footer();
++
++    # Fire the topic listener to indicate that the user has viewed the topic.
++    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+ }
+ 
+ 1;
+Index: codestriker/lib/Codestriker/Http/Input.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Input.pm,v
+retrieving revision 1.28
+diff -u -b -r1.28 Input.pm
+--- codestriker/lib/Codestriker/Http/Input.pm	9 Feb 2004 07:57:40 -0000	1.28
++++ codestriker/lib/Codestriker/Http/Input.pm	8 Mar 2004 03:22:34 -0000
+@@ -57,6 +57,7 @@
+     $self->{action} = $query->param('action');
+     $self->{comments} = $query->param('comments');
+     $self->{email} = $query->param('email');
++    $self->{author} = $query->param('author');
+     $self->{topic_text} = $query->param('topic_text');
+     $self->{topic_title} = $query->param('topic_title');
+     $self->{topic_description} = $query->param('topic_description');
+@@ -185,6 +186,7 @@
+     $self->_untaint_digits('topic');
+     $self->_untaint_digits('projectid');
+     $self->_untaint_email('email');
++    $self->_untaint_email('author');
+     $self->_untaint_emails('reviewers');
+     $self->_untaint_emails('cc');
+     $self->_untaint_filename('filename');
+Index: codestriker/lib/Codestriker/Model/File.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/File.pm,v
+retrieving revision 1.20
+diff -u -b -r1.20 File.pm
+--- codestriker/lib/Codestriker/Model/File.pm	18 Feb 2004 11:13:51 -0000	1.20
++++ codestriker/lib/Codestriker/Model/File.pm	8 Mar 2004 03:22:34 -0000
+@@ -140,12 +140,10 @@
+     # The delta object needs to know if there are only delta objects
+     # in this file so it can figure out if the delta is a new file.
+     foreach my $delta (@results) {
+-	if (scalar(@results) == 1)
+-        {
++	if (scalar(@results) == 1) {
+         	$delta->{only_delta_in_file} = 1;
+         }
+-        else
+-        {
++        else {
+         	$delta->{only_delta_in_file} = 0;
+         }
+     }
+Index: codestriker/lib/Codestriker/Model/MetricStats.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/MetricStats.pm,v
+retrieving revision 1.5
+diff -u -b -r1.5 MetricStats.pm
+--- codestriker/lib/Codestriker/Model/MetricStats.pm	19 Feb 2004 11:10:18 -0000	1.5
++++ codestriker/lib/Codestriker/Model/MetricStats.pm	8 Mar 2004 03:22:34 -0000
+@@ -14,6 +14,9 @@
+ 
+ use Codestriker::DB::DBI;
+ 
++our $total_particpants_header = 'Total Participants';
++our $topic_size_lines_header = 'Topic Size In Lines';
++
+ # Returns the list of users that have participated in a Codestriker topics.
+ #
+ # 
+@@ -26,6 +29,7 @@
+ # }
+ 
+ sub get_basic_user_metrics {
++    # Gather basic user metrics for the past 16 weeks.
+     my $last_n_days = 16*7;
+ 
+     my $date = Codestriker->get_timestamp(time-($last_n_days*24*60*60));
+@@ -49,17 +53,23 @@
+ 	my $metrics = 
+ 	{
+ 	    name=>$name,
+-	    date_last_authored=>Codestriker->format_date_timestamp($date),
++	    date_last_authored=>
++		int((time() - Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
+ 	    date_last_participated=>'',
+-	    total_topics=>$count
++	    total_codestriker_time => 
++		calculate_topic_view_time_for_user($date,$name),
++	    total_topics=>$count,
+ 	};
+ 
+ 	push(@users_metrics, $metrics);
+     }
+  
+-    # Get the list of participants from all these topics.
++    # Get the list of participants from all these topics. You need to 
++    # submit at least one comment to be counted.
+     my $participant_list = $dbh->selectall_arrayref(
+-	    'SELECT commentdata.author, MAX(topic.modified_ts), COUNT(DISTINCT topic.id)
++	    'SELECT commentdata.author, 
++		    MAX(topic.modified_ts), 
++		    COUNT(DISTINCT topic.id)
+ 	     FROM commentdata, commentstate, topic 
+ 	     WHERE topic.modified_ts >= ? AND 
+ 		   topic.id = commentstate.topicid AND 
+@@ -75,7 +85,8 @@
+ 	foreach my $user (@users_metrics) {
+ 	    if ($user->{name} eq $name) {
+ 		$user->{date_last_participated} = 
+-		    Codestriker->format_date_timestamp($date);
++		    int((time() - 
++		    Codestriker->convert_date_timestamp_time($date))/(60*60*24));
+ 		$user->{total_topics} += $count;
+ 		$found = 1;
+ 	    }
+@@ -86,8 +97,12 @@
+ 	    {
+ 		name=>$name,
+ 		date_last_authored=>'',
+-		date_last_participated=>Codestriker->format_date_timestamp($date),
+-		total_topics=>$count
++		date_last_participated=>
++		    int((time() - 
++		    Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
++		total_topics=>$count,
++		total_codestriker_time => 
++		    calculate_topic_view_time_for_user($date,$name),
+ 	    };
+ 
+ 	    push( @users_metrics, $metrics);
+@@ -100,6 +115,32 @@
+     return @users_metrics;
+ }
+ 
++# Given the username, and the oldest date, calculate the total amount of 
++# codestriker time that was recorded in hours.
++sub calculate_topic_view_time_for_user {
++    my ($date,$user) = @_;
++
++    # get the total time for this user.
++    my $dbh = Codestriker::DB::DBI->get_connection();
++
++    my $select_topic = $dbh->prepare_cached('SELECT creation_ts ' .
++					    'FROM topicviewhistory ' .
++					    'WHERE creation_ts > ? AND ' .
++					    'email = ? ' .
++					    'ORDER BY creation_ts');
++
++    $select_topic->execute($date,$user);
++
++    my $total_time = 
++	Codestriker::Model::Metrics->calculate_topic_view_time( $select_topic);
++
++    Codestriker::DB::DBI->release_connection($dbh);
++
++    $total_time = sprintf("%1.1f",$total_time / (60*60));
++
++    return $total_time;
++}
++
+ 
+ # Returns a list of all the topic ids in the database.
+ sub get_topic_ids {
+@@ -171,6 +212,15 @@
+ 	push @topic_metric_headers, $metric->[0];
+     }
+ 
++    # Do the built in topic metrics.
++
++    for(my $state = 0; $state < scalar(@Codestriker::topic_states); ++$state) {
++	push @topic_metric_headers, 
++	    'Time In ' . $Codestriker::topic_states[$state];
++    }
++
++    push @topic_metric_headers, $topic_size_lines_header;
++
+     my @topic_user_metric_headers;
+ 
+     # User topic metrics counts.
+@@ -184,6 +234,10 @@
+ 	push @topic_user_metric_headers, $metric->[0];
+     }
+     
++    # Do the built in user metrics.
++    push @topic_user_metric_headers, 'Codestriker Time';
++    push @topic_user_metric_headers, $total_particpants_header;
++    
+     my $headers = 
+     {
+ 	base=>\@base_headers,
+@@ -208,18 +262,28 @@
+     my $dbh = Codestriker::DB::DBI->get_connection();
+ 
+     my @basic_topic_info = $dbh->selectrow_array('
+-	    SELECT topic.id, topic.author, topic.title, topic.state, topic.creation_ts, project.name 
++	    SELECT topic.id, 
++		   topic.author, 
++		   topic.title, 
++		   topic.state, 
++		   topic.creation_ts, 
++		   project.name 
+ 	    FROM topic, project
+-	    WHERE topic.id = ? AND topic.projectid = project.id',{}, $topicid);
++	    WHERE topic.id = ? AND 
++		  topic.projectid = project.id',{}, $topicid);
+ 
+ 
+     if ($basic_topic_info[3] < @Codestriker::topic_states) {
+-	$basic_topic_info[3] = @Codestriker::topic_states[$basic_topic_info[3]];
++	$basic_topic_info[3] = 
++	    @Codestriker::topic_states[$basic_topic_info[3]];
+     }
+ 
+     $basic_topic_info[4] =
+ 	Codestriker->format_date_timestamp($basic_topic_info[4]);
+ 
++    $basic_topic_info[1] =
++	Codestriker->filter_email($basic_topic_info[1]);
++
+     my @row;
+ 
+     push @row,@basic_topic_info;
+@@ -244,42 +308,48 @@
+ 	push @row, $count;
+     } 
+ 
++    my $topic = Codestriker::Model::Topic->new($basic_topic_info[0]);     
+ 
+-    # Get the topic metrics.
+-    my $topic_metrics = $dbh->selectall_arrayref(
+-	    'SELECT metric_name, sum(value)
+-	     FROM topicmetric 
+-	     WHERE topicid = ?
+-	     GROUP BY metric_name
+-	    ',{}, $topicid);
++    my $metrics = $topic->get_metrics();
++
++    my @topic_metrics = $metrics->get_topic_metrics();
+     
+     for (my $index = 0; $index < scalar(@{$headers->{topic}}); ++$index) {
+-	my $count = 0;
++	my $count = "";
++
++	foreach my $metric ( @topic_metrics ) {
++	    $count = $metric->{value} 
++		if ($metric->{name} eq $headers->{topic}->[$index]);
++	}
+ 
+-	foreach my $row ( @$topic_metrics ) {
+-	    $count = $row->[1] if ($row->[0] eq $headers->{topic}->[$index]);
++	if ($headers->{topic}->[$index] eq $topic_size_lines_header ) {
++	    $count = $topic->get_topic_size_in_lines();
+ 	}
+ 
+ 	push @row, $count;
+     } 
+ 
+-    # Get the user metrics.
+-    my $user_metrics = $dbh->selectall_arrayref(
+-	    'SELECT metric_name, sum(value)
+-	     FROM topicusermetric 
+-	     WHERE topicid = ?
+-	     GROUP BY metric_name
+-	    ',{}, $topicid);
++    # Get the list of users for this review.
++    my @users = $metrics->get_complete_list_of_topic_participants();
++    
++    my @user_metrics = $metrics->get_user_metrics_totals( @users );
+     
+     for (my $index = 0; $index < scalar(@{$headers->{user}}); ++$index) {
+-	my $count = 0;
++	my $count = "";
++
++	foreach my $metric ( @user_metrics ) {
++	    $count = $metric->{value} 
++		if ($metric->{name} eq $headers->{user}->[$index]);
++	}
+ 
+-	foreach my $row ( @$user_metrics ) {
+-	    $count = $row->[1] if ($row->[0] eq $headers->{user}->[$index]);
++	if ( $headers->{user}->[$index] eq $total_particpants_header) {
++	    # Add the total number of participants in the topic.
++	    $count = scalar(@users);
+ 	}
+ 
+ 	push @row, $count;
+     } 
++
+ 
+     # Close the connection, and check for any database errors.
+     Codestriker::DB::DBI->release_connection($dbh, 1);
+Index: codestriker/lib/Codestriker/Model/Metrics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Metrics.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 Metrics.pm
+--- codestriker/lib/Codestriker/Model/Metrics.pm	18 Feb 2004 07:36:37 -0000	1.4
++++ codestriker/lib/Codestriker/Model/Metrics.pm	8 Mar 2004 03:22:35 -0000
+@@ -21,6 +21,7 @@
+     $self->{topicmetrics} = undef;
+     $self->{topicid} = $topicid;
+     $self->{usermetrics} = {};
++    $self->{topichistoryrows} = undef;
+ 
+     bless $self, $class;
+    
+@@ -143,7 +144,7 @@
+ 	# Add in any metrics that are in the database but not
+ 	# currently configured.  The system should display the
+ 	# metrics, but not let the user modify them.
+-	for(my $index = 0; $index < scalar(@stored_metrics); ++$index) {
++	for (my $index = 0; $index < scalar(@stored_metrics); ++$index) {
+ 	    my $stored_metric = $stored_metrics[$index];
+ 
+ 	    # This is the topic metric.
+@@ -161,12 +162,61 @@
+ 	    push @topic_metrics, $metric;
+ 	}
+ 
++	push @topic_metrics, $self->_get_built_in_topic_metrics();
++
+ 	$self->{topicmetrics} = \@topic_metrics;
+     }
+ 
+     return @topic_metrics;
+ }
+ 
++# Get a list of users that have metric data for this topic. People can 
++# look at the topic even if they were not invited, so if somebody touches the 
++# topic, they will appear in this list. Using this function rather than the 
++# invite list from the topic will insure that people don't get missed from 
++# the metric data.
++sub get_complete_list_of_topic_participants {
++
++    my ($self) = @_;
++
++    my $dbh = Codestriker::DB::DBI->get_connection();
++
++    my @metric_user_list = $dbh->selectrow_array('
++	    SELECT distinct email 
++	    from participant where topicid = ?',{}, $self->{topicid});
++
++    push @metric_user_list, $dbh->selectrow_array('
++	    SELECT author from topic where id = ?',{}, $self->{topicid});
++
++    push @metric_user_list, $dbh->selectrow_array('
++	    SELECT distinct email from topicusermetric 
++	    where topicid = ?',{}, $self->{topicid});
++    
++    push @metric_user_list, $dbh->selectrow_array(
++	    'SELECT distinct author from comment, commentstate ' .
++	    'where commentstate.topicid = ? and 
++		   commentstate.id = comment.commentstateid ',
++		   {}, $self->{topicid});
++
++    push @metric_user_list, $dbh->selectrow_array(
++	    'SELECT distinct email from topicviewhistory ' .
++	    'where topicid = ? and email is not null',{}, $self->{topicid});
++
++    # remove the duplicates.
++
++    my %metric_user_hash;
++    foreach my $user (@metric_user_list) {
++	$metric_user_hash{$user} = 1;
++    }
++
++    @metric_user_list = sort keys %metric_user_hash;
++
++    # Close the connection, and check for any database errors.
++    Codestriker::DB::DBI->release_connection($dbh, 1);
++
++    return @metric_user_list;
++}
++
+ # Sets the metrics for a specific user, both authors and reviewers. cc's don't 
+ # get metrics. The metrics are sent in as an array, that must in the same 
+ # order as the get_user_metric() call returns them. Metrics that are bad are 
+@@ -222,6 +272,7 @@
+ # plus a value key. If the user has not entered a value, it will be
+ # set to an empty string.
+ sub get_user_metrics {
++
+     my ($self, $username) = @_;
+ 
+     my @user_metrics;
+@@ -337,6 +388,8 @@
+ 	$self->{usermetrics}->{$username} = \@user_metrics;
+     }
+ 
++    push @user_metrics, $self->_get_built_in_user_metrics($username);
++
+     return @user_metrics;
+ }
+ 
+@@ -386,6 +439,405 @@
+     return @total_metrics;
+ }
+ 
++# Returns a list of hashes. Each hash is en event. In the hash is stored who 
++# caused the event, when it happened, and what happened. The hashs is defined
++# as: 
++#   email -> the email address of the user who caused the event.
++#   date  -> when the event happened.
++#   description -> the event description.
++#
++# The topic must be loaded from the db before this function can be called.
++sub get_topic_history {
++    my ($self) = @_;
++
++    my @topic_history = $self->_get_topic_history_rows();
++
++    my @event_list;
++
++    my $last_history_row;
++
++    foreach my $current_history_row ( @topic_history) {
++	if ( !defined($last_history_row) ) {
++	    # The first event is always the topic creation, so lets make 
++	    # that now.
++	    
++	    my $filteredemail = 
++		Codestriker->filter_email($current_history_row->{author});
++
++	    my $formated_time = 
++	        Codestriker->format_short_timestamp($current_history_row->{modified_ts});
++    
++	    push @event_list, 
++	    { 
++		email=>$filteredemail,
++		date =>$formated_time,
++		description=>'The topic is created.' 
++	    };
++	}
++	else {
++	    my %event = 
++	    ( 
++		email=> Codestriker->filter_email(
++			$current_history_row->{modified_by}),
++		date => Codestriker->format_short_timestamp(
++			$current_history_row->{modified_ts}),
++		description=>'' 
++	    );
++
++	    # look for changes in all of the fields. Several fields could have 
++	    # changed at once.
++
++	    if ( $current_history_row->{author} ne $last_history_row->{author}) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "Author changed: $last_history_row->{author} to " . 
++		    "$current_history_row->{author}.";
++		push @event_list, \%new_event;
++	    }
++
++	    if ( $current_history_row->{title} ne $last_history_row->{title} ) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "Title changed to: \"$current_history_row->{title}\".";
++		push @event_list, \%new_event;
++	    }
++
++	    if ( $current_history_row->{description} ne $last_history_row->{description} ) {
++		my %new_event = %event;
++		$new_event{description} = "Description changed to: " . 
++		    "$current_history_row->{description}.";
++		push @event_list, \%new_event;
++
++	    }
++
++	    if ( $current_history_row->{state} ne $last_history_row->{state} ) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "Topic state changed to: " . 
++		    $Codestriker::topic_states[$current_history_row->{state}];
++		push @event_list, \%new_event;
++
++	    }
++
++	    if ( $current_history_row->{repository} ne $last_history_row->{repository}) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "Repository changed to: $current_history_row->{repository}.";
++		push @event_list, \%new_event;
++
++	    }
++
++	    if ( $current_history_row->{project} ne $last_history_row->{project}) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "Project changed to: $current_history_row->{project}.";
++		push @event_list, \%new_event;
++	    }
++
++	    if ( $current_history_row->{reviewers} ne $last_history_row->{reviewers}) {
++		my %new_event = %event;
++
++		# Figure out who was removed, and who was added to the list.
++		my @reviewers = sort split /,/,$current_history_row->{reviewers};
++		my @l_reviewers = sort split /,/,$last_history_row->{reviewers};
++		my @new;
++		my @removed;
++
++		my $new_index = 0;
++		my $old_index = 0;
++		while ( $new_index < @reviewers || $old_index < @l_reviewers) {
++		    my $r = 0;
++
++		    if ( $new_index < @reviewers && $old_index < @l_reviewers) {
++			$r = $reviewers[$new_index] cmp $l_reviewers[$old_index];
++		    }
++		    elsif ( $new_index < @reviewers ) {
++			$r = -1;
++		    }
++		    else {
++			$r = 1;
++		    }
++
++		    if ( $r == 0) {
++			++$new_index;
++			++$old_index;
++
++		    }
++		    elsif ($r < 0) {
++			push( @new, $reviewers[$new_index]);
++			++$new_index;
++		    }
++		    else {
++			push( @removed, $l_reviewers[$old_index]);
++			++$old_index;
++		    }
++		}
++
++		if ( @new == 0) {
++    		    $new_event{description} = 
++			"Reviewers removed: " . join(',',@removed);;
++		}
++		elsif ( @removed == 0) {
++    		    $new_event{description} = 
++			"Reviewers added: " . join(',',@new);
++		}
++		else {
++    		    $new_event{description} = 
++			"Reviewers added: " . join(',',@new) . 
++			" and reviewers removed: " . join(',',@removed);
++		}
++
++		push @event_list, \%new_event;
++	    }
++
++	    if ( $current_history_row->{cc} ne $last_history_row->{cc}) {
++		my %new_event = %event;
++		$new_event{description} = 
++		    "CC changed to $current_history_row->{cc}.";
++		push @event_list, \%new_event;
++	    }
++	}
++
++	$last_history_row = $current_history_row
++    }
++    
++    return @event_list;
++}
++
++# Returns the topic metrics as a collection of references to
++# hashs. The hash that is returned has the same keys as the
++# metrics_schema hash, plus a value key. This private function
++# returns "built in" metrics derived from the topic history
++# table.
++sub _get_built_in_topic_metrics {
++    my $self = shift;
++
++    my @topic_metrics;
++
++    my @topic_history = $self->_get_topic_history_rows();
++
++    my %state_times;
++
++    my $last_history_row;
++
++    # Figure out how long the topic has spent in each state.
++
++    for ( my $topic_history_index = 0; 
++	  $topic_history_index <= scalar(  @topic_history );
++	  ++$topic_history_index) {
++	
++	my $current_history_row;
++	
++	if ( $topic_history_index < scalar(  @topic_history ) ) {
++	    $current_history_row = $topic_history[$topic_history_index];
++	}
++
++	if ( defined($last_history_row) ) {
++	    my $start = 
++		Codestriker->convert_date_timestamp_time( 
++		    $last_history_row->{modified_ts} );
++	    my $end   = 0;
++	    
++	    if ( defined($current_history_row)) {
++		$end = Codestriker->convert_date_timestamp_time( 
++		    $current_history_row->{modified_ts} );
++	    }
++	    else {
++		$end = time();
++	    }
++
++	    if ( exists( $state_times{$last_history_row->{state}} ) ) {
++		$state_times{$last_history_row->{state}} += $end - $start;
++	    }
++	    else {
++		$state_times{$last_history_row->{state}} = $end - $start;
++	    }
++	}
++
++	$last_history_row = $current_history_row
++    }
++
++    foreach my $state ( sort keys %state_times) {
++	my $statename = $Codestriker::topic_states[$state];
++	my $time_days = sprintf("%1.1f",$state_times{$state} / (60*60*24));
++
++	# This is the topic metric.
++	my $metric =
++	    {
++	    name         => 'Time In ' . $statename,
++	    description  => 
++		'Time in days the topic spent in the ' . $statename . ' state.',
++	    value        => $time_days,
++
++	    # User can not change the metric, not configured.
++	    enabled      => 0,
++	    in_database  => 0,
++	    filter       =>"count",
++	    builtin      => 1,
++	    };	
++
++	push @topic_metrics, $metric;
++    }
++
++    return @topic_metrics;
++}
++
++
++# Returns the user topic metrics as a collection of references to
++# hashs. The hash that is returned has the same keys as the
++# metrics_schema hash, plus a value key. This private function
++# returns "built in" metrics derived from the topic history
++# table and the topic view history table.
++sub _get_built_in_user_metrics {
++
++    my ($self,$username) = @_;
++
++    my @user_metrics;
++
++    my $dbh = Codestriker::DB::DBI->get_connection();
++
++    # Setup the prepared statements.
++    my $select_topic = $dbh->prepare_cached('SELECT creation_ts ' .
++					    'FROM topicviewhistory ' .
++					    'WHERE topicid = ? AND ' .
++					    'email = ? ' .
++					    'ORDER BY creation_ts');
++
++    $select_topic->execute($self->{topicid}, $username );
++
++    my $total_time = $self->calculate_topic_view_time( $select_topic);
++
++    Codestriker::DB::DBI->release_connection($dbh);
++
++    if ( $total_time == 0) {
++	$total_time = "";
++    }
++    else {
++	$total_time = sprintf("%1.0f",$total_time / (60));
++    }
++
++    # This is the topic metric.
++    my $metric =
++	{
++	name         => 'Codestriker Time',
++	description  => 
++	    'Time in minutes spent in codestriker looking at this topic.',
++	value        => $total_time,
++	enabled      => 0,
++	in_database  => 0,
++	filter       =>"minutes",
++	builtin      => 1,
++	scope        =>'participant',
++	};	
++
++    push @user_metrics, $metric;
++
++    return @user_metrics;
++}
++
++# given a DBI statement that returns a sorted collection of timestamps from 
++# the topicviewhistory table, return the total time.
++sub calculate_topic_view_time {
++
++    my ($self,$select_topic) = @_;
++
++    # The amount of time you give to people after a click assuming no other
++    # clicks are after it.
++    my $time_increment = 4*60;
++
++    my $total_time = 0;
++    my $last_time = 0;    
++
++    while ( my @row_array = $select_topic->fetchrow_array) {
++	my ($creation_ts ) = @row_array;
++
++	my $time = Codestriker->convert_date_timestamp_time($creation_ts);
++
++	if ( $last_time ) {
++
++	    if ( $time - $last_time > $time_increment) {
++		$total_time += $time_increment
++	    }
++	    else {
++		$total_time += $time - $last_time;
++	    }
++	}
++
++	$last_time = $time;
++    }
++
++    if ( $last_time ) {
++	$total_time += $time_increment;
++    }
++
++    return $total_time;
++
++}
++
++# Returns the topichistory rows as an array of hashes. Each element in the 
++# array is a row, each field in the table is a key. It will only fetch if 
++# from the db once.
++sub _get_topic_history_rows {
++    
++    my ($self) = @_;
++
++    if ( defined( $self->{topichistoryrows}) )  {
++	return @{$self->{topichistoryrows}};
++    }
++    else {
++	my $dbh = Codestriker::DB::DBI->get_connection();
++
++	my @history_list;
++
++	# Setup the prepared statements.
++	my $select_topic = $dbh->prepare_cached('SELECT topichistory.author, ' .
++						'topichistory.title, ' .
++						'topichistory.description, ' .
++						'topichistory.state, ' .
++						'topichistory.modified_ts, ' .
++						'topichistory.version, ' .
++						'topichistory.repository, ' .
++						'project.name, ' .
++						'topichistory.reviewers, ' .
++						'topichistory.cc, ' .
++						'topichistory.modified_by_user ' .
++						'FROM topichistory, project ' .
++						'WHERE topichistory.topicid = ? AND ' .
++						'topichistory.projectid = project.id ' .
++						'ORDER BY topichistory.version');
++
++	$select_topic->execute($self->{topicid} );
++
++	while ( my @row_array = $select_topic->fetchrow_array) {
++	    my ($author,$title,$description,$state,$modified_ts, $version,
++		$repository,$project,$reviewers,$cc, $modified_by ) = @row_array;
++
++	    my %entry = ( 
++	      author=>$author,
++	      title=>$title,
++	      description=>$description,
++	      state=>$state,
++	      modified_ts=>$modified_ts,
++	      version=>$version,
++	      repository=>$repository,
++	      project=>$project,
++	      reviewers=>$reviewers,
++	      cc=>$cc, 
++	      modified_by=>$modified_by
++	      );
++
++	    push @history_list, \%entry;
++	}
++
++	Codestriker::DB::DBI->release_connection($dbh);
++
++	$self->{topichistoryrows} = \@history_list;
++
++	return @history_list;
++    }
++}
++
++
+ # Returns an error message if a number is not a valid value for a given metric.
+ sub _verify_metric {
+     my ($self, $metric, $value) = @_;
+@@ -400,6 +852,12 @@
+ 		   " must be a valid time in hours. $value was " . 
+ 	           "not saved.<BR>" unless $input_ok;
+ 	}
++	elsif ($metric->{filter} eq "minutes") {
++	    $input_ok = ($value =~ /(^[\d]+)|(^$)/);
++	    $msg = $metric->{name} .
++		   " must be a valid time in minutes. $value was " . 
++	           "not saved.<BR>" unless $input_ok;
++	}
+ 	elsif ($metric->{filter} eq "count") {
+ 	    $input_ok = ($value =~ /(^[\d]+$)|(^$)/);
+ 	    $msg = $metric->{name} . 
+@@ -465,6 +923,9 @@
+ 	my @metrics = $self->get_user_metrics($user);
+ 
+ 	foreach my $metric (@metrics) {
++
++	    next if ($metric->{builtin} );
++
+ 	    if ($metric->{value} ne '') {
+ 		$insert_user_metric->execute($self->{topicid}, 
+ 					     $user, 
+@@ -502,6 +963,10 @@
+ 			     'WHERE topicid = ? and metric_name = ?');
+ 
+     foreach my $metric (@topic_metrics) {
++	# don't save built in metrics
++
++	next if ($metric->{builtin} );
++
+ 	if ($metric->{in_database}) {
+ 
+ 	    if ($metric->{value} ne '') {
+Index: codestriker/lib/Codestriker/Model/Topic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Topic.pm,v
+retrieving revision 1.28
+diff -u -b -r1.28 Topic.pm
+--- codestriker/lib/Codestriker/Model/Topic.pm	23 Feb 2004 10:02:55 -0000	1.28
++++ codestriker/lib/Codestriker/Model/Topic.pm	8 Mar 2004 03:22:35 -0000
+@@ -333,6 +333,30 @@
+     return $self->{metrics};
+ }
+ 
++# Returns the size of the topic text in lines. If the topic is a diff topic
++# it attempts to only count the lines that have changed, and not count the
++# context around the lines.
++sub get_topic_size_in_lines {
++
++    my ($self) = @_;
++
++    my @document = split /\n/, $self->{document};
++
++    my $diff_lines = scalar( grep /^[+-][^+-][^+-]/, @document );
++
++    my $looks_like_a_unified_diff = 
++	scalar( grep /^diff /, @document ) && 
++	scalar( grep /^\-\-\- /, @document ) && 
++	scalar( grep /^\+\+\+ /, @document ) && 
++	scalar( grep /^@@ /, @document ) && 
++	$diff_lines;
++
++    if ( $looks_like_a_unified_diff ) {
++	return $diff_lines;
++    }
++
++    return scalar( @document );
++}
+ 
+ # This function is used to create a new topic id. The function insures 
+ # that the new topic id is difficult to guess, and is not taken in the 
+Index: codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm,v
+retrieving revision 1.6
+diff -u -b -r1.6 HistoryRecorder.pm
+--- codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm	18 Feb 2004 21:17:20 -0000	1.6
++++ codestriker/lib/Codestriker/TopicListeners/HistoryRecorder.pm	8 Mar 2004 03:22:35 -0000
+@@ -67,6 +67,30 @@
+ sub topic_changed($$$$) {
+     my ($self, $user, $topic_orig, $topic) = @_;
+ 
++    # this code is here to handle the case of a topic being created
++    # in the older (pre 1.8.0) versions of codestriker that have
++    # been created without any topic history. See if topichistory
++    # row exists for the old topic, if not add it in first.
++    my $dbh = Codestriker::DB::DBI->get_connection();
++
++    my $exists =
++	$dbh->prepare_cached('SELECT COUNT(version) '. 
++			     'FROM topichistory ' .
++			     'WHERE ? = topicid and ? = version');
++
++    $exists->execute($topic->{topicid},$topic_orig->{version});
++
++    my $old_topic_has_history = ($exists->fetchrow_array())[0];
++
++    # Release the database connection.
++    Codestriker::DB::DBI->release_connection($dbh,1);
++
++    if ( $old_topic_has_history == 0)
++    {
++        $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
++    }
++
++
+     $self->_insert_topichistory_entry($user, $topic);
+ 
+     return '';
+@@ -87,7 +111,7 @@
+     my $success = defined $insert;
+     my $creation_ts = Codestriker->get_timestamp(time);
+     if (! defined $user || $user eq "") {
+-	$user = "unknown";
++	$user = "";
+     }
+ 
+     $success &&= $insert->execute($topic->{topicid}, $user, $creation_ts);
+Index: codestriker/template/en/default/metricsreport.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/metricsreport.html.tmpl,v
+retrieving revision 1.2
+diff -u -b -r1.2 metricsreport.html.tmpl
+--- codestriker/template/en/default/metricsreport.html.tmpl	24 Feb 2004 11:06:43 -0000	1.2
++++ codestriker/template/en/default/metricsreport.html.tmpl	8 Mar 2004 03:22:35 -0000
+@@ -10,14 +10,15 @@
+     <p>
+ [% END %]
+ 
+-<h3>User Metrics</h3>
++<h3>User Metrics - Past 16 weeks</h3>
+ 
+ 
+ <table cellpadding="5%" >
+     <tr class="tlh"><td>
+-	<td>last topic authored (days)
+-	<td>last topic reviewed (days)
+-	<td colspan=5>number of topics participated in the past 16 weeks
++	<td>last topic authored (days)</td>
++	<td>last topic reviewed (days)</td>
++	<td>total Codestriker time (hours)</td>
++	<td colspan=4>number of topics participated</td>
+     </tr>
+ 
+     [% FOREACH user_metrics %]
+@@ -26,6 +27,7 @@
+ 	<td>[% name | html %]
+ 	<td>[% date_last_authored %]
+ 	<td>[% date_last_participated %]
++	<td>[% total_codestriker_time %]
+ 	<td>[% total_topics %]
+     </tr>
+ 
+@@ -90,7 +92,7 @@
+ 
+ 
+ <hr>
+-<p><a href="[% download_url %]">Download Raw Data</a>
++<p><a href="[% download_url %]">Download all metric data as a tabbed delimited text file</a>
+ 
+ 
+ [% PROCESS trailer.html.tmpl %]
+Index: codestriker/template/en/default/viewtopicinfo.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopicinfo.html.tmpl,v
+retrieving revision 1.4
+diff -u -b -r1.4 viewtopicinfo.html.tmpl
+--- codestriker/template/en/default/viewtopicinfo.html.tmpl	24 Feb 2004 11:06:44 -0000	1.4
++++ codestriker/template/en/default/viewtopicinfo.html.tmpl	8 Mar 2004 03:22:35 -0000
+@@ -156,6 +156,23 @@
+        onClick="return DeleteTopicConfirm();"> 
+ 
+ </form>
++
++<HR>
++
++Activity Log:
++
++<table border="1">
++    <tr><td>who</td><td>when</td><td>change</td></tr>
++
++    [% FOREACH activity=activity_list %]
++    <tr><td>[% activity.email | html_entity%]</td>
++	<td>[% activity.date | html_entity%]</td>
++	<td>[% activity.description | html_entity | $AutomagicLinks %]</td></tr>
++    [% END %]
++
++</table>
++
++
+ 
+ [% PROCESS trailer.html.tmpl %]
+ 
+Index: codestriker/template/en/default/viewtopicproperties.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopicproperties.html.tmpl,v
+retrieving revision 1.2
+diff -u -b -r1.2 viewtopicproperties.html.tmpl
+--- codestriker/template/en/default/viewtopicproperties.html.tmpl	24 Feb 2004 11:06:44 -0000	1.2
++++ codestriker/template/en/default/viewtopicproperties.html.tmpl	8 Mar 2004 03:22:35 -0000
+@@ -59,7 +59,7 @@
+ <tr class="tt1">
+   <td>Author:</td>
+   <td>
+-    <input type="text" name="email" value="[% author | html_entity %]" 
++    <input type="text" name="author" value="[% author | html_entity %]" 
+            size="50" maxlength="80">
+   </td>
+ </tr>

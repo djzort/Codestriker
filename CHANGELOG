@@ -12,6 +12,9 @@ Version 1.8.3
   made from, after the comment has been submitted.  This has now been
   fixed.
 
+* Committed in a whole heap of test scripts from Jason Remilliard
+  which are located in the test/ subdirectory.
+
 Version 1.8.2
 
 * Codestriker now has the ability to view a specific file at a time in

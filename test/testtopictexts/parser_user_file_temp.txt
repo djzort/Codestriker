@@ -1,0 +1,121 @@
+Index: codestriker/lib/Codestriker/Action/SubmitEditTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditTopic.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 SubmitEditTopic.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditTopic.pm	7 Jan 2004 07:08:24 -0000	1.1
++++ codestriker/lib/Codestriker/Action/SubmitEditTopic.pm	22 Jan 2004 04:08:56 -0000
+@@ -52,7 +52,7 @@
+ 
+     for( my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex)
+     {
+-	my @usermetrics = @{$http_input->{"reviewer_metric, $userindex"}};
++	my @usermetrics = @{$http_input->{"reviewer_metric,$userindex"}};
+ 
+ 	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex], @usermetrics);
+ 	$metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);
+Index: codestriker/lib/Codestriker/FileParser/Parser.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/FileParser/Parser.pm,v
+retrieving revision 1.7
+diff -u -b -r1.7 Parser.pm
+--- codestriker/lib/Codestriker/FileParser/Parser.pm	8 Sep 2003 12:49:35 -0000	1.7
++++ codestriker/lib/Codestriker/FileParser/Parser.pm	22 Jan 2004 04:08:56 -0000
+@@ -16,6 +16,7 @@
+ use strict;
+ 
+ use FileHandle;
++use File::Temp qw/ tempfile /;
+ use Codestriker::FileParser::CvsUnidiff;
+ use Codestriker::FileParser::SubversionDiff;
+ use Codestriker::FileParser::VssDiff;
+@@ -36,24 +37,29 @@
+     # into account, create a temporary file here which removes them, and
+     # that file handle is passed on to the parser objects, so they aren't
+     # the wiser.
+-    my $tmp_filename = "tmpparse.$topicid";
+-    open(TMP, ">$tmp_filename") ||
++    my $tmpfh = tempfile();  
++    
++    if (!$tmpfh) {
+ 	die "Unable to create temporary parse file: $!";
++    }
++
+     while (<$fh>) {
+ 	my $line = $_;
+ 	$line =~ s/\r\n/\n/go;
+-	print TMP $line;
++	print $tmpfh $line;
+     }
+-    close TMP;
+-    my $tmpfh = new FileHandle "$tmp_filename", "r";
+-    die "Unable to open temporary parse file: $!" if (! defined $tmpfh);
++
++    # Rewind the file, then let the parsers have at it.
++    seek($tmpfh,0,0) or
++	die "Unable seek to the start of the temporary file. $!";
+ 
+     # If the file is plain/text, try all of the text parsers.
+     if ($content_type eq "text/plain") {
+ 
+ 	# Check if it is a CVS unidiff file.
+ 	if ($#diffs == -1) {
+-	    seek($tmpfh, 0, 0);
++	    seek($tmpfh, 0, 0) or
++		die "Unable seek to the start of the temporary file. $!";
+ 	    @diffs =
+ 		Codestriker::FileParser::CvsUnidiff->parse($tmpfh,
+ 							   $repository);
+@@ -61,7 +67,8 @@
+ 
+ 	# Check if it is a Subversion diff file.
+ 	if ($#diffs == -1) {
+-	    seek($tmpfh, 0, 0);
++	    seek($tmpfh, 0, 0) or
++		die "Unable seek to the start of the temporary file. $!";
+ 	    @diffs =
+ 		Codestriker::FileParser::SubversionDiff->parse($tmpfh,
+ 							       $repository);
+@@ -69,7 +76,8 @@
+ 
+ 	# Check if it is a VSS diff file.
+ 	if ($#diffs == -1) {
+-	    seek($tmpfh, 0, 0);
++	    seek($tmpfh, 0, 0) or
++		die "Unable seek to the start of the temporary file. $!";
+ 	    @diffs =
+ 		Codestriker::FileParser::VssDiff->parse($tmpfh,
+ 							$repository);
+@@ -77,7 +85,8 @@
+ 
+ 	# Check if it is a patch unidiff file.
+ 	if ($#diffs == -1) {
+-	    seek($tmpfh, 0, 0);
++	    seek($tmpfh, 0, 0) or
++		die "Unable seek to the start of the temporary file. $!";
+ 	    @diffs =
+ 		Codestriker::FileParser::PatchUnidiff->parse($tmpfh,
+ 							     $repository);
+@@ -86,7 +95,8 @@
+ 	# Last stop-gap - the file format is unknown, treat it as a
+ 	# single file with filename "unknown".
+ 	if ($#diffs == -1) {
+-	    seek($tmpfh, 0, 0);
++	    seek($tmpfh, 0, 0) or
++		die "Unable seek to the start of the temporary file. $!";
+ 	    @diffs = Codestriker::FileParser::UnknownFormat->
+ 		parse($tmpfh, $uploaded_filename);
+ 	}
+@@ -100,10 +110,8 @@
+     }
+ 
+     # Restore the offset back to the start of the file again.
+-    seek($fh, 0, 0);
+-
+-    # Remove the temporary file.
+-    unlink $tmp_filename;
++    seek($fh, 0, 0) or
++	die "Unable seek to the start of the temporary file. $!";
+ 
+     # Return the diffs found, if any.
+     return @diffs;

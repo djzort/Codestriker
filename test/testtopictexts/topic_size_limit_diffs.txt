@@ -1,0 +1,212 @@
+? codestriker/cgi-bin/codestriker.pl
+? codestriker/cgi-bin/data
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.34
+diff -u -b -r1.34 codestriker.conf
+--- codestriker/codestriker.conf	1 Sep 2003 22:41:37 -0000	1.34
++++ codestriker/codestriker.conf	8 Sep 2003 02:20:06 -0000
+@@ -3,14 +3,14 @@
+ 
+ # Database to use for storing codestriker data.  Examples given are Postgresql
+ # and MySQL
+-$db = 'DBI:Pg:dbname=codestrikerdb';
+-#$db = 'DBI:mysql:dbname=codestrikerdb';
++#$db = 'DBI:Pg:dbname=codestrikerdb';
++$db = 'DBI:mysql:dbname=codestrikerdb';
+ 
+ # Database user.
+ $dbuser = 'codestriker';
+ 
+ # Database password.
+-$dbpasswd = '';
++$dbpasswd = 'xxxx';
+ #$dbpasswd = 'cspasswd';
+ 
+ # Location of the mailing host.  This is used when sending out codestriker
+@@ -55,7 +55,7 @@
+ # be set to an anonymous user.
+ @valid_repositories =
+     (
+-     '/home/sits/cvs',
++     '/usr/local/cvsroot',
+      'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
+      'svn:http://svn.collab.net/repos/svn/trunk',
+      ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot'
+@@ -71,6 +71,24 @@
+     '/home/sits/cvs' => 'http://localhost/cgi-bin/cvsweb.cgi'
+ };
+ 
++# The number of problems found per line drops if the size of the 
++# topic is too large. A common inspection pitfall is for authors to 
++# attempt to review too much material and then miss problems. 
++# These two options allow the Codestriker administrator to limit 
++# the length of the topics. Topics that have more lines than 
++# $maximum_topic_size_lines are rejected when they are created. 
++# Topics that are larger than $suggested_topic_size_lines generate 
++# a warning displayed in the topic page, but are accepted into the 
++# system. Codestriker measures that length of the topic by counting 
++# the number of lines in the topic.
++#
++# The codestriker default of not enforcing any limits is specified by
++# settings either option to an empty string. If you are not sure 
++# what a resonable limit would be, start with a suggested_topic_size_lines
++# set to 350, and adjust with experence.
++$maximum_topic_size_lines = '';
++$suggested_topic_size_lines = '';
++
+ # The default viewing mode to use in the URL when creating a topic.  Can
+ # be either ($NORMAL_MODE, $COLOURED_MODE or $COLOURED_MONO_MODE).  These
+ # values should not be changed.
+@@ -103,7 +121,7 @@
+ $allow_repositories = 1;
+ 
+ # Indicate whether project operations (create, edit, list) can be performed.
+-$allow_projects = 1;
++$allow_projects = 0;
+ 
+ # If true, don't display any email addresses in their true form, but
+ # truncate them, to beat SPAM harvesters.
+Index: codestriker/lib/Codestriker/Action/CreateTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/CreateTopic.pm,v
+retrieving revision 1.18
+diff -u -b -r1.18 CreateTopic.pm
+--- codestriker/lib/Codestriker/Action/CreateTopic.pm	17 Aug 2003 13:03:34 -0000	1.18
++++ codestriker/lib/Codestriker/Action/CreateTopic.pm	8 Sep 2003 02:20:06 -0000
+@@ -84,6 +84,15 @@
+     my @projects = Codestriker::Model::Project->list();
+     $vars->{'projects'} = \@projects;
+ 
++    # Display the topic size limit if any.
++    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
++                                          0 : 
++                                          $Codestriker::maximum_topic_size_lines;
++                                          
++    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
++                                          0 : 
++                                          $Codestriker::suggested_topic_size_lines;
++                                          
+     my $template = Codestriker::Http::Template->new("createtopic");
+     $template->process($vars);
+ 
+Index: codestriker/lib/Codestriker/Action/SubmitTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitTopic.pm,v
+retrieving revision 1.28
+diff -u -b -r1.28 SubmitTopic.pm
+--- codestriker/lib/Codestriker/Action/SubmitTopic.pm	28 Aug 2003 08:55:30 -0000	1.28
++++ codestriker/lib/Codestriker/Action/SubmitTopic.pm	8 Sep 2003 02:20:06 -0000
+@@ -76,6 +76,7 @@
+     if ($feedback ne "" && defined $fh) {
+ 	$feedback .= "For security reasons, please re-enter the file name to upload.\n";
+     }
++    
+     $http_response->generate_header("", "Create new topic", $email, $reviewers,
+ 				    $cc, "", "", $repository_url, $projectid,
+ 				    "", 0, 0);
+@@ -98,6 +99,13 @@
+     $error_vars->{'start_tag'} = $start_tag;
+     $error_vars->{'end_tag'} = $end_tag;
+     $error_vars->{'module'} = $module;
++    $error_vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
++                                          0 : 
++                                          $Codestriker::maximum_topic_size_lines;
++                                          
++    $error_vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
++                                          0 : 
++                                          $Codestriker::suggested_topic_size_lines;
+ 
+     # If there is a problem with the input, redirect to the create screen
+     # with the message.
+@@ -202,6 +210,25 @@
+     # Remove \r from the topic text.
+     $topic_text =~ s/\r//g;
+ 
++    # Make sure the topic is not too large, count the number of \n
++    # in the topic content text.
++    my $new_topic_length = 0;
++    ++$new_topic_length while ($topic_text =~ /\n/g);
++     
++    if (defined($Codestriker::maximum_topic_size_lines) && 
++        $Codestriker::maximum_topic_size_lines ne "" &&
++        $Codestriker::maximum_topic_size_lines < $new_topic_length)
++    {        
++	$feedback .= "The topic length of $new_topic_length lines is too long. " . 
++                     "Topics cannot exceed $Codestriker::maximum_topic_size_lines " . 
++                     "lines long. Plesae remove content from topic, or chunk the topic " .
++                     "into several independent topics.\n";
++                     
++        _forward_create_topic($error_vars, $feedback);
++        $http_response->generate_footer();
++        return;
++    }
++    
+     # Create the topic in the model.
+     my $timestamp = Codestriker->get_timestamp(time);
+     Codestriker::Model::Topic->create($topicid, $email, $topic_title,
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.27
+diff -u -b -r1.27 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	1 Sep 2003 22:41:38 -0000	1.27
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	8 Sep 2003 02:20:06 -0000
+@@ -158,6 +158,9 @@
+     $vars->{'project_name'} = $project_name;
+     $vars->{'number_of_lines'} = $#document + 1;
+ 
++    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
++                                          0 : 
++                                          $Codestriker::suggested_topic_size_lines;    
+     $vars->{'list_url'} =
+ 	$url_builder->list_topics_url("", "", "", "", "", "", "",
+ 				      "", "", "", [ 0 ], undef);
+Index: codestriker/template/en/default/createtopic.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/createtopic.html.tmpl,v
+retrieving revision 1.16
+diff -u -b -r1.16 createtopic.html.tmpl
+--- codestriker/template/en/default/createtopic.html.tmpl	1 Sep 2003 22:41:38 -0000	1.16
++++ codestriker/template/en/default/createtopic.html.tmpl	8 Sep 2003 02:20:12 -0000
+@@ -46,7 +46,16 @@
+ <P>
+ 
+ <TABLE>
+-
++[% IF maximum_topic_size_lines != 0 || suggested_topic_size_lines != 0%]
++  <TR><TD COLSPAN="3">
++  [% IF maximum_topic_size_lines != 0 %]
++    Topics cannot be larger than [% maximum_topic_size_lines %] lines.
++  [% END %]
++  [% IF suggested_topic_size_lines != 0 %]
++    The suggested topic size is [% suggested_topic_size_lines %] lines.
++  [% END %]
++  </TD></TR>
++[% END %]
+ [%# The topic text upload button #%]
+ <TR>
+  <TD>Topic text upload:
+Index: codestriker/template/en/default/viewtopic.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/viewtopic.html.tmpl,v
+retrieving revision 1.15
+diff -u -b -r1.15 viewtopic.html.tmpl
+--- codestriker/template/en/default/viewtopic.html.tmpl	3 Sep 2003 11:20:26 -0000	1.15
++++ codestriker/template/en/default/viewtopic.html.tmpl	8 Sep 2003 02:20:12 -0000
+@@ -96,7 +96,13 @@
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Number of lines:</td>
+- <td>[% number_of_lines %]</td>
++ <td>[% number_of_lines %]
++  [% # Give them a nudge, that the topic is too large. %] 
++  [% IF number_of_lines > suggested_topic_size_lines && suggested_topic_size_lines > 0 %]
++    <FONT color=red>-- over suggested size of [% suggested_topic_size_lines %] lines.</FONT>
++  [% END %]
++  
++ </td>
+ </tr>
+ 
+ [% IF repository != '' %]

@@ -1,0 +1,487 @@
+Index: codestriker/lib/Codestriker.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker.pm,v
+retrieving revision 1.53
+diff -u -b -r1.53 Codestriker.pm
+--- codestriker/lib/Codestriker.pm	28 Mar 2004 02:41:20 -0000	1.53
++++ codestriker/lib/Codestriker.pm	20 Apr 2004 02:31:41 -0000
+@@ -401,6 +401,47 @@
+     
+     return $email;
+ }
++
++# Pass in two collections of string, it will return the elements in the string
++# that were added and where removed. All 4 params are references to lists. Mainly 
++# used to compare lists of reviewers and cc.
++sub set_differences($$$$)
++{
++    my ($list1_r,$list2_r,$added,$removed) = @_;
++
++    my @list1 = sort @$list1_r;
++    my @list2 = sort @$list2_r;
++
++    my $new_index = 0;
++    my $old_index = 0;
++    while ( $new_index < @list1 || $old_index < @list2) {
++        my $r = 0;
++
++        if ($new_index < @list1 && $old_index < @list2) {
++	    $r = $list1[$new_index] cmp $list2[$old_index];
++        }
++        elsif ($new_index < @list1) {
++	    $r = -1;
++        }
++        else {
++	    $r = 1;
++        }
++
++        if ($r == 0) {
++	    ++$new_index;
++	    ++$old_index;
++
++        }
++        elsif ($r < 0) {
++	    push( @$added, $list1[$new_index]);
++	    ++$new_index;
++        }
++        else {
++	    push( @$removed, $list2[$old_index]);
++	    ++$old_index;
++        }
++    }
++}
+ 
+     
+ 1;
+Index: codestriker/lib/Codestriker/Action/SubmitEditTopicsState.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditTopicsState.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 SubmitEditTopicsState.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditTopicsState.pm	23 Mar 2004 07:16:49 -0000	1.2
++++ codestriker/lib/Codestriker/Action/SubmitEditTopicsState.pm	20 Apr 2004 02:31:41 -0000
+@@ -43,13 +43,20 @@
+     # Apply the change to each topic.
+     for (my $i = 0; $i <= $#topics; $i++) {
+ 	# Extract the topic id and the version.
+-	$topics[$i] =~ /^(.*)\,(.*)$/;
++	$topics[$i] =~ /^([0-9]+)\,([0-9]+)$/;
++
++        # dump the request if the param does not look right.
++        next if (!defined($1) || !defined($2));
++
+ 	my $topicid = $1;
+ 	my $version = $2;
+ 
+ 	# Original topic object which won't be changed in the
+ 	# change_state operation.
+ 	my $topic_orig = Codestriker::Model::Topic->new($topicid);
++
++        # don't do anything if the topic is already at the given state.
++        next if ( $topic_state eq $topic_orig->{topic_state});
+ 
+ 	# Topic object to operate on.
+ 	my $topic = Codestriker::Model::Topic->new($topicid);
+Index: codestriker/lib/Codestriker/Model/Metrics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Metrics.pm,v
+retrieving revision 1.7
+diff -u -b -r1.7 Metrics.pm
+--- codestriker/lib/Codestriker/Model/Metrics.pm	28 Mar 2004 02:41:21 -0000	1.7
++++ codestriker/lib/Codestriker/Model/Metrics.pm	20 Apr 2004 02:31:42 -0000
+@@ -180,32 +180,33 @@
+ 
+     my $dbh = Codestriker::DB::DBI->get_connection();
+ 
+-    my @metric_user_list = $dbh->selectrow_array('
++
++    my @metric_user_list = @{ $dbh->selectall_arrayref('
+ 	    SELECT distinct email 
+-	    from participant where topicid = ?',{}, $self->{topicid});
++	    from participant where topicid = ?',{}, $self->{topicid})};
+ 
+-    push @metric_user_list, $dbh->selectrow_array('
+-	    SELECT author from topic where id = ?',{}, $self->{topicid});
++    push @metric_user_list, @{ $dbh->selectall_arrayref('
++	    SELECT author from topic where id = ?',{}, $self->{topicid})};
+ 
+-    push @metric_user_list, $dbh->selectrow_array('
++    push @metric_user_list, @{ $dbh->selectall_arrayref('
+ 	    SELECT distinct email from topicusermetric 
+-	    where topicid = ?',{}, $self->{topicid});
++	    where topicid = ?',{}, $self->{topicid})};
+     
+-    push @metric_user_list, $dbh->selectrow_array(
++    push @metric_user_list, @{ $dbh->selectall_arrayref(
+ 	    'SELECT distinct author from commentdata, commentstate ' .
+ 	    'where commentstate.topicid = ? and 
+ 		   commentstate.id = commentdata.commentstateid ',
+-		   {}, $self->{topicid});
++		   {}, $self->{topicid})};
+ 
+-    push @metric_user_list, $dbh->selectrow_array(
++    push @metric_user_list, @{ $dbh->selectall_arrayref(
+ 	    'SELECT distinct email from topicviewhistory ' .
+-	    'where topicid = ? and email is not null',{}, $self->{topicid});
++	    'where topicid = ? and email is not null',{}, $self->{topicid})};
+ 
+     # remove the duplicates.
+ 
+     my %metric_user_hash;
+     foreach my $user (@metric_user_list) {
+-	$metric_user_hash{$user} = 1;
++	$metric_user_hash{$user->[0]} = 1;
+     }
+ 
+     @metric_user_list = sort keys %metric_user_hash;
+@@ -360,6 +361,12 @@
+ 		}
+ 
+ 		if ($metric_schema->{enabled} || $metric->{in_database}) {
++                    
++                    if ( $username eq "") {
++                        # don't let any metrics be set into the db for unknown users.
++                        $metric->{enabled} = 0;
++                    }
++
+ 		    push @user_metrics, $metric;
+ 		}
+ 	    }
+@@ -537,40 +544,12 @@
+ 		my %new_event = %event;
+ 
+ 		# Figure out who was removed, and who was added to the list.
+-		my @reviewers = sort split /,/,$current_history_row->{reviewers};
+-		my @l_reviewers = sort split /,/,$last_history_row->{reviewers};
++		my @reviewers = split /,/,$current_history_row->{reviewers};
++		my @l_reviewers = split /,/,$last_history_row->{reviewers};
+ 		my @new;
+ 		my @removed;
+ 
+-		my $new_index = 0;
+-		my $old_index = 0;
+-		while ( $new_index < @reviewers || $old_index < @l_reviewers) {
+-		    my $r = 0;
+-
+-		    if ($new_index < @reviewers && $old_index < @l_reviewers) {
+-			$r = $reviewers[$new_index] cmp $l_reviewers[$old_index];
+-		    }
+-		    elsif ($new_index < @reviewers) {
+-			$r = -1;
+-		    }
+-		    else {
+-			$r = 1;
+-		    }
+-
+-		    if ($r == 0) {
+-			++$new_index;
+-			++$old_index;
+-
+-		    }
+-		    elsif ($r < 0) {
+-			push( @new, $reviewers[$new_index]);
+-			++$new_index;
+-		    }
+-		    else {
+-			push( @removed, $l_reviewers[$old_index]);
+-			++$old_index;
+-		    }
+-		}
++                Codestriker::set_differences( \@reviewers,\@l_reviewers,\@new,\@removed);
+ 
+ 		if (@new == 0) {
+     		    $new_event{description} = 
+Index: codestriker/lib/Codestriker/TopicListeners/Email.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/TopicListeners/Email.pm,v
+retrieving revision 1.6
+diff -u -b -r1.6 Email.pm
+--- codestriker/lib/Codestriker/TopicListeners/Email.pm	28 Mar 2004 02:41:21 -0000	1.6
++++ codestriker/lib/Codestriker/TopicListeners/Email.pm	20 Apr 2004 02:31:42 -0000
+@@ -42,66 +42,219 @@
+     my $cc = $topic->{cc};
+     my $bcc = $topic->{author};
+ 
+-    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc);
++    # Send out the list of files changes when creating a new topic.
++    my (@filenames, @revisions, @offsets, @binary);
++    $topic->get_filestable(
++    		\@filenames,
++                \@revisions,
++                \@offsets,
++                \@binary);
++
++    my $notes = 
++        "Description: \n" .  
++	"$topic->{description}\n\n" .
++	"$EMAIL_HR\n\n" .
++        "The topic was created, the following files were modified.\n" .
++        join("\n",@filenames);
++
++    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc,$notes);
+ 
+     return '';
+ }
+ 
+ sub topic_changed($$$$) {
+-    my ($self, $user, $topic_orig, $topic) = @_;
++    my ($self, $user_that_made_the_change, $topic_orig, $topic) = @_;
+ 
+-    # Any topic property changes need to be sent to all parties involved
+-    # for now, including parties which have been removed from the topic.
+-    # Eventually, email sending can be controlled by per-user preferences,
+-    # but in any case, in real practice, topic properties should not be
+-    # changed that often.
++    # Not all changes in the topic changes needs to be sent out to everybody
++    # who is working on the topic. The policy of this function is that 
++    # the following changes will cause an email to be sent. Otherwise,
++    # no email will be sent.
++    #
++    # change in author - sent to the new author, old author, and the person who
++    #   made the change.
++    # removed reviewer,cc - sent to the removed reviewer, and author if != user.
++    # added reviwer,cc - send to the new cc, and author if != user.
++    # any change not made by the author, sent to the author.
+ 
+     # Record the list of email addresses already handled.
+     my %handled_addresses = ();
+ 
+-    # The from (and bcc) is always the current author.
+-    my $from = $topic->{author};
+-    my $bcc = $from;
+-    $handled_addresses{$from} = 1;
++    # first rule, if the author is not one making the change, then the author
++    # gets an email no matter what changed.
++    if ( $user_that_made_the_change ne $topic->{author} ||
++         $user_that_made_the_change ne $topic_orig->{author} ) {
++        $handled_addresses{ $topic_orig->{author} } = 1;
++        $handled_addresses{ $topic->{author} } = 1;
++    }
+ 
+-    # The to are the current reviewers.
+-    my $to = $topic->{reviewers};
+-    foreach my $email (split /, /, $to) {
+-	$handled_addresses{$email} = 1;
++    # If the author was changed, then the old and new author gets an email.
++    if ( $topic->{author} ne $topic_orig->{author}) {
++        $handled_addresses{ $topic_orig->{author} } = 1;
++        $handled_addresses{ $topic->{author} } = 1;
+     }
+ 
+-    # The CC consist of the current CC, plus "removed" email addresses handled
+-    # below.
+-    my $cc = $topic->{cc};
+-    foreach my $email (split /, /, $cc) {
+-	$handled_addresses{$email} = 1;
++    # If a reviewer gets removed or added, then they get an email.
++    my @new;
++    my @removed;
++
++    Codestriker::set_differences( [ split /, /, $topic->{reviewers} ],
++                                  [ split /, /, $topic_orig->{reviewers} ],
++                                  \@new,\@removed);
++
++    foreach my $user (@removed) {
++        $handled_addresses{ $user } = 1;
+     }
+ 
+-    # Now add any removed email addresses, and add them to the email's CC.
+-    my @other_emails = ();
+-    if (! exists $handled_addresses{$topic_orig->{author}}) {
+-	push @other_emails, $topic_orig->{author};
++    foreach my $user (@new) {
++        $handled_addresses{ $user } = 1;
+     }
+-    foreach my $email (split /, /, $topic_orig->{reviewers}) {
+-	if (! exists $handled_addresses{$email}) {
+-	    push @other_emails, $email;
++
++    # If a CC gets removed or added, then they get an email.
++    @new = ();
++    @removed = ();
++
++    Codestriker::set_differences( [ split /, /, $topic->{cc} ], 
++                                  [ split /, /, $topic_orig->{cc} ],
++                                  \@new,\@removed);
++
++    foreach my $user (@removed) {
++        $handled_addresses{ $user } = 1;
+ 	}
++
++    foreach my $user (@new) {
++        $handled_addresses{ $user } = 1;
+     }
+-    foreach my $email (split /, /, $topic_orig->{cc}) {
+-	if (! exists $handled_addresses{$email}) {
+-	    push @other_emails, $email;
++
++    my @to_list = keys( %handled_addresses );
++
++    if ( @to_list ) {
++        $self->send_topic_changed_email($user_that_made_the_change, 
++                    $topic_orig, $topic,@to_list);
+ 	}
++
++    return '';
++}
++
++# This function is like topic_changed, except it expects a list of people
++# to send the email to as the last set of parameters. It diff's the two topics
++# and lists the changes made to the topic in the email. The caller is responsible
++# for figuring out if an email is worth sending out, this function is responsible
++# for the content of the email only.
++sub send_topic_changed_email {
++    my ($self, $user_that_made_the_change, $topic_orig, $topic,@to_list) = @_;
++
++    my $changes;
++
++    # First line is naming names on who made the change to the topic.
++    if ( $user_that_made_the_change ne "") {
++        $changes .= "The following changes were made by $user_that_made_the_change.\n";
+     }
+-    my $other_emails = join ', ', @other_emails;
+-    if (defined $other_emails && $other_emails ne "") {
+-	$cc .= ", " if $cc ne "";
+-	$cc .= $other_emails;
++    else {
++        my $host = $ENV{REMOTE_HOST};
++
++        $host = "(unknown)" if !defined($host);
++
++        $changes .= "The following changes were made by an unknown user from " . 
++                    "host $host and address $ENV{REMOTE_ADDR}\n";
+     }
+ 
+-    # Send off the email to the revelant parties.
+-    $self->_send_topic_email($topic, "Modified", 1, $from, $to, $cc, $bcc);
++    # Check for author change.
++    if ( $topic->{author} ne $topic_orig->{author}) {
++        $changes .= "Author changed from " . 
++            $topic_orig->{author} . " to " . $topic->{author} . "\n";
++    }
+ 
+-    return '';
++    # Check for changes in the reviewer list.
++    my @new;
++    my @removed;
++
++    Codestriker::set_differences( [ split /, /, $topic->{reviewers} ],
++                                  [ split /, /, $topic_orig->{reviewers} ],
++                                  \@new,\@removed);
++    foreach my $user (@removed) {
++        $changes .= "The reviewer $user was removed.\n";
++    }
++
++    foreach my $user (@new) {
++        $changes .= "The reviewer $user was added.\n";
++    }
++
++    # Check for changes in the cc list.
++    @new = ();
++    @removed = ();
++
++    Codestriker::set_differences( [ split /, /, $topic->{cc} ], 
++                                  [ split /, /, $topic_orig->{cc} ],
++                                  \@new,\@removed);
++
++    foreach my $user (@removed) {
++        $changes .= "The cc $user was removed.\n";
++    }
++
++    foreach my $user (@new) {
++        $changes .= "The cc $user was added.\n";
++    }
++
++    # Check for title change.
++    if ( $topic->{title} ne $topic_orig->{title} ) {
++        $changes .= "The title was changed to $topic->{title}.\n";
++    }
++
++    # Check for repository change.
++    if ( $topic->{repository} ne $topic_orig->{repository}) {
++        $changes .= "The repository was changed to $topic->{repository}.\n";
++    }
++
++    # Check for description change.
++    if ( $topic->{description} ne $topic_orig->{description} ) {
++        $changes .= "The description was changed.\n";
++    }
++
++    # Check for state changes
++    if ( $topic->{topic_state} ne $topic_orig->{topic_state} ) {
++        $changes .= "The state was changed to $topic->{topic_state}.\n";
++    }
++
++    if ( $topic->{project_name} ne $topic_orig->{project_name}) {
++        $changes .= "The project was changed to $topic->{project_name}.\n";
++    }
++
++    if ( $topic->{bug_ids} ne $topic_orig->{bug_ids}) {
++        $changes .= "The bug list was changed to $topic->{bug_ids}.\n";
++    }
++
++    # See if anybody needs an mail, if so then send it out.
++    if ( @to_list ) {
++        my $from = $user_that_made_the_change;
++        my $bcc = "";
++
++        if ( $user_that_made_the_change eq "") {
++            $from = $topic->{author};
++        }
++        else {
++            $bcc = $user_that_made_the_change;
++        }
++
++        # remove the $user_that_made_the_change, they are bcc'ed, don't want to
++        # send the email out twice.
++        my @final_to_list;
++
++        foreach my $user ( @to_list ) {
++            push ( @final_to_list,$user) if $user ne $user_that_made_the_change;
++        }
++        
++        if ( @to_list > 0 && @final_to_list == 0) {
++            push( @final_to_list,$user_that_made_the_change);
++            $bcc = "";
++        }
++
++        my $to = join ', ', sort @final_to_list;
++        my $cc = "";
++
++        # Send off the email to the revelant parties.
++        $self->_send_topic_email($topic, "Modified", 1, $from, 
++                $to, $cc, $bcc,$changes);
++    }
+ }
+ 
+ sub comment_create($$$) {
+@@ -194,7 +347,7 @@
+ # This is a private helper function that is used to send topic emails. Topic 
+ # emails include topic creation, state changes, and deletes.
+ sub _send_topic_email {
+-    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc) = @_;
++    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc,$notes) = @_;
+   
+     my $query = new CGI;
+     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+@@ -202,16 +355,15 @@
+ 						    "", "", "",
+ 						    $query->url(), 0);
+     
+-    my $subject = "[REVIEW] Topic \"" . $topic->{title} . "\" $event_name\n";
++    my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\" \n";
+     my $body =
+-	"Topic \"$topic->{title}\" $event_name\n" .
++	"Topic \"$topic->{title}\"\n" .
+ 	"Author: $topic->{author}\n" .
+ 	(($topic->{bug_ids} ne "") ? "Bug IDs: $topic->{bug_ids}\n" : "") .
+ 	"Reviewers: $topic->{reviewers}\n" .
+         (($include_url) ? "URL: $topic_url\n\n" : "") .
+-	"Description:\n" .
+-	"$EMAIL_HR\n\n" .
+-	"$topic->{description}\n";
++	"$EMAIL_HR\n" .
++        $notes;
+ 
+     # Send the email notification out.
+     $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);

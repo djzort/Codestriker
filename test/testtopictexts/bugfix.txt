@@ -1,0 +1,148 @@
+? codestriker/cgi-bin/codestriker.pl
+? codestriker/cgi-bin/data
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.37
+diff -u -b -r1.37 codestriker.conf
+--- codestriker/codestriker.conf	28 Sep 2003 11:08:58 -0000	1.37
++++ codestriker/codestriker.conf	8 Oct 2003 02:18:17 -0000
+@@ -3,14 +3,14 @@
+ 
+ # Database to use for storing codestriker data.  Examples given are Postgresql
+ # and MySQL
+-$db = 'DBI:Pg:dbname=codestrikerdb';
+-#$db = 'DBI:mysql:dbname=codestrikerdb';
++#$db = 'DBI:Pg:dbname=codestrikerdb';
++$db = 'DBI:mysql:dbname=codestrikerdb';
+ 
+ # Database user.
+ $dbuser = 'codestriker';
+ 
+ # Database password.
+-$dbpasswd = '';
++$dbpasswd = 'xxxxxx';
+ #$dbpasswd = 'cspasswd';
+ 
+ # Location of the mailing host.  This is used when sending out codestriker
+@@ -20,7 +20,7 @@
+ # Indicate whether to try and compress output if the client browser
+ # supports it.  This can make a tremendous difference in bandwidth,
+ # especially over slow links.
+-$use_compression = 0;
++$use_compression = 1;
+ 
+ # Location of gzip.  Gzip is used only if you don't have Compress::Zlib
+ # installed.  Note, if running with mod_perl, you _must_ have Compress:Zlib
+@@ -61,11 +61,7 @@
+ # The final example is a VSS repository.
+ @valid_repositories =
+     (
+-     '/home/sits/cvs',
+-     'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
+-     'svn:http://svn.collab.net/repos/svn/trunk',
+-     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
+-     'vss:localhost'
++     '/usr/local/cvsroot',
+     );
+ 
+ # A mapping of repositories to filename viewers.  Examples of such systems
+@@ -111,7 +107,7 @@
+ $LINE_BREAK_NORMAL_MODE = 1;
+ $LINE_BREAK_ASSIST_MODE = 2;
+ 
+-$default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
++$default_topic_br_mode = $LINE_BREAK_ASSIST_MODE;
+ 
+ # List of valid topic states.  Note these values are mapped to the database
+ # depending on their position in the list.  ie, Open -> 0, Closed -> 1, etc.
+@@ -136,7 +132,7 @@
+ $allow_repositories = 1;
+ 
+ # Indicate whether project operations (create, edit, list) can be performed.
+-$allow_projects = 1;
++$allow_projects = 0;
+ 
+ # If true, don't display any email addresses in their true form, but
+ # truncate them, to beat SPAM harvesters.
+Index: codestriker/lib/Codestriker/Action/EditTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/EditTopic.pm,v
+retrieving revision 1.21
+diff -u -b -r1.21 EditTopic.pm
+--- codestriker/lib/Codestriker/Action/EditTopic.pm	28 Sep 2003 11:08:58 -0000	1.21
++++ codestriker/lib/Codestriker/Action/EditTopic.pm	8 Oct 2003 02:18:18 -0000
+@@ -56,8 +56,7 @@
+     }
+ 
+     # Retrieve the comment details for this topic.
+-    my @comments =
+-	Codestriker::Model::Comment->read($topic, "", "", $fn, $line, $new);
++    my @comments = Codestriker::Model::Comment->read_same_line($topic,$fn, $line, $new);
+ 
+     # Retrieve line-by-line versions of the description.
+     my @document_description = split /\n/, $description;
+Index: codestriker/lib/Codestriker/Action/SubmitComment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitComment.pm,v
+retrieving revision 1.19
+diff -u -b -r1.19 SubmitComment.pm
+--- codestriker/lib/Codestriker/Action/SubmitComment.pm	28 Sep 2003 11:08:58 -0000	1.19
++++ codestriker/lib/Codestriker/Action/SubmitComment.pm	8 Oct 2003 02:18:18 -0000
+@@ -83,8 +83,8 @@
+     my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
+ 
+     # Retrieve the comment details for this topic.
+-    my @comments = Codestriker::Model::Comment->read($topic, "", "",
+-						     $fn, $line, $new);
++    my @comments = Codestriker::Model::Comment->read_same_line($topic,$fn, $line, $new);
++                                                                                                          
+     my %contributors = ();
+     $contributors{$email} = 1;
+     my $cc_recipients = "";
+Index: codestriker/lib/Codestriker/Model/Comment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Comment.pm,v
+retrieving revision 1.8
+diff -u -b -r1.8 Comment.pm
+--- codestriker/lib/Codestriker/Model/Comment.pm	10 Sep 2003 11:31:59 -0000	1.8
++++ codestriker/lib/Codestriker/Model/Comment.pm	8 Oct 2003 02:18:18 -0000
+@@ -193,6 +193,38 @@
+     return @results;
+ }
+ 
++# Returns a list of comments that are against the same line of the same
++# file.
++sub read_same_line
++{
++    my ($type,$topicid, $fn, $line, $new) = @_;
++    
++    # Read all of the comments from the database. 
++    my @comments = $type->read( $topicid );
++
++    # Now filter out comments that don't match file, line, and new or old file attribute.
++    @comments = grep { 
++        my $comment = $_;
++        my $keep_comment = 0;
++        
++        if ( $fn   == $comment->{filenumber} && 
++             $line == $comment->{fileline} && 
++             $new  == $comment->{filenew})
++        {
++    	    $keep_comment = 1;
++        }
++        else
++        {
++            $keep_comment = 0;
++        }
++        
++        $keep_comment;      
++    } @comments;
++    
++    return @comments;
++    
++}
++
+ # Return all of the comments made for a specified topic filtered by state 
+ # and author. The filtered parameter is not used if it is empty.
+ sub read_filtered

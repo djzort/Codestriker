@@ -1,0 +1,242 @@
+? codestriker/default_reviewers.txt
+? codestriker/vc
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.40
+diff -u -b -r1.40 codestriker.conf
+--- codestriker/codestriker.conf	21 Jan 2004 21:44:46 -0000	1.40
++++ codestriker/codestriker.conf	5 Feb 2004 03:19:05 -0000
+@@ -3,14 +3,14 @@
+ 
+ # Database to use for storing codestriker data.  Examples given are Postgresql
+ # and MySQL
+-$db = 'DBI:Pg:dbname=codestrikerdb2';
+-#$db = 'DBI:mysql:dbname=codestrikerdb';
++#$db = 'DBI:Pg:dbname=codestrikerdb2';
++$db = 'DBI:mysql:dbname=codestrikerdb2';
+ 
+ # Database user.
+ $dbuser = 'codestriker';
+ 
+ # Database password.
+-$dbpasswd = '';
++$dbpasswd = 'xxxxxx';
+ #$dbpasswd = 'cspasswd';
+ 
+ # Location of the mailing host.  This is used when sending out codestriker
+@@ -42,7 +42,7 @@
+ # The URL to the bug tracking system.  The bug number is appended to the
+ # end of this string when URLs are generated.  This can be left blank if
+ # there is no need for bug-tracking integration.
+-$bugtracker = '';
++$bugtracker = 'http://clover/bugzilla/show_bug.cgi?id=';
+ #$bugtracker = 'http://localhost.localdomain/show_bug.cgi?id=';
+ 
+ # Valid repositories which may be selected at the create topic screen.
+@@ -169,17 +169,17 @@
+ # $bug_db to "bugzilla", and set the following parameters to your setup.
+ # if the $bug_db is an empty string, all bug-tracking related features will
+ # be disabled.
+-$bug_db = '';
++$bug_db = 'bugzilla';
+ #$bug_db = 'bugzilla';
+ 
+ # Bug database connection details.
+ $bug_db_host = 'localhost';
+ $bug_db_name = 'bugs';
+-$bug_db_password = 'bugs_password';
++$bug_db_password = 'xxxxxxx';
+ $bug_db_dbname = 'bugs';
+ 
+ # Bugzilla codestriker user id.
+-$bug_db_user_id = '2';
++$bug_db_user_id = '1';
+ 
+ # LXR database.  Each repository can be optionally mapped to a
+ # different LXR deployment.  If a repository has an associated LXR
+Index: codestriker/lib/Codestriker/Action/CreateTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/CreateTopic.pm,v
+retrieving revision 1.20
+diff -u -b -r1.20 CreateTopic.pm
+--- codestriker/lib/Codestriker/Action/CreateTopic.pm	7 Jan 2004 07:08:24 -0000	1.20
++++ codestriker/lib/Codestriker/Action/CreateTopic.pm	5 Feb 2004 03:19:05 -0000
+@@ -43,8 +43,12 @@
+     # the cookie.
+     $vars->{'email'} =
+ 	Codestriker::Http::Cookie->get_property($query, 'email');
+-    $vars->{'reviewers'} =
+-	Codestriker::Http::Cookie->get_property($query, 'reviewers');
++    $vars->{'reviewers'} = "";
++
++    my @default_reviewers = split ',', Codestriker::Http::Cookie->get_property($query, 'reviewers');
++
++    $vars->{'default_reviewers'} = \@default_reviewers;
++	
+     $vars->{'cc'} =
+ 	Codestriker::Http::Cookie->get_property($query, 'cc');
+     $vars->{'default_repository'} =
+Index: codestriker/lib/Codestriker/Action/SubmitNewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitNewTopic.pm,v
+retrieving revision 1.4
+diff -u -b -r1.4 SubmitNewTopic.pm
+--- codestriker/lib/Codestriker/Action/SubmitNewTopic.pm	21 Jan 2004 21:44:46 -0000	1.4
++++ codestriker/lib/Codestriker/Action/SubmitNewTopic.pm	5 Feb 2004 03:19:05 -0000
+@@ -29,6 +29,7 @@
+     my $topic_title = $http_input->get('topic_title');
+     my $topic_description = $http_input->get('topic_description');
+     my $reviewers = $http_input->get('reviewers');
++    my $selected_default_reviewers = $http_input->get('default_reviewers');
+     my $email = $http_input->get('email');
+     my $cc = $http_input->get('cc');
+     my $fh = $http_input->get('fh');
+@@ -57,6 +58,27 @@
+ 	}
+     }
+ 
++    # merge together the checked default reviewers
++    my @default_reviewers = split(/[, ]+/, Codestriker::Http::Cookie->get_property($query, 'reviewers'));
++
++    foreach my $default_reviewer_index (split(/[, ]+/, $selected_default_reviewers))
++    {
++	my @new_reviwer_list = split(/[, ]+/, $reviewers);
++	push @new_reviwer_list, $default_reviewers[$default_reviewer_index];
++	$reviewers = join(', ', @new_reviwer_list);
++    }
++
++    # Eliminate duplicate reviewers, and remove the author from the reviewer list in case
++    # they added themselves. Remove the duplicates by sticking them into a hash, then
++    # pulling pulling them back out again by key.
++    my %reviewers;
++
++    foreach my $rev (split( /[, ]+/, $reviewers)) {
++	$reviewers{$rev} = 1 unless $rev eq $email;
++    }
++
++    $reviewers = join(', ', sort keys %reviewers);
++   
+     if ($topic_title eq "") {
+ 	$feedback .= "No topic title was entered.\n";
+     }
+Index: codestriker/lib/Codestriker/Http/Input.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Input.pm,v
+retrieving revision 1.27
+diff -u -b -r1.27 Input.pm
+--- codestriker/lib/Codestriker/Http/Input.pm	26 Jan 2004 21:17:08 -0000	1.27
++++ codestriker/lib/Codestriker/Http/Input.pm	5 Feb 2004 03:19:05 -0000
+@@ -61,6 +61,7 @@
+     $self->{topic_title} = $query->param('topic_title');
+     $self->{topic_description} = $query->param('topic_description');
+     $self->{reviewers} = $query->param('reviewers');
++    $self->{default_reviewers} = join(',',$query->param('default_reviewers'));
+     $self->{cc} = $query->param('cc');
+     $self->{comment_cc} = $query->param('comment_cc');
+     $self->{topic_state} = $query->param('topic_state');
+@@ -185,6 +186,7 @@
+     $self->_untaint_digits('projectid');
+     $self->_untaint_email('email');
+     $self->_untaint_emails('reviewers');
++    $self->_untaint_comma_digits('default_reviewers');
+     $self->_untaint_emails('cc');
+     $self->_untaint_filename('filename');
+     $self->_untaint_revision('revision');
+Index: codestriker/lib/Codestriker/Http/Response.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Response.pm,v
+retrieving revision 1.18
+diff -u -b -r1.18 Response.pm
+--- codestriker/lib/Codestriker/Http/Response.pm	7 Jan 2004 07:08:24 -0000	1.18
++++ codestriker/lib/Codestriker/Http/Response.pm	5 Feb 2004 03:19:05 -0000
+@@ -51,10 +51,58 @@
+     if (!defined $email || $email eq "") {
+ 	$email = Codestriker::Http::Cookie->get_property($query, 'email');
+     }
++
+     if (!defined $reviewers || $reviewers eq "") {
+-	$reviewers = Codestriker::Http::Cookie->get_property($query,
++	$reviewers = Codestriker::Http::Cookie->get_property($query,'reviewers');
++    }
++    else {
++	# This block of code maintains the default reviewer lists in the current
++	# users cookie. It maintains the last $max_default_reviewers in the 
++	# cookie sorted by the order of the last topic that they were invited to.
++	# This is used to populate the check box's in the create topic window 
++	# that contain the default user list. If the user has more than 
++	# $max_default_reviewers people that participate in reviewes, the list will
++	# by truncated so that the oldest invitee will be cut off the list. 
++	# No email address come out of the database, so we should not truncate
++	# the emails addresses even if we are configured to do so.
++
++	my $old_reviewers = Codestriker::Http::Cookie->get_property($query,
+ 							     'reviewers');
++
++	my @reviewers = split(/[, ]+/, $reviewers);
++
++	my $actaully_invited_length = scalar( @reviewers );
++
++	foreach my $old_reviewer (split(/[, ]+/, $old_reviewers)) {
++	    my $old_reviewer_included_in_new_review = 0;
++	    foreach my $new_reviewer ( @reviewers) {
++		if ( $new_reviewer eq $old_reviewer) {
++		    $old_reviewer_included_in_new_review = 1
++		}
++	    }
++
++	    if ( $old_reviewer_included_in_new_review == 0) {
++		push @reviewers, $old_reviewer; 
++	    }
++	}
++
++	# If the user setup a topic with tons of reviewers, don't truncate it, just 
++	# take it as is for the next topic.
++	my $max_default_reviewers = 6;
++
++	if ( $max_default_reviewers < $actaully_invited_length) {
++	    $max_default_reviewers = $actaully_invited_length;
++	}
++
++	if (scalar( @reviewers) > $max_default_reviewers) {
++	    splice @reviewers, $max_default_reviewers;
++	} 
++
++	$reviewers = join(',', @reviewers);
++
+     }
++
++
+     if (!defined $cc || $cc eq "") {
+ 	$cc = Codestriker::Http::Cookie->get_property($query, 'cc');
+     }
+Index: codestriker/template/en/default/createtopic.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/createtopic.html.tmpl,v
+retrieving revision 1.25
+diff -u -b -r1.25 createtopic.html.tmpl
+--- codestriker/template/en/default/createtopic.html.tmpl	7 Jan 2004 07:08:24 -0000	1.25
++++ codestriker/template/en/default/createtopic.html.tmpl	5 Feb 2004 03:19:06 -0000
+@@ -213,7 +213,21 @@
+ the new topic notification  email will be sent to these addresses.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
++ <TD COLSPAN="3">
++    
++    [% FOREACH default_reviewer = default_reviewers %]
++      <INPUT TYPE="checkbox" 
++	     name="default_reviewers" 
++	     value="[% loop.index %]" 
++	     [% IF loop.index < 2 %]CHECKED[% END %]>
++	     [% default_reviewer | html_entity %]
++      </INPUT>
++      [% IF loop.last %]<br>[% END %]
++    [% END %]
++
++    <INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150>
++
++ </TD>
+ </TR>
+ 
+ [%# The Cc input field #%]

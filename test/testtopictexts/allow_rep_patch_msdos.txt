@@ -1,0 +1,219 @@
+? codestriker/vc
+? codestriker/cgi-bin/tmpparse.1208284
+? codestriker/cgi-bin/tmpparse.1490490
+? codestriker/cgi-bin/tmpparse.1905132
+? codestriker/cgi-bin/tmpparse.2016720
+? codestriker/cgi-bin/tmpparse.3531023
+? codestriker/cgi-bin/tmpparse.4535518
+? codestriker/cgi-bin/tmpparse.6627619
+? codestriker/cgi-bin/tmpparse.7961234
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.39
+diff -u -b -r1.39 codestriker.conf
+--- codestriker/codestriker.conf	7 Jan 2004 07:08:24 -0000	1.39
++++ codestriker/codestriker.conf	21 Jan 2004 03:21:54 -0000
+@@ -3,15 +3,15 @@
+ 
+ # Database to use for storing codestriker data.  Examples given are Postgresql
+ # and MySQL
+-$db = 'DBI:Pg:dbname=codestrikerdb2';
+-#$db = 'DBI:mysql:dbname=codestrikerdb';
++#$db = 'DBI:Pg:dbname=codestrikerdb2';
++$db = 'DBI:mysql:dbname=codestrikerdb2';
+ 
+ # Database user.
+ $dbuser = 'codestriker';
+ 
+ # Database password.
+-$dbpasswd = '';
+-#$dbpasswd = 'cspasswd';
++$dbpasswd = 'xxxxxx';
++#$dbpasswd = 'cspa';
+ 
+ # Location of the mailing host.  This is used when sending out codestriker
+ # comments.
+@@ -59,13 +59,23 @@
+ # be set to an anonymous user.
+ #
+ # The final example is a VSS repository.
++#
++# If this list is empty it won't be possible to view the entire contents of a
++# file before the proposed change and/or after. All of the places 
++# in the application that ask for, or display repository information will
++# be hidden and lastly, it will be impossible to make a diff review topic
++# on files that already checked in.
++#
++# On some servers (such as sourceforge), the firewall doesn't allow CGI 
++# scripts to make remote connections. 
++
+ @valid_repositories =
+     (
+-     '/home/sits/cvs',
+-     'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
+-     'svn:http://svn.collab.net/repos/svn/trunk',
+-     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
+-     'vss:localhost'
++     '/usr/local/cvsroot',
++#     'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
++#     'svn:http://svn.collab.net/repos/svn/trunk',
++#     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
++#     'vss:localhost'
+     );
+ 
+ # A mapping of repositories to filename viewers.  Examples of such systems
+@@ -133,13 +143,6 @@
+ # Indicate if topics can be listed/searched.  Turning this to false can be
+ # useful for "anonymous" installations of codestriker.
+ $allow_searchlist = 1;
+-
+-# Indicate if the repository attribute can be set to a topic.  If this
+-# is disabled, it won't be possible to view the entire contents of a
+-# file before the proposed change and/or after.  On some servers (such
+-# as sourceforge), the firewall doesn't allow CGI scripts to make
+-# remote connections.
+-$allow_repositories = 1;
+ 
+ # Indicate whether project operations (create, edit, list) can be performed.
+ $allow_projects = 1;
+Index: codestriker/lib/Codestriker.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker.pm,v
+retrieving revision 1.42
+diff -u -b -r1.42 Codestriker.pm
+--- codestriker/lib/Codestriker.pm	7 Jan 2004 07:08:24 -0000	1.42
++++ codestriker/lib/Codestriker.pm	21 Jan 2004 03:21:54 -0000
+@@ -20,7 +20,7 @@
+ 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
+ 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
+ 	      $lxr_map $allow_comment_email $default_topic_br_mode
+-	      $allow_delete $allow_searchlist $allow_repositories
++	      $allow_delete $allow_searchlist 
+               $allow_projects $antispam_email $VERSION $title $BASEDIR
+ 	      @metrics_schema
+ 	      );
+Index: codestriker/lib/Codestriker/Action/SubmitNewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitNewTopic.pm,v
+retrieving revision 1.3
+diff -u -b -r1.3 SubmitNewTopic.pm
+--- codestriker/lib/Codestriker/Action/SubmitNewTopic.pm	14 Jan 2004 10:56:25 -0000	1.3
++++ codestriker/lib/Codestriker/Action/SubmitNewTopic.pm	21 Jan 2004 03:21:54 -0000
+@@ -51,7 +51,7 @@
+ 	$retrieve_text_from_rep = 1;
+ 
+ 	# Check if this action is permitted.
+-	if ($Codestriker::allow_repositories == 0) {
++	if (scalar(@Codestriker::valid_repositories) == 0) {
+ 	    $feedback .= "Repository functionality has been disabled.  " .
+ 		"Can't create topic text usings tags.\n";
+ 	}
+@@ -89,7 +89,6 @@
+     $error_vars->{'email'} = $email;
+     $error_vars->{'reviewers'} = $reviewers;
+     $error_vars->{'cc'} = $cc;
+-    $error_vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+     $error_vars->{'topic_file'} = $topic_file;
+     $error_vars->{'topic_description'} = $topic_description;
+     $error_vars->{'topic_title'} = $topic_title;
+@@ -99,23 +98,16 @@
+     $error_vars->{'start_tag'} = $start_tag;
+     $error_vars->{'end_tag'} = $end_tag;
+     $error_vars->{'module'} = $module;
+-    $error_vars->{'maximum_topic_size_lines'} =
+-	$Codestriker::maximum_topic_size_lines eq "" ?
+-	0 : $Codestriker::maximum_topic_size_lines;
+-                                          
+-    $error_vars->{'suggested_topic_size_lines'} =
+-	$Codestriker::suggested_topic_size_lines eq "" ?
+-	0 : $Codestriker::suggested_topic_size_lines;
+ 
+     my $repository = undef;
+-    if ($Codestriker::allow_repositories) {
++    if (scalar(@Codestriker::valid_repositories)) {
+ 	# Set the repository to the default if it is not entered.
+ 	if ($repository_url eq "") {
+ 	    $repository_url = $Codestriker::valid_repositories[0];
+ 	}
+ 
+ 	# Check if the repository argument is valid.
+-	my $repository =
++	$repository =
+ 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+ 	if (! defined $repository) {
+ 	    $feedback .= "The repository value \"$repository_url\" is invalid.\n";
+@@ -142,8 +134,8 @@
+     # create a temporary file to store the topic text.
+     my $temp_topic_filename = "";
+     my $temp_error_filename = "";
+-    if ($retrieve_text_from_rep && defined $repository) {
+ 
++    if ($retrieve_text_from_rep && defined $repository) {
+ 	# Store the topic text into this temporary file.
+ 	$temp_topic_filename = "topictext.$topicid";
+ 	$temp_error_filename = "errortext.$topicid";
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.31
+diff -u -b -r1.31 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	7 Jan 2004 07:08:24 -0000	1.31
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	21 Jan 2004 03:21:55 -0000
+@@ -60,7 +60,7 @@
+ 
+     # Retrieve the repository object, if repository functionality is enabled.
+     my $repository;
+-    if ($Codestriker::allow_repositories) {
++    if (scalar(@Codestriker::valid_repositories)) {
+ 	$repository =
+ 	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+     } else {
+Index: codestriker/lib/Codestriker/Action/ViewTopicFile.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicFile.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 ViewTopicFile.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicFile.pm	7 Jan 2004 07:08:24 -0000	1.1
++++ codestriker/lib/Codestriker/Action/ViewTopicFile.pm	21 Jan 2004 03:21:55 -0000
+@@ -30,7 +30,7 @@
+     my $parallel = $http_input->get('parallel');
+ 
+     # Check if this action is allowed.
+-    if ($Codestriker::allow_repositories == 0) {
++    if (scalar(@Codestriker::valid_repositories) == 0) {
+ 	$http_response->error("This function has been disabled");
+     }
+ 
+Index: codestriker/lib/Codestriker/Action/ViewTopicInfo.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopicInfo.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 ViewTopicInfo.pm
+--- codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	7 Jan 2004 07:08:24 -0000	1.1
++++ codestriker/lib/Codestriker/Action/ViewTopicInfo.pm	21 Jan 2004 03:21:55 -0000
+@@ -59,7 +59,7 @@
+ 
+     # Retrieve the repository object, if repository functionality is enabled.
+     my $repository;
+-    if ($Codestriker::allow_repositories) {
++    if (scalar(@Codestriker::valid_repositories)) {
+ 	$repository =
+ 	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+     } else {
+Index: codestriker/lib/Codestriker/Http/Template.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Template.pm,v
+retrieving revision 1.6
+diff -u -b -r1.6 Template.pm
+--- codestriker/lib/Codestriker/Http/Template.pm	7 Jan 2004 07:08:24 -0000	1.6
++++ codestriker/lib/Codestriker/Http/Template.pm	21 Jan 2004 03:21:55 -0000
+@@ -80,7 +80,7 @@
+     $vars->{'main_title'} = $Codestriker::title;
+ 
+     # Indicate if the repository field should be displayed.
+-    $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
++    $vars->{'allow_repositories'} = scalar(@Codestriker::valid_repositories) ? 1 : 0;
+ 
+     # Display the topic size limit if any.
+     $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
