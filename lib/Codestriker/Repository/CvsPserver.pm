@@ -68,10 +68,10 @@ sub toString ($) {
 # the specified file handle.  If the size of the diff goes beyond the
 # limit, then return the appropriate error code.
 sub getDiff ($$$$$) {
-    my ($self, $start_tag, $end_tag, $module_name, $fh) = @_;
+    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_file) = @_;
 
     open(CVS, "$Codestriker::cvs -d " . $self->{cvsroot} .
-	 " rdiff -u -r $start_tag -r $end_tag $module_name 2>/dev/null |")
+	 " rdiff -u -r $start_tag -r $end_tag $module_name 2> $error_file |")
 	|| die "Can't open connection to local CVS repository: $!";
     my $length = 0;
     while (<CVS>) {

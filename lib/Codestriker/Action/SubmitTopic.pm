@@ -52,7 +52,8 @@ sub process($$$) {
 	
 	# Check if this action is permitted.
 	if ($Codestriker::allow_repositories == 0) {
-	    $http_response->error("This function has been disabled.");
+	    $feedback .= "Repository functionality has been disabled.  " .
+		"Can't create topic text usings tags.\n";
 	}
     }
 
@@ -76,34 +77,30 @@ sub process($$$) {
 				    $cc, "", "", $repository_url, $projectid,
 				    "", 0, 0);
 
+    # Set the error_vars in case of any errorsm that will require forwarding
+    # to the create topic screen again.
+    my $error_vars = {};
+    $error_vars->{'version'} = $Codestriker::VERSION;
+    $error_vars->{'feedback'} = $feedback;
+    $error_vars->{'email'} = $email;
+    $error_vars->{'reviewers'} = $reviewers;
+    $error_vars->{'cc'} = $cc;
+    $error_vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+    $error_vars->{'topic_file'} = $topic_file;
+    $error_vars->{'topic_description'} = $topic_description;
+    $error_vars->{'topic_title'} = $topic_title;
+    $error_vars->{'bug_ids'} = $bug_ids;
+    $error_vars->{'default_repository'} = $repository_url;
+    $error_vars->{'repositories'} = \@Codestriker::valid_repositories;
+    $error_vars->{'start_tag'} = $start_tag;
+    $error_vars->{'end_tag'} = $end_tag;
+    $error_vars->{'module'} = $module;
+
     # If there is a problem with the input, redirect to the create screen
     # with the message.
     if ($feedback ne "") {
-	$feedback =~ s/\n/<BR>/g;
-	my $vars = {};
-	$vars->{'version'} = $Codestriker::VERSION;
-	$vars->{'feedback'} = $feedback;
-	$vars->{'email'} = $email;
-	$vars->{'reviewers'} = $reviewers;
-	$vars->{'cc'} = $cc;
-	$vars->{'allow_repositories'} = $Codestriker::allow_repositories;
-	$vars->{'topic_file'} = $topic_file;
-	$vars->{'topic_description'} = $topic_description;
-	$vars->{'topic_title'} = $topic_title;
-	$vars->{'bug_ids'} = $bug_ids;
-	$vars->{'default_repository'} = $repository_url;
-	$vars->{'repositories'} = \@Codestriker::valid_repositories;
-	$vars->{'start_tag'} = $start_tag;
-	$vars->{'end_tag'} = $end_tag;
-	$vars->{'module'} = $module;
-
-	my @projects = Codestriker::Model::Project->list();
-	$vars->{'projects'} = \@projects;
-
-	my $template = Codestriker::Http::Template->new("createtopic");
-	$template->process($vars) || die $template->error();
-	return;
-    }	
+	return _forward_create_topic($error_vars, $feedback);
+    }
 
     # Set the repository to the default if it is not entered.
     if ($repository_url eq "") {
@@ -126,27 +123,36 @@ sub process($$$) {
     # If the topic text needs to be retrieved from the repository object,
     # create a temporary file to store the topic text.
     my $temp_topic_filename = "";
+    my $temp_error_filename = "";
     if ($retrieve_text && defined $repository) {
 
 	# Store the topic text into this temporary file.
 	$temp_topic_filename = "topictext.$topicid";
+	$temp_error_filename = "errortext.$topicid";
 	$fh = new FileHandle "> $temp_topic_filename";
-	my $rc = $repository->getDiff($start_tag, $end_tag, $module, $fh);
+	my $rc = $repository->getDiff($start_tag, $end_tag, $module, $fh,
+				      $temp_error_filename);
 	$fh->close;
 
 	# Check if the generated diff was too big, and if so, throw an error
 	# message on the screen.
 	if ($rc == $Codestriker::DIFF_TOO_BIG) {
-	    unlink $temp_topic_filename;
-	    $http_response->error("Generated diff file is too big.");
+	    $feedback .= "Generated diff file is too big.\n";
 	} elsif ($rc == $Codestriker::UNSUPPORTED_OPERATION) {
-	    unlink $temp_topic_filename;
-	    $http_response->error("Repository \"" . $repository->toString() . 
-				  "\" doesn't support tag retrieval.");
+	    $feedback .= "Repository \"" . $repository->toString() . 
+		"\" doesn't support topic text tag retrieval.\n";
 	}
 
 	# Open the file again for reading, so that it can be parsed.
-	$fh = new FileHandle $temp_topic_filename, "r";
+	$fh = new FileHandle $temp_topic_filename, "r" if $feedback eq "";
+    }
+
+    if ($feedback ne "") {
+	# If there was a problem generating the diff file, remove the
+	# temporary files, and direct control to the create screen again.
+	unlink $temp_topic_filename if $temp_topic_filename ne "";
+	unlink $temp_error_filename if $temp_error_filename ne "";
+	return _forward_create_topic($error_vars, $feedback);
     }
 
     # Try to parse the topic text into its diff chunks.
@@ -159,14 +165,29 @@ sub process($$$) {
 	    $topic_text .= $_;
 	}
 	if ($topic_text eq "") {
-	    $http_response->error("Uploaded file doesn't exist or is empty!");
+	    if ($temp_error_filename ne "" &&
+		-f $temp_error_filename) {
+		local $/ = undef;
+		open(ERROR_FILE, "$temp_error_filename");
+		$feedback .= "Problem generating topic text:\n\n";
+		$feedback .= <ERROR_FILE>;
+		close ERROR_FILE;
+	    }
+	    else {
+		$feedback = "Uploaded file doesn't exist or is empty.\n";
+	    }		
+
+	    # Remove the temporary files if required, and forward control
+	    # back to the create topic page.
+	    unlink $temp_topic_filename if $temp_topic_filename ne "";
+	    unlink $temp_error_filename if $temp_error_filename ne "";
+	    return _forward_create_topic($error_vars, $feedback);
 	}
     }
 
-    # Remove the temporary file if required.
-    if ($temp_topic_filename ne "") {
-	unlink $temp_topic_filename;
-    }
+    # Remove the temporary files if required
+    unlink $temp_topic_filename if $temp_topic_filename ne "";
+    unlink $temp_error_filename if $temp_error_filename ne "";
 
     # Remove \r from the topic text.
     $topic_text =~ s/\r//g;
@@ -204,7 +225,8 @@ sub process($$$) {
     # Send the email notification out.
     if (!Codestriker::Smtp::SendEmail->doit(1, $topicid, $from, $to, $cc, $bcc,
 					    $subject, $body)) {
-	$http_response->error("Failed to send topic creation email");
+	return _forward_create_topic($error_vars,
+				     "Failed to send topic creation email");
     }
 
     # If Codestriker is linked to a bug database, and this topic is associated
@@ -236,6 +258,22 @@ sub process($$$) {
 
     my $template = Codestriker::Http::Template->new("submittopic");
     $template->process($vars) || die $template->error();
+}
+
+# Direct output to the create topic screen again, with the appropriate feedback
+# message.
+sub _forward_create_topic($$) {
+    my ($vars, $feedback) = @_;
+
+    $feedback =~ s/\n/<BR>/g;
+    $vars->{'feedback'} = $feedback;
+    my @projects = Codestriker::Model::Project->list();
+    $vars->{'projects'} = \@projects;
+    
+    my $template = Codestriker::Http::Template->new("createtopic");
+    $template->process($vars) || die $template->error();
+
+    return 0;
 }
 
 1;
