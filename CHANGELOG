@@ -10,6 +10,10 @@ Version 1.6.3
   to be updated when it has already been changed by another user (ie
   the topic is "stale").
 
+* The repository field in the create topic screen is replaced with a
+  drop-down list of valid repositories.  The repositories are set in
+  codestriker.conf for the configuration variable @valid_repositories.
+
 Version 1.6.2
 
 * Fixed warnings in checksetup.pl for MySQL databases, where "commits"

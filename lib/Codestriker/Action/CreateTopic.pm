@@ -37,16 +37,24 @@ sub process($$$) {
 	Codestriker::Http::Cookie->get_property($query, 'reviewers');
     $vars->{'cc'} =
 	Codestriker::Http::Cookie->get_property($query, 'cc');
-    $vars->{'repository'} =
+    $vars->{'default_repository'} = 
 	Codestriker::Http::Cookie->get_property($query, 'repository');
 
     # Indicate if the repository field should be displayed.
     $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
 
-    # Set the default repository.
-    if (! (defined $vars->{'repository'}) || $vars->{'repository'} eq "") {
-	$vars->{'repository'} = $Codestriker::default_repository;
+    # Set the default repository to select.
+    if (! (defined $vars->{'default_repository'}) ||
+	$vars->{'default_repository'} eq "") {
+	if ($#Codestriker::valid_repositories != -1) {
+	    # Choose the first repository as the default selection.
+	    $vars->{'default_repository'} =
+		$Codestriker::valid_repositories[0];
+	}
     }
+
+    # Indicate the list of valid repositories which can be choosen.
+    $vars->{'repositories'} = \@Codestriker::valid_repositories;
 
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars) || die $template->error();

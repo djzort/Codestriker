@@ -104,7 +104,16 @@ only the cvsroot path needs to be specified.  For example:\n
 /usr/local/cvsroot
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="repository" VALUE="[% repository %]" SIZE=50 MAXLENGTH=200></TD>
+ <TD><SELECT NAME="repository">
+       [% FOREACH entry = repositories %]
+          [% IF entry == default_repository %]
+	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]
+	  [% ELSE %]
+	      <OPTION VALUE="[% entry %]">[% entry %]
+	  [% END %]
+       [% END %]
+      </SELECT>
+ </TD>
 </TR>
 [% END %]
 

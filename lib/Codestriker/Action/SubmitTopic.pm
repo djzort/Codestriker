@@ -68,23 +68,23 @@ sub process($$$) {
 	$vars->{'email'} = $email;
 	$vars->{'reviewers'} = $reviewers;
 	$vars->{'cc'} = $cc;
-	$vars->{'repository'} = $repository_url;
 	$vars->{'allow_repositories'} = $Codestriker::allow_repositories;
 	$vars->{'topic_text'} = $topic_text;
 	$vars->{'topic_file'} = $topic_file;
 	$vars->{'topic_description'} = $topic_description;
 	$vars->{'topic_title'} = $topic_title;
 	$vars->{'bug_ids'} = $bug_ids;
+	$vars->{'default_repository'} = $repository_url;
+	$vars->{'repositories'} = \@Codestriker::valid_repositories;
 	
 	my $template = Codestriker::Http::Template->new("createtopic");
 	$template->process($vars) || die $template->error();
 	return;
     }	
 
-
     # Set the repository to the default if it is not entered.
     if ($repository_url eq "") {
-	$repository_url = $Codestriker::default_repository;
+	$repository_url = $Codestriker::valid_repositories[0];
     }
 
     # Check if the repository argument is valid.
@@ -173,6 +173,7 @@ sub process($$$) {
     $vars->{'topic_url'} = $topic_url;
     $vars->{'reviewers'} = $reviewers;
     $vars->{'cc'} = (defined $cc) ? $cc : "";
+
     my $template = Codestriker::Http::Template->new("submittopic");
     $template->process($vars) || die $template->error();
 }
