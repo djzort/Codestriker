@@ -62,10 +62,9 @@ sub get_tables() {
     my $self = shift;
 
     my @tables = ();
-    my $table_select =
-	$self->{dbh}->prepare_cached("SELECT name from sysobjects where type='U'");
-    $table_select->execute();
-    while (my ($table_name) = $table_select->fetchrow_array()) {
+    my $table_select = $self->{dbh}->table_info();
+    while (my ($qual, $owner, $table_name, $type, $remarks) =
+	   $table_select->fetchrow_array()) {
 	push @tables, $table_name;
     }
     $table_select->finish();
