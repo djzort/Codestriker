@@ -413,6 +413,72 @@ sub check_for_stale($$) {
     return $self->{version} ne $version;
 }
 
+# Update the state of the specified topic. 
+sub change_state($$) {
+    my ($self, $new_state) = @_;
+    
+    my $modified_ts = Codestriker->get_timestamp(time);
+    
+    # Map the new state to its number.
+    my $new_stateid;
+    for ($new_stateid = 0; $new_stateid <= $#Codestriker::topic_states;
+	 $new_stateid++) {
+	last if ($Codestriker::topic_states[$new_stateid] eq $new_state);
+    }
+    if ($new_stateid > $#Codestriker::topic_states) {
+	die "Unable to change topic to invalid state: \"$new_state\"";
+    }
+    
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+    
+    # Check that the version reflects the current version in the DB.  Note due
+    # to a weird MySQL bug, we need to also retrieve the creation_ts and store
+    # the same value when updating the record, otherwise it gets set to the
+    # current time!
+    my $select_topic =
+	$dbh->prepare_cached('SELECT version, creation_ts ' .
+			     'FROM topic WHERE id = ?');
+    my $update_topic =
+	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
+			     'creation_ts = ?, modified_ts = ? WHERE id = ?');
+    my $success = defined $select_topic && defined $update_topic;
+    my $rc = $Codestriker::OK;
+    
+    # Retrieve the current topic data.
+    $success &&= $select_topic->execute($self->{topicid});
+    
+    # Make sure that the topic still exists, and is therefore valid.
+    my ($current_version, $creation_ts);
+    if ($success && ! (($current_version, $creation_ts) =
+		       $select_topic->fetchrow_array())) {
+	# Invalid topic id.
+	$success = 0;
+	$rc = $Codestriker::INVALID_TOPIC;
+    }
+    $success &&= $select_topic->finish();
+    
+    # Check the version number.
+    if ($self->{version} != $current_version) {
+	$success = 0;
+	$rc = $Codestriker::STALE_VERSION;
+    }
+    
+    # If the state hasn't changed, don't do anything, otherwise update the
+    # topic.
+    if ($new_state ne $self->{topic_state}) {
+    	$self->{version} = $self->{version} + 1;
+	$success &&= $update_topic->execute($self->{version}, $new_stateid,
+					    $creation_ts, $modified_ts,
+					    $self->{topicid});
+    }
+    
+    $self->{modified_ts} = $modified_ts;
+    $self->{topic_state} = $new_state;
+    
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    return $rc;
+}
 
 # Update the properties of the specified topic. This is not implemented
 # very efficiently, however it is not expected to be called very often.

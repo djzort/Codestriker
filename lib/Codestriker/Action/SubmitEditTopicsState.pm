@@ -47,14 +47,31 @@ sub process($$$) {
 	my $topicid = $1;
 	my $version = $2;
 
-	my $topic = Codestriker::Model::Topic->new($topicid);    
+	# Original topic object which won't be changed in the
+	# change_state operation.
+	my $topic_orig = Codestriker::Model::Topic->new($topicid);
 
-	# Change the topic state.
-	my $rc = $topic->change_state($topic_state, $version);
+	# Topic object to operate on.
+	my $topic = Codestriker::Model::Topic->new($topicid);
+	my $rc = $Codestriker::OK;
+	if ($topic->{version} == $version) {
+	    # Change the topic state.
+	    $rc = $topic->change_state($topic_state);
+	} else {
+	    # Stale version.
+	    $rc = $Codestriker::STATE_VERSION;
+	}
 
 	# Record if there was a problem in changing the state.
 	$invalid = 1 if $rc == $Codestriker::INVALID_TOPIC;
 	$stale = 1 if $rc == $Codestriker::STALE_VERSION;
+
+	if ($rc == $Codestriker::OK) {
+	    # Fire a topic changed listener event.
+	    my $topic_new = Codestriker::Model::Topic->new($topicid);
+	    Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
+								$topic_new);
+	}
     }
 
     # These message could be made more helpful in the future, but for now...
