@@ -85,16 +85,25 @@ sub process($$$) {
     $http_response->generate_header($topic, $title, "", "", "", $mode,
 				    $tabwidth, $repository, "", 0, 1);
 
+    # Render the HTML header.
+    my $header = Codestriker::Http::Template->new("header");
+    $header->process() || die $header->error();
+
     my $parallel = ($new == $UrlBuilder::BOTH_FILES) ? 1 : 0;
     my $max_digit_width = length($#cvs_filedata);
 
     # Create a new render object to perform the line rendering.
+    my @toc_filenames = ();
+    my @toc_revisions = ();
+    my @toc_binaries = ();
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $render =
 	Codestriker::Http::Render->new($query, $url_builder, $parallel,
 				       $max_digit_width, $topic, $mode,
 				       \%comment_exists, \@comment_linenumber,
-				       \@comment_data, $tabwidth);
+				       \@comment_data, $tabwidth,
+				       \@toc_filenames, \@toc_revisions,
+				       \@toc_binaries);
     # Print the heading information.
     if ($new == $UrlBuilder::BOTH_FILES) {
 	$render->print_coloured_table();
@@ -240,6 +249,11 @@ sub process($$$) {
     else {
 	print "</PRE>\n";
     }
+
+    # Render the HTML trailer.
+    my $trailer = Codestriker::Http::Template->new("trailer");
+    $trailer->process() || die $trailer->error();
+
     print $query->end_html();
 }
 

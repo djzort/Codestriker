@@ -54,7 +54,8 @@ my $COMMENT_LINE_COLOUR = "red";
 sub new ($$$$$$$\%\@\@$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comment_exists_ref, $comment_linenumber_ref,
-	$comment_data_ref, $tabwidth, $repository) = @_;
+	$comment_data_ref, $tabwidth, $repository,
+	$filenames_ref, $revisions_ref, $binaries_ref) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -70,6 +71,9 @@ sub new ($$$$$$$\%\@\@$) {
     $self->{comment_data_ref} = $comment_data_ref;
     $self->{tabwidth} = $tabwidth;
     $self->{repository} = $repository;
+    $self->{filenames_ref} = $filenames_ref;
+    $self->{revisions_ref} = $revisions_ref;
+    $self->{binaries_ref} = $binaries_ref;
 
     # Also have a number of additional private variables which need to
     # be initialised.
@@ -682,11 +686,10 @@ sub _coloured_mode_start($) {
 				"Added"));
     print $query->end_table(), "\n";
 
-    # Print out the "table of contents".  Note, the data should be passed in
-    # rather than directly read from here, but this will do for now.  XXX
-    my (@filenames, @revisions, @offsets, @binary);
-    Codestriker::Model::File->get_filetable($topic, \@filenames,
-					    \@revisions, \@offsets, \@binary);
+    # Print out the "table of contents".
+    my $filenames = $self->{filenames_ref};
+    my $revisions = $self->{revisions_ref};
+    my $binaries = $self->{binaries_ref};
     
     print $query->p;
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
@@ -695,12 +698,12 @@ sub _coloured_mode_start($) {
 		     $query->td("&nbsp;")), "\n";
     
     my $url_builder = $self->{url_builder};
-    for (my $i = 0; $i <= $#filenames; $i++) {
-	my $filename = $filenames[$i];
-	my $revision = $revisions[$i];
+    for (my $i = 0; $i <= $#$filenames; $i++) {
+	my $filename = $$filenames[$i];
+	my $revision = $$revisions[$i];
 	my $href_filename = $url_builder->view_url($topic, -1, $mode) .
 	    "#" . "$filename";
-	my $tddata = $binary[$i] ? $filename :
+	my $tddata = $$binaries[$i] ? $filename :
 	    $query->a({href=>"$href_filename"}, "$filename");
 	my $class = "";
 	$class = "af" if ($revision eq $Codestriker::ADDED_REVISION);

@@ -145,12 +145,14 @@ sub process($$$) {
 
     # Indicate to the user that the topic has been created and an email has
     # been sent.
-    print $query->h1("Topic created");
-    print "Topic title: \"$topic_title\"", $query->br;
-    print "Author: $email", $query->br;
-    print "Topic URL: ", $query->a({href=>"$topic_url"}, $topic_url);
-    print $query->p, "Email has been sent to: $email, $reviewers";
-    print ", $cc" if (defined $cc && $cc ne "");
+    my $vars = {};
+    $vars->{'topic_title'} = $topic_title;
+    $vars->{'email'} = $email;
+    $vars->{'topic_url'} = $topic_url;
+    $vars->{'reviewers'} = $reviewers;
+    $vars->{'cc'} = (defined $cc) ? $cc : "";
+    my $template = Codestriker::Http::Template->new("submittopic");
+    $template->process($vars) || die $template->error();
 }
 
 1;

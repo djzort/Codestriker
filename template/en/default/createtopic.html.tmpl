@@ -1,5 +1,7 @@
 [%# Screen for the create topic form. #%]
 
+[% PROCESS header.html.tmpl %]
+
 <H1>Create new topic</H1>
 
 <P>
@@ -8,17 +10,45 @@
 <INPUT TYPE="hidden" NAME="action" VALUE="submit_topic">
 
 [%# The topic title input field #%]
-Topic title:<BR>
+Topic title:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+The topic title should be a consise but informative\n
+summary of the code change.  The title used in the\n
+subject of sent emails, and in the topic list screen.
+')">(What's this?)</A></FONT>
+<BR>
 <INPUT TYPE="text" NAME="topic_title"  SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The topic description input field #%]
-Topic description: <BR>
+Topic description: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+The topic description should contain enough information\n
+for a reviewer to understand broadly what the code change\n
+achieves. This information is sent with the new topic\n
+notification email to all reviewers.
+')">(What's this?)</A></FONT>
+<BR>
 <TEXTAREA NAME="topic_description" ROWS=5 COLS=70 WRAP="hard"></TEXTAREA>
 <P>
 
 [%# The topic text input field #%]
-Topic text: <BR>
+Topic text:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+The topic text contains the actual text of the review.\n
+It can either be pasted into the \'Topic text\' text area\n
+or uploaded from a file in the \'Topic text upload\' box.\n
+\n
+Typically, the text is the output of a command such as:\n
+cvs diff -uN &gt; output.txt\n
+or\n
+diff -urN ../old-version/ . &gt; output.txt\n
+\n
+Non unidiff files can be reviewed, but can\'t be displayed\n
+as a coloured-diff, and can\'t be linked to a CVS repository.\n
+Ordinary source files can also be uploaded.
+')">(What's this?)</A></FONT>
+<BR>
 <TEXTAREA NAME="topic_text" ROWS=15 COLS=70></TEXTAREA>
 <P>
 
@@ -26,37 +56,107 @@ Topic text: <BR>
 
 [%# The topic text upload button #%]
 <TR>
- <TD>Topic text upload: </TD>
+ <TD>Topic text upload: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+The topic text contains the actual text of the review.\n
+It can either be pasted into the \'Topic text\' text area\n
+or uploaded from a file in the \'Topic text upload\' box.\n
+\n
+Typically, the text is the output of a command such as:\n
+cvs diff -uN &gt; output.txt\n
+or\n
+diff -urN ../old-version/ . &gt; output.txt\n
+\n
+Non unidiff files can be reviewed, but can\'t be displayed\n
+as a coloured-diff, and can\'t be linked to a CVS repository.\n
+Ordinary source files can also be uploaded.
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="file" NAME="topic_file"  SIZE=40 MAXLENGTH=200></TD>
 </TR>
 
 [%# The repository the review is made against #%]
 <TR>
- <TD>Repository: </TD>
+ <TD>Repository:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+If the topic text is a CVS diff, this field should be\n
+set to the corresponding CVS repository.\n
+\n
+Remote repositories are specified as the URL to the\n
+cvsweb.cgi or viewcvs.cgi script that represents the repository,\n
+plus the cvsroot path.  As an example, for codestriker changes,\n
+the respository is set to:\n
+\n
+http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi   /cvsroot\n
+\n
+If the repository is deployed on the same machine as codestriker,\n
+only the cvsroot path needs to be specified.  For example:\n
+\n
+/usr/local/cvsroot
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="text" NAME="repository" VALUE="[% repository %]" SIZE=50 MAXLENGTH=200></TD>
 </TR>
 
 [%# The bug ids input field #%]
 <TR>
- <TD>Bug IDs: </TD>
+ <TD>Bug IDs: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+Indicates what bug identifiers are addressed by this code change.\n
+These are space or comma separated identifiers, such as:\n
+\n
+1634\n
+\n
+or\n
+\n
+1534, 4625, 1243\n
+\n
+The apprioriate links to the bug-tracking system will be made\n
+when the topic is viewed, for the reviewer\'s reference.\n
+\n
+In addition, if integrating with Bugzilla, when the topic state\n
+is changed, a comment will be inserted automatically to the\n
+associated bugs for cross referencing.  When a bug is viewed,\n
+it can be easily determined what code fixes have been applied\n
+to it.
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="text" NAME="bug_ids"  SIZE=30 MAXLENGTH=50></TD>
 </TR>
 
 [%# The email input field #%]
 <TR>
- <TD>Your email address: </TD>
+ <TD>Your email address: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+This is your email address.  All comments made against a topic\n
+will be sent to this address.  The new topic notification email\n
+will also be sent to this address.
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=80></TD>
 </TR>
 
 [%# The reviewers input field #%]
 <TR>
- <TD>Reviewers: </TD>
+ <TD>Reviewers: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+This is a comma separated list of email addresses, which are the\n
+people who need to review this code.  When the topic is created,\n
+the new topic notification  email will be sent to these addresses.
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 
 [%# The Cc input field #%]
 <TR>
- <TD>Cc: </TD>
+ <TD>Cc: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+This is a comma separated list of email addresses, which are\n
+not indented to be reviewers, but typically a mailing list\n
+to notify a number of people about the creation of a new topic.
+')">(What's this?)</A></FONT>
+</TD>
  <TD><INPUT TYPE="text" NAME="cc" VALUE="[% cc %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 </TABLE>
@@ -65,5 +165,8 @@ Topic text: <BR>
 <INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
 
 </FORM>
+
+[% PROCESS trailer.html.tmpl %]
+
 </BODY>
 </HTML>

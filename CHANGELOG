@@ -27,7 +27,17 @@ Version 1.6.1
 * Added a configuration flag to indicate that email addresses should
   be displayed in an "anti spam" form.  Eg:
 
-  sits@users.sf.net -> sits 'at' users 'dot' sf 'dot' net.
+  sits@users.sf.net -> sits@use...
+
+* Created header and trailer templates which appear on every screen,
+  to assist in customising a site's look.
+
+* The submit comment and submit topic screens where changed to use
+  templates.
+
+* Added a lot of on-line help for the create topic screen, to explain
+  what all the input form elements mean.  Also added help for the
+  update topic status button in the view topic screen.
 
 Version 1.6.0
 

@@ -159,16 +159,11 @@ sub process($$$) {
     $http_response->generate_header($topic, "Comment submitted", $email, "",
 				    "", "", "", $repository, $anchor,
 				    $reload, 0);
-    print $query->h2("Comment submitted") . $query->p . "\n";
-    print "Topic URL: " . $query->a({href=>"$edit_url"},$edit_url) .
-	$query->p . "\n";
-    print $query->pre($comments) . $query->p . "\n";
-    print $query->start_form();
-    print $query->p, $query->submit(-value=>'Close',
-				    -onClick=>'window.close()');
-    print $query->end_form();
-
-    return;
+    my $vars = {};
+    $vars->{'topic_url'} = $edit_url;
+    $vars->{'comment'} = $comments;
+    my $template = Codestriker::Http::Template->new("submitcomment");
+    $template->process($vars) || die $template->error();
 }
 
 # Given a topic and topic line number, try to determine the line

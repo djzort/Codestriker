@@ -1,0 +1,21 @@
+[%# Screen for the submit comment confirmation screen. #%]
+
+[% PROCESS header.html.tmpl %]
+
+<H2>Comment submitted</H2>
+<P>
+Topic URL: <A HREF="[% topic_url %]">[% topic_url %]</A>
+<P>
+<PRE>[% comment %]
+</PRE><P>
+
+[%# Display a simple form for closing the comment popup window #%]
+<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+<INPUT TYPE="submit" NAME=".submit" VALUE="Close"
+       ONCLICK="window.close()">
+</FORM>
+
+[% PROCESS trailer.html.tmpl %]
+
+</BODY>
+</HTML>

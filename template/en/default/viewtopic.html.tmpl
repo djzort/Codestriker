@@ -1,7 +1,9 @@
 [%# Screen for displaying the heading information of a topic.  The
     actual view topic data is still generated directly from the perl
     script, as it is complex HTML that doesn't need to be
-    customised. #]
+    customised. #%]
+
+[% PROCESS header.html.tmpl %]
 
 [%# Show the top-level links for "Create new topic", "List open topics"
     and "search" #%]
@@ -64,7 +66,23 @@
 [%# Display the form for changing the topic state #%]
 <form method="post" enctype="application/x-www-form-urlencoded">
 <tr>
- <td>State:</td>
+ <td>State:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+When a topic is created, it is initialised in state \'open\'.\n
+Once a topic has been reviewed, and the code has been committed,\n
+the state should be updated to \'committed\'.  If the code\n
+in this review is not be committed, perhaps because a\n
+new review will superceed this one, or because it was rejected,\n
+the state should be changed to \'closed\'.\n
+\n
+If a topic is linked to Bugzilla bugs, each time the topic\n
+state is changed, an appropriate comment will be appended to\n
+all associated bugs, as a form of tracking.\n
+\n
+The topic states are also useful as a form of filtering, when\n
+retrieving lists of topics from the search page.
+')">(What's this?)</A></FONT>
+</td>
  <td>
    <input type="hidden" name="action" value="change_topic_state">
    <input type="hidden" name="topic" value="[% topicid %]">

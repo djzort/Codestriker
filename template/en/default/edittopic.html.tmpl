@@ -1,5 +1,7 @@
 [%# Screen for the create topic form. #%]
 
+[% PROCESS header.html.tmpl %]
+
 <H2>[% topic_title %]</H2>
 <TABLE>
 <TR>
@@ -68,6 +70,8 @@ Enter comments:
  <P>
  <INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()">
 </FORM>
+
+[% PROCESS trailer.html.tmpl %]
 
 </BODY>
 </HTML>

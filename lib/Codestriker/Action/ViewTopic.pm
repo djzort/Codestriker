@@ -39,7 +39,18 @@ sub process($$$) {
 				    \$document_modified_time, \$topic_state,
 				    \$version, \$repository_url);
 
-    # Retrieve the reposiory object.
+    # Retrieve the changed files which are a part of this review.
+    my (@filenames, @revisions, @offsets, @binary);
+    Codestriker::Model::File->get_filetable($topic, \@filenames,
+					    \@revisions, \@offsets, \@binary);
+
+    # If there are no files associated with this topic, there is no point
+    # showing a coloured mode - drop back to the text view.
+    if ($#filenames == -1) {
+	$mode = $Codestriker::NORMAL_MODE;
+    }
+
+    # Retrieve the repository object.
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
     my $repository_root = defined $repository ? $repository->getRoot() : "";
@@ -156,28 +167,33 @@ sub process($$$) {
     # complex.
 
     # Give the user the option of swapping between diff view modes.
-    my $normal_url = $url_builder->view_url($topic, -1,
-					    $Codestriker::NORMAL_MODE);
-    my $coloured_url =
-	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE);
-    my $coloured_mono_url =
-	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MONO_MODE);
-
-    if ($mode == $Codestriker::COLOURED_MODE) {
-	print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
-	$query->a({href=>$coloured_mono_url}, "coloured monospace"),
-	") diff.\n";
-    } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
-	print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
-	$query->a({href=>$coloured_url}, "coloured variable-width"),
-	") diff.\n";
-    } else {
-	print "View as (", $query->a({href=>$coloured_url},
-				     "coloured variable-width"), " | ",
-	$query->a({href=>$coloured_mono_url}, "coloured monospace"),
-	") diff.\n";
+    # If there are no files associated with the review, remove this
+    # option.
+    if ($#filenames != -1) {
+	my $normal_url = $url_builder->view_url($topic, -1,
+						$Codestriker::NORMAL_MODE);
+	my $coloured_url =
+	    $url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE);
+	my $coloured_mono_url =
+	    $url_builder->view_url($topic, -1,
+				   $Codestriker::COLOURED_MONO_MODE);
+	
+	if ($mode == $Codestriker::COLOURED_MODE) {
+	    print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
+	    $query->a({href=>$coloured_mono_url}, "coloured monospace"),
+	    ") diff.\n";
+	} elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
+	    print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
+	    $query->a({href=>$coloured_url}, "coloured variable-width"),
+	    ") diff.\n";
+	} else {
+	    print "View as (", $query->a({href=>$coloured_url},
+					 "coloured variable-width"), " | ",
+	    $query->a({href=>$coloured_mono_url}, "coloured monospace"),
+	    ") diff.\n";
+	}
+	print $query->br;
     }
-    print $query->br;
 
     # Display the option to change the tab width.
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
@@ -201,7 +217,8 @@ sub process($$$) {
 						$mode, \%comment_exists,
 						\@comment_linenumber,
 						\@comment_data, $tabwidth,
-						$repository);
+						$repository, \@filenames,
+						\@revisions, \@binary);
 
     # Record of the current CVS file being diffs (if the file is a
     # unidiff diff file).
@@ -330,6 +347,12 @@ sub process($$$) {
 	print $query->pre($http_response->escapeHTML($comment_data[$i])) .
 	    $query->p;
     }
+
+    # Render the HTML trailer.
+    my $trailer = Codestriker::Http::Template->new("trailer");
+    $trailer->process() || die $trailer->error();
+
+    print $query->end_html();
 }
 
 1;
