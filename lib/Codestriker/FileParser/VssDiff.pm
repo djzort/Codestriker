@@ -27,6 +27,7 @@ sub parse ($$$) {
 	# Values associated with the diff.
 	my $revision;
 	my $filename;
+	my $repmatch;
 
 	# Skip whitespace.
 	while (defined($line) && $line =~ /^\s*$/o) {
@@ -35,10 +36,21 @@ sub parse ($$$) {
 	return @result unless defined $line;
 
 	# For VSS diffs, the start of the diff block is the "Diffing:" line
-	# which contains the filename and version number.
-	return () unless defined $line && $line =~ /^Diffing: (.*);(.+)$/o;
-	$filename = $1;
-	$revision = $2;
+	# which contains the filename and version number.  Some diffs may
+	# not contain the version number for us.
+	return () unless defined $line;
+	if ($line =~ /^Diffing: (.*);(.+)$/o) {
+	    $filename = $1;
+	    $revision = $2;
+	    $repmatch = 1;
+	} elsif ($line =~ /^Diffing: (.*)$/o) {
+	    $filename = $1;
+	    $revision = $Codestriker::PATCH_REVISION;
+	    $repmatch = 0;
+	} else {
+	    # Some other weird format.
+	    return ();
+	}
 
 	# The next line will be the "Against:" line, followed by a blank line.
 	$line = <$fh>;
@@ -53,17 +65,48 @@ sub parse ($$$) {
 	    my $chunk;
 	    do
 	    {
-		$chunk = Codestriker::FileParser::BasicDiffUtils->read_diff_text(
-		       $fh, $line, $filename, $revision, 1);
-		if (defined $chunk) {
-		    push @result, $chunk;
+		my $leading_context = '';
+		my $leading_context_line_count = 0;
+		my $trailing_context = '';
+		my $trailing_context_line_count = 0;
+		if ($line =~ /^\*\*\*\*\*\*\*\*/) {
+		    # Need to record some leading context.
 		    $line = <$fh>;
+		    while ($line =~ /^ (.*)$/o) {
+			$leading_context .= "$1\n";
+			$leading_context_line_count++;
+			$line = <$fh>;
+		    }
 		}
-	    } while (defined $chunk);
+
+		$chunk = Codestriker::FileParser::BasicDiffUtils
+		    ->read_diff_text($fh, $line, $filename, $revision,
+				     $repmatch);
+		if (defined $chunk) {
+		    # Check for trailing context.
+		    $line = <$fh>;
+		    while (defined $line && $line =~ /^ (.*)$/o) {
+			$trailing_context .= "$1\n";
+			$trailing_context_line_count++;
+			$line = <$fh>;
+		    }
+
+		    # Adjust the chunk accordingly with the leading and
+		    # trailing context.
+		    if ($leading_context_line_count > 0) {
+			$chunk->{old_linenumber} -= $leading_context_line_count;
+			$chunk->{text} = $leading_context . $chunk->{text};
+		    }
+		    if ($trailing_context_line_count > 0) {
+			$chunk->{text} .= $trailing_context;
+		    }
+		    push @result, $chunk;
+		}
+	    } while (defined $chunk && defined $line);
 	}
 
 	# Read the next line.
-	$line = <$fh>;
+	$line = <$fh> if defined $line;
     }
 
     # Return the found diff chunks.
