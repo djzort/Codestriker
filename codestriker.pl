@@ -181,6 +181,9 @@ $document_creation_time = "";
 # The cvs document data read.
 @cvs_filedata = ();
 
+# The maximum line length of the CVS file.
+$cvs_filedata_max_line_length = 0;
+
 # Record if the HTML header has been generated yet or not.
 $header_generated_record = 0;
 
@@ -568,7 +571,7 @@ sub read_document_file($$) {
     while (<DOCUMENT>) {
 	chop;
 	my $data = $_;
-	
+
 	# Replace tabs with spaces to preserve alignment during display.
 	$data =~ s/\t/        /g if ($replace_tabs);
 	push @document, $data;
@@ -640,8 +643,15 @@ sub read_cvs_file ($$) {
 	error_return("Couldn't get CVS data for $filename $revision: $!");
     }
 
+    $cvs_filedata_max_line_length = 0;
     for (my $i = 1; <CVSFILE>; $i++) {
+	chop;
 	$cvs_filedata[$i] = $_;
+	$cvs_filedata[$i] =~ s/\t/        /g;
+	$line_length = length($cvs_filedata[$i]);
+	if ($line_length > $cvs_filedata_max_line_length) {
+	    $cvs_filedata_max_line_length = $line_length;
+	}
     }
 }
 
@@ -1924,19 +1934,15 @@ sub read_diff_header($$$$$) {
 
 # Print out a line of data with the specified line number suitably aligned,
 # and with tabs replaced by spaces for proper alignment.
-sub render_monospaced_line ($$$$$$) {
-    my ($topic, $linenumber, $data, $offset, $max_digit_width, $class) = @_;
+sub render_monospaced_line ($$$$$$$) {
+    my ($topic, $linenumber, $data, $offset, $max_digit_width,
+	$max_line_length, $class) = @_;
 
     my $prefix = "";
     my $digit_width = length($linenumber);
     for (my $i = 0; $i < ($max_digit_width - $digit_width); $i++) {
-	$prefix .= "&nbsp;";
+	$prefix .= " ";
     }
-    my $newdata = CGI::escapeHTML($data);
-    $newdata =~ s/\t/        /g;
-    $newdata =~ s/ /&nbsp;/g;
-    $newdata = "&nbsp;" if ($newdata eq "");
-
 
     # Render the line data.  If the user clicks on a topic line, the
     # main window is moved to the edit page.  I'm not sure if this is
@@ -1944,6 +1950,7 @@ sub render_monospaced_line ($$$$$$) {
     # now.
     my $line_cell = "";
     if ($offset != -1) {
+	# A line corresponding to the review.
 	my $edit_url =
 	    $query->url() . build_edit_url($offset, $topic, $context,
 					   $COLOURED_MODE);
@@ -1951,36 +1958,46 @@ sub render_monospaced_line ($$$$$$) {
 	    my $link_title = get_comment_digest($offset);
 	    my $js_title = $link_title;
 	    $js_title =~ s/\'/\\\'/mg;
-	    $line_cell =
-		$query->td({class=>'ms'}, "$prefix" .
-			   $query->a({name=>"$linenumber",
-				      href=>"javascript:fetch('$edit_url')",
-				      class=>'mscom',
-				      title=>"$js_title",
-				      onmouseover=>
-					  "window.status='$js_title'; " .
-					  "return true;"},
-				     $query->span({-class=>'mscom'},
-						  "$linenumber")));
+	    $line_cell = "$prefix" .
+		$query->a({name=>"$linenumber",
+			   href=>"javascript:fetch('$edit_url')",
+			   title=>"$js_title",
+			   onmouseover=> "window.status='$js_title'; " .
+			       "return true;" },
+			  $query->span({-class=>'mscom'},
+				       "$linenumber"));
 	}
 	else {
-	    $line_cell =
-		$query->td({class=>'ms'}, "$prefix" .
-			   $query->a({name=>"$linenumber",
-				      href=>"javascript:fetch('$edit_url')",
-				      class=>'mscom'},
-				     $query->span({-class=>'msnocom'},
-						  "$linenumber")));
+	    $line_cell = "$prefix" .
+		$query->a({name=>"$linenumber",
+			   href=>"javascript:fetch('$edit_url')"},
+			  $query->span({-class=>'msnocom'},
+				       "$linenumber"));
 	}
     }
     else {
-	$line_cell = $query->td({class=>'ms'}, "$prefix" .
-				$query->a({name=>"$linenumber"},
-					  "$linenumber"));
+	# A line outside of the review.  Just render the line number, as
+	# the "name" of the linenumber should not be used.
+	$line_cell = "$prefix$linenumber";
     }
 
-    return $query->Tr($line_cell,
-		      $query->td({class=>"$class"}, "&nbsp;$newdata"));
+    $data =~ s/\t/        /g;
+    my $newdata = CGI::escapeHTML($data);
+
+    if ($class ne "") {
+	# Add the appropriate number of spaces to justify the data to a length
+	# of $max_line_length, and render it within a SPAN to get the correct
+	# background colour.
+	my $padding = $max_line_length - length($data);
+	for (my $i = 0; $i < ($padding); $i++) {
+	    $newdata .= " ";
+	}
+	return "$line_cell " .
+	    $query->span({-class=>"$class"}, $newdata) . "\n";
+    }
+    else {
+	return "$line_cell $newdata\n";
+    }
 }
 
 # Record a plus line.
@@ -2000,8 +2017,9 @@ sub add_minus_monospace_line ($$) {
 # Flush the current diff chunk, and update the line count.  Note if the
 # original file is being rendered, the minus lines are used, otherwise the
 # plus lines.
-sub flush_monospaced_lines ($$$$) {
-    my ($topic, $new, $linenumber_ref, $max_digit_width) = @_;
+sub flush_monospaced_lines ($$$$$) {
+    my ($topic, $new, $linenumber_ref, $max_digit_width,
+	$max_line_length) = @_;
 
     my $class = "";
     if ($#view_file_plus != -1 && $#view_file_minus != -1) {
@@ -2022,7 +2040,8 @@ sub flush_monospaced_lines ($$$$) {
 	    print render_monospaced_line($topic, $$linenumber_ref,
 					 $view_file_plus[$i],
 					 $view_file_plus_offset[$i],
-					 $max_digit_width, $class), "\n";
+					 $max_digit_width,
+					 $max_line_length, $class);
 	    $$linenumber_ref++;
 	}
     }
@@ -2031,7 +2050,8 @@ sub flush_monospaced_lines ($$$$) {
 	    print render_monospaced_line($topic, $$linenumber_ref,
 					 $view_file_minus[$i],
 					 $view_file_minus_offset[$i],
-					 $max_digit_width, $class), "\n";
+					 $max_digit_width,
+					 $max_line_length, $class);
 	    $$linenumber_ref++;
 	}
     }
@@ -2078,13 +2098,32 @@ sub view_file ($$$) {
     if (! open(PATCH, "$datadir/$topic/diff.$index")) {
 	error_return("Could not open patch file for $filename");
     }
+
+    # This could be done more efficiently, but for now, read through the
+    # PATCH file, and determine the longest line length for the resulting
+    # data hat is to be viewed.  Note it is not 100% accurate, but it will
+    # do for now, to reduce the resulting page size.
+    my $max_line_length = $cvs_filedata_max_line_length;
+    while (<PATCH>) {
+	if (/^\s(.*)$/ || /^\+(.*)$/ || /^\-(.*)$/) {
+	    my $line_length = length($1);
+	    if ($line_length > $max_line_length) {
+		$max_line_length = $line_length;
+	    }
+	}
+    }
+
+    # Close and re-open the PATCH file for processing.
+    close PATCH;
+    if (! open(PATCH, "$datadir/$topic/diff.$index")) {
+	error_return("Could not open patch file for $filename");
+    }
     
     # Output the new file, with the appropriate patch applied.
     my $title = $new ? "New $filename" : "$filename v$revision";
     generate_header($topic, $title, "", "", "", $diff_background_col);
 
-    print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
-			       -border=>'0'}), "\n";
+    print "<PRE class=\"ms\">\n";
 
     my $max_digit_width = length($#cvs_filedata);
     my $patch_line = <PATCH>;
@@ -2108,7 +2147,8 @@ sub view_file ($$$) {
 	for (my $i = $chunk_end; $i < $patch_line_start; $i++, $linenumber++) {
 	    print render_monospaced_line($topic, $linenumber,
 					 $cvs_filedata[$i], -1,
-					 $max_digit_width, "ms");
+					 $max_digit_width, $max_line_length,
+					 "");
 	}
 	
 	# Read the information from the patch, and "apply" it to the
@@ -2118,9 +2158,10 @@ sub view_file ($$$) {
 	    if (/^\s(.*)$/) {
 		# An unchanged line, output it and anything pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
-				       $max_digit_width);
+				       $max_digit_width, $max_line_length);
 		print render_monospaced_line($topic, $linenumber, $1, $offset,
-					     $max_digit_width, "ms"), "\n";
+					     $max_digit_width,
+					     $max_line_length, "");
 		$linenumber++;
 	    } elsif (/^\-(.*)$/) {
 		# A removed line.
@@ -2137,7 +2178,7 @@ sub view_file ($$$) {
 		# Start of next diff block, exit from loop and flush anything
 		# pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
-				       $max_digit_width);
+				       $max_digit_width, $max_line_length);
 		$patch_line = $_;
 		last;
 	    } else {
@@ -2150,7 +2191,7 @@ sub view_file ($$$) {
 	if (! defined $_) {
 	    # Reached the end of the patch file.  Flush anything pending.
 	    flush_monospaced_lines($topic, $new, \$linenumber,
-				   $max_digit_width);
+				   $max_digit_width, $max_line_length);
 	    last;
 	}
     }
@@ -2158,10 +2199,11 @@ sub view_file ($$$) {
     # Display the last part of the file.
     for (my $i = $chunk_end; $i <= $#cvs_filedata; $i++, $linenumber++) {
 	print render_monospaced_line($topic, $linenumber, $cvs_filedata[$i],
-				     -1, $max_digit_width, "ms");
+				     -1, $max_digit_width, $max_line_length,
+				     "");
     }
 
-    print $query->end_table();
+    print "</PRE>\n";
     print $query->end_html();
 }
 

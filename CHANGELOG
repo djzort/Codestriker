@@ -1,3 +1,16 @@
+Version 1.4.2:
+
+* Can now handle diffs which each in: "\ No newline at end of file".
+
+* Changed the HTML generation for popup windows displaying old/new
+  versions of a file to use <PRE> rather than a table, which cuts down
+  the loading time considerably.
+
+Version 1.4.1:
+
+* Popup windows were not resizable in IE due to a bug in the
+  javascript code.  Has now been fixed.
+
 Version 1.4:
 
 * Clicking on an original diff block line heading will open a popup
