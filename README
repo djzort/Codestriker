@@ -213,14 +213,47 @@ For deployments outside an intranet, I would suggest using apache's
 ".htaccess" mechanism to limit access as to who can execute the
 script, as an extra security precaution.
 
+Bugzilla integration
+--------------------
+
+To automatically create new "comments" to bugzilla bugs when code
+review topics are created/closed/committed, the following steps need
+to be performed:
+
+* Create a new bugzilla user, called "codestriker" via the Bugzilla
+  UI.
+* Determine the userid, connect to the bugzilla database using
+  something like:
+  
+  mysql -u bugs bugs -p
+
+  Omit the -p option if you have no database password.
+
+  Then execute the query:
+
+  SELECT userid FROM profiles WHERE
+  login_name = 'codestriker@localhost.localdomain';
+
+  Substitute the appropriate email address for the codestriker user
+  just created.  Set this value in codestriker.conf, for
+  $bug_db_user_id.  Also set $dub_db_host, $bug_db_name and
+  $bug_db_password so codestriker knows how to connect to the Bugzilla
+  database.
+
+When enabled, a newly topic with associated bugs will add a comment to
+those bugs with details of the new codestriker topic (including the
+URL).  Comments will also be added whenever the topic changes state.
+
+When going to a bug page, it easy to determine what code was committed
+against this bug, and what the review decisions were.
+
+It should be trivial to add support for other bug tracking systems.
+
 Future plans
 ------------
 
-Stronger links with Bugzilla, so changes to a topic that is related to
-a bug will appear as a comment in the appropriate Bugzilla page.
-
 Please mail me any other suggestions you have to
-codestriker-user@lists.sourceforge.net.  Contributions are most
-welcome!
+codestriker-user@lists.sourceforge.net or to me personally at
+sits@users.sourceforge.net.  Contributions are most welcome!
 
 Codestriker project page: http://sourceforge.net/projects/codestriker.
