@@ -51,7 +51,10 @@ sub generate_header {
     my $topicsort = "";
 
     my $reload = $params{reload};
-    my $cache =  $params{cache};
+    my $cache = $params{cache};
+
+    $load_anchor = $params{load_anchor};
+    $load_anchor = "" if ! defined $load_anchor;
 
     # If the header has already been generated, do nothing.
     return if ($self->{header_generated});
