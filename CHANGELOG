@@ -3,6 +3,12 @@
 
 Version 1.8.5
 
+* Complete support for VSS repositories.  Topics linked to a VSS
+  repository can now be created by either specifying labels with the
+  VSS directory of interest for code already committed in the
+  repository, or pre-commit reviews can be done by generating diff
+  text with the ssdiff.pl script in the Codestriker bin directory.
+
 * Modified log_accum.pl so that deleted files are also included in the
   topic.
 
@@ -23,7 +29,7 @@ Version 1.8.5
 
 * Added new configuration variable @Codestriker::exclude_file_types
   which contains a list of filename extensions which Codestriker will
-  ignore when creatign topics.  These generally include those
+  ignore when creating topics.  These generally include those
   extensions which are binary, or of not any interest.  Contributed by
   Dave Clendenan <dave.clendenan@polycom.com>.
 
