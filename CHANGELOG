@@ -14,6 +14,8 @@ Version 1.8.2
 * The email taint/input checking code has been tightened, from Jason
   Remilliard.
 
+* Improved the input checking code on the topic properties page.
+
 Version 1.8.1
 
 * Modified the filename field in the topicfile table back to 255
