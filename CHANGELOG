@@ -5,7 +5,7 @@ Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and
   module parameters if they were used when the topic was created.
-  Contribution by Robert Hudson <RHudson@Staffware.com>.
+  Contribution by Robert Hudson <codestriker@go2town.co.uk>.
 
 * The repository property has been changed to be a read-only property
   in the topic properties page, from Robert Hudson.
