@@ -83,6 +83,12 @@ SPAN.smscom {color: #ff0000; font-family: monospace; font-size: smaller}
 /* Smaller monospaced line number with no comment */
 SPAN.smsnocom {font-family: monospace; font-size: smaller}
 
+/* File heading */
+SPAN.file_comment {background-color: #cccccc; font-family: Helvetica, Arial; font-size: medium; color: #ff0000}
+
+/* General heading */
+SPAN.general_comment {color: #ff0000}
+
 /* Style used for rendering data within popup window */
 PRE.ms {font-family: monospace; font-size: medium}
 

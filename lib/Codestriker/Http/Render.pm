@@ -369,9 +369,9 @@ sub delta_file_header ($$$$) {
     }
 
     # Generate the text for the link to add a file-level comment.
-    my $add_file_level_comment_link = "javascript:eo('$cfi','-1','1')";
     my $add_file_level_comment_text =
-	$query->a({href=>$add_file_level_comment_link}, "[Add File Comment]");
+	$self->render_comment_link($cfi, -1, 1, "[Add File Comment]",
+				   "file_comment", undef);
 
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
@@ -748,56 +748,56 @@ sub render_linenumber($$$$$) {
 	$no_comment_class = "smsnocom";
     }
 
-    my $linedata;
-    my %comment_hash = %{ $self->{comment_hash} };
-    my $key = "$filenumber|$line|$new";
-    if ($filenumber != -1 && defined $comment_hash{$key}) {
-	if ($self->{mode} == $Codestriker::NORMAL_MODE) {
-	    $linedata = "<FONT COLOR=\"$COMMENT_LINE_COLOUR\">$line</FONT>";
-	} else {
-	    $linedata = $self->{query}->span({-class=>$comment_class}, $line);
-	}
-    } else {
-	if ($self->{mode} == $Codestriker::NORMAL_MODE) {
-	    $linedata = $line;
-	} else {
-	    $linedata =
-		$self->{query}->span({-class=>$no_comment_class}, $line);
-	}
-    }
-
     # Check if the linenumber is outside the review.
     if ($link == 0) {
-	return $linedata;
+	return $line;
     }
 
-    my $link_title = $self->get_comment_digest($line, $filenumber, $new);
-    my $js_title = $link_title;
-    $js_title =~ s/\'/\\\'/mg;
-    my $anchor = $key;
-    my $edit_url = "javascript:eo('$filenumber','$line','$new');";
+    # Now render the line.
+    return $self->render_comment_link($filenumber, $line, $new, $line,
+				      $comment_class, $no_comment_class);
+}
 
-    # If the topic is read only, and there is a comment on this line
-    # don't provide a clickable action, but still show the comment tooltip.
-    if ($self->{topic_state} ne $Codestriker::topic_states[0]) {
-	if ($link_title ne "") {
-	    $edit_url = "javascript:void(0);";
-	} else {
-	    # No comment on this line, just return the line number as is.
-	    return $linedata;
+# Render the supplied text within a edit comment link.
+sub render_comment_link {
+    my ($self, $filenumber, $line, $new, $text,
+	$comment_class, $no_comment_class) = @_;
+
+    # Retrieve any comments associated with this line, and javascript
+    # escape it appropriately.
+    my $title = $self->get_comment_digest($line, $filenumber, $new);
+    $title =~ s/\'/\\\'/mg;
+
+    # Determine the anchor and edit URL for this line number.
+    my $anchor = "$filenumber|$line|$new";
+    my $edit_url = "javascript:eo('$filenumber','$line','$new')";
+
+    # Set the anchor to this line number.
+    my $params = {};
+    $params->{name} = $anchor;
+
+    # Only set the href attribute if the comment is in open state.
+    if ($self->{topic_state} eq $Codestriker::topic_states[0]) {
+	$params->{href} = $edit_url;
+    }
+
+    # If a comment exists on this line, set span and the overlib hooks onto
+    # it.
+    my $query = $self->{query};
+    if ($title ne "") {
+	if (defined $comment_class) {
+	    $text = $query->span({-class=>$comment_class}, $text);
+	}
+	$params->{onmouseover} = "return overlib('$title');";
+	$params->{onmouseout} = "return nd();";
+    } else {
+	if (defined $no_comment_class) {
+	    $text = $query->span({-class=>$no_comment_class}, $text);
 	}
     }
 
-    my $query = $self->{query};
-    if ($link_title ne "") {
-	return $query->a(
-			 {name=>$anchor,
-			  href=>$edit_url,
-			  onmouseover=>"return overlib('$js_title');",
-			  onmouseout=>"return nd();"}, $linedata);
-    } else {
-	return $query->a({name=>$anchor, href=>"$edit_url"}, $linedata);
-    }
+    # Return the rendered link.
+    return $query->a($params, $text);
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -986,8 +986,11 @@ sub _coloured_mode_start($) {
     print $query->end_table() . "\n";
 
     # Render the "Add comment to topic" link.
-    print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
-			      "Add general comment") . " to topic.");
+    print $query->p;
+    print $self->render_comment_link(-1, -1, 1, "Add General Comment",
+				     "general_comment", undef);
+    print " to topic.";
+    print $query->p;
 }
 
 # Render the initial start of the coloured table, with an empty row setting
@@ -1024,8 +1027,11 @@ sub _coloured_mode_finish ($) {
 
     # Render the "Add comment to topic" link.
     my $query = $self->{query};
-    print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
-			      "Add general comment") . " to topic.");
+    print $query->p;
+    print $self->render_comment_link(-1, -1, 1, "Add General Comment",
+				     "general_comment", undef);
+    print " to topic.";
+    print $query->p;
 }
 
 # Display a line for a single file view.
@@ -1094,51 +1100,23 @@ sub render_monospaced_line ($$$$$$$$) {
 	}
     }
 
-    # Render the line data.  If the user clicks on a topic line, the
-    # edit window is focused to the appropriate line.
-    my $query = $self->{query};
     my $line_cell = "";
-
-    # Check to see if the topic is read only.
-    if ($self->{topic_state} ne $Codestriker::topic_states[0])
-    {
-	$line_cell = "$prefix$linenumber";
-    }
-    else
-    {
-
-    if ($link) {
-	# A line corresponding to the review.
-	my $edit_url = "javascript:eo('$filenumber','$linenumber','$new')";
-	my %comment_hash = %{ $self->{comment_hash} };
-	my $key = "$filenumber|$linenumber|$new";
-	if (defined $comment_hash{$key}) {
-	    my $link_title =
-		$self->get_comment_digest($linenumber, $filenumber, $new);
-	    my $js_title = $link_title;
-	    $js_title =~ s/\'/\\\'/mgo;
-	    $line_cell = $prefix .
-		$query->a({name=>$key,
-			   href=>$edit_url,
-			   onmouseover=>"return overlib('<pre>$js_title</pre>');",
-			   onmouseout=>"return nd();"},
-			  $query->span({-class=>$comment_class}, $linenumber));
-	}
-	else {
-	    $line_cell = $prefix .
-		$query->a({name=>$key,
-			   href=>$edit_url},
-			  $query->span({-class=>$no_comment_class},
-				       $linenumber));
-	}
-    }
-    else {
+    if ($link == 0) {
 	# A line outside of the review.  Just render the line number, as
 	# the "name" of the linenumber should not be used.
 	$line_cell = "$prefix$linenumber";
+    } else {
+	$line_cell = $prefix .
+	    $self->render_comment_link($filenumber, $linenumber, $new,
+				       $linenumber, $comment_class,
+				       $no_comment_class);
     }
 
-    }
+    # Render the line data.  If the user clicks on a topic line, the
+    # edit window is focused to the appropriate line.
+    my $query = $self->{query};
+
+    # Replace the line data with spaces.
     my $newdata = tabadjust($self, $self->{tabwidth}, $data, 0);
 
     if ($class ne "") {
