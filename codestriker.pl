@@ -58,6 +58,7 @@ use vars qw (
 	     $ADDED_REVISION $REMOVED_REVISION $PATCH_REVISION
 	     $OLD_FILE $NEW_FILE $BOTH_FILES $tabwidth
 	     $output_compressed $url_prefix $query
+	     $BINARY_ADDED_REVISION $BINARY_REMOVED_REVISION
 	     );
 
 # BEGIN CONFIGURATION OPTIONS --------------------
@@ -202,6 +203,8 @@ $diff_current_filename = "";
 $ADDED_REVISION = "1.0";
 $REMOVED_REVISION = "0.0";
 $PATCH_REVISION = "0.1";
+$BINARY_ADDED_REVISION = "0.2";
+$BINARY_REMOVED_REVISION = "0.3";
 
 # New constants used for viewing files.
 $OLD_FILE = 0;
@@ -766,7 +769,7 @@ sub read_filetable_file($) {
 
     my $rc = 1;
     for (my $i = 0; <FILETABLE>; $i++) {
-	if (/\|(.*)\| ([\d\.]+) (\d+)$/o) {
+	if (/\|(.*)\| (b?[\d\.]+) (\d+)$/o) {
 	    $filetable_filename[$i] = $1;
 	    $filetable_revision[$i] = $2;
 	    $filetable_offset[$i] = $3;
@@ -1341,6 +1344,9 @@ sub coloured_mode_start ($$) {
 	$class = "af" if ($revision eq $ADDED_REVISION);
 	$class = "rf" if ($revision eq $REMOVED_REVISION);
 	$class = "cf" if ($revision eq $PATCH_REVISION);
+	$class = "af" if ($revision eq $BINARY_ADDED_REVISION);
+	$class = "rf" if ($revision eq $BINARY_REMOVED_REVISION);
+	$class = "cf" if ($revision eq "b$PATCH_REVISION");
 	if ($revision eq $ADDED_REVISION ||
 	    $revision eq $REMOVED_REVISION ||
 	    $revision eq $PATCH_REVISION) {
@@ -1348,13 +1354,27 @@ sub coloured_mode_start ($$) {
 	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
 					$query->a({href=>"$href_filename"},
 						  "$filename"))), "\n";
+	} elsif ($revision eq "b$PATCH_REVISION" ||
+		 $revision eq $BINARY_ADDED_REVISION ||
+		 $revision eq $BINARY_REMOVED_REVISION) {
+	    # Patch file entry that is binary.
+	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
+					$filename)) . "\n";
 	} else {
-	    # Modified file.
-	    print $query->Tr($query->td({-class=>'cf'},
-					$query->a({href=>"$href_filename"},
-						  "$filename")),
-			     $query->td({-class=>'cf'}, "&nbsp; $revision"),
-			     "\n");
+	    # Modified file.  If it is a modified binary file, don't hyperlink
+	    # it.
+	    if ($revision =~ /^b(.*)$/) {
+		my $real_revision = $1;
+		print $query->Tr($query->td({-class=>'cf'}, $filename),
+				 $query->td({-class=>'cf'},
+					    "&nbsp; $real_revision")) . "\n";
+	    } else {
+		print $query->Tr($query->td({-class=>'cf'},
+					    $query->a({href=>"$href_filename"},
+						      "$filename")),
+				 $query->td({-class=>'cf'},
+					    "&nbsp; $revision")) . "\n";
+	    }
 	}
     }
     print $query->end_table(), "\n";
@@ -2174,9 +2194,12 @@ sub process_document($) {
 	    error_return("Could not create diff.$diff_number: $!");
 	}
 
-	while (<DOCUMENT>) {
+	while ($line = <DOCUMENT>) {
 	    $offset++;
-	    last if (/^Index/o || /^diff/o); # The start of the next diff header.
+
+	    # Check for the start of the next diff header.
+	    $_ = $line;
+	    last if (/^Index/o || /^diff/o || /^Binary/o || /^Only/o);
 	    print DIFF $_;
 	}
 	close DIFF;
@@ -2197,6 +2220,9 @@ sub process_document($) {
 # the appropriate values set to the reference variables passed in.
 sub read_diff_header($$$$$) {
     my ($fh, $offset, $filename, $revision, $line) = @_;
+
+    # Check if there is nothing to do.
+    return 0 if (! defined $line);
 
     # Note we only iterate while handling empty diff blocks.
     while (1) {
@@ -2248,6 +2274,20 @@ sub read_diff_header($$$$$) {
 	    return 0 unless defined $line;
 	    $$offset++;
 	}
+
+	# Need to check for binary file differences for patch files.
+	# Unfortunately, when you provide the "-N" argument to diff, then
+	# it doesn't indicate new files or removed files properly.  Without
+	# the -N argument, it then indicates "Only in ...".
+	if ($line =~ /^Binary files (.*) and .* differ$/) {
+	    $$filename = $1;
+	    $$revision = "b" . $PATCH_REVISION;
+	    return 1;
+	} elsif ($line =~ /^Only in (.*): (.*)$/) {
+	    $$filename = "$1/$2";
+	    $$revision = "b" . $PATCH_REVISION;
+	    return 1;
+	}	    
 	
 	# Now read in the diff line, followed by the legend lines.  If this is
 	# not present, then we know we aren't dealing with a diff file of any
@@ -2263,7 +2303,21 @@ sub read_diff_header($$$$$) {
 	# a diff section if it is blank.
 	next if ($line =~ /^Index:/o);
 
-	if ($line =~ /^\-\-\- \/dev\/null/o) {
+	# Check for binary files being added, changed or removed.
+	if ($line =~ /^Binary files \/dev\/null and (.*) differ$/o) {
+	    # Binary file has been added.
+	    $$revision = $BINARY_ADDED_REVISION;
+	    return 1;
+	} elsif ($line =~ /^Binary files .* and \/dev\/null differ$/o) {
+	    # Binary file has been removed.
+	    $$revision = $BINARY_REMOVED_REVISION;
+	    return 1;
+	} elsif ($line =~ /^Binary files .* and .* differ$/o) {
+	    # Binary file has been modified.  Indicate this in the revision
+	    # number.
+	    $$revision = "b" . $$revision;
+	    return 1;
+	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $$revision = $ADDED_REVISION;
 	} elsif ($cvs_diff == 0 &&

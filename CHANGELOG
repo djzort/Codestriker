@@ -1,5 +1,7 @@
 Version 1.4.5:
 
+* Support for the handling of binary files in diffs.
+
 * Fix bug in popup parallel coloured-diff mode where the anchor names
   weren't being generated properly, resulting in some browsers not
   centering their view in the correct place.
@@ -7,7 +9,7 @@ Version 1.4.5:
 * Fixed bug in pop parallel coloured-diff mode where changes right at
   the end of the file weren't rendered.
 
-* Support for parsing files generated with diff -b.
+* Support for parsing files generated with cvs diff -b.
 
 Version 1.4.4:
 
