@@ -1,5 +1,9 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
 
+<!-- Note the /usr/share/sgml/docbook/sgml-dtd-3.1/dbnotn.mod file had
+  to be accept PNG images (simple change).  Should migrate to
+  Docbook 4 eventually. -->
+
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
@@ -7,7 +11,7 @@
     <authorgroup>
       <author>
         <firstname>David</firstname>
-	<surname>Sitsky</surname> 
+	<surname>Sitsky</surname>
       </author>	
     </authorgroup>
   </bookinfo>
@@ -42,14 +46,35 @@
 	from the developer community.  Codestriker can also be linked
 	with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
-	for fast lookup of code, to assit in the review process.
+	for fast lookup of code, to assist in the review process.
       </para>
       <para>
         Codestriker is written in Perl in a cross-platform style.  It
-        can run on any variant of UNIX (Linux, *BSD) and has been
-        tested and installed on Windows 98 and above.  The Codestriker
-        project page is located at:
-	<ulink url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>
+        can run on any variant of *NIX (Linux, *BSD) and has been
+        tested and installed on Window systems (Windows 98 and above).
+        The Codestriker home page is located at:
+	<ulink
+	url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>.
+	The SourceForge-specific page, which contains information on
+	file releases, defect lists, mailing lists and information on
+	the CVS repository is located at
+	<ulink
+	url="http://www.sourceforge.net/projects/codestriker">http://www.sourceforge.net/projects/codestriker</ulink>.
+      </para>
+      <para>
+        A screenshot of Codestriker is action can be seen in <xref
+        linkend="screenshot">.
+	<figure id="screenshot" float="1">
+	  <title>Codestriker Screenshot</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="screenshot.png" format="png">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="screenshot.eps" format="eps">
+	    </imageobject>
+	  </mediaobject>
+	</figure>
       </para>
     </sect1>
     <sect1>
@@ -855,56 +880,825 @@ PerlSwitches -T
 	</para>
       </sect2>
     </sect1>
+
+    <sect1>
+      <title>Upgrading</title>
+      <para>
+        To upgrade, extract the distribution to another directory,
+        check the <filename>CHANGELOG</filename> file to see if any
+        configuration changes are required, since the last version you
+        used, copy/modify your existing
+        <filename>codestriker.conf</filename> file, and <emphasis>most
+        importantly, run
+        <filename>checksetup.pl</filename></emphasis>.  There is no
+        harm in running this script as many times as you like.
+      </para>
+    </sect1>
+
   </chapter>
 
   <chapter>
     <title>User's Guide</title>
     <sect1>
       <title>Introduction</title>
-      <para></para>
+      <para>
+        The goal of this chapter is to present how to create/manage
+        Codestriker projects, how to create code review topics, and
+        then how to review these topics.  Assuming Codestriker has
+        been configured and is running, you can get started by going
+        to the following URL:
+        http://yourhost.yourdomain/codestriker/codestriker.pl.  This
+        should take you to the topic list screen, which is talked
+        about in the following section.  From a fresh install, there
+        will obviously be no code review topics in the list.  However
+        there are some links at the top of the page, to "List
+        projects", which will allow you to create some new projects to
+        match your development process.  Once you have defined all of
+        your initial projects, you can create a new code review topic
+        by clicking on "Create new topic".  These screens are covered
+        in further detail below.
+      </para>
     </sect1>
-    <sect1>
+    <sect1 id="topic-list">
       <title>Topic List Screen</title>
-      <para></para>
+      <para>
+        The topic list screen is used for displaying a list of code
+        review topics, which contain the topic's title, author,
+        reviewers, cc, creation date, links to the bugs it fixes, and
+        its state.  The email address for the author, reviewers and cc
+        fields are shortened from brevity reasons.  The links from
+        the bug ids will take you to the bug tracking system
+        (currently, only Bugzilla is supported) for more information
+        on that specific bug.  A topic can be in one of the following
+        states:
+	<variablelist>
+	  <varlistentry>
+	    <term>Open</term>
+	    <listitem>
+	      <para>
+	        This is the initial state of the topic, and indicates
+	        it is still open for reviewing.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Closed</term>
+	    <listitem>
+	      <para>
+	        Closed indicates that the review is no longer
+	        relevant, or invalid.  A reviewer might decide that a
+	        review posted is fixing a problem in the wrong way,
+	        and after adding a comment, closes the review off.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Committed</term>
+	    <listitem>
+	      <para>
+	        Committed indicates that all the comments posted to
+	        the review have been addressed, and that the source
+	        code has been committed into the SCM system.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+	    
+	An example screen can be seen in <xref
+        linkend="figure-topiclist">.
+	<figure id="figure-topiclist" float="1">
+	  <title>Topic List Screenshot</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="topiclist.png" format="png">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="topiclist.eps" format="eps">
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+      </para>
+      <para>
+        To view a specific topic, click on its title.  This will take
+        you to the view topic page, which is covered in <xref
+        linkend="view-topic">.  From the "topic list" screen, it is
+        possible to change the state of many topics in one action, by
+        selected the checkboxes next to the topics of interest, and
+        pressing the "Update" button with the state dropdown selected
+        to the desired state.  If topic deletion functionality has
+        been enabled, the "Delete topics" button will delete the
+        selected topics from the database.  Generally speaking, topics
+        are only deleted if the wrong content was posted by mistake.
+        It is useful to maintain all historical topics in the
+        Codestriker database, as they can be searched over in the
+        future, which is covered in <xref linkend="topic-search">.
+      </para>
     </sect1>
-    <sect1>
+    <sect1 id="projects">
       <title>Creating a new Project</title>
-      <para></para>
+      <para>
+        When a new code review topic is created, it is necessary to
+        specify what project the review is related to.  Projects can
+        be used as a filtering mechanism when displaying lists of
+        topics (see <xref linkend="topic-search">).  This can be a
+        great benefit, in the situation where a single Codestriker
+        deployment is serving a large number of developer groups.
+        Typically, a member of a developer group only wants to see the
+        list of open code review topics in their project.
+      </para>
+      <para>
+        An example project list screen can be seen in <xref
+        linkend="figure-project-list">.
+	<figure id="figure-project-list" float="1">
+	  <title>Project List Screenshot</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="projectlist.png" format="png">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="projectlist.eps" format="eps">
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+      </para>
+      <para>
+        This figure shows an example Codestriker deployment, which
+        shows the list of projects defined, where each row contains
+        the project's name and description.  To edit a project's name
+        and/or description, click on the project's name.  This will
+        take you to a screen for modifying the project's attributes.
+      </para>
+      <para>
+        At the bottom of the "project list" page, is a link to "Create
+        new project".  This will take you a screen, as shown in <xref
+        linkend="figure-create-project">.
+	<figure id="figure-create-project" float="1">
+	  <title>Create Project Screenshot</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="createproject.png" format="png">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="createproject.eps" format="eps">
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+      </para>
+      <para>
+        To create the project, simple fill in the details for the
+        project's name and description, and press the "Submit"
+        button.  This will then display an updated project list.
+      </para>
     </sect1>
-    <sect1>
+    <sect1 id="create-topic">
       <title>Creating a new Topic</title>
+      <para>
+        The "Create topic" screen can be accessed from a number of
+        other screens, and requires the submission of a number of
+        details in order to create a topic.  A screenshot can be seen
+        in <xref linkend="figure-create-topic">.
+	<figure id="figure-create-topic" float="1">
+	  <title>Create Topic Screenshot</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="createtopic.png" format="png">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="createtopic.eps" format="eps">
+	    </imageobject>
+	  </mediaobject>
+	</figure>
+      </para>
+      <para>
+        The topic title is a mandatory field which contains a one-line
+        summary of the topic.  This title is used when the topic is
+        displayed in the "Topic list" screen (see <xref
+        linkend="topic-list">).  The topic description contains a more
+        detailed description of the review itself, and show be enough
+        for a reviewer to understand the purpose of the review.  If
+        Codestriker is linked to a bug tracin system, further down in
+        the form, the "Bug IDs" field gives the opportunity to enter
+        in multiple bug ids (either space or comma separated), which
+        will also give the reviewer an opportunity to see what bugs
+        this review fixes.
+      </para>
+      <para>
+        The "Project" dropdown list should be selected onto the
+        project this review belongs to.  The last three fields contain
+        comma-separated email addresses.  The "Your email address"
+        field contains the email address which will receive review
+        comments.  This is typically, the author's email address.  The
+        "Reviewers" field contains the list of reviewer email address
+        which will be notified once the review is created.  The "Cc"
+        field is typically used for notifying a group email list that
+        a new review has been created.  These field values are stored
+        into your browser's cookie, so that the next time a review is
+        created, these fields will be pre-filled, as they don't
+        typically change much between different reviews.
+      </para>
+      <para>
+        The most complex part of this form are the values required for
+        the "Topic text upload", "Start tag", "End tag", "Module" and
+        "Repository" fields.  These fields dictate what the actual
+        review text is.  The first step is to select what source
+        control management system the review was made against, and
+        updating the "Repository" field accordingly.  The following
+        sub-sections detail the different review inputs that can be
+        handled.  Once all the details have been entered, and the
+        "Submit" button is pressed, a confirmation screen will come up
+        indicating that the review has been created.  An email, with
+        a URL to view the topic will be sent to the author, reviewers
+        and any email addresses entered in the "Cc" field.
+      </para>
       <sect2>
 	<title>Creating CVS Diff Topics</title>
-	<para></para>
+	<para>
+	  For CVS projects, a common situation is you have a checkout
+	  of your project's module, and you have fixed a bug which
+	  needs to be reviewed.  To get this reviewed in Codestriker,
+	  you need to generate the review text, by going to the
+	  top-level directory of your checkout, and issuing a command
+	  like:
+	  <programlisting>
+% cvs diff -uN > /tmp/review.txt
+	  </programlisting>
+	  This command creates a diff file, which consists of the code
+          changes you have made since you checked out the project from
+          CVS.  The <option>-u</option> option indicates to create a
+          "unidiff" formatted file, which is what Codestriker can
+          parse.  The <option>-N</option> option means to show added
+          and removed files.  Depending on your development process,
+          you may want to issue different cvs diff commands with
+          different flags, or even using "cvs rdiff" instead.
+          Codestriker can accept any output, as long as
+          <option>-u</option> is specified, to ensure the diff is in
+          unidiff format.
+	</para>
+	<para>
+	  This filename can either be entered directly into the "Topic
+	  text upload" field, or selected from a file dialog which is
+	  created when the "Browse" button is pressed.  The "Start
+	  tag", "End tag" and "Module" fields can be left blank.  Once
+	  all the other fields have been entered, click the "Submit"
+	  button will create the review, and show a confirmation
+	  screen.
+	</para>
+	<para>
+	  In some development processes, CVS tags are used to mark
+	  units of work that have been applied to the repository,
+	  which may or may not exist on separate branches to the main
+	  branch.  Rather than generating the review text via a CVS
+	  command, as specified in the previous section, the review
+	  text can be specified by entering in the "Start tag", "End
+	  tag" and "Module" name into their respective fields.
+	  Codestriker will then fetch the review text from the
+	  nominated repository automatically, by executing the
+	  appropriate CVS command itself.
+	</para>
       </sect2>
       <sect2>
-        <title>Creating Patch Topics</title>
-	<para></para>
+        <title>Creating Diff Topics</title>
+	<para>
+	  In some deployments, there may not even be a source control
+	  management system, and it might be the case that only diffs
+	  are reviewed.  An example command to generate the review
+	  text could be something like:
+	  <programlisting>
+% diff -urN ../old-version/ . > /tmp/review.txt
+	  </programlisting>
+          Like the CVS command shown above, the <option>-u</option>
+          and <option>-N</option> options are specified to output a
+          unidiff file, which contains new and old files.  The
+          <option>-r</option> option indicates to recursively check
+          the source and target directories specified (in this case
+          <filename>../old-version</filename> and
+          <filename>.</filename> to find differences.  There are
+          likely to be other options that will be specified, run
+          <command>man diff</command> for more options.
+	</para>
+	<para>
+	  The "Start tag", "End tag" and "Module" fields have no
+	  relevance in this situation.
+	</para>
+      </sect2>
+      <sect2>
+	<title>Creating Plain Text Topics</title>
+	<para>
+	  It is also possible to use Codestriker to simple review text
+	  that is not in the form as a diff.  In this situation,
+	  Codestriker will simply treat the text as a single new
+	  file.  Reviewers will still be able to view the text and
+	  make comments on a per-line basis as before.  Simple put the
+	  filename to be reviewed in the "Topic text upload" field.
+	</para>
       </sect2>
       <sect2>
 	<title>Creating Subversion Diff Topics</title>
-	<para></para>
+	<para>
+	  Similar to CVS, Subversion diffs are created by again, going
+	  to the top of your project directory, and issuing the
+	  following command:
+	  <programlisting>
+% svn diff -uN > /tmp/review.txt
+	  </programlisting>
+	  This file should then be selected for the "Topic text
+	  upload" field.  The "Start tag", "End tag" and "Module"
+	  fields have no relevance in this situation.
+	</para>
       </sect2>
     </sect1>
     <sect1>
       <title>Reviewing Topics</title>
-      <sect2>
-	<title>Viewing the Topic</title>
-	<para></para>
+      <para>
+        Reviewing a topic is achieved by going to the "View Topic"
+        screen for a specific review topic.  This can be accessed from
+        either the "Topic List" screen (<xref linkend="topic-list">),
+        or from a URL in a new topic notification email, which is sent
+        to the author and reviewers.
+      </para>
+      <sect2 id="view-topic">
+	<title>Viewing a Topic</title>
+	<para>
+	  The "View Topic" screen consists of a header, followed by
+	  the actual code itself.  An example header snapshot can be
+	  seen in <xref linkend="figure-viewtopic">.
+	  <figure id="figure-viewtopic" float="1">
+	   <title>View Topic Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="viewtopic.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="viewtopic.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	  </figure>
+	</para>
+	<para>
+	  The top bar contains the following links to other
+	  Codestriker pages:
+	  <variablelist>
+	    <varlistentry>
+	      <term>Create new topic</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "Create
+		  Topic" page (see <xref linkend="create-topic">).
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>List open topics</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "Topic
+		  List" page (see <xref linkend="topic-list">), and
+		  will display all open topics in the system.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>List open topics in project</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "Topic
+		  List" page (see <xref linkend="topic-list">), and
+		  will display all open topics in the system that
+		  belong to the same project as the topic shown on the
+		  screen.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>Search</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "Topic
+		  Search" page (see <xref linkend="topic-search">).
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>List projects</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "Project
+		  List" page (see <xref linkend="projects">).
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>View all comments</term>
+	      <listitem>
+	        <para>
+		  Following this link will take you to the "View
+		  Comments" page (see <xref linkend="view-comments">),
+		  which will show all comments which have been made
+		  against this code review topic.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>Help</term>
+	      <listitem>
+	        <para>
+		  Following this link will show this help text.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+          </variablelist>	
+	</para>
+	<para>
+	  The next part of the screen shows the topic's attributes,
+	  such as the title, author, creation date, reviewer, the size
+	  of the topic text, the repository the code in the review has
+	  been made against and the project the review is associated
+	  with, the topic description.  If the topic fixes any bugs,
+	  the links to the bug descriptions will be shown here.  The
+	  topic's state is also shown here, and can be modified if
+	  appropriate, by selected the state from the drop-down list
+	  and pressing "Update".  If deletion has been enabled, a
+	  "Delete" button will appear, that allows the topic to be
+	  deleted.
+	</para>
+	<para>
+	  A link called "Download" topic text is shown.  Following
+	  this link will return in the browser the raw topic text
+	  which was entered when the review was created.  This can be
+	  useful if the raw diff needs to be retrieved, so it can be
+	  used as a patch file.  There are some links which affect the
+	  display, such as whether a monospace font should be used to
+	  render the code changes (requires more screen real-estate)
+	  and what tab-width to use.
+	</para>
+	<para>
+	  This is followed by the table of contents of the review,
+	  which consists of the list of files which comprise the
+	  topic, whether they are added, removed or modified files,
+	  and if they are modified, what revision of the file has been
+	  modified.  If filename is clicked, the browser will move to
+	  the anchor which corresponds to changes made to that file.
+	</para>
+	<para>
+	  The rest of the "View Topic" page can be seen in <xref
+	  linkend="figure-viewtopicdetail">.
+	  <figure id="figure-viewtopicdetail" float="1">
+	   <title>View Topic Detail Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="viewtopicdetail.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="viewtopicdetail.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	  </figure>
+        </para>
+	<para>
+	  This shows the start of the code changes for the file
+	  <filename>codestriker/codestriker.pl</filename>.  Clicking
+	  on the filename will show revision history of this file, if
+	  Codestriker has been configured to link with a system, like
+	  ViewCVS.  The "Go To Contents" link will move the browser
+	  back to the table of contents.
+	</para>
+	<para>
+	  From this point, the screen in split into two sections,
+	  where the left side represents the old version of the file,
+	  and right side represents the new version.  In the figure,
+	  the code in the block of red represents code which has been
+	  removed in the proposed change.  Adjacent yellow blocks
+	  represent code changes, as can be seen with the version
+	  number change.  The green block represents new code which
+	  has been added, in this instance, the new constants for
+	  viewing modes.
+	</para>
+	<para>
+	  Each file is broken up into a series of "deltas".  At the
+	  head of each delta block, for both the old and new versions
+	  of the file, there is an indication of what line number the
+	  delat started at.  In this situation, clicking on the "Line
+	  24" link on the left hand side, will open a new browser
+	  window, which will contain the complete original contents of
+	  <filename>codestriker/codestriker.pl</filename>, anchored at
+	  line 24.  Clicking on the "Line 22" link on the right hand
+	  side will contain the complete contents of
+	  <filename>codestriker/codestriker.pl</filename> will
+	  <emphasis>all</emphasis> of the proposed changes applied.
+	  Clicking on "Parallel" will do a similar job, bu will show
+	  both the original and new version of the complete file
+	  side-by-side.  See <xref linkend="view-file"> for more
+	  details on what can be done with these complete file-based
+	  views, which can assist enormously in the review process.
+	</para>
+	<para>
+	  Every line of code in the display, is prefixed with a
+	  hyperlinked number.  This number represents the line number
+	  of the file.  If a comment needs to be made against a
+	  specific linenumber, click on the linenumber, and a new
+	  browser window will come up with the "Add Comment" page (see
+	  <xref linkend="add-comment">).
+	  This may take some time the first time, as a new browser
+	  window needs to be created.  After the comment has been
+	  entered, the window is not closed, so that for subsequent
+	  comments, the add comment window can be displayed quickly.
+	</para>
       </sect2>
-      <sect2>
+      <sect2 id="add-comment">
 	<title>Adding a Comment</title>
-	<para></para>
+	<para>
+	  A comment against a line is made by clicking on the line
+	  number of interest.  This will display another browser
+	  window, an example can be seen in <xref
+	  linkend="figure-add-comment">.
+	  <figure id="figure-add-comment" float="1">
+	   <title>Add Comment Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="edittopic.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="edittopic.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	  </figure>
+	  As can be seen in the figure, a summary of the topic is
+	  displayed, followed by the code in question.  The "increase"
+	  link can increase the amount of context code to display,
+	  while "decrease" will decrease the amount of context code.
+	  The line in question will be highlighted in red.
+	</para>
+	<para>
+	  Any previous comments made on this line will then be
+	  displayed.  You can enter your comment into the textarea
+	  provided.  Any formatting will be preserved, so that you can
+	  enter new code fragments, if required.  As before, your
+	  email address is remembered in the browser's cookie, to
+	  prevent you from having to enter it each time you make a
+	  comment.  When the "Submit" button is pressed, an email will
+	  be generated and sent to the author of the review, to the
+	  email address in the "Your email address" field as a
+	  reference, to the email address in the "Cc" field, just in
+	  case there is a requirement to send the email elsewhere, and
+	  to any other email addresses that have made a comment on
+	  this line, so that it is possible to get a form of
+	  discussion happening.
+	</para>  
+	<para>
+	  On the comment has been submitted, the main "View Topic"
+	  window will be displayed so that the review can quickly
+	  continue.  If a new comment needs to be added, the comment
+	  browser window will be bought quickly into focus.
+	</para>
       </sect2>
-      <sect2>
+      <sect2 id="view-file">
 	<title>Viewing Complete old/new Files</title>
-	<para></para>
+	<para>
+	  As mention in <xref linkend="view-topic">, it is possible to
+	  view the entire contents of a file in a review in its
+	  original form, or in its proposed form, or side-by-side
+	  depending on which "Line" or "Parallel" link was selected.
+	  The review has to be linked to a SCM repository, so that it
+	  can fetch parts of the file which aren' a part of the review
+	  text.
+	</para>
+	<para>
+	  When a "Line" link is clicked, a new browser window will
+	  come up with the contents of the file.  Like the "Add
+	  Comment" window, this will be slow the first time, but in
+	  subsequent times will be fast since the browser window is
+	  not closed.  An example of this window can be seen in <xref
+	  linkend="figure-viewfile">.
+	  <figure id="figure-viewfile" float="1">
+	   <title>View File Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="fileview.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="fileview.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	  </figure>
+	</para>
+	<para>
+	  This view matches the new contents of
+	  <filename>codestriker/codestriker.pl</filename>, from the
+	  "View Topic" screen seen in <xref linkend="view-topic">.
+	  Each corresponding delta will have consecutive hyperlinked
+	  line numbers.  Those lines which do not have a hyperlinked
+	  line number are outside the deltas in the review, but are a
+	  part of the file.  Clicking on a hyperlinked line will bring
+	  the "Add Comment" window into display, in the same way it
+	  would as if the line number was clicked from the "View
+	  Topic" screen.
+	</para>
+	<para>
+	  Seeing the entire contents of a file, either pre or post
+	  change is often essentially to complete a review properly.
+	  Sometimes, it is necessary to see both versions of the file
+	  side-by-side.  An example can be seen in <xref
+	  linkend="figure-parallelfileview">.
+	  <figure id="figure-parallelfileview" float="1">
+	   <title>Parallel View File Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="parallelfileview.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="parallelfileview.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	  </figure>
+	  The same rules apply for adding comments - any hyperlinked
+	  line number can be clicked in order to add a comment.
+	</para>
       </sect2>
     </sect1>
-    <sect1>
+    <sect1 id="view-comments">
       <title>Viewing Comments</title>
-      <para></para>
+      <para>
+        From the "View Topic" page (see <xref
+        linkend="view-topic">), there is a link at the top to view the
+        comments associated with a topic.  This can be clicked at any
+        stage to see what comments have been submitted against a
+        review.  It is often useful for the author once a review has
+        been completed, to work their way through the comments from
+        the browser, although they can do this with their email client
+        as well, since each comment will generate an email message.
+	An example screenshot of the "View Comments" page can be seen
+        in <xref linkend="view-comments">.
+        <figure id="figure-viewcomments" float="1">
+	   <title>View Comments Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="viewcomments.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="viewcomments.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	</figure>
+      </para>
+      <para>
+        A separate heading is shown in the display, for each line in
+        the review which has at least one comment made against it.
+        For each line, all of the comments made is shown, including
+        the author and date information.  Each comment block has a
+        state associated with it, which is primarily for the author's
+        benefit to change.  The following states are available:
+	<variablelist>
+	  <varlistentry>
+	    <term>Submitted</term>
+	    <listitem>
+	      <para>
+	        This is the initial state that a comment block will have.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Invalid</term>
+	    <listitem>
+	      <para>
+	        This can be set to indicate that the comments made in
+	        this block are actually not valid.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Completed</term>
+	    <listitem>
+	      <para>
+	        This is typically set by the author, as a record, to
+	        indicate that the comments in this block have been
+	        subsequently addressed in their code.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+	For each comment block, there are three links to other
+	Codestriker screens.  The first link will bring up a "View
+	File" page (see <xref linkend="view-file">) centered on the
+	line number of the comment, "Parallel" will do the same, by
+	using the parallel view, and the "Add comment" link will bring
+	up the "Add Comment" page (see <xref linkend="add-comment">)
+	for that line number.
+      </para>
+      <para>
+        In this particular example, there are two comment blocks, for
+        file <filename>codestriker/codestriker.pl</filename>, on lines
+        27 and 60.
+      </para>
     </sect1>
+    <sect1 id="topic-search">
+      <title>Topic Search</title>
+      <para>
+        If Codestriker is used to review all new code before it is
+        committed into a SCM, it builds up a very important
+        development history.  Since all this information is stored in
+        a relational database, the information is searchable.  The
+        "Topic Search" screen provides an interface for locating
+        topics, depending on a search criteria.  The "Topic Search"
+        screen can be seen in <xref linkend="topic-search">.
+        <figure id="figure-search" float="1">
+	   <title>Topic Search Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="search.png" format="png">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="search.eps" format="eps">
+	     </imageobject>
+	   </mediaobject>
+	</figure>
+      </para>
+      <para>
+        By default, pressing "Submit" without typing anything extra
+        will return all open topics in the system.  This is because
+        the "State" field is set to match any topic in state "Open",
+        and the "Project" field is set to "Any", which will match any
+        project, and there are no other constraints in the other
+        fields.  The search can be narrowed by entering in matching
+        text in the "Author", "Reviewer", "Cc" and "Bug ID" fields.
+      </para>
+      <para>
+        The "Contains text" field in allows for searching in the
+        following areas, depending on which checkboxes have been
+        enabled (multiple checkboxes are ORed together):
+	  <variablelist>
+	    <varlistentry>
+	      <term>title</term>
+	      <listitem>
+	        <para>
+		  This will try to match the entered text with a
+		  topic's title.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>description</term>
+	      <listitem>
+	        <para>
+		  This will try to match the entered text with a
+		  topic's description.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>comment</term>
+	      <listitem>
+	        <para>
+		  This will try to match the entered text with a
+		  comment associated with a topic.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>body</term>
+	      <listitem>
+	        <para>
+		  This will try to match the entered text with the
+		  actual code associated with a topic.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+	      <term>filename</term>
+	      <listitem>
+	        <para>
+		  This will try to match the entered text with a
+		  filename that was a part of a topic.
+	        </para>
+	      </listitem>
+	    </varlistentry>
+	  </variablelist>
+      </para>
+      <para>
+        In all cases, text entered will match the corresponding
+        database text fields as a substring match.  That is, entering
+        "paul" in the "Author" field will match the author
+        "paul@zot.com" or "joe_paul@zoo.com".  It is also possible to
+        use wildcards in the entered text, such as "joe*paul@zoo.com".
+	Once the "Submit" button is pressed, the results are displayed
+        in the "Topic List" page (see <xref linkend="topic-list">).
+      </para>
+    </sect1>
+
   </chapter>
 
   <chapter>
@@ -1081,6 +1875,19 @@ PerlSwitches -T
 	      </para>
 	    </listitem>
 	  </varlistentry>
+
+	  <varlistentry>
+	    <term>doc</term>
+	    <listitem>
+	      <para>
+	        This directory contains the source for the Codestriker
+	        guide written in docbook, contained in the
+	        <filename>codestriker.sgml</filename>, with the
+	        <filename>Makefile</filename> for building the various
+	        forms of the documentation.
+	      </para>
+	    </listitem>
+	  </varlistentry>
 	</variablelist>
       </para>
     </sect1>
@@ -1203,7 +2010,12 @@ PerlSwitches -T
 
   <chapter>
     <title>Future Plans</title>
-    <para></para>
+    <para>
+      Immediate work includes support for other source control
+      management systems, such as ClearCase and VSS.  For this work to
+      proceed, I need support from the developer community, as I don't
+      have access to these systems.
+    </para>
   </chapter>
 
   <chapter id="contact">

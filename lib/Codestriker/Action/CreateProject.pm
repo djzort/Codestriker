@@ -41,6 +41,10 @@ sub process($$$) {
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'search_url'} = $url_builder->search_url();
 
+    $vars->{'list_url'} =
+ 	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+
     my $template = Codestriker::Http::Template->new("createproject");
     $template->process($vars);
 

@@ -81,6 +81,10 @@ sub process($$$) {
     $vars->{'author'} = $document_author;
     $vars->{'reviewers'} = $document_reviewers;
 
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+    
     if (defined $document_cc && $document_cc ne "") {
 	$vars->{'cc'} = $document_cc;
     } else {
@@ -91,6 +95,7 @@ sub process($$$) {
     my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
+    $vars->{'doc_url'} = $url_builder->doc_url();
 
     # Retrieve the context in question.  Allow the user to increase it
     # or decrease it appropriately.

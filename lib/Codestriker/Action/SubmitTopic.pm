@@ -268,6 +268,10 @@ sub process($$$) {
     $vars->{'reviewers'} = $reviewers;
     $vars->{'cc'} = (defined $cc) ? $cc : "";
 
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+    
     my $template = Codestriker::Http::Template->new("submittopic");
     $template->process($vars);
 

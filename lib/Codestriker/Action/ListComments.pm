@@ -50,6 +50,13 @@ sub process($$$) {
     my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'view_comments_url'} = $view_comments_url;
 
+    # Indicate where the documentation directory is.
+    $vars->{'doc_url'} = $url_builder->doc_url();
+
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+				      
     # Go through all the comments and make them into an appropriate form for
     # displaying.
     my $last_filenumber = -1;
@@ -57,7 +64,7 @@ sub process($$$) {
     my $index = 0;
     for (my $i = 0; $i <= $#comments; $i++) {
 	my $comment = $comments[$i];
-	
+
 	if ($comment->{fileline} != $last_fileline ||
 	    $comment->{filenumber} != $last_filenumber) {
 	    my $new_file =

@@ -21,12 +21,6 @@ DOCBOOK_DSL=docbook.dsl
 DOCBOOK_DSL_HTML=$(DOCBOOK_DSL)\#html
 DOCBOOK_DSL_PRINT=$(DOCBOOK_DSL)\#print
 
-# Directory which holds the docbook HTML style files.
-DOCBOOK_HTML_DIR=/usr/lib/sgml/docbook/dssl-stylesheets/html
-
-# Directory which holds the docbook print style files.
-DOCBOOK_PRINT_DIR=/usr/lib/sgml/docbook/dssl-stylesheets/print
-
 # Target file
 HTML_TARGETS=$(SOURCES:.sgml=.html)
 TEX_TARGETS=$(SOURCES:.sgml=.tex)
@@ -38,21 +32,19 @@ PDF_TARGETS=$(SOURCES:.sgml=.pdf)
 
 # Build the html files from a docbook sgml file.
 %.html: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
-	$(JADE) -t sgml -D $(DOCBOOK_HTML_DIR) -D $(DOCBOOK_DIR) \
-                -V nochunks -d $(DOCBOOK_DSL_HTML) $< > $@
+	$(JADE) -t sgml -D $(DOCBOOK_DIR) \
+                -d $(DOCBOOK_DSL_HTML) $< > $@
 	@if [ -f t1.html ]; then cp t1.html $@ ; fi
 	@if [ -f book1.html ]; then cp book1.html $@ ; fi
 
 # Build a tex file from a docbook sgml file.
 %.tex: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
-	$(JADE) -t tex -D $(DOCBOOK_PRINT_DIR) -D $(DOCBOOK_DIR) \
-                -d $(DOCBOOK_DSL_PRINT) $<
+	$(JADE) -t tex -D $(DOCBOOK_DIR) -d $(DOCBOOK_DSL_PRINT) $<
 
 
 # Build a tex file from a docbook sgml file.
 %.rtf: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
-	$(JADE) -t rtf -D $(DOCBOOK_PRINT_DIR) -D $(DOCBOOK_DIR) \
-                -d $(DOCBOOK_DSL_PRINT) $<
+	$(JADE) -t rtf -D $(DOCBOOK_DIR) -d $(DOCBOOK_DSL_PRINT) $<
 
 # Build a dvi file from a tex file.  Note if there are undefined
 # references, re-run JADETEX twice to ensure toc is updated properly.

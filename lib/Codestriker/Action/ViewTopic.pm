@@ -94,6 +94,8 @@ sub process($$$) {
     my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
+    $vars->{'doc_url'} = $url_builder->doc_url();
+
     my @topic_states = (0);
     my @projectids = ($projectid);
     $vars->{'list_url'} =
@@ -154,6 +156,10 @@ sub process($$$) {
     $vars->{'repository'} = $repository_url;
     $vars->{'project_name'} = $project_name;
     $vars->{'number_of_lines'} = $#document + 1;
+
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
 
     # Prepare the data for displaying the state update option.
     # Make sure the old mode setting is no longer used.
@@ -225,7 +231,7 @@ sub process($$$) {
     print ")\n";
 
     print $query->p if ($mode == $Codestriker::NORMAL_MODE);
-    
+
     # Number of characters the line number should take.
     my $max_digit_width = length($#document+1);
 
@@ -257,7 +263,7 @@ sub process($$$) {
     $render->finish();
     print $query->p, $query->a({href=>$view_comments_url},
 			       "View all comments");
-    
+
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");
     $trailer->process();

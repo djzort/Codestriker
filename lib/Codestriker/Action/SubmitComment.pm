@@ -170,6 +170,11 @@ sub process($$$) {
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
+
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+
     my $template = Codestriker::Http::Template->new("submitcomment");
     $template->process($vars);
 
@@ -188,7 +193,7 @@ sub _get_file_linenumber ($$$$$$$$)
 {
     my ($type, $topic, $topic_linenumber, $filenumber_ref,
 	$filename_ref, $linenumber_ref, $accurate_ref, $new_ref) = @_;
-    
+
     # Find the appropriate file that $topic_linenumber refers to.
     my (@filename, @revision, @offset, @binary);
     Codestriker::Model::File->get_filetable($topic, \@filename, \@revision,

@@ -122,6 +122,7 @@ sub process($$$) {
 				       \@toc_revisions, \@toc_binaries,
 				       $max_line_length);
     # Prepare the output.
+
     if ($parallel) {
 	$render->print_coloured_table();
     }
@@ -175,6 +176,10 @@ sub process($$$) {
     my $trailer = Codestriker::Http::Template->new("trailer");
     $trailer->process();
 
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+    
     print $query->end_html();
 
     $http_response->generate_footer();

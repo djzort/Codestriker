@@ -24,6 +24,9 @@ sub process($$$) {
 	$http_response->error("This function has been disabled");
     }
 
+    # Obtain a new URL builder object.
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+
     # Check that the appropriate fields have been filled in.
     my $mode = $http_input->get('mode');
     my $sauthor = $http_input->get('sauthor') || "";
@@ -48,7 +51,7 @@ sub process($$$) {
     if ($sproject eq "-1") {
 	$sproject = (defined $projectid) ? $projectid : "";
     }
-    
+
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
     my (@id, @title, @author, @ts, @state, @bugid, @email, @type, @version);
@@ -77,14 +80,18 @@ sub process($$$) {
     $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+
     # Indicate if deletes are enabled in the system.
     $vars->{'delete_enabled'} = $Codestriker::allow_delete;
 
+    # Indicate if bug db integration is enabled.
+    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
+
     # Indicate if project operations are enabled in the system.
     $vars->{'projects_enabled'} = $Codestriker::allow_projects;
-
-    # Obtain a new URL builder object.
-    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Store the search parameters, which become hidden fields.
     $vars->{'sauthor'} = $sauthor;
@@ -103,10 +110,11 @@ sub process($$$) {
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'search_url'} = $url_builder->search_url();
+    $vars->{'doc_url'} = $url_builder->doc_url();
 
     # The list of topics.
     my @topics;
-    
+
     # For each topic, collect all the reviewers, CC, and bugs, and display it
     # as a row in the table.  Each bug should be linked appropriately.
     for (my $index = 0, my $row = 0; $index <= $#id; $row++) {
@@ -145,7 +153,7 @@ sub process($$$) {
 	for (my $i = 0; $i <= $#accum_cc; $i++) {
 	    $accum_cc[$i] =~ s/\@.*$//o;
 	}
-	
+
 	my $reviewer_text = join ', ', @accum_reviewers;
 	$reviewer_text = "&nbsp;" if $reviewer_text eq "";
 	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "&nbsp;";
@@ -195,5 +203,5 @@ sub _insert_nonduplicate(\@$) {
     }
     push @$array_ref, $value if ($i > $#array);
 }
-			 
+
 1;

@@ -28,6 +28,9 @@ sub new($$) {
     my $browser = $ENV{'HTTP_USER_AGENT'};
     $self->{url_prefix} = ($browser =~ m%^Mozilla/(\d)% && $1 <= 4) ?
 	$query->url(-relative=>1) : "";
+    my $htmlurl = $query->url();
+    $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
+    $self->{htmldir} = $htmlurl;
 
     return bless $self, $type;
 }
@@ -84,6 +87,12 @@ sub view_file_url ($$$$$$$) {
 sub search_url ($) {
     my ($self) = @_;
     return $self->{url_prefix} . "?action=search";
+}
+
+# Create the URL for the documentation page.
+sub doc_url ($) {
+    my ($self) = @_;
+    return $self->{htmldir};
 }
 
 # Create the URL for listing the topics.

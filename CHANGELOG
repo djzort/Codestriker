@@ -1,6 +1,35 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.4
+
+* Major documentation rewrite.  All documentation (installation/user
+  guide/hacking) is now present in doc/codestriker.sgml, in DocBook
+  format.
+
+* Now have simple "Help" links on all screens, which link to the
+  appropriate HTML segment of the Codestriker User's guide.
+
+The following changes below were from Jason Remillard
+<jremillardshop@yahoo.com>:
+
+* The Codestriker title is now a link to the list topic page.
+
+* If Bugzilla integration is not enabled (empty $bug_db), hide all of
+  the references to the topic bug id (topic list, new topic, view
+  topic and search).
+
+* Added some additional help in the create topic page to clarify with 
+  usage of the start tag, end tag and module fields.
+
+* Hide the project combo box if the user does not have projects
+  enabled.
+
+* Fixed some spelling mistakes in the create topic pop-up help.
+
+* The rows in the delta table that are associated with a topic were
+  not deleted when a topic is deleted.
+
 Version 1.7.3
 
 * Make sure comments are properly HTML-escaped in the list comments

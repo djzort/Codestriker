@@ -19,7 +19,7 @@ sub create($$$$$$$$$$$$) {
     my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
 	$description, $document, $timestamp, $repository, $projectid,
 	$deltas_ref) = @_;
-    
+
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
     my @cc = split /, /, $cc;
@@ -437,7 +437,7 @@ sub _add_condition($$$\@\$) {
 	$$first_cond_ref = 0;
 	$query .= " WHERE (" . $condition . ") ";
     } else {
-	$query .= " AND (" . $condition . ") ";	
+	$query .= " AND (" . $condition . ") ";
     }
     push @$values_array_ref, $value if defined $value;
     return $query;
@@ -467,11 +467,14 @@ sub delete($$) {
     my $delete_topicbug =
 	$dbh->prepare_cached('DELETE FROM topicbug WHERE topicid = ?');
 
+    my $delete_delta =
+	$dbh->prepare_cached('DELETE FROM delta WHERE topicid = ?');
+
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&
 	defined $delete_file && defined $delete_participant &&
-	defined $delete_topicbug;
-    
+	defined $delete_topicbug && $delete_delta;
+
     # Now do the deed.
     $success &&= $select->execute($topicid);
     if ($success) {
@@ -486,6 +489,7 @@ sub delete($$) {
     $success &&= $delete_file->execute($topicid);
     $success &&= $delete_participant->execute($topicid);
     $success &&= $delete_topicbug->execute($topicid);
+    $success &&= $delete_delta->execute($topicid);
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

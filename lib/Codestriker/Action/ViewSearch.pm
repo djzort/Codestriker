@@ -26,9 +26,20 @@ sub process($$$) {
     $http_response->generate_header("", "Search", "", "", "", "", "", "", "",
 				    "", 0, 1);
 
+    # Obtain a URL builder object.
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+
     # Create the hash for the template variables.
     my $vars = {};
     $vars->{'version'} = $Codestriker::VERSION;
+
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
+ 
+    # Create the URLs for viewing the documentation and for creating a topic.
+    $vars->{'doc_url'} = $url_builder->doc_url();
+    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
 
     # Create the list of valid states that can be searched over.
     my @states = ("Any");
@@ -47,6 +58,8 @@ sub process($$$) {
 	push @projects, $project;
     }
     $vars->{'projects'} = \@projects;
+
+    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
 
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars);

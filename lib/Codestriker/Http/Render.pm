@@ -95,7 +95,7 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
 	if (defined $value) {
 	    my %lxr = %{ $value };
 	    my %idhash = ();
-	    
+
 	    my $dbh = DBI->connect($lxr{db}, $lxr{user}, $lxr{passwd},
 				   {AutoCommit=>0, RaiseError=>1})
 		|| die "Couldn't connect to database: " . DBI->errstr;
@@ -118,7 +118,7 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
 	# Topic has no repository, so no LXR mapping.
 	$self->{idhashref} = undef;
     }
-	
+
     bless $self, $type;
 }
 
@@ -128,9 +128,9 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
 # characters long.
 sub lxr_ident($$) {
     my ($self, $id) = @_;
-    
+
     my $idhashref = $self->{idhashref};
-    
+
     if (length($id) >= 4 && defined $$idhashref{$id}) {
 	return "<A HREF=\"" . $self->{lxr_base_url} . "$id\" " .
 	    "CLASS=\"fid\">$id</A>";
@@ -229,7 +229,7 @@ sub delta ($$$$$$$$$$) {
     # Display the delta heading.
     $self->delta_heading($filenumber, $revision, $old_linenumber,
 			 $new_linenumber, $description, $repmatch);
-    
+
     # Now render the actual diff text itself.
     $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
 		      $new_linenumber, $text, $repmatch, 1, 1);
@@ -280,7 +280,7 @@ sub delta_file_header ($$$$) {
 					 $filename),
 			       $revision_text);
 	}
-	
+
 	# Output the "back to contents" link.
 	print $query->Tr($cell,
 			 $query->td({-class=>'file', align=>'right'},
@@ -632,7 +632,7 @@ sub render_linenumber($$$$$) {
 		$self->{query}->span({-class=>$no_comment_class}, $line);
 	}
     }
-    
+
     # Check if the linenumber is outside the review.
     if ($link == 0) {
 	return $linedata;
@@ -668,7 +668,7 @@ sub get_comment_digest($$$$) {
     my $key = "$filenumber|$line|$new";
     if (defined $comment_hash{$key}) {
 	my @comments = @{ $comment_hash{$key} };
-    
+
 	for (my $i = 0; $i <= $#comments; $i++) {
 	    my $comment = $comments[$i];
 
@@ -680,7 +680,7 @@ sub get_comment_digest($$$$) {
 	# Chop off the last 9 characters.
 	substr($digest, -9) = "";
     }
-    
+
     return $digest;
 }
 

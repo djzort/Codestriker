@@ -2,6 +2,12 @@
 
 [% PROCESS header.html.tmpl version = version %]
 
+[%# Show the top-level links for "Search" and "Help" #%]
+<p>
+    <a href="[% search_url %]">Search</a> |
+    <a href="[% doc_url %]/x309.html">Help</a>
+</p>
+
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
     <font color="red">[% feedback %]</font>
@@ -19,7 +25,7 @@
 [%# The topic title input field #%]
 Topic title:
 <FONT SIZE="-2"><A HREF="javascript:alert('
-The topic title should be a consise but informative\n
+The topic title should be a concise but informative\n
 summary of the code change.  The title used in the\n
 subject of sent emails, and in the topic list screen.
 ')">(What's this?)</A></FONT>
@@ -28,7 +34,7 @@ subject of sent emails, and in the topic list screen.
 <P>
 
 [%# The topic description input field #%]
-Topic description: 
+Topic description:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 The topic description should contain enough information\n
 for a reviewer to understand broadly what the code change\n
@@ -43,7 +49,7 @@ notification email to all reviewers.
 
 [%# The topic text upload button #%]
 <TR>
- <TD>Topic text upload: 
+ <TD>Topic text upload:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 The uploaded file contains the actual text of the review.\n
 \n
@@ -55,7 +61,10 @@ or\n
 diff -urN ../old-version/ . &gt; output.txt\n
 \n
 Non-unidiff files, or ordinary text files can be uploaded,\n
-but will be treated simply as \'new files\'.
+but will be treated simply as \'new files\'.\n\n
+
+This should be left blank if you are reviewing files\n
+directly from a repository.
 ')">(What's this?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
@@ -65,17 +74,22 @@ but will be treated simply as \'new files\'.
 [%# The diff fetcher #%]
 <TR>
  <TD>
-Start tag: 
+Start tag:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 Rather than uploading the topic text, if the repository\n
 supports it, the text can be fetched by querying the\n
-repository given start and end tags, and a module name.
+repository given start and end tags, and a module name.\n
+The start tag, end tag, and module is ignored if text\n
+is uploaded.
 ')">(What's this?)</A></FONT>
 </TD>
 <TD>
-<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag %]" SIZE=20 MAXLENGTH=150> 
+<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag %]" SIZE=20 MAXLENGTH=150>
 </TD>
-<TD>End tag: </TD>
+<TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
+This is the version number or tag that identifies the new\n
+version of the file that you want reviewed.
+')">(What's this?)</A></FONT></TD>
 <TD>
 <INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag %]" SIZE=20 MAXLENGTH=150>
 </TD>
@@ -83,7 +97,12 @@ repository given start and end tags, and a module name.
 <TR>
 <TD>&nbsp;</TD><TD>&nbsp;</TD>
 <TD>
-Module: 
+Module:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+This is the path to the file or module relative to the repository\n
+root that should be inspected. It is ignored if text\n
+is uploaded.
+')">(What's this?)</A></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="module" VALUE="[% module %]" SIZE=20 MAXLENGTH=150>
@@ -118,6 +137,8 @@ an aid in the reviewing process.
 </TR>
 [% END %]
 
+[% IF projects_enabled != 0 %]
+
 [%# The project the review belongs to #%]
 <TR>
  <TD>Project:
@@ -138,9 +159,12 @@ used as filtering criteria in the search screen.
  </TD>
 </TR>
 
+[% END %]
+
 [%# The bug ids input field #%]
+[% IF bugdb_enabled != 0 %]
 <TR>
- <TD>Bug IDs: 
+ <TD>Bug IDs:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 Indicates what bug identifiers are addressed by this code change.\n
 These are space or comma separated identifiers, such as:\n
@@ -151,7 +175,7 @@ or\n
 \n
 1534, 4625, 1243\n
 \n
-The apprioriate links to the bug-tracking system will be made\n
+The appropriate links to the bug-tracking system will be made\n
 when the topic is viewed, for the reviewer\'s reference.\n
 \n
 In addition, if integrating with Bugzilla, when the topic state\n
@@ -163,10 +187,11 @@ to it.
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
+[% END %]
 
 [%# The email input field #%]
 <TR>
- <TD>Your email address: 
+ <TD>Your email address:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 This is your email address.  All comments made against a topic\n
 will be sent to this address.  The new topic notification email\n
@@ -178,7 +203,7 @@ will also be sent to this address.
 
 [%# The reviewers input field #%]
 <TR>
- <TD>Reviewers: 
+ <TD>Reviewers:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 This is a comma separated list of email addresses, which are the\n
 people who need to review this code.  When the topic is created,\n

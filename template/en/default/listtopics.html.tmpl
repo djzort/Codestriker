@@ -9,6 +9,7 @@
     | <a href="[% list_projects_url %]">List projects</a>
 [% END %]
     | <a href="[% search_url %]">Search</a>
+    | <a href="[% doc_url %]/x258.html">Help</a>
 </p>
 
 [%# Display any "feedback" to the user if necessary. #%]
@@ -44,7 +45,9 @@
         <th>Reviewer</th>
         <th>Cc</th>
         <th>Created</th>
+	[% IF bugdb_enabled != 0 %]
         <th>Bug IDs</th>
+	[% END %]
         <th>State</th>
     </tr>
 
@@ -59,7 +62,9 @@
         <td>[% topic.reviewer %]</td>
         <td>[% topic.cc %]</td>
         <td>[% topic.created %]</td>
+	[% IF bugdb_enabled != 0 %]
         <td>[% topic.bugids %]</td>
+	[% END %]
         <td>[% topic.state %]</td>
     </tr>
 
@@ -75,7 +80,7 @@ Change state: &nbsp;
      [% FOREACH state = states %]
      [% IF state == default_state %]
      <option selected value="[% state %]">[% state %]
-     [% ELSE %]           
+     [% ELSE %]
      <option value="[% state %]">[% state %]
      [% END %]
      [% END %]
@@ -85,7 +90,7 @@ Change state: &nbsp;
    <table width="100%">
     <tr class="tlh"><td>&nbsp</td></tr>
     </tr>
-   </table> 
+   </table>
 
    [% IF delete_enabled != 0 %]
    <input type="submit" name="button" value="Delete topics"
