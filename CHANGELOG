@@ -1,0 +1,12 @@
+Version 1.2:
+* Converted to use CSS to reduce the resulting HTML size and to enable
+  easier customisation.
+
+* Coloured diff mode handles ordinary patches, CVS diffs, and ordinary
+  text.
+
+* Put in more newlines to make the resulting HTML more readable.
+
+* Removed a stray <PRE> tag in coloured diff mode.
+
+
