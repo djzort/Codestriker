@@ -125,55 +125,5 @@ sub get_filetable($$$$$$) {
     die $dbh->errstr unless $success;
 }
 
-# Retrieve the ordered list of deltas that comprise this review.
-sub get_delta_set($$) {
-    my ($type, $topicid) = @_;
-    return $type->get_deltas($topicid, -1);
-}
-
-# Retrieve the ordered list of deltas applied to a specific file.
-sub get_deltas($$$) {
-    my ($type, $topicid, $filenumber) = @_;
-
-    my @results = Codestriker::Model::Delta::get_deltas($topicid, $filenumber);
-
-    # The delta object needs to know if there are only delta objects
-    # in this file so it can figure out if the delta is a new file.
-    foreach my $delta (@results) {
-	if (scalar(@results) == 1) {
-        	$delta->{only_delta_in_file} = 1;
-        }
-        else {
-        	$delta->{only_delta_in_file} = 0;
-        }
-    }
-
-    return @results;
-}
-
-# Retrieve the delta for the specific filename and linenumber.
-sub get_delta($$$) {
-    my ($type, $topicid, $filenumber, $linenumber, $new) = @_;
-
-    # Grab all the deltas for this file, and grab the delta with the highest
-    # starting line number lower than or equal to the specific linenumber,
-    # and matching the same file number.
-    my @deltas = $type->get_deltas($topicid, $filenumber);
-    my $found_delta = undef;
-    for (my $i = 0; $i <= $#deltas; $i++) {
-	my $delta = $deltas[$i];
-	my $delta_linenumber = $new ?
-	    $delta->{new_linenumber} : $delta->{old_linenumber};
-	if ($delta_linenumber <= $linenumber) {
-	    $found_delta = $delta;
-	} else {
-	    # Passed the delta of interest, return the previous one found.
-	    return $found_delta;
-	}
-    }
-
-    # Return the matching delta found, if any.
-    return $found_delta;
-}
 
 1;

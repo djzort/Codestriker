@@ -69,6 +69,7 @@ sub getDiff ($$$$$$) {
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
+
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 		    $Codestriker::cvs, '-q', '-d', $self->{cvsroot},
 		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,

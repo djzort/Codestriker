@@ -33,10 +33,41 @@ sub new {
     return $self;
 }
 
-# Retrieve the ordered list of deltas applied to a specific file. class factory
+# Retrieve the ordered list of deltas that comprise this review.
+sub get_delta_set($$) {
+    my ($type, $topicid) = @_;
+    return $type->get_deltas($topicid, -1);
+}
+
+# Retrieve the delta for the specific filename and linenumber.
+sub get_delta($$$) {
+    my ($type, $topicid, $filenumber, $linenumber, $new) = @_;
+
+    # Grab all the deltas for this file, and grab the delta with the highest
+    # starting line number lower than or equal to the specific linenumber,
+    # and matching the same file number.
+    my @deltas = $type->get_deltas($topicid, $filenumber);
+    my $found_delta = undef;
+    for (my $i = 0; $i <= $#deltas; $i++) {
+	my $delta = $deltas[$i];
+	my $delta_linenumber = $new ?
+	    $delta->{new_linenumber} : $delta->{old_linenumber};
+	if ($delta_linenumber <= $linenumber) {
+	    $found_delta = $delta;
+	} else {
+	    # Passed the delta of interest, return the previous one found.
+	    return $found_delta;
+	}
+    }
+
+    # Return the matching delta found, if any.
+    return $found_delta;
+}
+
+# Retrieve the ordered list of deltas applied to a specific file. Class factory
 # method, returns a list of delta objects.
-sub get_deltas($$) {
-    my ($topicid, $filenumber) = @_;
+sub get_deltas($$$) {
+    my ($type, $topicid, $filenumber) = @_;
     
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -51,10 +82,11 @@ sub get_deltas($$) {
 			     'delta.topicid = topicfile.topicid AND ' .
 			     'delta.file_sequence = topicfile.sequence ' .
 			     (($filenumber != -1) ?
-			      'AND topicfile.sequence = ? ' : '').
+			      'AND topicfile.sequence = ? ' : '') .
 			     'ORDER BY delta_sequence ASC');
     
     my $success = defined $select_deltas;
+	print STDERR "Topic id $topicid filename $filenumber\n";
     if ($filenumber != -1) {
 	$success &&= $select_deltas->execute($topicid, $filenumber);
     } else {
@@ -71,11 +103,24 @@ sub get_deltas($$) {
 	}
     }
     
+    # The delta object needs to know if there are only delta objects
+    # in this file so it can figure out if the delta is a new file.
+    foreach my $delta (@results) {
+	if (scalar(@results) == 1) {
+        	$delta->{only_delta_in_file} = 1;
+        }
+        else {
+        	$delta->{only_delta_in_file} = 0;
+        }
+    }
+
+    
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
     
     return @results;
 }
+
 
 # This function looks at the delta, and will return 1 if the delta looks like
 # it is a delta for a completly new file. This happens when a new file is added

@@ -121,7 +121,7 @@ sub comment_create($$$) {
 					  $query->url());
 
     # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::File->get_delta(
+    my $delta = Codestriker::Model::Delta->get_delta(
                     $comment->{topicid}, 
                     $comment->{filenumber}, 
 		    $comment->{fileline}, 

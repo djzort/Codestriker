@@ -37,14 +37,6 @@ sub process($$$) {
     # Retrieve the appropriate topic details.           
     my $topic = Codestriker::Model::Topic->new($topicid);     
 
-    # Retrieve the changed files which are a part of this review.
-    my (@filenames, @revisions, @offsets, @binary);
-    Codestriker::Model::File->get_filetable($topicid,
-					    \@filenames,
-					    \@revisions,
-					    \@offsets,
-					    \@binary);
-
     # Retrieve the comment details for this topic.
     my @topic_comments = $topic->read_comments();
 

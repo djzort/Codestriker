@@ -68,19 +68,21 @@ sub topic_changed($$$$) {
     my ($self, $user, $topic_orig, $topic) = @_;
 
     # This code is here to handle the case of a topic being created
-    # in the older (pre 1.8.0) versions of codestriker that have
-    # been created without any topic history. See if topichistory
-    # row exists for the old topic, if not add it in first.
+    # in the older (pre 1.8.0) versions of codestriker. The older 
+    # topics have been created without any topic history. See if 
+    # topichistory row exists for the old topic, if not add it in first.
+
+    if (Codestriker::Model::Topic::exists($topic->{topicid}))
+    {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    my $exists =
-	$dbh->prepare_cached('SELECT COUNT(version) '. 
+        my @array = $dbh->selectrow_array('SELECT COUNT(version) '. 
 			     'FROM topichistory ' .
-			     'WHERE ? = topicid and ? = version');
+			     'WHERE ? = topicid and ? = version',
+                              {},
+                              $topic->{topicid},$topic_orig->{version});
 
-    $exists->execute($topic->{topicid},$topic_orig->{version});
-
-    my $old_topic_has_history = ($exists->fetchrow_array())[0];
+        my $old_topic_has_history = $array[0];
 
     # Release the database connection.
     Codestriker::DB::DBI->release_connection($dbh,1);
@@ -90,8 +92,13 @@ sub topic_changed($$$$) {
         $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
     }
 
-
     $self->_insert_topichistory_entry($user, $topic);
+    }
+    else
+    {
+        # The Topic change is a topic delete, so we don't want to add a
+        # history event to a topic that no longer exists. 
+    }
 
     return '';
 }

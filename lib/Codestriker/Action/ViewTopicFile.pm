@@ -43,7 +43,7 @@ sub process($$$) {
 	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
 
     # Retrieve the deltas corresponding to this file.
-    my @deltas = Codestriker::Model::File->get_deltas($topicid, $fn);
+    my @deltas = Codestriker::Model::Delta->get_deltas($topicid, $fn);
     my $filename = $deltas[0]->{filename};
     my $revision = $deltas[0]->{revision};
 

@@ -41,7 +41,7 @@ sub process($$$) {
 
     # Retrieve the changed files which are a part of this review.
     my (@filenames, @revisions, @offsets, @binary);
-    Codestriker::Model::File->get_filetable($topicid,
+    $topic->get_filestable(
     		\@filenames,
                 \@revisions,
                 \@offsets,
@@ -218,7 +218,7 @@ sub process($$$) {
     $render->start();
 
     # Retrieve the delta set comprising this review.
-    my @deltas = Codestriker::Model::File->get_delta_set($topicid);
+    my @deltas = Codestriker::Model::Delta->get_delta_set($topicid);
 
     # Render the deltas.
     my $old_filename = "";

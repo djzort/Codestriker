@@ -107,7 +107,7 @@ sub process($$$) {
 	$comment->{state} = $Codestriker::comment_states[$state];
 
         if ($show_context ne "" && $show_context > 0) {
-                my $delta = Codestriker::Model::File->get_delta($topicid, 
+                my $delta = Codestriker::Model::Delta->get_delta($topicid, 
                                 $comment->{filenumber}, 
                                 $comment->{fileline} , 
                                 $comment->{filenew});

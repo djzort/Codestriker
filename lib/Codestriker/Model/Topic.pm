@@ -301,6 +301,37 @@ sub read_comments {
     return @{$self->{comments}};
 }
 
+
+# Retrieve the changed files which are a part of this review. It will only pull them
+# from the database once.
+sub get_filestable
+{
+    my ($self,$filenames, $revisions, $offsets, $binary) = @_;
+
+    if (exists ($self->{filetable})) {
+
+    	( $filenames, $revisions, $offsets,$binary ) = @{$self->{filetable}};
+    }
+    else {
+
+        Codestriker::Model::File->get_filetable($self->{topicid},
+    		    $filenames,
+                    $revisions,
+                    $offsets,
+                    $binary);
+
+        $self->{filetable} = [ 
+    		    $filenames,
+                    $revisions,
+                    $offsets,
+                    $binary ];
+
+    }
+
+}
+
+
+
 # Determine if the specified topic id exists in the table or not.
 sub exists($) {
     my ($topicid) = @_;
@@ -340,23 +371,20 @@ sub get_topic_size_in_lines {
 
     my ($self) = @_;
 
-    my @document = split /\n/, $self->{document};
+    my @deltas = Codestriker::Model::Delta->get_delta_set($self->{topicid});
 
-    my $diff_lines = scalar( grep /^[+-][^+-][^+-]/, @document );
+    my $line_count = 0;
 
-    my $looks_like_a_unified_diff = 
-	scalar( grep /^diff /, @document ) && 
-	scalar( grep /^\-\-\- /, @document ) && 
-	scalar( grep /^\+\+\+ /, @document ) && 
-	scalar( grep /^@@ /, @document ) && 
-	$diff_lines;
+    foreach my $delta (@deltas)
+    {
+        my @document = split /\n/, $delta->{text};
 
-    if ( $looks_like_a_unified_diff ) {
-	return $diff_lines;
+        $line_count += scalar( grep /^[+-][^+-][^+-]/, @document );
     }
 
-    return scalar( @document );
+    return $line_count;
 }
+
 
 # This function is used to create a new topic id. The function insures 
 # that the new topic id is difficult to guess, and is not taken in the 

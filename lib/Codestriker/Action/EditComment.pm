@@ -42,7 +42,7 @@ sub process($$$) {
     my @document_description = split /\n/, $topic->{description};
 
     # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::File->get_delta($topicid, $fn, $line, $new);
+    my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn, $line, $new);
 
     # Display the header of this page.
     $http_response->generate_header($topicid, $topic->{title}, $email, "", "",
