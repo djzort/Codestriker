@@ -1851,6 +1851,45 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
 	  </programlisting>
 	</para>
       </sect2>
+      <sect2>
+        <title>Creating Visual SourceSafe Topics</title>
+	<para>
+	  Similar to CVS, SourceSafe diffs are creating by going to
+	  the top of your project, and issuing a command like the
+	  following in a cmd.exe window:
+	  <programlisting>
+C:\Project\> ssdiff.pl > topic.txt
+	  </programlisting>
+	  The <filename>topic.txt</filename> file will contain the
+	  source-code differences made with the current code set
+	  compared with the SourceSafe repository.  This file can then
+	  be selected for the "Topic text upload" field in the create
+	  topic screen.  The "Start tag", "End tag" and "Module"
+	  fields have no relevance in this situation.  
+	</para>
+	<para>
+	  The <filename>ssdiff.pl</filename> Perl script is a custom
+	  script that is contained in the Codestriker
+	  <filename>bin</filename> directory, which needs to be
+	  installed on client machines that need to run the above
+	  command.  The configuration section at the start of the
+	  script should be updated appropriately before it is used.
+	</para>
+	<para>
+	  Alternatively, for code which has already been committed to
+	  SourceSafe, it is possible to explicitly specify on the
+	  create topic screen, values for the "Start tag", "End tag"
+	  and "Module" fields, which will enable Codestriker to fetch
+	  the topic text directly from SourceSafe.  In this instance,
+	  any SourceSafe label names can be used in the tag fields.
+	  If only one tag field is specified, the complete contents of
+	  files corresponding to the specified label will be
+	  retrieved.  The "Module" field contains a path into the
+	  SourceSafe repository which indicates the files of interest.
+	  An example value could be <filename>$/Project/Gui</filename>,
+	  which would work on all files located within that path.
+	</para>
+      </sect2>
     </sect1>
     <sect1>
       <title>Reviewing Topics</title>
