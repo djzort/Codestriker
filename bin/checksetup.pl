@@ -630,7 +630,7 @@ if ($project_count == 0) {
     # later.
     print "Creating default project...\n";
     my $timestamp = Codestriker->get_timestamp(time);
-    my $create = $dbh->prepare_cached('INSERT INTO PROJECT ' .
+    my $create = $dbh->prepare_cached('INSERT INTO project ' .
 				      '(name, description, creation_ts, ' .
 				      'modified_ts, version ) ' .
 				      'VALUES (?, ?, ?, ?, ?) ');
