@@ -141,6 +141,12 @@ sub process($$$) {
     $vars->{'fn'} = $fn;
     $vars->{'new'} = $new;
 
+    # Add the "other" reviewers, which is all the reviewers without the
+    # address set in $email.
+    my @reviewers = split ', ', $topic->{reviewers};
+    @reviewers = grep !/^$email$/, @reviewers;
+    $vars->{'reviewers'} = \@reviewers;
+
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("editcomment");
     $template->process($vars);

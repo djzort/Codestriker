@@ -91,7 +91,17 @@ function verify() {
   return true;
 }
 
-</SCRIPT>
+// Called when the "add other reviewers" link is pressed, which adds all
+// reviewers to the Cc: field.
+function add_other_reviewers() {
+  [% FOREACH reviewer = reviewers %]
+    if (document.add_comment.comment_cc.value != '') {
+        document.add_comment.comment_cc.value += ', ';
+    }
+    document.add_comment.comment_cc.value += "[% reviewer %]";
+  [% END %]
+}
+</Script>
 
 [%# Screen for the add comment form. #%]
 
@@ -181,7 +191,7 @@ function verify() {
   <TD></TD>
  </TR>
  <TR>
-  <TD>Cc: </TD>
+  <TD>Cc: <FONT SIZE="-1"><A HREF="javascript:add_other_reviewers();">(add other reviewers)</A></FONT> </TD>
   <TD>
      <INPUT TYPE="text" NAME="comment_cc" SIZE=50 MAXLENGTH=150>
   </TD>

@@ -27,7 +27,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.8.5";
+$Codestriker::VERSION = "1.8.6";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";
