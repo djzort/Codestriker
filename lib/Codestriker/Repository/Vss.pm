@@ -65,6 +65,11 @@ sub retrieve ($$$\$) {
     }
     else {
 	$tempdir = tempdir(CLEANUP => 1);
+
+	# Hack alert for windows - temporary directory needs to start
+	# with a letter, or commands below will fail.  Most people will
+	# set the temporary directory explicitly in the conf file.
+	$tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
     }
 
     # Temporary Batch file for executing VSS commands.
@@ -79,7 +84,7 @@ sub retrieve ($$$\$) {
 	" -y" . $self->{username} . "," . $self->{password} .
 	" $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
     $self->_write_vss_command($cmd, $tmp_batch_file);
-    system($tmp_batch_file);
+    system("\"$tmp_batch_file\"");
 
     $filename =~ /\/([^\/]+)$/o;
     my $basefilename = $1;
@@ -141,6 +146,11 @@ sub getDiff ($$$$$) {
     }
     else {
 	$tempdir = tempdir(CLEANUP => 1);
+	
+	# Hack alert for windows - temporary directory needs to start
+	# with a letter, or commands below will fail.  Most people will
+	# set the temporary directory explicitly in the conf file.
+	$tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
     }
 
     # Temporary Batch file for executing VSS commands.
@@ -156,7 +166,7 @@ sub getDiff ($$$$$) {
 	" -R \"-VL${tag}\" -I-Y";
     $self->_write_vss_command($cmd, $tmp_batch_file);
 
-    open(VSS, "$tmp_batch_file |")
+    open(VSS, "\"$tmp_batch_file\" |")
 	|| die "Can't open connection to VSS repository: $!";
 
     # Collect the list of filename and revision numbers into a list.
@@ -196,7 +206,7 @@ sub getDiff ($$$$$) {
 	    " -y" . $self->{username} . "," . $self->{password} .
 	    " -I-Y";
 	$self->_write_vss_command($cmd, $tmp_batch_file);
-	open(VSS, "$tmp_batch_file |")
+	open(VSS, "\"$tmp_batch_file\" |")
 	    || die "Unable to run ss properties on $files[$i]\n";
 	my $text_type = 0;
 	while (<VSS>) {
@@ -215,7 +225,7 @@ sub getDiff ($$$$$) {
 		   " -I-Y -DU3000X5 \"-VL${start_tag}~L${end_tag}\"" .
 		   " -O\"$command_output\"";
 	    $self->_write_vss_command($cmd, $tmp_batch_file);
-	    system($tmp_batch_file);
+	    system("\"$tmp_batch_file\"");
 	    if (open(VSS, $command_output)) {
 		while (<VSS>) {
 		    print $fh $_;
@@ -230,7 +240,7 @@ sub getDiff ($$$$$) {
 		   " -y" . $self->{username} . "," . $self->{password} .
 		   " \"-VL${tag}\" -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
 	    $self->_write_vss_command($cmd, $tmp_batch_file);
-	    system($tmp_batch_file);
+	    system("\"$tmp_batch_file\"");
 
 	    $files[$i] =~ /\/([^\/]+)$/o;
 	    my $basefilename = $1;
