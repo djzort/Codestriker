@@ -13,6 +13,9 @@ use strict;
 use Cwd;
 use File::Temp qw/ tmpnam tempdir /;
 
+# Switch for emitting debug information.
+my $_DEBUG = 1;
+
 # Constructor, which takes the username and password as parameters.
 sub new {
     my ($type, $username, $password, $ssdir) = @_;
@@ -40,10 +43,12 @@ sub _wrap_vss_command {
 	$perl_cmd = "perl -e \"" .
 	    (defined $ssdir ? "\$ENV{SSDIR}='$ssdir' ; " : "") .
 	    "system('$perl_cmd')\"";
+	print STDERR "Executing $perl_cmd\n" if $_DEBUG;
 	return $perl_cmd;
     }
     else {
 	# No need to change the command, as SSDIR does not need to be set.
+	print STDERR "Executing $cmd\n" if $_DEBUG;
 	return $cmd;
     }
 }
