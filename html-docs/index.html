@@ -7,9 +7,7 @@
 	<h1>Codestriker</h1>
 	<p>
 	    Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights
-	    reserved.<br>
-	   <A HREF="mailto:sitsNOSPAM@users.sourceforgeNOSPAM.net">
-		sitsNOSPAM@users.sourceforgeNOSPAM.net</A>
+	    reserved.
 	</p>
         <p>
 	   <a href="screenshot.jpg">
@@ -18,7 +16,7 @@
 	</p>
 	<p>
 	    The latest version of codestriker can be obtained from
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.5.tar.gz">here</A>.
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.5.0.tar.gz">here</A>.
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -28,7 +26,8 @@
 	<p>
 	    Codestriker is a perl CGI script which is used for
 	    performing code reviews in a collaborative fashion as
-	    opposed to using unstructured emails.
+	    opposed to sending patches and comments using unstructured
+	    emails.
 	</p>
 	<p>
 	    Authors create code review topics, where the nominated
@@ -79,8 +78,8 @@
 	    which needs to be informative, as this is the text that
 	    is sent with the topic creation email.  URLs will be
 	    rendered as hyperlinks, and strings in the form of "Bug
-	    <ID>" will be linked to your bug tracking system, if it is
-	    defined, when the description is displayed on the view
+	    <ID>" will be linked to your bug tracking system (if
+	    defined), when the description is displayed on the view
 	    topic screen.
 	</p>
 	<p>
@@ -114,14 +113,24 @@
 	    bugzilla).  This is followed by the email addresses of the
 	    people involved, and what their respective roles are.  The
 	    size of the topic text is then shown, to indicate a rough
-	    size of the review.  The topic description follows.  The
-	    number of comments made against this topic is then shown.
-	    If required, the actual topic text can be downloaded (ie,
-	    if it is a patch which later needs to be applied).  The
-	    code text is then shown in its entirety, followed by the
-	    submitted comments.  Clicking on "comments" will take the
-	    browser to the start of the comments at the end of the
-	    page.
+	    size of the review.  The topic state is then shown.  When
+	    a topic is created, it is in state "Open".  It is the
+	    author's responsibility to maintain this state.  if the
+	    review is eventually committed, the state should be
+	    updated to "Committed".  If the review needs to be
+	    re-submitted, is should be moved to state "Closed".  These
+	    states are useful when performing searches over topics, as
+	    detailed further below.
+        </p>
+	<p>
+	    Following the topic state is the topic description
+	    follows.  The number of comments made against this topic
+	    is then shown.  If required, the actual topic text can be
+	    downloaded (ie, if it is a patch which later needs to be
+	    applied).  The code text is then shown in its entirety,
+	    followed by the submitted comments.  Clicking on
+	    "comments" will take the browser to the start of the
+	    comments at the end of the page.
 	</p>
 	<p>
 	    A comment can be made against any line by simply clicking
@@ -140,11 +149,12 @@
 	<p>
 	    In this example, the user scrolls to the bottom of the
 	    page, and clicks on line number 247 (click to enlarge
-	    image).
+	    image), which brings up a popup window for submitting a
+	    comment.
 	</p>
 	<h3>Submitting a comment</h3>
 	<p>
-	    The user is then fills out the form as shown in the
+	    The user then fills out the form as shown in the
 	    following diagram.
 	</p>
 	<p>
@@ -163,13 +173,11 @@
 	    for all subsequent comments.
 	</p>
 	<p>
-	    The "comments" field is used for entered in
-	    your comments.  The submit button will lodge your comment,
-	    and take you back to the viewing page, centered on the
-	    line you just made your comment against, as shown in the
-	    following diagram.  Note how line 247 is now rendered red,
-	    and all comments are presented in reverse chronological
-	    order.
+	    The "comments" field is used for entered in your comments.
+	    The submit button will lodge your comment, and the view
+	    topic window should be bought automatically into focus
+	    again, centered on the line you just made your comment
+	    against, as shown in the following diagram.
 	</p>
 	<p>
 	    <a href="view2.jpg">
@@ -241,10 +249,21 @@
 	       <img src="view4_thumb.jpg" width="150" height="94"
 	            alt="View review 4"></a>
 	</p>
-	<h2>Installation</h2>
+	<h3>Topic search</h3>
+	<p>
+	At the top of the view topic screens, there is a "Search"
+	link (not shown in the above snapshots).  This takes you to a
+	simple search form, allowing you to search by "author",
+	"reviewer", "cc", "bug id", "topic state" and/or text that
+	appears in the topic title, description, comment and/or body.
+	Submitting the query takes you to the topic list screen, which
+	allows you to then drill down to individual topics.
+	</p>
+
+	<h2>Download</h2>
 	<p>
 	    The latest version of codestriker can be obtained from
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.5.tar.gz">here</A>.
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.5.0.tar.gz">here</A>.
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -255,134 +274,16 @@
 	Please read the CHANGELOG file for functionality changes between
 	releases.
 	</p>
-	<p>
-	    I use codestriker as a tool behind our company's firewall
-	    for performing code reviews within our engineering team.
-	    For RedHat 7.1, the installation is simply the following
-	    as root on the internal web server:
-	    <pre>
-cd /var/www/cgi-bin
-cp /from/installed/location/codestriker.pl .
-cp /from/installed/location/codestriker.css ../html
-mkdir /var/www/codestriker
-chown apache.apache /var/www/codestriker
-cp /from/installed/location/codestriker.conf /var/www/codestriker
-	    </pre>
-	</p>
-	<p>
-	    The CSS file can be located elsewhere of course, but if it
-	    is stored in another location, be sure to update its
-	    location in codestriker.pl.
-        </p>
-	<p>
-	To use Codestriker with mod_perl, which reduces the startup
-	costs of creating a new Perl interpreter and parsing the
-	Codestriker script for each request, I do the following:
-	    <pre>
-mkdir /var/www/codestriker
-chown apache.apache /var/www/codestriker
-cd /var/www/codestriker
-cp /from/installed/location/codestriker.css ../html
-cp /from/installed/location/codestriker.pl .
-cp /from/installed/location/codestriker.conf .
-	    </pre>
-        </p>
-	<p>
-	Put the following lines in your httpd.conf (probably located
-	in /etc/httpd/conf), which will make
-	http://yoursite.yourdomain/codestriker/codestriker.pl the URL
-	to Codestriker.
-	<pre>
-Alias /codestriker/  /var/www/codestriker/
 
-&lt;Location /codestriker&gt;
- SetHandler  perl-script
- PerlHandler Apache::Registry
- Options +ExecCGI
-&lt;/Location&gt;
-
-PerlTaintCheck On
-        </pre>
-	Most distributions of Linux seem to configure apache with mod_perl, so
-	the above approach is recommended.  Restart apache with something like
-	"/etc/rc.d/init.d/httpd restart" and you should be away.
-	</p>
-	<h3>Compression support</h3>
+	<h2>Future plans</h2>
 	<p>
-	The pages generated from Codestriker can be quite large,
-	depending on the size of the review and files involved.  It
-	can send the HTML as content-encoding x-gzip.  Browsers such
-	as Netscape, Konqueror and Mozilla supporting the handling of
-	compressed data.  Unfortunately, IE can't.  Using compression
-	can make an enormous difference in the speed of transfers,
-	particularly over slow links.  If you have installed
-	Codestriker with mod_perl, and wish to use compression, you
-	must also install the Compress::Zlib module, available from
-	CPAN (<A HREF="http://www.cpan.org">http://www.cpan.org</A>).
-	For non mod_perl installs, the gzip executable can be used
-	for compression.  When receiving a page from Codestriker, the
-	page source contains near the top within an HTML comment
-	whether the text was sent compressed or not.  To enable
-	compression, you need to turn that option on in the
-	configuration file.  For an intranet setup where the server is
-	one hop away, compression will probably slow things down if
-	the review sizes are relatively small.  Its best to experiment
-	to see what works best for you.
-	</p>
-
-	<h3>Data storage</h3>
-	<p>
-	    Codestriker stores all of its topic data and comments by
-	    default in <code>/var/www/codestriker</code>.  This
-	    location can be changed by the configuration variable at
-	    the start of the script.  This directory needs to be owned
-	    by the user which runs <code>httpd</code>, since the
-	    script creates files and directories under the
-	    <code>/var/www/codestriker</code> directory.  The username
-	    is typically either nobody or apache.  Use the <code>ps
-	    auxww | grep httpd</code> command to find out.
-	</p>
-
-	<h3>Codestriker settings</h3>
-	<p><font color="red">
-
-	    Read through the configuration options within
-            codestriker.pl and codestriker.conf to ensure all the
-            settings are correct for your site.</font> It is intended
-            that codestriker.conf will remain fairly static, so
-            upgrades should be fairly painless.  Among other things,
-            the settings include the location of your CVS repository,
-            the base URL to your bug tracking system, and the base URL
-            to your CVS viewing system.  Note these settings can be
-            left blank, they aren't required in order to use
-            Codestriker.
-        </p> 
-	<p>
-	    For deployments outside an intranet, I would suggest using
-	    apache's <code>.htaccess</code> mechanism to limit access
-	    as to who can execute the script, as an extra security
-	    precaution.
-	</p>
-
-	<h3>Future plans</h3>
-	<p>
-	    Codestriker 1.5 will store its data into a database using
-	    DBI.  The code will also be restructured into a number of
-	    modules.  There will eventually be support for performing
-	    a number of queries, such as "show me all topics I am a
-	    reviewer of".  Topics will also have a state field, which
-	    can be updated.  It should be possible to also be able to
-	    search over the entire codestriker database for text
-	    within the description, title and/or comment fields.
-        </p>
-	<p>
-	    Please send me an email
+	Please send your suggestions preferably to the Codestriker mailing list
+	<A
+	HREF="mailto:codestriker-userNOSPAM@lists.sourceforgeNOSPAM.net">codestriker-userNOSPAM@lists.sourceforgeNOSPAM.net</A>
+	or to me personally at:
 	   <A HREF="mailto:sitsNOSPAM@users.sourceforgeNOSPAM.net">
-		sitsNOSPAM@users.sourceforgeNOSPAM.net</A>
-		for your comments or
-		submit them directly on the sourceforge project page
-	    <a href="http://sourceforge.net/projects/codestriker">
-		http://sourceforge.net/projects/codestriker</a>.
+		sitsNOSPAM@users.sourceforgeNOSPAM.net</A>.
+		Contributions are most welcome!
 	</p>
 	<hr>
 	<a href="http://sourceforge.net">

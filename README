@@ -5,8 +5,8 @@ sits@users.sourceforge.net
 ------------------------------------------------
 
 Codestriker is a perl CGI script which is used for performing code
-reviews in a collaborative fashion as opposed to using unstructured
-emails.
+reviews in a collaborative fashion as opposed to sending patches and
+comments using unstructured emails.
 
 Authors create code review topics, where the nominated reviewers will
 be automatically notified by email.  Reviewers then submit comments
@@ -28,7 +28,7 @@ optionally linked with a bug tracking system, such as
 bugzilla, and a CVS web viewing system, such as CVS web to
 obtain further information necessary to complete a review.
 
-A tutorial on how to use codestriker can be seen from
+A tutorial on how to use codestriker can be seen at
 http://codestriker.sourceforge.net
 
 Installation
@@ -47,7 +47,9 @@ codestriker.conf appropriately for your setup.
 For MySQL, it is necessary to download the mysql, mysql-devel and
 mysql-server packages (or equivalent for non-RedHat distros), install
 them, and to then obtain the DBD::mysql package from
-http://www.cpan.org.  Start your database with something like:
+http://www.cpan.org for the Perl MySQL DBI interface.  Start your
+database with something like:
+
 /etc/rc.d/init.d/mysql start
 
 Then enter the following commands to create the Codestriker database,
@@ -75,13 +77,16 @@ from a "mysql -u root mysql" session.
 
 ----------------------------------------------------------------------
 
-For PostgreSQL, download all of the relevant Postgres packages.  Make
-sure your version is at least 7.1, as prior versions had heavy
-restrictions on the size of "text" fields, which make it impractical
-for use with Codestriker.  Start your database with something like:
-/etc/rc.d/init.d/postgresql start
+For PostgreSQL, download all of the relevant Postgres packages.  This
+should include (for RedHat distributions) the postgresql,
+postgresql-server and postgresql-devel packages.  Make sure your
+version is at least 7.1, as prior versions had restrictions on the
+size of "text" fields, making it impractical for use with Codestriker.
+Start your database with something like: /etc/rc.d/init.d/postgresql
+start
 
-Download and install the DBD::Pg package from http://www.cpan.org.
+Download and install the DBD::Pg package from http://www.cpan.org,
+which is the Postgresql Perl DBI interface.
 
 To create the codestriker database and user, issue the following:
 
@@ -131,6 +136,8 @@ Put the following lines in your httpd.conf file (probably located in
 http://yoursite.yourdomain/codestriker/codestriker.pl is the URL to
 codestriker.
 
+----
+
 Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
 
 <Location /codestriker>
@@ -140,6 +147,8 @@ Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
 </Location>
 
 PerlTaintCheck On
+
+----
 
 Restart apache (for upgrades) with something like
 "/etc/rc.d/init.d/httpd restart" and you should be away.
@@ -155,10 +164,11 @@ simply do the following (assuming your database is up and running).
       cd /var/www/codestriker/codestriker.X.Y.Z/bin
       ./import.pl /var/www/codestriker
 
-The argument is import.pl is the location of your previous Codestriker
+The argument to import.pl is the location of your previous Codestriker
 installation.  By default, all imported topics are set to state
 "Closed".  You may need to modify some to state open via your browser
-for those topics which are still pending.
+for those topics which are still pending using the "search" and "topic
+list" screens.
 
 Compression support
 -------------------
@@ -207,18 +217,10 @@ Future plans
 ------------
 
 Some basic things like the option to delete a topic, and some more
-functionality on the view topic screen.  For using Codestriker over
-the net where bandwidth is not a luxury (ie not a local LAN), it would
-be friendlier if you could just load the topic page once, batch all of
-your comments using javascript, and then send them all at once, rather
-than having to reload the topic page for each comment that is
-submitted.
+functionality on the view topic screen.
 
 Please mail me any other suggestions you have to
 codestriker-user@lists.sourceforge.net.  Contributions are most
 welcome!
 
 Codestriker project page: http://sourceforge.net/projects/codestriker.
-The latest version of codestriker can be obtained from:
-http://codestriker.sourceforge.net.
-
