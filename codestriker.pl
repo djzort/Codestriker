@@ -1750,7 +1750,7 @@ sub render_linenumber($$$$$$) {
 
     # Determine what class to use when rendering the number.
     my ($comment_class, $no_comment_class);
-    if ($parallel) {
+    if ($mode == $COLOURED_MODE) {
 	$comment_class = "com";
 	$no_comment_class = "nocom";
     } else {
@@ -2730,9 +2730,17 @@ sub get_file_linenumber ($$$$$)
 	    # Added or removed file.
 	    $diff_header_size = 6;
 	}
+	elsif ($filetable_revision[$index] eq $BINARY_ADDED_REVISION ||
+	       $filetable_revision[$index] eq $BINARY_REMOVED_REVISION) {
+	    # Added or removed binary file.
+	    $diff_header_size = 5;
+	}
 	elsif ($filetable_revision[$index] eq $PATCH_REVISION) {
 	    # Patch file
 	    $diff_header_size = 3;
+	}
+	elsif ($filetable_revision[$index] eq "b$PATCH_REVISION") {
+	    $diff_header_size = 1;
 	}
 	else {
 	    # Normal CVS diff header.
