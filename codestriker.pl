@@ -34,24 +34,29 @@ use FileHandle;
 #use diagnostics -verbose;
 
 use vars qw (
-	     $datadir $sendmail $bugtracker $cvsviewer $cvsrep $cvscmd
-	     $cvsaccess $codestriker_css $default_topic_create_mode
-	     $background_col $diff_background_col $default_tabwidth
-	     $use_compression $gzip $config $NORMAL_MODE $COLOURED_MODE @days
-	     @months $default_context $email_context $email_hr $context_colour
-	     $comment_line_colour $cookie_name $document_file $comment_file
-	     $filetable_file @document $document_title $document_bug_ids
-	     @document_description $document_reviewers $document_cc
-	     $document_author $document_creation_time %comment_exists
+	     $datadir $sendmail $bugtracker $cvsviewer $cvsrep
+	     $cvscmd $cvsaccess $codestriker_css
+	     $default_topic_create_mode $background_col
+	     $diff_background_col $default_tabwidth $use_compression
+	     $gzip $config $NORMAL_MODE $COLOURED_MODE
+	     $COLOURED_MONO_MODE @days @months $default_context
+	     $email_context $email_hr $context_colour
+	     $comment_line_colour $cookie_name $document_file
+	     $comment_file $filetable_file @document $document_title
+	     $document_bug_ids @document_description
+	     $document_reviewers $document_cc $document_author
+	     $document_creation_time %comment_exists
 	     @comment_linenumber @comment_data @comment_author
 	     @comment_date @filetable_filename @filetable_revision
-	     @filetable_offset @cvs_filedata $cvs_filedata_max_line_length
-	     $header_generated_record $diff_current_filename @diff_new_lines
-	     @diff_new_lines_numbers @diff_new_lines_offsets @diff_old_lines
-	     @diff_old_lines_numbers @diff_old_lines_offsets
-	     @view_file_minus @view_file_plus @view_file_minus_offset
-	     @view_file_plus_offset $ADDED_REVISION $REMOVED_REVISION
-	     $PATCH_REVISION $OLD_FILE $NEW_FILE $BOTH_FILES $tabwidth
+	     @filetable_offset @cvs_filedata
+	     $cvs_filedata_max_line_length $header_generated_record
+	     $diff_current_filename @diff_new_lines
+	     @diff_new_lines_numbers @diff_new_lines_offsets
+	     @diff_old_lines @diff_old_lines_numbers
+	     @diff_old_lines_offsets @view_file_minus @view_file_plus
+	     @view_file_minus_offset @view_file_plus_offset
+	     $ADDED_REVISION $REMOVED_REVISION $PATCH_REVISION
+	     $OLD_FILE $NEW_FILE $BOTH_FILES $tabwidth
 	     $output_compressed $url_prefix $query
 	     );
 
@@ -69,6 +74,7 @@ $ENV{'PATH'} = "/bin:/usr/bin";
 # Constants for viewing modes.
 $NORMAL_MODE = 0;
 $COLOURED_MODE = 1;
+$COLOURED_MONO_MODE = 2;
 
 # Day strings
 @days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
@@ -222,7 +228,7 @@ sub download_topic_text($);
 sub submit_comments($$$$$$);
 sub create_topic();
 sub submit_topic($$$$$$$$);
-sub view_file($$$);
+sub view_file($$$$);
 sub error_return($);
 sub display_context($$$);
 sub myescapeHTML($);
@@ -242,7 +248,7 @@ sub build_edit_url($$$$);
 sub build_download_url($);
 sub build_view_url($$$);
 sub build_view_url_extended($$$$$$);
-sub build_view_file_url($$$$$);
+sub build_view_file_url($$$$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$$$);
 sub header_generated();
@@ -259,7 +265,7 @@ sub make_canonical_email_list($);
 sub make_bug_list($);
 sub display_data ($$$$$$$$$$$$$$);
 sub display_coloured_data ($$$$$$$$$$$$$$$$$);
-sub render_linenumber($$$$$);
+sub render_linenumber($$$$$$);
 sub add_old_change($$$);
 sub add_new_change($$$);
 sub render_changes($$$);
@@ -354,7 +360,7 @@ sub main() {
 	return;
     }
     elsif ($action eq "view_file") {
-	view_file($topic, $filename, $new);
+	view_file($topic, $filename, $new, $mode);
     }
     else {
 	create_topic();
@@ -908,11 +914,11 @@ sub build_edit_url ($$$$) {
 }
 
 # Create the URL for viewing a new file.
-sub build_view_file_url ($$$$$) {
-    my ($topic, $filename, $new, $line, $prefix) = @_;
+sub build_view_file_url ($$$$$$) {
+    my ($topic, $filename, $new, $line, $prefix, $mode) = @_;
     return $url_prefix . 
-	"?action=view_file&filename=$filename&topic=$topic&new=$new#" .
-	"$prefix$line";
+	"?action=view_file&filename=$filename&topic=$topic&mode=$mode&new=$new#"
+	. "$prefix$line";
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -1049,7 +1055,7 @@ sub view_topic ($$$) {
 
     # Display header information
     my $bg_colour =
-	($mode == $COLOURED_MODE ? $diff_background_col : $background_col);
+	($mode == $NORMAL_MODE ? $background_col : $diff_background_col);
     generate_header($topic, $document_title, $email, "", "", $mode,
 		    $bg_colour);
 
@@ -1119,27 +1125,30 @@ sub view_topic ($$$) {
     print $query->p, $query->hr, $query->p;
 
     # Give the user the option of swapping between diff view modes.
+    my $normal_url = build_view_url($topic, -1, $NORMAL_MODE);
+    my $coloured_url = build_view_url($topic, -1, $COLOURED_MODE);
+    my $coloured_mono_url = build_view_url($topic, -1, $COLOURED_MONO_MODE);
     if ($mode == $COLOURED_MODE) {
-	my $url =  build_view_url($topic, -1, $NORMAL_MODE);
-	print "View as ", $query->a({href=>"$url"}, "plain"), " diff. ";
+	print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
+	$query->a({href=>$coloured_mono_url}, "coloured monospace"),
+	") diff.\n";
+    } elsif ($mode == $COLOURED_MONO_MODE) {
+	print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
+	$query->a({href=>$coloured_url}, "coloured variable-width"),
+	") diff.\n";
     } else {
-	my $url = build_view_url($topic, -1, $COLOURED_MODE);
-	print "View as ", $query->a({href=>"$url"}, "coloured"), " diff.\n";
+	print "View as (", $query->a({href=>$coloured_url},
+				     " coloured variable-width"), " | ",
+	$query->a({href=>$coloured_mono_url}, "coloured monospace"),
+	") diff.\n";
     }
     print $query->br;
 
     # Display the option to change the tab width.
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
     my $change_tabwidth_url;
-    if ($mode == $NORMAL_MODE) {
-	$change_tabwidth_url =
-	    build_view_url_extended($topic, -1, $NORMAL_MODE,
-				    $newtabwidth, "", "");
-    } else {
-	$change_tabwidth_url =
-	    build_view_url_extended($topic, -1, $COLOURED_MODE,
-				    $newtabwidth, "", "");
-    }
+    $change_tabwidth_url =
+	build_view_url_extended($topic, -1, $mode, $newtabwidth, "", "");
 
     print "Tab width set to $tabwidth (";
     print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
@@ -1163,8 +1172,11 @@ sub view_topic ($$$) {
     my $block_description = "";
 
     # Display the data that is being reviewed.
-    coloured_mode_start($topic) if ($mode == $COLOURED_MODE);
-    normal_mode_start($topic) if ($mode == $NORMAL_MODE);
+    if ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE) {
+	coloured_mode_start($topic);
+    } else {
+	normal_mode_start($topic);
+    }
     for (my $i = 0; $i <= $#document; $i++) {
 
 	# Check for uni-diff information.
@@ -1178,10 +1190,11 @@ sub view_topic ($$$) {
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
 	} elsif ($document[$i] =~ /^Index: (.*)$/o &&
-		 $mode == $COLOURED_MODE) {
+		 ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE)) {
 	    $index_filename = $1;
 	    next;
-	} elsif ($document[$i] =~ /^\?/o && $mode == $COLOURED_MODE) {
+	} elsif ($document[$i] =~ /^\?/o &&
+		 ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE)) {
 	    next;
 	} elsif ($document[$i] =~ /^RCS file: ${cvsrep}\/(.*),v$/) {
 	    # The part identifying the file.
@@ -1222,7 +1235,7 @@ sub view_topic ($$$) {
 	my $url = build_edit_url($i, $topic, "", "");
 
 	# Display the data.
-	if ($mode == $COLOURED_MODE) {
+	if ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE) {
 	    display_coloured_data($i, $i, $i, 0, $max_digit_width,
 				  $document[$i], $url, $current_file,
 				  $current_file_revision,
@@ -1249,8 +1262,11 @@ sub view_topic ($$$) {
 	    $current_new_file_linenumber = "";
 	}
     }
-    coloured_mode_finish($topic, $mode) if ($mode == $COLOURED_MODE);
-    normal_mode_finish($topic, $mode) if ($mode == $NORMAL_MODE);
+    if ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE) {
+	coloured_mode_finish($topic, $mode);
+    } else {
+	normal_mode_finish($topic, $mode);
+    }
     print $query->p;
     
     # Now display all comments in reverse order.  Put an anchor in for the
@@ -1383,7 +1399,7 @@ sub display_data ($$$$$$$$$$$$$$) {
     for (my $j = 0; $j < ($max_digit_width - $digit_width); $j++) {
 	print " ";
     }
-    print render_linenumber($line, $line, "", $topic, $mode);
+    print render_linenumber($line, $line, "", $topic, $mode, 0);
 
     # Now render the data.
     print " $data\n";
@@ -1471,23 +1487,23 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	    # to the CVS file.
 	    my $url_old_full =
 		build_view_file_url($topic, $current_file, $OLD_FILE,
-				    $current_old_file_linenumber, "");
+				    $current_old_file_linenumber, "", $mode);
 	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
 
 	    my $url_old_both_full =
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_old_file_linenumber, "L");
+				    $current_old_file_linenumber, "L", $mode);
 	    my $url_old_both =
 		"javascript: myOpen('$url_old_both_full','CVS')";
 
 	    my $url_new_full =
 		build_view_file_url($topic, $current_file, $NEW_FILE,
-				    $current_new_file_linenumber, "");
+				    $current_new_file_linenumber, "", $mode);
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 
 	    my $url_new_both_full =
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_new_file_linenumber, "R");
+				    $current_new_file_linenumber, "R", $mode);
 	    my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
 
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
@@ -1533,18 +1549,23 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	    my $celldata = render_coloured_cell($data);
 	    my $left_prefix = $parallel ? "L" : "";
 	    my $right_prefix = $parallel ? "R" : "";
+
+	    # Determine the appropriate classes to render.
+	    my $cell_class = ($mode == $COLOURED_MODE) ? "n" : "msn";
+
 	    my $rendered_left_linenumber =
 		render_linenumber($leftline, $offset, $left_prefix, $topic,
-				  $mode);
+				  $mode, $parallel);
 	    my $rendered_right_linenumber =
 		($leftline == $rightline) ? $rendered_left_linenumber :
 		render_linenumber($rightline, $offset, $right_prefix, $topic,
-				  $mode);
+				  $mode, $parallel);
 
 	    print $query->Tr($query->td($rendered_left_linenumber),
-			     $query->td({-class=>'n'}, $celldata),
+			     $query->td({-class=>$cell_class}, $celldata),
 			     $query->td($rendered_right_linenumber),
-			     $query->td({-class=>'n'}, $celldata), "\n");
+			     $query->td({-class=>$cell_class}, $celldata),
+			     "\n");
 	}
     }
 }
@@ -1588,16 +1609,31 @@ sub render_changes($$$) {
 
     return if ($#diff_new_lines == -1 && $#diff_old_lines == -1);
 
+    my ($arg1, $arg2, $arg3, $arg4);
     if ($#diff_new_lines != -1 && $#diff_old_lines != -1) {
 	# Lines have been added and removed.
-	render_inplace_changes("c", "cb", "c", "cb", $topic, $mode, $parallel);
+	if ($mode == $COLOURED_MODE) {
+	    $arg1 = "c"; $arg2 = "cb"; $arg3 = "c"; $arg4 = "cb";
+	} else {
+	    $arg1 = "msc"; $arg2 = "mscb"; $arg3 = "msc"; $arg4 = "mscb";
+	}
     } elsif ($#diff_new_lines != -1 && $#diff_old_lines == -1) {
 	# New lines have been added.
-	render_inplace_changes("a", "ab", "a", "ab", $topic, $mode, $parallel);
+	if ($mode == $COLOURED_MODE) {
+	    $arg1 = "a"; $arg2 = "ab"; $arg3 = "a"; $arg4 = "ab";
+	} else {
+	    $arg1 = "msa"; $arg2 = "msab"; $arg3 = "msa"; $arg4 = "msab";
+	}
     } else {
 	# Lines have been removed.
-	render_inplace_changes("r", "rb", "r", "rb", $topic, $mode, $parallel);
+	if ($mode == $COLOURED_MODE) {
+	    $arg1 = "r"; $arg2 = "rb"; $arg3 = "r"; $arg4 = "rb";
+	} else {
+	    $arg1 = "msr"; $arg2 = "msrb"; $arg3 = "msr"; $arg4 = "msrb";
+	}
     }
+    render_inplace_changes($arg1, $arg2, $arg3, $arg4, $topic, $mode,
+			   $parallel);
 
     # Now that the diff changeset has been rendered, remove the state data.
     @diff_new_lines = ();
@@ -1661,13 +1697,13 @@ sub render_inplace_changes($$$$$$$)
 	print $query->Tr($query->td(render_linenumber($old_data_line,
 						      $old_data_offset,
 						      $old_prefix, $topic,
-						      $mode)),
+						      $mode, $parallel)),
 			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
 			 $query->td(render_linenumber($new_data_line,
 						      $new_data_offset,
 						      $new_prefix, $topic,
-						      $mode)),
+						      $mode, $parallel)),
 			 $query->td({-class=>"$render_new_colour"},
 				    $render_new_data), "\n");
     }
@@ -1679,25 +1715,35 @@ sub render_inplace_changes($$$$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$$$) {
-    my ($line, $offset, $prefix, $topic, $mode) = @_;
+sub render_linenumber($$$$$$) {
+    my ($line, $offset, $prefix, $topic, $mode, $parallel) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
     }
-    
+
+    # Determine what class to use when rendering the number.
+    my ($comment_class, $no_comment_class);
+    if ($parallel) {
+	$comment_class = "com";
+	$no_comment_class = "nocom";
+    } else {
+	$comment_class = "smscom";
+	$no_comment_class = "smsnocom";
+    }
+
     my $linedata;
     if ($offset != -1 && defined $comment_exists{$offset}) {
-	if ($mode == $COLOURED_MODE) {
-	    $linedata = $query->span({-class=>'com'}, $line);
-	} else {
+	if ($mode == $NORMAL_MODE) {
 	    $linedata = "<FONT COLOR=\"$comment_line_colour\">$line</FONT>";
+	} else {
+	    $linedata = $query->span({-class=>$comment_class}, $line);
 	}
     } else {
-	if ($mode == $COLOURED_MODE) {
-	    $linedata = $query->span({-class=>'ncom'}, $line);
-	} else {
+	if ($mode == $NORMAL_MODE) {
 	    $linedata = $line;
+	} else {
+	    $linedata = $query->span({-class=>$no_comment_class}, $line);
 	}
     }
     
@@ -2227,14 +2273,29 @@ sub read_diff_header($$$$$) {
 
 # Print out a line of data with the specified line number suitably aligned,
 # and with tabs replaced by spaces for proper alignment.
-sub render_monospaced_line ($$$$$$$) {
+sub render_monospaced_line ($$$$$$$$$) {
     my ($topic, $linenumber, $data, $offset, $max_digit_width,
-	$max_line_length, $class) = @_;
+	$max_line_length, $class, $parallel, $mode) = @_;
 
     my $prefix = "";
     my $digit_width = length($linenumber);
     for (my $i = 0; $i < ($max_digit_width - $digit_width); $i++) {
 	$prefix .= " ";
+    }
+
+    # Determine what class to use when rendering the number.
+    my ($comment_class, $no_comment_class);
+    if ($parallel == 0) {
+	$comment_class = "mscom";
+	$no_comment_class = "msnocom";
+    } else {
+	if ($mode == $COLOURED_MODE) {
+	    $comment_class = "com";
+	    $no_comment_class = "nocom";
+	} else {
+	    $comment_class = "smscom";
+	    $no_comment_class = "smsnocom";
+	}
     }
 
     # Render the line data.  If the user clicks on a topic line, the
@@ -2255,14 +2316,14 @@ sub render_monospaced_line ($$$$$$$) {
 			   title=>$js_title,
 			   onmouseover=> "window.status='$js_title'; " .
 			       "return true;" },
-			  $query->span({-class=>'mscom'},
+			  $query->span({-class=>$comment_class},
 				       "$linenumber"));
 	}
 	else {
 	    $line_cell = "$prefix" .
 		$query->a({name=>"$linenumber",
 			   href=>"javascript:fetch('$edit_url')"},
-			  $query->span({-class=>'msnocom'},
+			  $query->span({-class=>$no_comment_class},
 				       "$linenumber"));
 	}
     }
@@ -2308,9 +2369,9 @@ sub add_minus_monospace_line ($$) {
 # Flush the current diff chunk, and update the line count.  Note if the
 # original file is being rendered, the minus lines are used, otherwise the
 # plus lines.
-sub flush_monospaced_lines ($$$$$) {
+sub flush_monospaced_lines ($$$$$$$) {
     my ($topic, $new, $linenumber_ref, $max_digit_width,
-	$max_line_length) = @_;
+	$max_line_length, $parallel, $mode) = @_;
 
     my $class = "";
     if ($#view_file_plus != -1 && $#view_file_minus != -1) {
@@ -2332,7 +2393,8 @@ sub flush_monospaced_lines ($$$$$) {
 					 $view_file_plus[$i],
 					 $view_file_plus_offset[$i],
 					 $max_digit_width,
-					 $max_line_length, $class);
+					 $max_line_length, $class,
+					 $parallel, $mode);
 	    $$linenumber_ref++;
 	}
     }
@@ -2342,7 +2404,8 @@ sub flush_monospaced_lines ($$$$$) {
 					 $view_file_minus[$i],
 					 $view_file_minus_offset[$i],
 					 $max_digit_width,
-					 $max_line_length, $class);
+					 $max_line_length, $class,
+					 $parallel, $mode);
 	    $$linenumber_ref++;
 	}
     }
@@ -2354,9 +2417,9 @@ sub flush_monospaced_lines ($$$$$) {
 
 # Show the contents of a file, and indicate whether it is the file before
 # modification (pre-patch), after or to show both.
-sub view_file ($$$) {
-    my ($topic, $filename, $new) = @_;
-    
+sub view_file ($$$$) {
+    my ($topic, $filename, $new, $mode) = @_;
+
     # Read the filetable.
     if (!read_filetable_file($topic)) {
 	error_return("Unable to read filetable for topic $topic: $!");
@@ -2414,11 +2477,14 @@ sub view_file ($$$) {
     my $title = $new == $NEW_FILE ? "New $filename" : "$filename v$revision";
     generate_header($topic, $title, "", "", "", "", $diff_background_col);
 
+    my $parallel;
     if ($new == $BOTH_FILES) {
 	print_coloured_table();
+	$parallel = 1;
     }
     else {
 	print "<PRE class=\"ms\">\n";
+	$parallel = 0;
     }
 
     my $max_digit_width = length($#cvs_filedata);
@@ -2444,10 +2510,10 @@ sub view_file ($$$) {
 	# are not part of the review, so they can't be acted upon.
 	for (my $i = $chunk_end; $i < $patch_line_start; $i++, $linenumber++) {
 	    if ($new == $BOTH_FILES) {
-		display_coloured_data($old_linenumber, $new_linenumber, -1, 1,
-				      $max_digit_width, " $cvs_filedata[$i]",
-				      "", "", "", 0, 0, 0, 0, $topic,
-				      $COLOURED_MODE, 1, "");
+		display_coloured_data($old_linenumber, $new_linenumber, -1,
+				      $parallel, $max_digit_width,
+				      " $cvs_filedata[$i]", "", "", "", 0, 0,
+				      0, 0, $topic, $mode, 1, "");
 		$old_linenumber++;
 		$new_linenumber++;
 	    }
@@ -2455,7 +2521,8 @@ sub view_file ($$$) {
 		print render_monospaced_line($topic, $linenumber,
 					     $cvs_filedata[$i], -1,
 					     $max_digit_width,
-					     $max_line_length, "");
+					     $max_line_length, "",
+					     $parallel, $mode);
 	    }
 	}
 	
@@ -2469,9 +2536,9 @@ sub view_file ($$$) {
 	    if ($new == $BOTH_FILES &&
 		($data =~ /^\s/o || $data =~ /^\-/o || $data =~ /^\+/o)) {
 		display_coloured_data($old_linenumber, $new_linenumber,
-				      $offset, 1, $max_digit_width, $_, "",
-				      "", "", 0, 0, 0, 0, $topic,
-				      $COLOURED_MODE, 1, "");
+				      $offset, $parallel, $max_digit_width, $_,
+				      "", "", "", 0, 0, 0, 0, $topic,
+				      $mode, 1, "");
 		$old_linenumber++ if $data =~ /^\s/o || $data =~ /^\-/o;
 		$new_linenumber++ if $data =~ /^\s/o || $data =~ /^\+/o;
 		next;
@@ -2480,10 +2547,12 @@ sub view_file ($$$) {
 	    if (/^\s(.*)$/o) {
 		# An unchanged line, output it and anything pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
-				       $max_digit_width, $max_line_length);
+				       $max_digit_width, $max_line_length,
+				       $parallel, $mode);
 		print render_monospaced_line($topic, $linenumber, $1, $offset,
 					     $max_digit_width,
-					     $max_line_length, "");
+					     $max_line_length, "",
+					     $parallel, $mode);
 		$linenumber++;
 	    } elsif (/^\-(.*)$/o) {
 		# A removed line.
@@ -2501,7 +2570,8 @@ sub view_file ($$$) {
 		# pending.
 		if ($new != $BOTH_FILES) {
 		    flush_monospaced_lines($topic, $new, \$linenumber,
-					   $max_digit_width, $max_line_length);
+					   $max_digit_width, $max_line_length,
+					   $parallel, $mode);
 		}
 		$patch_line = $_;
 		last;
@@ -2516,7 +2586,8 @@ sub view_file ($$$) {
 	    if ($new != $BOTH_FILES) {
 		# Reached the end of the patch file.  Flush anything pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
-				       $max_digit_width, $max_line_length);
+				       $max_digit_width, $max_line_length,
+				       $parallel, $mode);
 	    }
 	    last;
 	}
@@ -2525,10 +2596,10 @@ sub view_file ($$$) {
     # Display the last part of the file.
     for (my $i = $chunk_end; $i <= $#cvs_filedata; $i++, $linenumber++) {
 	if ($new == $BOTH_FILES) {
-	    display_coloured_data($old_linenumber, $new_linenumber, -1, 1,
-				  $max_digit_width, " $cvs_filedata[$i]",
-				  "", "", "", 0, 0, 0, 0, $topic,
-				  $COLOURED_MODE, 1, "");
+	    display_coloured_data($old_linenumber, $new_linenumber, -1,
+				  $parallel, $max_digit_width,
+				  " $cvs_filedata[$i]", "", "", "", 0, 0, 0,
+				  0, $topic, $mode, 1, "");
 	    $old_linenumber++;
 	    $new_linenumber++;
 	}
@@ -2536,7 +2607,7 @@ sub view_file ($$$) {
 	    print render_monospaced_line($topic, $linenumber,
 					 $cvs_filedata[$i], -1,
 					 $max_digit_width, $max_line_length,
-					 "");
+					 "", $parallel, $mode);
 	}
     }
 
