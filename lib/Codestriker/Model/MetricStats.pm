@@ -537,7 +537,7 @@ sub _dbi_month_time_stamp {
 
     for (my $count = 0; $count < $number_months_back +1; ++$count) {
 	# Calculate the start of this month dbi string.
-	my $month_start = sprintf("%04d-%02d-1 00:00:00", 
+	my $month_start = sprintf("%04d-%02d-01 00:00:00", 
 	    $month[5]+1900,
 	    $month[4]+1);
 
