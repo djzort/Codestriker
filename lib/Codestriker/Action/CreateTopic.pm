@@ -20,8 +20,19 @@ sub process($$$) {
     $http_response->generate_header("", "Create new topic", "", "", "", "",
 				    "", "", 0, 0);
 
+    # Create the hash for the template variables.
+    my $vars = {};
+
+    # Retrieve the email, reviewers and cc from the cookie.
+    $vars->{'email'} =
+	Codestriker::Http::Cookie->get_property($query, 'email');
+    $vars->{'reviewers'} =
+	Codestriker::Http::Cookie->get_property($query, 'reviewers');
+    $vars->{'cc'} =
+	Codestriker::Http::Cookie->get_property($query, 'cc');
+
     my $template = Codestriker::Http::Template->new("createtopic");
-    $template->process({}) || die $template->error();
+    $template->process($vars) || die $template->error();
 }
 
 1;

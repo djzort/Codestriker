@@ -63,6 +63,7 @@ sub generate_header($$$$$$$$$$) {
     if (!defined $mode || $mode eq "") {
 	$mode = Codestriker::Http::Cookie->get_property($query, 'mode');
     }
+
     $cookie{'email'} = $email if $email ne "";
     $cookie{'reviewers'} = $reviewers if $reviewers ne "";
     $cookie{'cc'} = $cc if $cc ne "";

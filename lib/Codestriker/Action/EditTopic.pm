@@ -55,23 +55,23 @@ sub process($$$) {
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
 				    $mode, $tabwidth, "", 0, 0);
-    print $query->h2("Edit topic: $document_title");
-    print $query->start_table();
-    print $query->Tr($query->td("Author: "),
-		     $query->td($document_author));
-    print $query->Tr($query->td("Reviewers: "),
-		     $query->td($document_reviewers));
+
+    # Create the hash for the template variables.
+    my $vars = {};
+    $vars->{'topic_title'} = "Edit topic: $document_title";
+    $vars->{'author'} = $document_author;
+    $vars->{'reviewers'} = $document_reviewers;
+
     if (defined $document_cc && $document_cc ne "") {
-	print $query->Tr($query->td("Cc: "),
-			 $query->td($document_cc));
+	$vars->{'cc'} = $document_cc;
+    } else {
+	$vars->{'cc'} = "";
     }
-    print $query->end_table();
 
     my $view_url = $url_builder->view_url($topic, $line, $mode);
-    print $query->p, $query->a({href=>"$view_url"},"View topic");
-    print $query->p, $query->hr, $query->p;
+    $vars->{'view_url'} = $view_url;
 
-    # Display the context in question.  Allow the user to increase it
+    # Retrieve the context in question.  Allow the user to increase it
     # or decrease it appropriately.
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
@@ -79,11 +79,10 @@ sub process($$$) {
 	$url_builder->edit_url($line, $topic, $inc_context, "", "");
     my $dec_context_url =
 	$url_builder->edit_url($line, $topic, $dec_context, "", "");
-    print "Context: (" .
-	$query->a({href=>"$inc_context_url"},"increase") . " | " .
-	$query->a({href=>"$dec_context_url"},"decrease)") . "\n";
-    
-    print $query->p .
+    $vars->{'inc_context_url'} = $inc_context_url;
+    $vars->{'dec_context_url'} = $dec_context_url;
+
+    $vars->{'context'} =
 	$query->pre(Codestriker::Http::Render->get_context($line, $topic,
 							   $context, 1,
 							   \@document)) .
@@ -91,55 +90,28 @@ sub process($$$) {
 
     # Display the comments which have been made for this line number
     # thus far in reverse order.
+    my @comments = ();
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
 	if ($comment_linenumber[$i] == $line) {
-	    print $query->hr . "$comment_author[$i] $comment_date[$i]";
-	    print $query->br . "\n";
-	    print $query->pre($http_response->escapeHTML($comment_data[$i])) .
-		$query->p;
+	    my $comment = {};
+	    $comment->{'author'} = $comment_author[$i];
+	    $comment->{'date'} = $comment_date[$i];
+	    $comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
+	    push @comments, $comment;
 	}
     }
+    $vars->{'comments'} = \@comments;
 
-    # Create a form which will allow the user to enter in some comments.
-    print $query->hr . $query->p("Enter comments:") . $query->p . "\n";
-    print $query->start_form() . "\n";
-    $query->param(-name=>'action', -value=>'submit_comment');
-    print $query->hidden(-name=>'action', -default=>'submit_comment') . "\n";
-    print $query->hidden(-name=>'line', -default=>$line) . "\n";
-    print $query->hidden(-name=>'topic', -default=>$topic) . "\n";
-    print $query->hidden(-name=>'mode', -default=>$mode) . "\n";
-    print $query->hidden(-name=>'a', -default=>$anchor) . "\n";
-    print $query->textarea(-name=>'comments',
-			   -rows=>15,
-			   -columns=>75,
-			   -wrap=>'hard') . "\n";
+    # Populate the form values.
+    $vars->{'line'} = $line;
+    $vars->{'topicid'} = $topic;
+    $vars->{'mode'} = $mode;
+    $vars->{'anchor'} = $anchor;
+    $vars->{'email'} = $email;
 
-    print $query->p, $query->start_table() . "\n";
-    print $query->Tr($query->td("Your email address: "),
-		     $query->td($query->textfield(-name=>'email',
-						  -size=>50,
-						  -default=>"$email",
-						  -override=>1,
-						  -maxlength=>100))) . "\n";
-    print $query->Tr($query->td("Cc: "),
-		     $query->td($query->textfield(-name=>'comment_cc',
-						  -size=>50,
-						  -maxlength=>150))) . "\n";
-    print $query->end_table() . $query->p . "\n";
-
-    # Display two buttons, one which will submit the comment, the other, which
-    # will submit the comment, and refresh the opener's window.
-    print $query->submit(-name=>'submit',
-			 -value=>'Submit',
-			 -onClick=>'opener.focus()');
-
-# Don't enable the "Submit+Refresh" option for now...
-#    print "&nbsp;&nbsp;&nbsp;";
-#    print $query->submit(-name=>'submit',
-#			 -value=>'Submit+Refresh',
-#			 -onClick=>"opener.focus()") . "\n";
-
-    print $query->end_form() . "\n";
+    # Display the output via the template.
+    my $template = Codestriker::Http::Template->new("edittopic");
+    $template->process($vars) || die $template->error();
 }
 
 1;

@@ -1,0 +1,74 @@
+[%# Screen for the create topic form. #%]
+
+<H2>[% topic_title %]</H2>
+<TABLE>
+<TR>
+ <TD>Author: </TD>
+ <TD>[% author %]</TD>
+</TR>
+<TR>
+ <TD>Reviewers: </TD> 
+ <TD>[% reviewers %]</TD>
+</TR>
+[% IF cc != '' %]
+<TR>
+ <TD>Cc: </TD> 
+ <TD>[% cc %]</TD>
+</TR>
+[% END %]
+</TABLE>
+
+<P>
+<A HREF="[% view_url %]">View topic</A>
+
+<P>
+<HR>
+
+<P>Context: (<A HREF="[% inc_context_url %]">increase</A> | <A HREF="[% dec_context_url %]">decrease)</A>
+<P>
+
+<PRE>[% context %]
+</PRE>
+
+<P>
+<HR>
+
+[%# Display all of the comments made on this line #%]
+[% FOREACH comment = comments %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+<P>
+[% comment.author %] [% comment.date %] <BR>
+<PRE>[% comment.text %]</PRE><P><HR>
+[% END %]
+
+<P>
+Enter comments:
+<P>
+
+<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+ <INPUT TYPE="hidden" NAME="action" VALUE="submit_comment">
+ <INPUT TYPE="hidden" NAME="line" VALUE="[% line %]">
+ <INPUT TYPE="hidden" NAME="topic" VALUE="[% topicid %]">
+ <INPUT TYPE="hidden" NAME="mode" VALUE="[% mode %]">
+ <INPUT TYPE="hidden" NAME="a" VALUE="[% anchor %]">
+ <TEXTAREA NAME="comments" ROWS=15 COLS=75 WRAP="hard"></TEXTAREA>
+ <P>
+
+ <TABLE>
+ <TR>
+  <TD>Your email address: </TD>
+  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=100></TD>
+ </TR>
+ <TR>
+  <TD>Cc: </TD>
+  <TD><INPUT TYPE="text" NAME="comment_cc"  SIZE=50 MAXLENGTH=150></TD>
+ </TR>
+ </TABLE>
+
+ <P>
+ <INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()">
+</FORM>
+
+</BODY>
+</HTML>
+
