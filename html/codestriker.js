@@ -155,14 +155,14 @@ function add_comment_html(file, line, new_value)
     html += '<p><table><tr>\n' +
             '<td>Your email address: </td>\n' +
             '<td>' +
-            '<input type="text" name="email" size="35" maxlength="100" ' +
+            '<input type="text" name="email" size="25" maxlength="100" ' +
                    'value="' + cs_email + '">\n' +
             '</td><td></td></tr><tr>' +
 	    '<td>Cc: <font size="-1">' +
             '<a href="javascript:top.add_other_reviewers();">' +
             '(add other reviewers)</a></font> </td>' +
             '<td>' +
-	    '<input type="text" name="comment_cc" size="35" ' +
+	    '<input type="text" name="comment_cc" size="25" ' +
                     'maxlength="150"></td>\n' +
             '<td><input type="submit" name="submit" value="Submit"></td>' +
             '</tr></table></form></body></html>\n';
