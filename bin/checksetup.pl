@@ -18,6 +18,7 @@
 #   installations, and does data migration automatically.
 
 use strict;
+use Config;
 
 # Indicate which modules are required for codestriker (this code is
 # completely stolen more-or-less verbatim from Bugzilla)
@@ -127,17 +128,58 @@ sub have_vers {
 
 # Output any modules which may be missing.
 if (%missing) {
+    # Determine if this process is running under Windows, as the installation
+    # process is different.
+    my $osname = $Config{'osname'};
+    my $windows = (defined $osname && $osname eq "MSWin32") ? 1 : 0;
+
+    # First, output the generic "missing module" message.
     print "\n\n";
-    print "Codestriker requires some Perl modules which are either missing\n",
-    "from your system, or the version on your system is too old.\n",
-    "They can be installed by running (as root) the following:\n";
-    foreach my $module (keys %missing) {
-        print "   perl -MCPAN -e 'install \"$module\"'\n";
-        if ($missing{$module} > 0) {
-            print "   Minimum version required: $missing{$module}\n";
-        }
+    print "Codestriker requires some Perl modules which are either missing\n" .
+	  "from your system, or the version on your system is too old.\n";
+
+    if ($windows) {
+	foreach my $module (keys %missing) {
+	    print " Missing \"$module\"\n";
+	    if ($missing{$module} > 0) {
+		print "   Minimum version required: $missing{$module}\n";
+	    }
+	}
+
+	print <<EOF;
+
+These can be installed by doing the following in PPM 2.0:
+C:\> ppm
+
+PPM> set repository oi http://openinteract.sourceforge.net/ppmpackages
+PPM> set save
+PPM> install (package-name)
+
+For PPM 3.0:
+
+C:\> ppm
+PPM> rep add oi http://openinteract.sourceforge.net/ppmpackages
+PPM> install (package-name)
+
+*NOTE* The Template package name may not be "Template" but "Template-Toolkit"
+when entering the commands above.
+
+See http://openinteract.sourceforge.net/cgi-bin/twiki/view/OI/ActivePerlPackages for more details.
+Another repository of Perl packages is http://theoryx5.uwinnipeg.ca/ppmpackages.
+The ActiveState default repository in PPM has almost all of the packages
+required.
+EOF
     }
-    print "\n";
+    else {
+	print "They can be installed by running (as root) the following:\n";
+	foreach my $module (keys %missing) {
+	    print "   perl -MCPAN -e 'install \"$module\"'\n";
+	    if ($missing{$module} > 0) {
+		print "   Minimum version required: $missing{$module}\n";
+	    }
+	}
+	print "\n";
+    }
     exit;
 }
 

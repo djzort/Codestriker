@@ -3,6 +3,9 @@
 
 Version 1.8.0
 
+* Improved useability of messages (when Perl modules are missing) for
+  Win32 users.
+
 * Now support ODBC and Oracle databases.  The Database
   creation/upgrade code has been modified so that it is properly
   modularised, and so checksetup.pl is far more maintainable.  Adding
