@@ -53,10 +53,10 @@ $cvsviewer = "";
 #$cvsaccess = ":ext:sits\@cvs.cvsplot.sourceforge.net:";
 $cvsaccess = "";
 
-# The path of the cvs repository";
+# Set this to the path of the CVS repository.
+$cvsrep = "";
 #$cvsrep = "/usr/local/cvsroot";
 #$cvsrep = "/home/sits/cvs";
-$cvsrep = "/set/this/if/you/want/to/link/to/cvs";
 
 # The CVS command to execute in order to retrieve file data.  The revision
 # argument and filename is appended to the end of this string.
@@ -1224,7 +1224,7 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
 			 $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
 	
-	if ($cvsmatch) {
+	if ($cvsmatch && $cvsrep ne "") {
 	    # Display the line numbers corresponding to the patch, with links
 	    # to the CVS file.
 	    my $url_old_full = $query->url() .
