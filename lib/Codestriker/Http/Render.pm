@@ -371,7 +371,7 @@ sub delta_file_header ($$$$) {
     # Generate the text for the link to add a file-level comment.
     my $add_file_level_comment_link = "javascript:eo('$cfi','-1','1')";
     my $add_file_level_comment_text =
-	$query->a({href=>$add_file_level_comment_link}, "[Add comment]");
+	$query->a({href=>$add_file_level_comment_link}, "[Add File Comment]");
 
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
@@ -973,7 +973,7 @@ sub _coloured_mode_start($) {
 
     # Render the "Add comment to topic" link.
     print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
-			      "Add comment") . " to topic.");
+			      "Add general comment") . " to topic.");
 }
 
 # Render the initial start of the coloured table, with an empty row setting
@@ -1011,7 +1011,7 @@ sub _coloured_mode_finish ($) {
     # Render the "Add comment to topic" link.
     my $query = $self->{query};
     print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
-			      "Add comment") . " to topic.");
+			      "Add general comment") . " to topic.");
 }
 
 # Display a line for a single file view.
