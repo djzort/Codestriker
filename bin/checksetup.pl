@@ -35,6 +35,7 @@ eval("use Codestriker::Action::SubmitComment");
 eval("use Codestriker::Repository::RepositoryFactory");
 eval("use Codestriker::FileParser::Parser");
 eval("use Codestriker::FileParser::UnknownFormat");
+eval("use Codestriker::Model::File");
 
 # Set this variables, to avoid compilation warnings below.
 $Codestriker::COMMENT_SUBMITTED = 0;

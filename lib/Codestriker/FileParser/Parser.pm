@@ -160,8 +160,20 @@ sub parse ($$$$$) {
     seek($fh, 0, 0) ||
 	die "Unable to seek to the start of the temporary file. $!";
 
+    # Only include those files whose extension is not in
+    # @Codestriker::exclude_file_types, provided it is defined.
+    return @diffs unless defined @Codestriker::exclude_file_types;
+
+    my @trimmed_diffs = ();
+    foreach my $curr (@diffs) {
+	if ($curr->{filename} =~ /\.(\w+)$/o) {
+	    push @trimmed_diffs, $curr
+		unless grep(/$1/, @Codestriker::exclude_file_types);
+	}
+    }
+	
     # Return the diffs found, if any.
-    return @diffs;
+    return @trimmed_diffs;
 }
 
 1;
