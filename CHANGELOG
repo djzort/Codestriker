@@ -4,7 +4,8 @@ Version 1.4.2:
 
 * Changed the HTML generation for popup windows displaying old/new
   versions of a file to use <PRE> rather than a table, which cuts down
-  the loading time considerably.
+  the loading time considerably.  Note, the codestriker.css file had
+  to be changed.
 
 Version 1.4.1:
 
