@@ -150,7 +150,6 @@ This option affects only CVS topics currently.
 [%# The repository the review is made against #%]
 [%# Only display the repository select if there is more than one #%]
 [% IF repositories.size > 1 %]
-[% IF allow_repositories != 0 %]
 <TR>
  <TD>Repository:
 <FONT SIZE="-2"><A HREF="javascript:alert('
@@ -173,7 +172,6 @@ an aid in the reviewing process.
       </SELECT>
  </TD>
 </TR>
-[% END %]
 [% END %]
 
 [% IF projects_enabled != 0 %]

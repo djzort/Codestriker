@@ -38,6 +38,21 @@ Version 1.8.5
   status bar or in a tool-tip when hovering over a commented line in
   the view topic window.
 
+  The following changes are from Jason Remillard:
+
+* Fixed a security problem with the repository not being checked
+  against the actual configured list. A user could send in any well
+  formed repository string and Codestriker would just take it, even if
+  it was not configured.
+
+* Fixed a bug preventing create topic from working when the user had
+  just one repository working. The cookie was overriding it because it
+  was missing from the html code.
+
+* Subversion repositories can now be configured with a username and
+  password in the configuration file if authentication is required.
+  Any errors from accessing subversion are written to STDERR.
+
 Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and

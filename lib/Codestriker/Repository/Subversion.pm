@@ -14,10 +14,25 @@ use strict;
 
 # Constructor, which takes as a parameter the repository url.
 sub new ($$) {
-    my ($type, $repository_url) = @_;
+    my ($type, $repository_url, $user, $password) = @_;
+  
+    my $userCmdLine = "";
+    if (defined($user) && defined($password)) {
+        $userCmdLine = "--username $user --password $password ";
+    }
+
+
+    # Make sure the repo url does not end in a /, the 
+    # rest of the module assumes that it does not.
+    $repository_url =~ s/[\\\/]^//;
+    
+    # Replace any spaces with %20 uri friendly escapes.
+    $repository_url =~ s/ /%20/g;
 
     my $self = {};
     $self->{repository_url} = $repository_url;
+    $self->{userCmdLine} = $userCmdLine;
+
     bless $self, $type;
 }
 
@@ -26,17 +41,37 @@ sub new ($$) {
 sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
-    # Open a pipe to the local Subversion repository.
-    open(SVN, "svn cat --revision $revision \"" . $self->{repository_url} .
-	 "/$filename\" 2>/dev/null |")
-	|| die "Can't retrieve information from Subversion repository: $!";
+    # Replace any spaces with %20 uri friendly escapes.
+    $filename =~ s/ /%20/g;
+
+    my $cmd = "svn cat --non-interactive --no-auth-cache " . $self->{userCmdLine} .
+              "--revision $revision " .
+              "\"" . $self->{repository_url} . "/$filename\"";
+
+    my $write_stdin_fh = new FileHandle;
+    my $read_stdout_fh = new FileHandle;
+    my $read_stderr_fh = new FileHandle;
+   
+    my $pid = open3($write_stdin_fh,$read_stdout_fh,$read_stderr_fh,$cmd);
 
     # Read the data.
-    for (my $i = 1; <SVN>; $i++) {
+    for (my $i = 1; <$read_stdout_fh>; $i++) {
 	chop;
 	$$content_array_ref[$i] = $_;
     }
-    close SVN;
+
+    # Log anything on standard error to apache error log
+    # along with the cmd that caused the error.
+
+    my $buf;
+    my $first_lines = 1;
+    while (read($read_stderr_fh, $buf, 16384)) {
+        print STDERR "$cmd\n" if $first_lines;
+        $first_lines = 0;
+	print STDERR $buf;
+     }
+      
+    waitpid($pid, 0);
 }
 
 # Retrieve the "root" of this repository.
@@ -65,7 +100,8 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $stdout_fh, $stderr_fh) = @_;
 
-    my $cmd = "svn diff --non-interactive -r $start_tag:$end_tag " . 
+    my $cmd = "svn diff --non-interactive --no-auth-cache " . $self->{userCmdLine} . 
+              "-r $start_tag:$end_tag " . 
               "--old \"$self->{repository_url}\" \"$module_name\"";
 
     my $write_stdin_fh = new FileHandle;
@@ -74,7 +110,7 @@ sub getDiff ($$$$$) {
 
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,$cmd);
 
-    # Make sure the module does not end or start with a / 
+    # Make sure the moduel does not end or start with a /
     $module_name =~ s/\\$//;
     $module_name =~ s/^\\//;
 

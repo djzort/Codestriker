@@ -409,9 +409,15 @@ sub doit($$$$$$$$$) {
     $recipients .= ", $bcc" if $bcc ne "";
     my @receiver = split /, /, $recipients;
     for (my $i = 0; $i <= $#receiver; $i++) {
+        if ($receiver[$i] ne "") {
 	$smtp->recipient($receiver[$i]);
 	$smtp->ok() || die "Couldn't send email to \"$receiver[$i]\" $!, " .
 	    $smtp->message();
+        } else {
+            # Can't track down why, but sometimes an empty email address
+            # pops into here and kills the entire thing. This makes the 
+            # problem go away.
+        }
     }
 
     $smtp->data();

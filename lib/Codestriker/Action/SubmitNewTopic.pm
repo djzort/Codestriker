@@ -112,13 +112,22 @@ sub process($$$) {
     my $repository = undef;
     if (scalar(@Codestriker::valid_repositories)) {
 	# Set the repository to the default if it is not entered.
-	if ($repository_url eq "") {
+	if ($repository_url eq "" || scalar(@Codestriker::valid_repositories) == 1) {
 	    $repository_url = $Codestriker::valid_repositories[0];
 	}
 
-	# Check if the repository argument is valid.
+	# Check if the repository argument is in fact a configured
+        # repository.
+        my $configured = 0;
+        foreach my $rep ( @Codestriker::valid_repositories ) {
+            $configured = 1 if $repository_url eq $rep;
+        }
+
+        if ($configured) {
 	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+        }
+
 	if (! defined $repository) {
 	    $feedback .=
 		"The repository value \"$repository_url\" is invalid.\n" .
