@@ -56,11 +56,11 @@ Version 1.8.4
 
 * Added an optional show_on_mainpage attribute to the comment metrics
   configuration, which specifies which comment metric counts will
-  appear on the topic list page.  From Jason Remilliard.
+  appear on the topic list page.  From Jason Remillard.
 
 * Reviewers who haven't viewed a topic will have their names
   surrounded by parenthesis in the topic list page.  From Jason
-  Remilliard.
+  Remillard.
 
 * Fixed a number of taint-mode problems when using Perl 5.8.
 
@@ -120,7 +120,7 @@ Version 1.8.3
   made from, after the comment has been submitted.  This has now been
   fixed.
 
-* Committed in a whole heap of test scripts from Jason Remilliard
+* Committed in a whole heap of test scripts from Jason Remillard
   which are located in the test/ subdirectory.
 
 * The clearcase diff parser can now handle diffs which describe chunk
@@ -153,15 +153,15 @@ Version 1.8.2
   Contribution by Oliver Lohmann <oliver_lohmann@gmx.de>.
 
 * Codestriker can now sort by the column headers in the topic list
-  view, from Jason Remilliard.
+  view, from Jason Remillard.
 
 * It is now possible to create Subversion topics by entering values
   in the START_TAG, END_TAG and MODULE fields on the create topic
-  page, from Jason Remilliard.  See the manual for more details.
+  page, from Jason Remillard.  See the manual for more details.
 
 * In addition to the existing Subversion HTTP server support, it is
   now possible to integrate with a native Subversion server as well,
-  from Jason Remilliard.
+  from Jason Remillard.
 
 * Codestriker can now parse basic diff files (non unidiff and context
   diff), and also ClearCase serial diffs.
@@ -177,10 +177,10 @@ Version 1.8.2
 
 * The view topic display has been improved for diffs which contain new
   files.  Now the entire width of the screen is used when displaying
-  new files.  Fix from Jason Remilliard and Kannan Goundan.
+  new files.  Fix from Jason Remillard and Kannan Goundan.
 
 * The email taint/input checking code has been tightened, from Jason
-  Remilliard.
+  Remillard.
 
 * Improved the input checking code on the topic properties page.
 
