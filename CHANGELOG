@@ -4,7 +4,11 @@
 Version 1.8.0
 
 * Some minor fixes to fully support Win32-based CVS repositories,
-  including use of the older-style :local:c:\\cvsrep syntax.
+  including use of the older-style :local:c:\\cvsrep syntax.  Also be
+  more robust in handling directory separators as either forward or
+  backward slashes, since different versions of CVSNT support this.
+  Make sure the CVS executable path is quoted, since it will often
+  contain spaces for Win32 environments.
 
 * Improved useability of messages (when Perl modules are missing) for
   Win32 users.
