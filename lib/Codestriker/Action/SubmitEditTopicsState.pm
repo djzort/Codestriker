@@ -38,7 +38,7 @@ sub process($$$) {
     }
 
     # The main topic list page does not allow deletes, so block this out.
-    if ($topic_state eq "Delete") {
+    if ($topic_state eq "Deleted") {
 	$http_response->error("This function has been disabled");
     }
     

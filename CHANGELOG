@@ -10,10 +10,16 @@ Version 1.8.5
   which allows you to create a new topic which superseeds the selected
   topics.  The obsoleted topics will be changed to state "Obsoleted"
   and will become read-only.  Note the @topic_states configuration
-  variable in codestriker.conf has been modified to include the new
-  'Obsoleted' state.  The view topic screens have been modified to
-  include links if the topic being viewed has been obsoleted or
-  superseeds other topics.
+  variable in codestriker.conf needs to be modified to include the new
+  'Obsoleted' state to enable this.  The view topic screens have been
+  modified to include links if the topic being viewed has been
+  obsoleted or superseeds other topics.  A single topic can be
+  obsoleted from the view topic properties page, by selecting the
+  'Obsoleted' state.
+
+* The $allow_delete config variable has been removed.  If topic
+  deletion is to be enabled, the 'Deleted' state needs to be added to
+  the @topic_states configuration variable in codestriker.conf.
 
 * Added new configuration variable @Codestriker::exclude_file_types
   which contains a list of filename extensions which Codestriker will

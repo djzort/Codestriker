@@ -13,6 +13,12 @@ drop table topicmetric;
 drop table topicusermetric;
 drop table topicviewhistory;
 
+drop sequence sequence;
+drop trigger commentstate_id_ins_row;
+drop trigger project_id_ins_row;
+
+
+
 In commitinfo:
 
 # Run this to prepare for log_accum.pl in loginfo

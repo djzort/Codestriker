@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.8.4</subtitle>
+    <subtitle>Version 1.8.5</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -40,8 +40,14 @@
       </para>
       <para>
         Special support is provided for integration with
-	<ulink url="http://cvshome.org">CVS</ulink> and
-	<ulink url="http://subversion.tigris.org">Subversion</ulink>
+	<ulink url="http://cvshome.org">CVS</ulink>,
+	<ulink url="http://subversion.tigris.org">Subversion</ulink>,
+	<ulink url="http://www.perforce.com">Perforce</ulink>,
+	<ulink
+	url="http://www.rational.com/products/clearcase">ClearCase</ulink>
+	and
+	<ulink
+	url="http://msdn.microsoft.com/ssafe">Visual SourceSafe</ulink>.
 	 source control management systems, for the display of
 	 coloured diffs and for the ability to view original and new
 	 files in their entirety to assist in the review process.
@@ -54,7 +60,7 @@
 	process.
       </para>
       <para>
-        Codestriker is written in Perl in a cross-platform style.  It
+        Codestriker is written in cross-platform Perl.  It
         can run on any variant of UNIX (Linux, *BSD) and has been
         deployed on Win32 systems (Windows 98 and above).  It can be
         used in conjunction with a number of relational databases,
@@ -274,21 +280,19 @@ DROP DATABASE codestrikerdb;
           Codestriker has been deployed using SQL Server, via the ODBC
           interface.  The first step is to create a "Codestriker"
           system data source, by going to "Control Panel" ->
-	  "Administrative Tools" -> "Data Sources (ODBC)".
-          From here, select the "System DSN" tab, and click "Add".
-          Select the driver named "SQL Server", then click "Finish".
-          Enter in "Codestriker" for the name textfield, "Codestriker
-          database" for the description textfield, and select the
-          appropriate SQL Server from the server dropdown box,
-          then click "Next".  Choose the authentication appropriate
-          for your site, and work your way through the final
-          configuration options.  Install the DBD::ODBC Perl module,
-          modify the <varname>$db</varname> variable in the
-	  <filename>codestriker.conf</filename> file appropriately so
-	  that Codestriker knows how to connect to this datasource.  An
-	  example is given in the configuration file.  For more
-	  advanced connection strings, please consult the DBD::ODBC
-	  man page.
+          "Administrative Tools" -> "Data Sources (ODBC)".  From here,
+          select the "System DSN" tab, and click "Add".  Select the
+          driver named "SQL Server", then click "Finish".  Enter in
+          "Codestriker" for the name textfield, "Codestriker database"
+          for the description textfield, and select the appropriate
+          SQL Server from the server dropdown box, then click "Next".
+          Choose the authentication appropriate for your site, and
+          work your way through the final configuration options.
+          Modify the <varname>$db</varname> variable in the
+	  <filename>codestriker.conf</filename> file appropriately
+	  (see the example) so that Codestriker knows how to connect
+	  to this datasource.  For more advanced connection settings,
+	  please consult the DBD::ODBC man page or online manual.
 	</para>
       </sect2>
       <sect2>
@@ -366,6 +370,8 @@ $dbuser = 'codestriker';
 # Database password.
 $dbpasswd = 'cspasswd';
 </programlisting>
+        Other examples for other database systems are present in the
+        configuration file.
 	</para>
       </sect2>
 
@@ -419,91 +425,94 @@ $use_compression = 0;
 	  file).  For many Codestriker deployments, there may only be
 	  a single SCM system.  There is currently support for CVS,
 	  Subversion, Perforce, Visual Source Safe, and ClearCase.
-	  An example setting could be the following:
+	  Here are examples from the codestriker.conf file:
 	  <programlisting>
+# Valid repositories which may be selected at the create topic screen.
+# The order shown here is the order presented in the option list.  Most
+# deployments will only require a single repository to be specified.
+# Comment out / modify entries appropriate for your deployment.
+#
+# If this list is empty it won't be possible to view the entire contents of a
+# file before the proposed change and/or after. All of the places 
+# in the application that ask for, or display repository information will
+# be hidden and lastly, it will be impossible to make a diff review topic
+# on files that already checked in.
 @valid_repositories =
     (
+     # Example CVSROOT of a CVS repository on the same machine as the
+     # codestriker server.
      '/home/sits/cvs',
+
+     # Example of a CVS repository which contains the URL to a viewcvs
+     # installation (CVS web is also supported), followed by the
+     # CVSROOT of the repository.
      'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
+
+     # The next example is the syntax used for specifying a Subversion
+     # repository, which is simply the subversion repository URL
+     # prefixed # by svn:
      'svn:http://svn.collab.net/repos/svn/trunk',
-     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
-     'c:/cvsrep',
-     'perforce:sits:client@localhost:1666',
-     'clearcase:h:\\my_stuff\\view_name\\vob_name'
+
+     # Subversion server with authentication.  The user name and
+     # password should be added to the end and separated by
+     # semicolons.
+     'svn:http://svn.collab.net/repos/svn/trunk;username;password',
+
+     # Example CVS pserver config with username and password
+     # specified.
+     ':pserver:sits:password@cvs.sourceforge.net:/cvsroot',
+
+     # Example CVS pserver config with proxy options.
+     ':pserver;proxy=abc.com;proxyport=8080:sits:pwd@cvs.dev.net',
+
+     # Example CVS pserver with empty password.
+     ':pserver:anonymous:@cvs.sourceforge.net:/cvsroot',
+
+     # Example CVS server which will be connected to with SSH.  This
+     # assumes the appropriate ssh keys have been created so that the
+     # process running the Codestriker application can connect to the
+     # CVS server without requiring a password to be entered.
+     ':ext:sits@localhost:/home/sits/cvs',
+
+     # Visual SourceSafe repository on same machine at default
+     # location.  Username "admin", password "password".
+     'vss:admin;password',
+
+     # Visual SourceSafe repository on same machine, but with specific
+     # repository location specified.
+     'vss:c:\\Program Files\\Microsoft Visual Studio\\VSS;admin;password',
+
+     # Visual SourceSafe repository located on a network fileshare.
+     'vss:\\\\VisualSourceSafeMachineName\\SharedRepositoryPath;admin;password',
+     # Example Win32 CVS repository on the same machine.
+     ':local:c:\\cvsrep',
+
+     # Another Win32 CVS repository on the same machine.
+     'c:/cvsrep2',
+
+     # The next example is for a Perforce repository.  After the
+     # leading :perforce identifier, the next two components are the
+     # Perforce user and client parameters.  The last two parameters
+     # after the '@' symbol represent the host and port number of
+     # the Perforce server.
+     'perforce:sits:sits2@localhost:1666',
+
+     # The final example is a ClearCase repository, where the path is
+     # the location of a shared snapshot view.  From this view, it
+     # should be  possible to a file of any version can be 
+     # retrieved from the vob using the "cleartool get" command.  It
+     # is important that this snapshot view is accessible with  the
+     # same path specification for all developers.  This is because
+     # a diff file created by a developer will refer to the snapshot
+     # view, and will allow Codestriker to retrieve specific files
+     # and versions mentioned in the review text, when necessary.
+     # It is also important that the user account running the
+     # webserver process has permission to access to the snapshot
+     # view.
+     'clearcase:c:\\stuff\\view_name\\vob_name'
     );
-	  </programlisting>
-	  This is Perl syntax for a list of string values.  The first
-	  value indicates a CVS repository on the same machine as
-	  Codestriker, which has a CVSROOT of
-	  <filename>/home/sits/cvs</filename>.
-	</para>
-	<para>
-	  If you have ViewCVS installed on your site, Codestriker can
-	  use it directly for CVS information, if CVS is not installed
-	  on the same machine.  The second value
-	  <filename>http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot</filename>
-	  contain the base URL for accessing ViewCVS, and the second
-	  part contains the CVSROOT value of this repository, which is
-	  <filename>/cvsroot</filename>.
-	</para>
-	<para>
-	  Codestriker can also work with other source control systems.
-	  There is currently support for CVS, Subversion (<ulink
-	  url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
-	  Perforce (<ulink
-	  url="http://www.perforce.com/">http://www.perforce.com/</ulink>),
-	  Visual Source Safe (<ulink
-	  url="msdn.microsoft.com/ssafe/">msdn.microsoft.com/ssafe/</ulink>)
-	  and ClearCase.  In the future other SCM systems will become
-	  available depending on demand and contributions.  The third
-	  string
-	  <filename>svn:http://svn.collab.net/repos/svn/trunk</filename>
-	  is a Subversion repository URL prefixed by
-	  "svn:". Codestriker works with both http style repositories,
-	  and the stand alone Subversion server. The Subversion
-	  repository can be located on another computer than the one
-	  running Codestriker.
-	</para>
-	<para>
-	  The next value which is likely to be common for many
-	  deployments is an anonymous CVS pserver specification.  The
-	  string is actually in the same form as a CVS pserver URL.
-	  Note you can also use the :ext method with SSH, if the user
-	  running the Codestriker application has the ability to
-	  connect to the CVS server via SSH (see the configuration
-	  file for an example).  For more information of setting up
-	  anonymous pserver access, please consult the CVS manual.
-	  Note if your anonymous account does not have a password, the
-	  setting would be (note the colons):
-          <programlisting>
-     ':pserver:anonymous:@cvs.sourceforge.net:/cvsroot'
-          </programlisting>
-	</para>
-	<para>
-	  The next value is an example of a CVS repository located on
-	  a Win32 system.  Note that forward slashes are still used as
-	  a directory separator.
-	</para>
-	<para>
-	  The next value is a Perforce repository specification,
-	  where after the "perforce:" keyword, there is the Perforce
-	  user and client, followed by the hostname and port of the
-	  Perforce server.
-	</para>
-	<para>
-	  The final value is a ClearCase repository specification,
-	  where after the "clearcase:" keyword, is the pathname to a
-	  shared snapshot view, where a file of any version can be
-	  retrieved from the vob using the "cleartool get" command.
-	  It is important that this snapshot view is accessible with
-	  the same path specification for all developers.  This is
-	  because a diff file created by a developer will refer to the
-	  snapshot view, and will allow Codestriker to retrieve
-	  specific files and versions mentioned in the review text,
-	  when necessary.  It is also important that the user account
-	  running the webserver process has permission to access to
-	  the snapshot view.
-	</para>
+        </programlisting>
+        </para>
 	<para>
 	  During a review, it is sometimes beneficial to see the
 	  revision history of a file, such as information provided by
@@ -520,7 +529,7 @@ $file_viewer =
 	  revision information can be found using the URL specified.
 	</para>
 	<para>
-	  Finally, if you are using CVS, please make sure the
+	  If you are using CVS, make sure the
 	  <varname>$cvs</varname> setting is set to the correct path.
 	  For UNIX, this is likely to be something like:
 	  <programlisting>
@@ -536,6 +545,14 @@ $cvs = 'c:/gnu/bin/cvs';
 	  rather than '\' (back-slash).  Even under Windows, when
 	  setting filenames, you should always use forward
 	  slashes.</emphasis>
+	</para>
+	<para>
+	 If you are using Perforce, make sure the
+	 <varname>$p4</varname> setting is set to the correct path.
+	</para>
+	<para>
+	 If you are using Visual SourceSafe, make sure the
+	 <varname>$vss</varname> setting is set to the correct path.
 	</para>
       </sect2>
       <sect2>
@@ -698,10 +715,6 @@ $lxr_map =
 		       'indd', 'wav', 'o', 'obj', 'mpp', 'vsw', 'jfif',
 		       'tif', 'tiff', 'xbm', 'fnt', 'ttf', 'pfm', 'pfb',
 		       'eps', 'wpj', 'sxi');
-
-# Indicate if topics can be deleted.  Turning this to false can be useful for
-# "anonymous" installations of codestriker.
-$allow_delete = 1;
 
 # Indicate if topics can be listed/searched.  Turning this to false can be
 # useful for "anonymous" installations of Codestriker.
@@ -966,24 +979,6 @@ $metric_config = "none";
 	data migrations.
       </para>
       <para>
-        For Window systems, edit the first line from the files
-        <filename>bin/checksetup.pl</filename> and
-        <filename>bin/codestriker.pl.base</filename>.  For example, if
-        you have Perl installed in <filename>c:\perl\perl</filename>,
-        then the first line of <filename>bin/checksetup.pl</filename>
-        should look like:
-<programlisting>
-#!c:/perl/perl -w
-</programlisting>
-        The first line of <filename>bin/codestriker.pl.base</filename>
-        should look like:
-<programlisting>
-#!c:/perl/perl -w
-</programlisting>
-        <emphasis>Note the use of forward slashes.  Also note the -T
-      flag must be removed for Win32 users, due to very obscure reasons.</emphasis>
-      </para>
-      <para>
         Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
@@ -998,7 +993,7 @@ $metric_config = "none";
         For Windows, you need to do something like the following from
         the command prompt:
 <programlisting>
-% cd c:\codestriker\bin
+% cd c:\codestriker\install\location\bin
 % checksetup.pl
 </programlisting>
       </para>

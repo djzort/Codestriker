@@ -5,7 +5,7 @@
 
 [% PROCESS viewtopicheader.html.tmpl version = version topicview = 0
    topiccomments = 0 topicinfo = 0 topicproperties = 1
-   help = "x605.html" %]
+   help = "x594.html" %]
 
 <script language="JavaScript">
 <!--
@@ -20,7 +20,7 @@ function DeleteTopicConfirm()
     var stateSelection = document.form.topic_state.options[stateIndex].value;
     
     // Confirm with the user if they are deleting.
-    if (stateSelection == 'Delete')
+    if (stateSelection == 'Deleted')
     {
     	return confirm('This topic and all of its comments will be ' +
                        'permanently removed. Are you sure you want ' +
@@ -214,13 +214,11 @@ state \'obsoleted\'.
     [% FOREACH state = states %]
        [% IF state == default_state %]
            <option selected value="[% state %]">[% state %]</option>
+       [% ELSIF state == 'Deleted' %]
+   	   <option value="Deleted">Delete Topic ... </option>
        [% ELSE %]           
            <option value="[% state %]">[% state %]</option>
        [% END %]
-    [% END %]
-    [%# Render a "delete" button, for deleting topics, if enabled #%]
-    [% IF delete_enabled != 0 %]
-   	   <option value="Delete">Delete Topic ... </option>
     [% END %]
     </select>
  </td>

@@ -37,9 +37,7 @@ sub process($$$) {
     my $projectid = $http_input->get('projectid');
 
     # Check if this action is allowed, and that the state is valid.
-    if ($Codestriker::allow_delete == 0 && $topic_state eq "Delete") {
-	$http_response->error("This function has been disabled");
-    } elsif (! grep /^$topic_state$/, @Codestriker::topic_states) {
+    if (! grep /^$topic_state$/, @Codestriker::topic_states) {
 	$http_response->error("Topic state $topic_state unrecognised");
     }
 
@@ -83,7 +81,7 @@ sub process($$$) {
     }
 
     if ($feedback eq "") {
-	if ($topic_state eq "Delete") {
+	if ($topic_state eq "Deleted") {
 	    $rc = $topic->delete();
 	    if ($rc == $Codestriker::INVALID_TOPIC) {
 		$feedback .= "Topic no longer exists.\n";
@@ -128,7 +126,7 @@ sub process($$$) {
     $feedback =~ s/\n/<BR>/g;
     $http_input->{feedback} = $feedback;
     if ($rc == $Codestriker::INVALID_TOPIC ||
-	($rc == $Codestriker::OK && $topic_state eq "Delete")) {
+	($rc == $Codestriker::OK && $topic_state eq "Deleted")) {
 	if ($Codestriker::allow_searchlist) {
 	    # Go to the topic list screen for just open topics.
 	    $http_input->{sstate} = "0";

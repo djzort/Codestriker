@@ -151,12 +151,13 @@ sub have_vers {
   return $vok;
 }
 
+# Determine if this process is running under Windows, as the installation
+# process is slightly different.
+my $osname = $Config{'osname'};
+my $windows = (defined $osname && $osname eq "MSWin32") ? 1 : 0;
+
 # Output any modules which may be missing.
 if (%missing) {
-    # Determine if this process is running under Windows, as the installation
-    # process is different.
-    my $osname = $Config{'osname'};
-    my $windows = (defined $osname && $osname eq "MSWin32") ? 1 : 0;
 
     # First, output the generic "missing module" message.
     print "\n\n";
@@ -925,6 +926,14 @@ open(CODESTRIKER_BASE, "codestriker.pl.base")
     || die "Unable to open codestriker.pl.base file: $!";
 open(CODESTRIKER_PL, ">../cgi-bin/codestriker.pl")
     || die "Unable to create ../cgi-bin/codestriker.pl file: $!";
+
+# For Win32, don't enable tainting mode.  There are weird issues with
+# ActivePerl, and sometimes with IIS as well.
+if ($windows) {
+    print CODESTRIKER_PL '#!perl.exe -w' . "\n";
+} else {
+    print CODESTRIKER_PL '#!/usr/bin/perl -w' . "\n";
+}
 my $codestriker_lib = 'use lib \'' . cwd() . '/../lib\';';
 for (my $i = 0; <CODESTRIKER_BASE>; $i++) {
 
