@@ -1,0 +1,340 @@
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+
+<book>
+  <bookinfo>
+    <title>The Codestriker Guide</title>
+    <subtitle>Version 1.7.3</subtitle>
+    <authorgroup>
+      <author>
+        <firstname>David</firstname>
+	<surname>Sitsky</surname> 
+      </author>	
+    </authorgroup>
+  </bookinfo>
+  <toc></toc>
+
+  <chapter>
+    <title>Introduction</title>
+    <sect1>
+      <title>What is Codestriker?</title>
+      <para>
+        Codestriker is a web application which facilitates
+        collaborative code reviewing.  Authors create code review
+        topics, where the nominated reviewers will be automatically
+        notified by email.  Reviewers then submit comments against the
+        code on a per-line basis, and can also view comments submitted
+        by the other reviewers as they are created.  Emails are sent
+        to the appropriate parties when comments are created, as an
+        alert mechanism.  The author is also free to submit comments
+        against the review comments.  Once all reviewers have
+        finished, the author has all review comments available in a
+        structured fashion.  All information is stored in a relational
+        database, which Codestriker can search over.
+      </para>
+      <para>
+        Special support is provided for integration with CVS and
+	Subversion source control management systems, for the display
+	of coloured diffs and for the ability to view original and new
+	files in their entirety to assist in the review process.
+	Codestriker can be optionally linked with a bug tracking
+	system, such as Bugzilla.  Other SCM systems, such as
+	ClearCase and VSS will be added in future releases, given help
+	from the developer community.  Codestriker can also be linked
+	with
+	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
+	for fast lookup of code, to assit in the review process.
+      </para>
+      <para>
+        Codestriker is written in Perl in a cross-platform style.  It
+        can run on any variant of UNIX (Linux, *BSD) and has been
+        tested and installed on Windows 98 and above.  The Codestriker
+        project page is located at:
+	<ulink url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>
+      </para>
+    </sect1>
+    <sect1>
+      <title>Document Structure</title>
+      <para>
+        The remainder of this document is in three parts.  The next
+        part is concerned with installing Codestriker and customising
+        it.  Following that is the user's guide.  Lastly, details on
+        Codestriker's code structure, database schema is presented.
+      </para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Installation</title>
+    <para>
+      This chapter is concerned with installing Codestriker on your
+      system.  This requires the following steps:
+      <itemizedlist>
+        <listitem><para>Creating the Codestriker database;</para></listitem>
+        <listitem><para>Configuring the webserver; and</para></listitem>
+        <listitem>
+	  <para>Unpacking and configuring Codestriker.</para>
+	</listitem>
+      </itemizedlist>             
+    </para>
+
+    <sect1>
+      <title>Codestriker database creation</title>
+      <para>
+        Codestriker stores all code review topics and comments into a
+        relational database.  Currently, MySQL and PostgreSQL are
+        supported, but any database system can be used provided it has
+        an implementation of Perl's DBI interface.
+      </para>
+      <sect2>
+        <title>Using MySQL</title>
+	<para>
+	  MySQL can be used on either *NIX or Window platforms.  It is
+	  available for download from
+	  <ulink
+	  url="http://www.mysql.com">http://www.mysql.com</ulink>.
+	  For Linux RedHat distributions, the necessary packages
+	  required are mysql mysql-devel, mysql-server, which may or
+	  may not already be present on your system.  Depending on
+	  your *NIX distribution, starting mysql will be something
+	  like the following:
+	  <programlisting>
+/etc/rc.d/init.d/mysql start
+          </programlisting>
+	  For Windows, there will typically be a desktop icon or menu
+	  shortcut for starting mysqld.
+	</para>
+	<para>
+	  Once mysql is running, it is necessary to create the
+	  codestriker database and create the codestriker user.  Under
+	  *NIX, a command like the following will be required:
+	  <programlisting>
+% mysql -u root mysql
+          </programlisting>
+          For Windows, there should be a shortcut available for
+          getting a mysql prompt.
+	</para>
+	<para>
+	  At the mysql prompt, issue the following command, but
+	  substitute a suitable database password instead of cspasswd
+	  as shown here.
+	  <programlisting>
+CREATE DATABASE codestrikerdb;
+
+GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
+
+FLUSH PRIVILEGES;
+
+QUIT
+          </programlisting>
+	 </para>
+	 <para>
+	   You can check the Codestriker database at any time from the
+	   command line, by issuing the following command, and
+	   entering the database password:
+	  <programlisting>
+mysql -u codestriker -D codestrikerdb -p
+          </programlisting>
+	 </para>
+	 <para>
+	   If required, the Codestriker database can be dropped, by
+	   entering in the following command at the mysql command
+	   prompt as user root:
+	  <programlisting>
+DROP DATABASE codestrikerdb;
+          </programlisting>
+	 </para>
+      </sect2>
+      <sect2>
+        <title>Using PostgreSQL</title>
+	<para>
+	  At the time of writing PostgreSQL was only available for
+	  *NIX platforms, however it is quite possible by the time you
+	  are reading this that a version for Windows is available.
+	  The project page for PostgreSQL is:
+	  <ulink
+	  url="http://www.postgresql.org">http://www.postgresql.org</ulink>.
+	  For Linux RedHat distributions, the postgresql,
+	  postgresql-server and postgresql-devel packages are
+	  required.  Make sure you are using at least version 7.1, as
+	  prior versions had restrictions on the size of "text"
+	  fields, making it impractical for use with Codestriker.
+	  PostgreSQL can be started with a command like:
+	  <programlisting>
+/etc/rc.d/init.d/postgresql start
+          </programlisting>
+	</para>
+	<para>
+	  To create the Codestriker database and user, enter the
+	  following commands:
+	  <programlisting>
+% createuser --username=postgres -d -A codestriker
+% createdb --username=codestriker codestrikerdb
+          </programlisting>
+	</para>
+	<para>
+	  Make sure your <filename>pg_hba.conf</filename> file is
+	  suitable configurated, in particular for authentication.
+	  This file is often located in
+	  <filename>/etc/postgres</filename>.
+	</para>
+	<para>
+	  You can check the Codestriker database interactively at any
+	  time with the following command:
+	  <programlisting>
+% psql -U codestriker codestrikerdb
+          </programlisting>
+	</para>
+	 <para>
+	   If required, the Codestriker database can be dropped, by
+	   entering in the following command:
+	  <programlisting>
+% dropdb --username=codestriker codestrikerdb
+          </programlisting>
+	 </para>
+      </sect2>
+      <sect2>
+        <title>Other Databases</title>
+	<para>
+	  Codestriker is written using the Perl DBI package, which
+	  makes it portable for use between different databases.
+	  Apart from the specifics of creating the database and
+	  starting it, Codestriekr should work without change for
+	  other databases.
+	</para>
+      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>Webserver configuration</title>
+      <sect2>
+        <title>CGI Script</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Apache 1.X mod_perl</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Apache 2.X mod_perl</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Other Webservers</title>
+	<para></para>
+      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>Configuration</title>
+      <sect2>
+        <title>Codestriker Database</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Source Code Management Systems</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Email</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Bug-Tracking Integration</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>LXR Integration</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Compression</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Deployment Options</title>
+	<para></para>
+      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>Running checksetup.pl</title>
+      <para>
+      </para>
+    </sect1>
+
+  </chapter>
+
+  <chapter>
+    <title>User's Guide</title>
+    <sect1>
+      <title>Topic List Screen</title>
+      <para></para>
+    </sect1>
+    <sect1>
+      <title>Creating a new Project</title>
+      <para></para>
+    </sect1>
+    <sect1>
+      <title>Creating a new Topic</title>
+      <sect2>
+	<title>Creating CVS Diff Topics</title>
+	<para></para>
+      </sect2>
+      <sect2>
+        <title>Creating Patch Topics</title>
+	<para></para>
+      </sect2>
+      <sect2>
+	<title>Creating Subversion Diff Topics</title>
+	<para></para>
+      </sect2>
+    </sect1>
+    <sect1>
+      <title>Reviewing Topics</title>
+      <sect2>
+	<title>Viewing the Topic</title>
+	<para></para>
+      </sect2>
+      <sect2>
+	<title>Adding a Comment</title>
+	<para></para>
+      </sect2>
+      <sect2>
+	<title>Viewing Complete old/new Files</title>
+	<para></para>
+      </sect2>
+    </sect1>
+    <sect1>
+      <title>Viewing Comments</title>
+      <para></para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Hacking</title>
+    <sect1>
+      <title>Codestriker Layout</title>
+      <para></para>
+    </sect1>
+    <sect1>
+      <title>Database Schema</title>
+      <para></para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Troubleshooting</title>
+    <para></para>
+  </chapter>
+
+  <chapter>
+    <title>Future Plans</title>
+    <para></para>
+  </chapter>
+
+  <chapter>
+    <title>Contact Details</title>
+    <para></para>
+  </chapter>
+      
+</book>
