@@ -132,7 +132,7 @@ sub process($) {
     # otherwise.
     # Note topic_file is forced to be a string to get the filename (and
     # not have any confusion with the file object).  CGI.pm weirdness.
-    if ( defined $query->param('topic_file')) {
+    if (defined $query->param('topic_file')) {
 	$self->{fh_filename} = "" . $query->param('topic_file');
     }
     else {
@@ -140,11 +140,18 @@ sub process($) {
     }
     $self->{fh} = $query->upload('topic_file');
     $self->{fh_mime_type} = 'text/plain';
-    if (defined $self->{fh_filename} &&
-	defined $query->uploadInfo($self->{fh_filename})) {
-	$self->{fh_mime_type} =
-	    $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
-    }
+
+# This code doesn't work, it produces a warning like:
+#
+# Use of uninitialized value in hash element at (eval 34) line 3.
+#
+# Since mime-types aren't used yet, this code is skipped for now.
+#
+#    if ((defined $self->{fh_filename})) {
+#	(defined $query->uploadInfo($query->param('topic_file'))) {
+#	$self->{fh_mime_type} =
+#	    $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
+#    }
 
     # Set parameter values from the cookie if they are not set.
     $self->_set_property_from_cookie('context', $DEFAULT_CONTEXT);

@@ -92,11 +92,6 @@ Change state: &nbsp;
     </tr>
    </table>
 
-   [% IF delete_enabled != 0 %]
-   <input type="submit" name="button" value="Delete topics"
-     onclick="return confirm('Are you sure you want to delete these topics?')">
-   [% END %]
-
 </FORM>
 
 [% PROCESS trailer.html.tmpl %]

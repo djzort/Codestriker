@@ -91,9 +91,6 @@ sub process($$$) {
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 
-    # Indicate if deletes are enabled in the system.
-    $vars->{'delete_enabled'} = $Codestriker::allow_delete;
-
     # Indicate if bug db integration is enabled.
     $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
 

@@ -15,6 +15,22 @@ The following changes below were from Jason Remillard
 * Turned off more project-specific display that should be hidden when
   projects are not enabled.
 
+* Delete topic button moved to topic state option on view topic
+  screen.
+
+* List comments page modified so that it is now possible to filter by
+  user and/or comment state.  It is also possible to show the context
+  text associated with each comment.  This page can now be used as a
+  form of a printable report, suitable for code inspection meetings.
+
+* Configuration option $allow_comment_email (default true) which
+  indicates if an email is sent for each comment made.  If the Cc
+  field in the add comment page is filled, an email will be sent to
+  that address regardless.
+
+* The default page shown by Codestriker is the list of open topics,
+  rather than all topics in the system.
+
 Version 1.7.4
 
 * Major documentation rewrite.  All documentation (installation/user

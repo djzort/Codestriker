@@ -22,24 +22,22 @@ sub process($$$) {
 
     # Check that the appropriate fields have been filled in.
     my $topic = $http_input->get('topic');
-    my $button = $http_input->get('button');
     my $mode = $http_input->get('mode');
     my $version = $http_input->get('version');
     my $topic_state = $http_input->get('topic_state');
     my $email = $http_input->get('email');
 
     # Check if this action is allowed.
-    if ($Codestriker::allow_delete == 0 && $button eq "Delete") {
+    if ($Codestriker::allow_delete == 0 && $topic_state eq "Delete") {
 	$http_response->error("This function has been disabled");
     }
 
-    my $state = ($button eq "Delete") ? "Delete" : $topic_state;
-    my $rc = $type->change_state($query, $topic, $state, $version, $email);
+    my $rc = $type->change_state($query, $topic, $topic_state, $version, $email);
 
     # Set the feedback message to the user.
     my $feedback = "";
     if ($rc == $Codestriker::OK) {
-	if ($button eq "Delete") {
+	if ($topic_state eq "Delete") {
 	    $feedback = "Topic has been deleted.";
 	} else {
 	    $feedback = "Topic state updated.";
@@ -53,7 +51,7 @@ sub process($$$) {
     # Direct control to the appropriate action class, depending on the result
     # of the above operation, and what screens are enabled.
     $http_input->{feedback} = $feedback;
-    if ($rc == $Codestriker::INVALID_TOPIC || $button eq "Delete") {
+    if ($rc == $Codestriker::INVALID_TOPIC || $topic_state eq "Delete") {
 	if ($Codestriker::allow_searchlist) {
 	    # Go to the topic list screen for just open topics.
 	    $http_input->{sstate} = "0";

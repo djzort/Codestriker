@@ -26,16 +26,12 @@ sub process($$$) {
 
     my $topic_state = $http_input->get('topic_state');
     my $email = $http_input->get('email');
-    my $button = $http_input->get('button');
 
-    # Check if this action is allowed.
-    if ($Codestriker::allow_delete == 0 && $button eq "Delete topics") {
+    # The main topic list page does not allow deletes, so block this out.
+    if ($topic_state eq "Delete") {
 	$http_response->error("This function has been disabled");
     }
     
-    # Determine the "state" to change the group of topics to.
-    my $change_state = ($button eq "Delete topics") ? "Delete" : $topic_state;
-
     # Any feedback messages to the user.
     my $feedback = "";
 
@@ -55,7 +51,7 @@ sub process($$$) {
 	# Change the topic state.
 	my $rc =
 	    Codestriker::Action::ChangeTopicState->change_state($query, $topic,
-								$change_state,
+								$topic_state,
 								$version,
 								$email);
 
