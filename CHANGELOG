@@ -1,3 +1,14 @@
+Version 1.4.5:
+
+* Fix bug in popup parallel coloured-diff mode where the anchor names
+  weren't being generated properly, resulting in some browsers not
+  centering their view in the correct place.
+
+* Fixed bug in pop parallel coloured-diff mode where changes right at
+  the end of the file weren't rendered.
+
+* Support for parsing files generated with diff -b.
+
 Version 1.4.4:
 
 * Made the CVS file data retrieve command expanded within an eval for

@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.4.4
+# pre-Version 1.4.5
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -406,7 +406,7 @@ sub untaint_digits($$) {
 			 "you naughty boy.");
 	}
     } else {
-	return $value;
+	return "";
     }
 }
 
@@ -422,7 +422,7 @@ sub untaint_filename($) {
 	    error_return("Invalid filename \"$filename\" - you naughty boy.");
 	}
     } else {
-	return $filename;
+	return "";
     }
 }
 
@@ -437,7 +437,7 @@ sub untaint_revision($) {
 	    error_return("Invalid revision \"$revision\" - you naught boy.");
 	}
     } else {
-	return $revision;
+	return "";
     }
 }
 	    
@@ -452,7 +452,7 @@ sub untaint_email($) {
 	    error_return("Invalid email \"$email\" - you naughty boy.");
 	}
     } else {
-	return $email;
+	return "";
     }
 }
 
@@ -467,7 +467,7 @@ sub untaint_emails($) {
 	    error_return("Invalid email list \"$emails\" - you naughty boy.");
 	}
     } else {
-	return $emails;
+	return "";
     }
 }
 
@@ -482,7 +482,7 @@ sub untaint_bug_ids($) {
 	    error_return("Invalid bug ids \"$bug_ids\" - you naught boy.");
 	}
     } else {
-	return $bug_ids;
+	return "";
     }
 }
 
@@ -1562,7 +1562,8 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 		render_linenumber($leftline, $offset, $left_prefix, $topic,
 				  $mode, $parallel);
 	    my $rendered_right_linenumber =
-		($leftline == $rightline) ? $rendered_left_linenumber :
+		($leftline == $rightline && !$parallel) ?
+		$rendered_left_linenumber :
 		render_linenumber($rightline, $offset, $right_prefix, $topic,
 				  $mode, $parallel);
 
@@ -2162,6 +2163,7 @@ sub process_document($) {
     for (my $diff_number = 0;
 	 read_diff_header(\*DOCUMENT, \$offset, \$filename, \$revision, $line);
 	 $diff_number++) {
+
 	# The filehandle is now positioned in the interesting part of the
 	# file.
 	push @filenames, $filename;
@@ -2196,85 +2198,96 @@ sub process_document($) {
 sub read_diff_header($$$$$) {
     my ($fh, $offset, $filename, $revision, $line) = @_;
 
-    # read any ? lines, denoting unknown files to CVS.
-    while ($line =~ /^\?/o) {
-	$line = <$fh>;
-	$$offset++;
-    }
-    return 0 unless defined $line;
+    # Note we only iterate while handling empty diff blocks.
+    while (1) {
 
-    # For CVS diffs, the Index line is next.
-    if ($line =~ /^Index:/o) {
+	# read any ? lines, denoting unknown files to CVS.
+	while ($line =~ /^\?/o) {
+	    $line = <$fh>;
+	    $$offset++;
+	}
+	return 0 unless defined $line;
+	
+	# For CVS diffs, the Index line is next.
+	if ($line =~ /^Index:/o) {
+	    $line = <$fh>;
+	    return 0 unless defined $line;
+	    $$offset++;
+	}
+	
+	# Then we expect the separator line, for CVS diffs.
+	if ($line =~ /^===================================================================$/) {
+	    $line = <$fh>;
+	    return 0 unless defined $line;
+	    $$offset++;
+	}
+	
+	# Now we expect the RCS line, whose filename should include the CVS
+	# repository, and if not, it is probably a new file.  if there is no
+	# such line, we could still be dealing with an ordinary patch file.
+	my $cvs_diff = 0;
+	if ($line =~ /^RCS file: $cvsrep\/(.*),v$/) {
+	    $$filename = $1;
+	    $line = <$fh>;
+	    return 0 unless defined $line;
+	    $$offset++;
+	    $cvs_diff = 1;
+	} elsif ($line =~ /^RCS file: (.*)$/o) {
+	    $$filename = $1;
+	    $line = <$fh>;
+	    return 0 unless defined $line;
+	    $$offset++;
+	    $cvs_diff = 1;
+	}
+	
+	# Now we expect the retrieving revision line, unless it is a new or
+	# removed file.
+	if ($line =~ /^retrieving revision (.*)$/o) {
+	    $$revision = $1;
+	    $line = <$fh>;
+	    return 0 unless defined $line;
+	    $$offset++;
+	}
+	
+	# Now read in the diff line, followed by the legend lines.  If this is
+	# not present, then we know we aren't dealing with a diff file of any
+	# kind.
+	return 0 unless $line =~ /^diff/o;
 	$line = <$fh>;
 	return 0 unless defined $line;
 	$$offset++;
-    }
-    
-    # Then we expect the separator line, for CVS diffs.
-    if ($line =~ /^===================================================================$/) {
+
+	# If the diff is empty (since we may have used the -b flag), continue
+	# processing the next diff header back around this loop.  Note this is
+	# only an issue with cvs diffs.  Ordinary diffs just don't include
+	# a diff section if it is blank.
+	next if ($line =~ /^Index:/o);
+
+	if ($line =~ /^\-\-\- \/dev\/null/o) {
+	    # File has been added.
+	    $$revision = $ADDED_REVISION;
+	} elsif ($cvs_diff == 0 &&
+		 $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o) {
+	    $$filename = $1;
+	    $$revision = $PATCH_REVISION;
+	} elsif (! $line =~ /^\-\-\-/o) {
+	    return 0;
+	}
+	
 	$line = <$fh>;
 	return 0 unless defined $line;
 	$$offset++;
+	if ($line =~ /^\+\+\+ \/dev\/null/o) {
+	    # File has been removed.
+	    $$revision = $REMOVED_REVISION;
+	} elsif (! $line =~ /^\+\+\+/o) {
+	    return 0;
+	}
+	
+	# Now up to the line chunks, so the diff header has been successfully
+	# read.
+	return 1;
     }
-
-    # Now we expect the RCS line, whose filename should include the CVS
-    # repository, and if not, it is probably a new file.  if there is no such
-    # line, we could still be dealing with an ordinary patch file.
-    my $cvs_diff = 0;
-    if ($line =~ /^RCS file: $cvsrep\/(.*),v$/) {
-	$$filename = $1;
-	$line = <$fh>;
-	return 0 unless defined $line;
-	$$offset++;
-	$cvs_diff = 1;
-    } elsif ($line =~ /^RCS file: (.*)$/o) {
-	$$filename = $1;
-	$line = <$fh>;
-	return 0 unless defined $line;
-	$$offset++;
-	$cvs_diff = 1;
-    }
-
-    # Now we expect the retrieving revision line, unless it is a new or
-    # removed file.
-    if ($line =~ /^retrieving revision (.*)$/o) {
-	$$revision = $1;
-	$line = <$fh>;
-	return 0 unless defined $line;
-	$$offset++;
-    }
-    
-    # Now read in the diff line, followed by the legend lines.  If this is
-    # not present, then we know we aren't dealing with a diff file of any
-    # kind.
-    return 0 unless $line =~ /^diff/o;
-    $line = <$fh>;
-    return 0 unless defined $line;
-    $$offset++;
-
-    if ($line =~ /^\-\-\- \/dev\/null/o) {
-	# File has been added.
-	$$revision = $ADDED_REVISION;
-    } elsif ($cvs_diff == 0 &&
-	     $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o) {
-	$$filename = $1;
-	$$revision = $PATCH_REVISION;
-    } elsif (! $line =~ /^\-\-\-/o) {
-	return 0;
-    }
-
-    $line = <$fh>;
-    return 0 unless defined $line;
-    $$offset++;
-    if ($line =~ /^\+\+\+ \/dev\/null/o) {
-	# File has been removed.
-	$$revision = $REMOVED_REVISION;
-    } elsif (! $line =~ /^\+\+\+/o) {
-	return 0;
-    }
-
-    # Now up to the line chunks, so the diff header has been successfully read.
-    return 1;
 }
 
 # Print out a line of data with the specified line number suitably aligned,
@@ -2594,6 +2607,10 @@ sub view_file ($$$$) {
 		flush_monospaced_lines($topic, $new, \$linenumber,
 				       $max_digit_width, $max_line_length,
 				       $parallel, $mode);
+	    }
+	    else {
+		# Flush anything pending.
+		render_changes($topic, $mode, $parallel);
 	    }
 	    last;
 	}
