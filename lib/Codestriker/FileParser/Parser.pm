@@ -20,6 +20,7 @@ use File::Temp qw/ tempfile /;
 use Codestriker::FileParser::CvsUnidiff;
 use Codestriker::FileParser::SubversionDiff;
 use Codestriker::FileParser::PerforceDescribe;
+use Codestriker::FileParser::PerforceDiff;
 use Codestriker::FileParser::VssDiff;
 use Codestriker::FileParser::PatchUnidiff;
 use Codestriker::FileParser::UnknownFormat;
@@ -89,6 +90,15 @@ sub parse ($$$$$) {
 	    @diffs =
 		Codestriker::FileParser::PerforceDescribe->parse($tmpfh,
 								 $repository);
+	}
+
+	# Check if it is a Perforce diff file.
+	if ($#diffs == -1) {
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
+	    @diffs =
+		Codestriker::FileParser::PerforceDiff->parse($tmpfh,
+							     $repository);
 	}
 
 	# Check if it is a VSS diff file.
