@@ -18,6 +18,7 @@ use Codestriker::Repository::CvsWeb;
 use Codestriker::Repository::Subversion;
 use Codestriker::Repository::Perforce;
 use Codestriker::Repository::Vss;
+use Codestriker::Repository::ClearCaseSnapshot;
 
 # Factory method for retrieving a Repository object, given a descriptor.
 sub get ($$) {
@@ -54,6 +55,9 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*vss:(.*)$/i) {
 	# Visual Source Safe (VSS) repository.
 	return Codestriker::Repository::Vss->new($1);
+    } elsif ($repository =~ /^\s*clearcase:(.*)$/i) {
+	# ClearCase Snapshot repository.
+	return Codestriker::Repository::ClearCaseSnapshot->new($1);
     } else {
 	# Unknown repository type.
 	print STDERR "Codestriker: Couldn't match repository: \"$repository\"\n";

@@ -15,8 +15,16 @@ use Codestriker::FileParser::BasicDiffUtils;
 
 # Return the array of filenames, revision number, linenumber and the diff text.
 # Return () if the file can't be parsed, meaning it is in another format.
-sub parse ($$) {
-    my ($type, $fh) = @_;
+sub parse ($$$) {
+    my ($type, $fh, $repository) = @_;
+
+    # Retrieve the repository root, and escape back-slashes in the case of
+    # a Windows CVS repository, as it is used in regular expressions.
+    my $repository_root =
+	(defined $repository) ? $repository->getRoot() : undef;
+    if (defined $repository_root) {
+        $repository_root =~ s/\\/\\\\/g;
+    }
 
     # Array of results found.
     my @result = ();
@@ -24,6 +32,7 @@ sub parse ($$) {
     # The current filename and revision being tracked.
     my $revision = $Codestriker::PATCH_REVISION;
     my $filename = "";
+    my $repmatch = 0;
 
     # Ignore any whitespace at the start of the file.
     my $line = <$fh>;
@@ -46,6 +55,17 @@ sub parse ($$) {
 	    $filename = $1;
 	    $revision = $2;
 
+	    # Check if the filename matches the clear case repository.
+	    # This is very simple for now, but will need to be more
+	    # sophisticated later.
+	    if (defined $repository_root &&
+		$filename =~ /^$repository_root[\/\\](.*)$/) {
+		$filename = $1;
+		$repmatch = 1;
+	    } else {
+		$repmatch = 0;
+	    }
+
 	    # Read the next line which is the local file.
 	    $line = <$fh>;
 	    return () unless
@@ -64,7 +84,7 @@ sub parse ($$) {
 	# Read the next diff chunk.
 	my $chunk =
 	    Codestriker::FileParser::BasicDiffUtils->read_diff_text(
-		       $fh, $line, $filename, $revision, 0);
+		       $fh, $line, $filename, $revision, $repmatch);
 	return () unless defined $chunk;
 	push @result, $chunk;
 
