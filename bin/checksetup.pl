@@ -20,6 +20,28 @@
 use strict;
 use Config;
 
+# Now load up the required modules.  Do this is a lazy fashion so that Perl
+# doesn't try to grab this during compile time, otherwise nasty-looking
+# error messages will appear to the user.
+eval("use Cwd");
+eval("use File::Path");
+eval("use lib '../lib'");
+eval("use Codestriker::DB::Database");
+eval("use Codestriker::DB::Column");
+eval("use Codestriker::DB::Table");
+eval("use Codestriker::DB::Index");
+eval("use Codestriker::Action::SubmitComment");
+eval("use Codestriker::Repository::RepositoryFactory");
+eval("use Codestriker::FileParser::Parser");
+eval("use Codestriker::FileParser::UnknownFormat");
+
+# Set this variables, to avoid compilation warnings below.
+$Codestriker::COMMENT_SUBMITTED = 0;
+@Codestriker::valid_repositories = ();
+
+# Initialise Codestriker, load up the configuration file.
+Codestriker->initialise(cwd() . '/..');
+
 # Indicate which modules are required for codestriker (this code is
 # completely stolen more-or-less verbatim from Bugzilla)
 my $modules = [ 
@@ -60,6 +82,10 @@ my $modules = [
         version => '0' 
     } 
 ];
+
+# Retrieve the database module dependency.
+my $database = Codestriker::DB::Database->get_database();
+push @{$modules}, $database->get_module_dependencies();
 
 my %missing = ();
 foreach my $module (@{$modules}) {
@@ -189,33 +215,7 @@ EOF
     exit;
 }
 
-# Now load up the required modules.  Do this is a lazy fashion so that Perl
-# doesn't try to grab this during compile time, otherwise nasty-looking
-# error messages will appear to the user.
-eval("use Cwd");
-eval("use File::Path");
-eval("use lib '../lib'");
-eval("use Codestriker::DB::Database");
-eval("use Codestriker::DB::Column");
-eval("use Codestriker::DB::Table");
-eval("use Codestriker::DB::Index");
-eval("use Codestriker::Action::SubmitComment");
-eval("use Codestriker::Repository::RepositoryFactory");
-eval("use Codestriker::FileParser::Parser");
-eval("use Codestriker::FileParser::UnknownFormat");
-
-use lib '../lib';
-use Codestriker::DB::Database;
-
-# Set this variables, to avoid compilation warnings below.
-$Codestriker::COMMENT_SUBMITTED = 0;
-@Codestriker::valid_repositories = ();
-
-# Initialise Codestriker, load up the configuration file.
-Codestriker->initialise(cwd() . '/..');
-
 # Obtain a database connection.
-my $database = Codestriker::DB::Database->get_database();
 my $dbh = $database->get_connection();
 
 # Convenience methods and variables for creating table objects.

@@ -36,6 +36,11 @@ sub new {
     return bless $self, $type;
 }
 
+# Return the DBD module this is dependent on.
+sub get_module_dependencies {
+    return { name => 'DBD::ODBC', version => '0' };
+}
+
 # Retrieve a database connection.
 sub get_connection {
     my $self = shift;

@@ -3,6 +3,11 @@
 
 Version 1.8.0
 
+* Add more win32 example configuration to codestriker.conf.
+
+* Include the relevant DBD modules in the checksetup.pl dependency
+  list, depending on what database system has been configured.
+
 * Some minor fixes to fully support Win32-based CVS repositories,
   including use of the older-style :local:c:\\cvsrep syntax.  Also be
   more robust in handling directory separators as either forward or

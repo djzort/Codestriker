@@ -424,7 +424,8 @@ $use_compression = 0;
      '/home/sits/cvs',
      'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
      'svn:http://svn.collab.net/repos/svn/trunk',
-     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot'
+     ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
+     'c:/cvsrep'
     );
 	  </programlisting>
 	  This is Perl syntax for a list of string values.  The first
@@ -451,11 +452,15 @@ $use_compression = 0;
 	  is a Subversion repository URL prefixed by "svn:".
 	</para>
 	<para>
-	  The last value which is likely to be common for many
+	  The next value which is likely to be common for many
 	  deployments is an anonymous CVS pserver specification.  The
 	  string is actually in the same form as a CVS pserver URL.
 	  For more information of setting up anonymous pserver access,
 	  please consult the CVS manual.
+	</para>
+	<para>
+	  The final value is an example of a CVS repository located on
+	  a Win32 system.
 	</para>
 	<para>
 	  During a review, it is sometimes beneficial to see the
@@ -800,11 +805,14 @@ $metric_config = "none";
       <title>Running checksetup.pl</title>
       <para>
         The <filename>checksetup.pl</filename> script located in
-        <filename>bin</filename> <emphasis>must</emphasis> be run
+        the <filename>bin</filename> directory <emphasis>must</emphasis> be run
         before Codestriker can be used, or after each upgrade.  There
         is no harm in running it as many times as you like.  The
         purpose of the script is to ensure all of the necessary pieces
-        on your system are installed, and complains if they aren't.
+        on your system are installed, and tells you how to install
+        anything that is missing.  The other purpose of the script is
+        to create the Codestriker database, and perform any necessary
+	data migrations.
       </para>
       <para>
         For Window systems, edit the first line from the files
@@ -827,37 +835,6 @@ $metric_config = "none";
         Perl is available by default for all *NIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
-        Missing Perl modules can be downloaded with the
-        <command>ppm</command> command typed at the command prompt,
-        for Windows, which is the Perl Package Manager.  Installing
-        new Perl modules is easy.  To install the DBI module, simply
-        type in the following at the <command>ppm</command> prompt.
-<programlisting>
-install DBI
-</programlisting>
-        This will retrieve the DBI package and install it on your
-        system.
-      </para>
-      <para>
-        Codestriker requires the following Perl modules in order to
-        run:
-<programlisting>
-LWP::UserAgent
-CGI
-CGI::Carp
-Net::SMTP
-DBI
-IPC::Run
-Template
-HTML::Entities
-File::Temp
-</programlisting>
-      You'll also require <filename>DBD::Pg</filename> for PostgreSQL
-      or <filename>DBD::Mysql</filename> for MySQL, depending on which
-      database you are using.  Its quite possible that you already
-      have all/most of these modules on your system.  Running the
-      <filename>checksetup.pl</filename> script will check this for
-      you automatically.
       </para>
       <para>
         To run <filename>checksetup.pl</filename> under *NIX, do the
@@ -870,14 +847,15 @@ File::Temp
         the command prompt:
 <programlisting>
 % cd c:\codestriker\bin
-% perl checksetup.pl
+% checksetup.pl
 </programlisting>
       </para>
       <para>
-        This will tell you what missing Perl modules you have, and
-        will then attempt to try and initialise the Codestriker
-        database.  Make sure your database is running, and that you
-        have the necessary DBD::Pg/DBD::Mysql modules installed.
+        This will tell you what missing Perl modules you have, 
+        and how to install them.  It will then attempt to try and
+        initialise the Codestriker database.  Make sure your
+	Codestriker database has been created and the database
+	system is running, before running this script.
       </para>
     </sect1>
 
