@@ -28,35 +28,36 @@ sub new {
 sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
-    # This not safe under Apache2 with threads, but this will do for now.
-    # Record the current directory, make a temporary directory, issue the
-    # vss command, read the file, remove the directory then continue.
-    my $saved_cwd = cwd();
-    my $tempdir = tempdir();
-    chdir $tempdir || die "Failed to change to directory: \"$tempdir\": $!";
-    
-    my $error_file = "__________error_file.txt";
-    system("\"$Codestriker::vss\" get \"\$\/$filename\" -V$revision " .
-	   "\"-O&${error_file}\"");
-
-    # Now read the data from the file.  Need to get the basename of the file.
-    $filename =~ /\/([^\/]+)$/o;
-    my $basename = $1;
-    open(VSS, $basename) || die "Unable to open file \"$basename\": $!";
-    for (my $i = 1; <VSS>; $i++) {
-	chop;
-	$$content_array_ref[$i] = $_;
+    # Create a temporary directory where all of the temporary files
+    # will be written to.
+    my $tempdir;
+    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
     }
-    close VSS;
+    else {
+	$tempdir = tempdir(CLEANUP => 1);
+    }
 
-    # Delete the two files, and the temporary directory, then chdir back to
-    # where we were.
-    unlink $error_file;
-    unlink $basename;
+    # Retrieve a read-only copy of the file into a temporary
+    # directory.  Make sure the command output is put into
+    # a temporary file, rather than stdout/stderr.
+    my $command_output = "$tempdir\\___output.txt";
+    system("\"$Codestriker::vss\" get \"$filename\"" .
+	   " -y" . $self->{username} . "," . $self->{password} .
+	   " -VL${revision} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
 
-    # Avoid tainting issues.
-    $saved_cwd =~ /^(.*)$/;
-    chdir $1;
+    $filename =~ /\/([^\/]+)$/o;
+    my $basefilename = $1;
+    if (open(VSS, "$tempdir/$basefilename")) {
+	for (my $i = 1; <VSS>; $i++) {
+	    chop;
+	    $$content_array_ref[$i] = $_;
+	}
+	close VSS;
+	unlink "$tempdir/$basefilename";
+    }
+
+    # Remove the temporary directory.
     rmdir $tempdir;
 }
 
@@ -87,8 +88,9 @@ sub getDiff ($$$$$) {
 
     # Currently we only support either start_tag or end_tag being set.
     my $tag = '';
-    $tag = $end_tag if $start_tag eq '' && $end_tag ne '';
     $tag = $start_tag if $start_tag ne '' && $end_tag eq '';
+    $tag = $end_tag if $start_tag eq '' && $end_tag ne '';
+    $tag = $end_tag if $start_tag ne '' && $end_tag ne '';
     return $Codestriker::UNSUPPORTED_OPERATION if $tag eq '';
 
     # Create a temporary directory where all of the temporary files
@@ -147,35 +149,48 @@ sub getDiff ($$$$$) {
 	}
 	close(VSS);
 	next if $text_type == 0;
-	
-	# Retrieve a read-only copy of the file into a temporary
-	# directory.  Make sure the command output is put into
-	# a temporary file, rather than stdout/stderr.
-	my $command_output = "$tempdir\\___output.txt";
-	system("\"$Codestriker::vss\" get \"$files[$i]\"" .
-	       " -y" . $self->{username} . "," . $self->{password} .
-	       " -VL${tag} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
-	unlink $command_output;
 
-	$files[$i] =~ /\/([^\/]+)$/o;
-	my $basefilename = $1;
-	my @data = ();
-	if (open(VSS, "$tempdir/$basefilename")) {
-	    while (<VSS>) {
-		push @data, $_;
+	my $command_output = "$tempdir\\___output.txt";
+	if ($start_tag ne '' && $end_tag ne '') {
+	    system("\"$Codestriker::vss\" diff \"$files[$i]\"" .
+		   " -y" . $self->{username} . "," . $self->{password} .
+		   " -I- -DU3000 -VL${start_tag}~L${end_tag}" .
+		   " -O\"$command_output\"");
+	    if (open(VSS, $command_output)) {
+		while (<VSS>) {
+		    print $fh $_;
+		}
+		close VSS;
 	    }
-	    close VSS;
-	    unlink "$tempdir/$basefilename";
-	}
-	my $data_size = $#data + 1;
+	} else {
+	    # Retrieve a read-only copy of the file into a temporary
+	    # directory.  Make sure the command output is put into
+	    # a temporary file, rather than stdout/stderr.
+	    system("\"$Codestriker::vss\" get \"$files[$i]\"" .
+		   " -y" . $self->{username} . "," . $self->{password} .
+		   " -VL${tag} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
+
+	    $files[$i] =~ /\/([^\/]+)$/o;
+	    my $basefilename = $1;
+	    my @data = ();
+	    if (open(VSS, "$tempdir/$basefilename")) {
+		while (<VSS>) {
+		    push @data, $_;
+		}
+		close VSS;
+		unlink "$tempdir/$basefilename";
+	    }
+	    my $data_size = $#data + 1;
 	
-	# Output the file header information in VSS diff format.
-	print $fh "Diffing: $files[$i];$versions[$i]\n";
-	print $fh "Against: \n";
-	print $fh "0a1,$data_size\n";
-	for (my $index = 0; $index <= $#data; $index++) {
-	    print $fh "> " . $data[$index];
+	    # Output the file header information in VSS diff format.
+	    print $fh "Diffing: $files[$i];$versions[$i]\n";
+	    print $fh "Against: \n\n";
+	    print $fh "0a1,$data_size\n";
+	    for (my $index = 0; $index <= $#data; $index++) {
+		print $fh "> " . $data[$index];
+	    }
 	}
+	unlink $command_output;
 	print $fh "\n";
     }
 

@@ -36,22 +36,31 @@ sub parse ($$$) {
 
 	# For VSS diffs, the start of the diff block is the "Diffing:" line
 	# which contains the filename and version number.
-	return () unless defined $line && $line =~ /^Diffing: (.*);(\d+)$/o;
+	return () unless defined $line && $line =~ /^Diffing: (.*);(.+)$/o;
 	$filename = $1;
 	$revision = $2;
 
-	# The next line will be the "Against:" line.
+	# The next line will be the "Against:" line, followed by a blank line.
 	$line = <$fh>;
 	return () unless defined $line && $line =~ /^Against:/o;
-
-	# The next part of the diff will be the old style diff format.
 	$line = <$fh>;
-	my $chunk =
-	    Codestriker::FileParser::BasicDiffUtils->read_diff_text(
-		       $fh, $line, $filename, $revision, 1);
+	return () unless defined $line && $line =~ /^\s*$/o;
 
-	return () unless defined $chunk;
-	push @result, $chunk;
+	# The next part of the diff will be the old style diff format, or
+	# possibly "No differences." if there are no differences.
+	$line = <$fh>;
+	if ($line !~ /^No differences\./) {
+	    my $chunk;
+	    do
+	    {
+		$chunk = Codestriker::FileParser::BasicDiffUtils->read_diff_text(
+		       $fh, $line, $filename, $revision, 1);
+		if (defined $chunk) {
+		    push @result, $chunk;
+		    $line = <$fh>;
+		}
+	    } while (defined $chunk);
+	}
 
 	# Read the next line.
 	$line = <$fh>;
