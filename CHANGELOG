@@ -1,3 +1,11 @@
+Version 1.5.3:
+
+* Further integration with Bugzilla.  When a topic is created, or the
+  state is changed, a suitable comment is added to all bugs associated
+  with the topic.  This allows important information to be available
+  within the context of displaying a bug.  Support for other
+  bug-tracking systems should be easy to implement.
+
 Version 1.5.2:
 
 * Fixed minor rendering bug in view single file mode.

@@ -14,6 +14,7 @@ use strict;
 use Codestriker::Model::Topic;
 use Codestriker::Smtp::SendEmail;
 use Codestriker::Http::Render;
+use Codestriker::BugDB::BugDBConnectionFactory;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -105,6 +106,23 @@ sub process($$$) {
     if (!Codestriker::Smtp::SendEmail->doit(1, $topicid, $from, $to, $cc, $bcc,
 					    $subject, $body)) {
 	$http_response->error("Failed to send topic creation email");
+    }
+
+    # If Codestriker is linked to a bug database, and this topic is associated
+    # with some bugs, update them with an appropriate message.
+    if ($bug_ids ne "" && $Codestriker::bug_db ne "") {
+	my $bug_db_connection =
+	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
+	$bug_db_connection->get_connection();
+	my @ids = split /, /, $bug_ids;
+	my $text = "Codestriker topic: $topic_url created.\n" .
+	    "Author: $email\n" .
+	    "Reviewer(s): $reviewers\n" .
+	    "Title: $topic_title\n";
+	for (my $i = 0; $i <= $#ids; $i++) {
+	    $bug_db_connection->update_bug($ids[$i], $text);
+	}
+	$bug_db_connection->release_connection();
     }
 
     # Indicate to the user that the topic has been created and an email has

@@ -18,7 +18,9 @@ use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
 	      $cvsviewer $cvsrep $cvscmd $codestriker_css
 	      $default_topic_create_mode $default_tabwidth
 	      $db $dbuser $dbpasswd
-	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states );
+	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
+	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
+	      );
 
 # Version of Codestriker.
 $Codestriker::VERSION = "1.5.0b1";
