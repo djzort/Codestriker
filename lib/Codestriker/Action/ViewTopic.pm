@@ -267,7 +267,7 @@ sub ProcessTopicHeader($$$) {
     my @project_ids = ($topic->{project_id});
     $vars->{'list_open_topics_in_project_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "", "", "",
-				      "", undef, \@project_ids);
+				      "", [ 0 ], \@project_ids);
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
