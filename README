@@ -129,7 +129,16 @@ For deployments outside an intranet, I would suggest using apache's
 ".htaccess" mechanism to limit access as to who can execute the
 script, as an extra security precaution.
 
+Future plans
 ------------
+
+Codestriker 1.5 will store its data into a database using DBI.  The
+code will also be restructured into a number of modules.  There will
+eventually be support for performing a number of queries, such as
+"show me all topics I am a reviewer of".  Topics will also have a
+state field, which can be updated.  It should be possible to also be
+able to search over the entire codestriker database for text within
+the description, title and/or comment fields.
 
 Please send your comments to sits@users.sourceforge.net, or visit the
 Codestriker project page: http://sourceforge.net/projects/codestriker.

@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# pre-Version 1.4.5
+# Version 1.4.5
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
