@@ -34,6 +34,9 @@ Version 1.7.2
   replaced by a single $lxr_map variable.  See the codestriker.conf
   file for more details.
 
+* Fixed minor bug where the filename wasn't being properly retrieved
+  from a CVS diff when a binary file was being removed.
+
 Version 1.7.1.2
 
 * Compressed output (see $use_compression in codestriker.conf) is now

@@ -121,7 +121,6 @@ sub parse ($$$) {
 	    $binary = 1;
 	} elsif ($line =~ /^Binary files (.*) and \/dev\/null differ$/o) {
 	    # Binary file has been removed.
-	    $filename = $1;
 	    $revision = $Codestriker::REMOVED_REVISION;
 	    $binary = 1;
 	} elsif ($line =~ /^Binary files .* and (.*) differ$/o) {
