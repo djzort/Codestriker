@@ -42,6 +42,9 @@ Version 1.8.4
   repository, and requires the path to ssh to be specified in the $ssh
   setting.
 
+* If a cookie contains an invalid value (such as the email address),
+  report the error message, but also reset its value in the cookie.
+
 Version 1.8.3
 
 * In the add comment window, clicking on the "increase context" or

@@ -277,7 +277,7 @@ sub _set_property_from_cookie($$$) {
     }
 }
 
-# Untain the specified property, against the expected regular expression.
+# Untaint the specified property, against the expected regular expression.
 sub _untaint($$$) {
     my ($self, $name, $regexp) = @_;
 
@@ -290,6 +290,9 @@ sub _untaint($$$) {
 	    my $error_message = "Input parameter $name has invalid value: " .
 		"\"$value\"";
 	    $self->{http_response}->error($error_message);
+
+	    # Reset the value, so that if it is cookie-based, it gets reset.
+	    $self->{$name} = "";
 	}
     } else {
 	$self->{$name} = "";
