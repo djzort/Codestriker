@@ -3,6 +3,8 @@
 
 Version 1.7.1.1
 
+* Problem for creating new projects for MySQL fixed.
+
 * Minor fix to the untaint code for start tag, end tag and module
   name, to make it accept filename characters.  That way, the module
   argument can be a filename in a CVS repository, rather than a
