@@ -54,7 +54,7 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
-				    $mode, $tabwidth, "", 0);
+				    $mode, $tabwidth, "", 0, 0);
     print $query->h2("Edit topic: $document_title");
     print $query->start_table();
     print $query->Tr($query->td("Author: "),

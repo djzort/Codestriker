@@ -1,3 +1,32 @@
+Version 1.5.5 (if upgrading, make sure you run checksetup.pl, see below):
+
+* Modified database schema for MySQL so that review text is not
+  limited to 64KB, but up to 24MB, by changing certain fields from
+  type "text" to "mediumtext".  PostgreSQL and other databases are not
+  affected.  Simply running checksetup.pl in bin will automatically do the
+  migration for you.  I highly recommend backing up your database with
+  the following command, in case there are problems, which should be
+  something like:
+
+  mysqldump -u codestriker -p --opt codestrikerdb > /tmp/cs.backup.sql
+
+* Don't let IE cache the topic list and edit topic screens.
+
+* Implemented a "delete topic" action.
+
+* Put a "List open topics" link at the top of the view topic screen to
+  easily go to the current list of open topics.
+
+* Don't set the Cc and Reviewer field from the cookie if it hasn't
+  been set in the create topic form.
+
+* Handle patch files where the time stamps are in a different format
+  to the typical CVS diff format.
+
+* After a comment is added, make sure the focus goes back to the
+  window that initiated the add comment action.  This wasn't a
+  problenm for Mozilla, but for other browsers.
+
 Version 1.5.4:
 
 * When the topic state is updated, add a confirmation message to the

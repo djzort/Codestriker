@@ -38,7 +38,7 @@ sub get_query($) {
 # Most of the input parameters are used for storage into the user's cookie.
 sub generate_header($$$$$$$$$$) {
     my ($self, $topic, $topic_title, $email, $reviewers, $cc, $mode,
-	$tabwidth, $load_anchor, $reload) = @_;
+	$tabwidth, $load_anchor, $reload, $cache) = @_;
 
     # If the header has already been generated, do nothing.
     return if ($self->{header_generated});
@@ -97,12 +97,18 @@ sub generate_header($$$$$$$$$$) {
     if ($can_compress &&
 	($has_zlib || ($Codestriker::gzip ne "" &&
 		       open(GZIP, "| $Codestriker::gzip -1 -c")))) {
-	print $query->header(-cookie=>$cookie_obj,
-#			     -expires=>'+1d',
-#			     -cache_control=>'no-store',
-#			     -pragma=>'no-cache'
-			     -content_encoding=>'x-gzip',
-			     -vary=>'Accept-Encoding');
+	if ($cache) {
+	    print $query->header(-cookie=>$cookie_obj,
+				 -content_encoding=>'x-gzip',
+				 -vary=>'Accept-Encoding');
+	} else {
+	    print $query->header(-cookie=>$cookie_obj,
+				 -expires=>'+1d',
+				 -cache_control=>'no-store',
+				 -pragma=>'no-cache'
+				 -content_encoding=>'x-gzip',
+				 -vary=>'Accept-Encoding');
+	}
 
 	# Flush header output, and switch STDOUT to GZIP.
 	$| = 1; $| = 0;
@@ -112,11 +118,14 @@ sub generate_header($$$$$$$$$$) {
 	select(GZIP);
 	$output_compressed = 1;
     } else {
-	print $query->header(-cookie=>$cookie_obj,
-#			     -expires=>'+1d',
-#			     -cache_control=>'no-store',
-#			     -pragma=>'no-cache'
-			     );
+	if ($cache) {
+	    print $query->header(-cookie=>$cookie_obj);
+	} else {
+	    print $query->header(-cookie=>$cookie_obj,
+				 -expires=>'+1d',
+				 -cache_control=>'no-store',
+				 -pragma=>'no-cache');
+	}
     }
 
     my $title = "Codestriker";
@@ -132,31 +141,32 @@ sub generate_header($$$$$$$$$$) {
     #
     # As the old netscapes don't handle it properly.
     my $jscript=<<END;
+    var initiator;
     var windowHandle = '';
 
     function myOpen(url,name) {
 	windowHandle = window.open(url,name,
 				   'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
-	if (windowHandle.opener == null) {
-	    windowHandle.opener = self;
-	}
+	// Indicate who initiated this operation.
+        windowHandle.initiator = self;
+
 	windowHandle.focus();
     }
 
     function gotoAnchor(anchor, reload) {
-	if (anchor == "" || opener == null) return;
+	if (anchor == "" || initiator == null) return;
 
-	var index = opener.location.href.lastIndexOf("#");
+	var index = initiator.location.href.lastIndexOf("#");
 	if (index != -1) {
-	    opener.location.href =
-		opener.location.href.substr(0, index) + "#" + anchor;
+	    initiator.location.href =
+		initiator.location.href.substr(0, index) + "#" + anchor;
 	}
 	else {
-	    opener.location.href += "#" + anchor;
+	    initiator.location.href += "#" + anchor;
 	}
 		
-	if (reload) opener.location.reload(reload);
-	opener.focus();
+	if (reload) initiator.location.reload(reload);
+	initiator.focus();
     }
 END
 

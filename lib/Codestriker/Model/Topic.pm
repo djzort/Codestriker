@@ -383,4 +383,39 @@ sub _add_condition($$$\@\$) {
     return $query;
 }
 
+# Delete the specified topic.
+sub delete($$) {
+    my ($type, $topicid) = @_;
+
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    # Create the prepared statements.
+    my $delete_topic = $dbh->prepare_cached('DELETE FROM topic WHERE id = ?');
+    my $delete_comments =
+	$dbh->prepare_cached('DELETE FROM comment WHERE topicid = ?');
+    my $delete_file =
+	$dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
+    my $delete_participant =
+	$dbh->prepare_cached('DELETE FROM participant WHERE topicid = ?');
+    my $delete_topicbug =
+	$dbh->prepare_cached('DELETE FROM topicbug WHERE topicid = ?');
+
+    my $success = defined $delete_topic && defined $delete_comments &&
+	defined $delete_file && defined $delete_participant &&
+	defined $delete_topicbug;
+    
+    # Now do the deed.
+    $success &&= $delete_topic->execute($topicid);
+    $success &&= $delete_comments->execute($topicid);
+    $success &&= $delete_file->execute($topicid);
+    $success &&= $delete_participant->execute($topicid);
+    $success &&= $delete_topicbug->execute($topicid);
+
+    $success ? $dbh->commit : $dbh->rollback;
+    Codestriker::DB::DBI->release_connection($dbh);
+
+    die $dbh->errstr unless $success;
+}
+
 1;

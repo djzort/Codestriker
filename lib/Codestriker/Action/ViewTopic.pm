@@ -51,15 +51,19 @@ sub process($$$) {
 				      \@comment_date, \%comment_exists);
 
     $http_response->generate_header($topic, $document_title, $email,
-				    "", "", $mode, $tabwidth, "", 0);
+				    "", "", $mode, $tabwidth, "", 0, 1);
     
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Display the "Create a new topic" and "Search" links.
+    # Display the "Create a new topic", "Search" and "Open topics" links.
     my $create_topic_url = $url_builder->create_topic_url();
     my $search_url = $url_builder->search_url();
-    print $query->a({href=>$create_topic_url}, "Create a new topic") . " | ";
+    my @topic_states = (0);
+    my $list_url = $url_builder->list_topics_url("", "", "", "", "", "", "",
+						 "", "", \@topic_states);
+    print $query->a({href=>$create_topic_url}, "Create new topic") . " | ";
+    print $query->a({href=>$list_url}, "List open topics") . " | ";
     print $query->a({href=>$search_url}, "Search") . "\n";
     print $query->p;
 
@@ -111,9 +115,15 @@ sub process($$$) {
 	$query->popup_menu(-name=>'topic_state',
 			   -values=>\@Codestriker::topic_states,
 			   -default=>$topic_state)
-	. $query->submit(-value=>'Update');
+	. $query->submit(-name=>'button', -value=>'Update');
     print $query->Tr($query->td("State: "),
 		     $query->td($state_cell)) . "\n";
+    my $delete_text =
+	"return confirm('Are you sure you want to delete this topic?')";
+    my $delete_button = $query->submit(-name=>'button',
+				       -onClick=>"$delete_text",
+				       -value=>'Delete');
+    print $query->Tr($query->td($delete_button));
     print $query->end_form();
     print $query->end_table(), "\n";
 

@@ -23,7 +23,7 @@ use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.5.0b1";
+$Codestriker::VERSION = "1.5.5";
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

@@ -157,7 +157,7 @@ sub process($$$) {
     # overhead of bringing up a new window is removed.
     my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
     $http_response->generate_header($topic, "Comment submitted", $email, "",
-				    "", "", "", $anchor, $reload);
+				    "", "", "", $anchor, $reload, 0);
     print $query->h2("Comment submitted") . $query->p . "\n";
     print "Topic URL: " . $query->a({href=>"$edit_url"},$edit_url) .
 	$query->p . "\n";

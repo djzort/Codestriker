@@ -11,7 +11,7 @@ package Codestriker::Action::ChangeTopicState;
 
 use strict;
 
-# Attempt to change the topic's state.
+# Attempt to change the topic's state, or to delete it.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
@@ -19,6 +19,7 @@ sub process($$$) {
 
     # Check that the appropriate fields have been filled in.
     my $topic = $http_input->get('topic');
+    my $button = $http_input->get('button');
     my $mode = $http_input->get('mode');
     my $version = $http_input->get('version');
     my $topic_state = $http_input->get('topic_state');
@@ -37,9 +38,13 @@ sub process($$$) {
 				    \$_document_modified_time, \$_topic_state,
 				    \$_version);
     # Update the topic's state.
-    my $timestamp = Codestriker->get_timestamp(time);
-    Codestriker::Model::Topic->change_state($topic, $topic_state, $timestamp,
-					    $version);
+    if ($button eq "Delete") {
+	Codestriker::Model::Topic->delete($topic);
+    } else {
+	my $timestamp = Codestriker->get_timestamp(time);
+	Codestriker::Model::Topic->change_state($topic, $topic_state,
+						$timestamp, $version);
+    }
 
     # If Codestriker is linked to a bug database, and this topic is associated
     # with some bugs, update them with an appropriate message.
@@ -59,11 +64,21 @@ sub process($$$) {
 	$bug_db_connection->release_connection();
     }
 
-    # Redirect the user to the view topic page.
+    # Redirect the user to the view topic page if the topic wasn't deleted,
+    # otherwise go to the list of open topics.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $redirect_url = $url_builder->view_url_extended($topic, -1, $mode,
-						       "", "", $query->url(),
-						       1);
+    my $redirect_url = "";
+    if ($button eq "Delete") {
+	my @topic_states = (0);
+	$redirect_url =
+	    $url_builder->list_topics_url("", "", "", "", "", "", "",
+					  "", "", \@topic_states);
+    } else {
+	$redirect_url =
+	    $url_builder->view_url_extended($topic, -1, $mode, "", "",
+					    $query->url(), 1);
+    }	
+	
     print $query->redirect(-URI=>$redirect_url);
 }
 

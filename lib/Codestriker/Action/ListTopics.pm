@@ -42,7 +42,7 @@ sub process($$$) {
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
-				    0);
+				    0, 0);
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -50,7 +50,7 @@ sub process($$$) {
     # Display the "Create a new topic" and "Search" links.
     my $create_topic_url = $url_builder->create_topic_url();
     my $search_url = $url_builder->search_url();
-    print $query->a({href=>$create_topic_url}, "Create a new topic") . " | ";
+    print $query->a({href=>$create_topic_url}, "Create new topic") . " | ";
     print $query->a({href=>$search_url}, "Search") . "\n";
     print $query->p;
 

@@ -97,8 +97,11 @@ sub list_topics_url ($$$$$$$$$$\@) {
 	($scc ne "" ? "&scc=$scc" : "") .
 	($sbugid ne "" ? "&sbugid=$sbugid" : "") .
 	($stext ne "" ? "&stext=" . CGI::escape($stext) : "") .
-	"&stitle=$stitle&sdescription=$sdescription" .
-	"&scomments=$scomments&sbody=$sbody" .
+	($stitle ne "" ? "&stitle=" . CGI::escape($stitle) : "") .
+	($sdescription ne "" ?
+	 "&sdescription=" . CGI::escape($sdescription) : "") .
+	($scomments ne "" ? "&scomments=" . CGI::escape($scomments) : "") .
+	($sbody ne "" ? "&sbody=" . CGI::escape($sbody) : "") .
 	($sstate ne "" ? "&sstate=$sstate" : "");
 }
 

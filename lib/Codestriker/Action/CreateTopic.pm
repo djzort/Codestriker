@@ -18,7 +18,7 @@ sub process($$$) {
 
     my $query = $http_response->get_query();
     $http_response->generate_header("", "Create new topic", "", "", "", "",
-				    "", "", 0);
+				    "", "", 0, 0);
 
     print $query->h1("Create new topic"), $query->p;
     print $query->start_multipart_form();

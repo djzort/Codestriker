@@ -71,7 +71,7 @@ sub process($$$) {
     my $title = $new == $UrlBuilder::NEW_FILE ?
 	"New $filename" : "$filename v$revision";
     $http_response->generate_header($topic, $title, "", "", "", $mode,
-				    $tabwidth, "", 0);
+				    $tabwidth, "", 0, 1);
 
     my $parallel = ($new == $UrlBuilder::BOTH_FILES) ? 1 : 0;
     my $max_digit_width = length($#cvs_filedata);

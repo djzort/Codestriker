@@ -48,6 +48,7 @@ sub process($) {
     # Retrieve all of the known Codestriker CGI parameters, and check they
     # are valid.
     $self->{action} = $query->param('action');
+    $self->{button} = $query->param('button');
     $self->{topic} = $query->param('topic');
     $self->{line} = $query->param('line');
     $self->{context} = $query->param('context');
@@ -114,8 +115,6 @@ sub process($) {
     $self->_set_property_from_cookie('tabwidth',
 				     $Codestriker::default_tabwidth);
     $self->_set_property_from_cookie('email', "");
-    $self->_set_property_from_cookie('cc', "");
-    $self->_set_property_from_cookie('reviewers', "");
 
     # Untaint the required input.
     $self->_untaint_name('action');
