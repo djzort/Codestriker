@@ -1,10 +1,10 @@
 /* CSS for codestriker */
 
 /* File heading */
-TD.file {background-color: #cccccc; font-family: Helvetica, Arial; font-size: large}
+TD.file {background-color: #cccccc; font-family: Helvetica, Arial; font-size: medium}
 
 /* Line heading */
-TD.line {background-color: #99cccc; font-family: Helvetica, Arial; font-size: large}
+TD.line {background-color: #99cccc; font-family: Helvetica, Arial; font-size: medium}
 
 /* Normal text */
 TD.n {font-family: Helvetica, Arial; font-size: smaller}
