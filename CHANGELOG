@@ -3,8 +3,20 @@
 
 Version 1.8.4
 
-* !!!INITIAL VERSION OF COMMENT METRICS.  DO NOT USE FOR PRODUCTION
-  USE, YET  UNTESTED!!!
+* It is now possible to specify multiple metrics associated with a
+  comment "thread".  In previous versions of Codestriker, there was a
+  configuration variable called @comment_states which had the default
+  values of "Submitted", "Invalid", or "Completed".  These states
+  still exist, but under the metric name "Status" by default.
+
+  Some other example configurations are illustrated in the config
+  file.  For example "Level", "Mode" and "Type" metrics.  These values
+  are then accumulated in the "Topic Information" tab, along with all
+  the other topic metrics.
+
+  Apart from the add/edit comment screen, the topic comments screen
+  allows you to modify any metric associated with any comment thread,
+  via a series of dropdown form elements.
 
 * It is now possible in the create topic screen to only specify a
   single tag and a module name in order to create a new topic, rather
