@@ -3,6 +3,11 @@
 
 Version 1.8.2
 
+* Codestriker can now accept basic diff files (non unidiff and context
+  diff), and also ClearCase serial diffs.  Still need to integrate a
+  ClearCase repository object with this, which should be coming very
+  soon.
+
 * Topic property change emails didn't have the "References" and
   "In-Reply-To" mail headers set correctly, so that those emails
   weren't grouped into the same "topic" email thread.

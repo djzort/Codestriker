@@ -23,6 +23,8 @@ use Codestriker::FileParser::PerforceDescribe;
 use Codestriker::FileParser::PerforceDiff;
 use Codestriker::FileParser::VssDiff;
 use Codestriker::FileParser::PatchUnidiff;
+use Codestriker::FileParser::PatchBasicDiff;
+use Codestriker::FileParser::ClearCaseSerialDiff;
 use Codestriker::FileParser::UnknownFormat;
 
 # Given the content-type and the file handle, try to determine what files,
@@ -117,6 +119,24 @@ sub parse ($$$$$) {
 	    @diffs =
 		Codestriker::FileParser::PatchUnidiff->parse($tmpfh,
 							     $repository);
+	}
+
+	# Check if it is a patch basic file.
+	if ($#diffs == -1) {
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
+	    @diffs =
+		Codestriker::FileParser::PatchBasicDiff->parse($tmpfh,
+							       $uploaded_filename);
+	}
+
+	# Check if it is a ClearCase serial diff file.
+	if ($#diffs == -1) {
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
+	    @diffs =
+		Codestriker::FileParser::ClearCaseSerialDiff->parse($tmpfh,
+								    $repository);
 	}
 
 	# Last stop-gap - the file format is unknown, treat it as a
