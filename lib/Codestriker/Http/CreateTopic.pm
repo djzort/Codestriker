@@ -28,11 +28,11 @@ use IO::Handle;
 #      topic_text => "Here is some text\nHere is some\n\nMore and more...\n"});
 
 sub doit {
-    my ($params) = @_;
+    my ($self, $params) = @_;
 
     # Create a temporary file containing the topic text.
     my ($tempfile_fh, $tempfile_filename) = tempfile();
-    print $tempfile_fh $params->{topic_text};
+    $tempfile_fh->print($params->{topic_text});
     $tempfile_fh->flush;
 
     # Perform the HTTP Post.
@@ -54,7 +54,9 @@ sub doit {
 
     # Indicate if the operation was successful.
     my $content = $response->content;
-    return $content =~ /Topic created/ && $content =~ /Topic URL/;    
+    my $rc = $content =~ /Topic created/ && $content =~ /Topic URL/;
+    print STDERR "Failed to create topic, response: $content\n" if $rc == 0;
+    return $rc;
 }
 
 1;

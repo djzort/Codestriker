@@ -33,6 +33,27 @@ Version 1.8.4
   used from scripts that need to create new topics, for example, from
   a CVS post-commit script.
 
+* Modified custom CVS post-commit scripts so that a Codestriker topic
+  is created for each CVS commit, along with a sent email.  The
+  commit_prep.pl and log_accum.pl are located in the bin directory,
+  and need to be copied into your CVSROOT area, with a line like the
+  following in your commitinfo file:
+
+  DEFAULT $CVSROOT/CVSROOT/commit_prep.pl -r
+
+  and a line like the following in your loginfo file:
+
+  DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
+
+  The log_accum.pl file needs to have some configuration variables set
+  at the start of the script to reflect your site.
+
+  Note the first line of the log message will be used as the topic
+  title.  The entire log message is used as the topic description.
+  Any strings of the form "Bug nnn" in the log message will be taken
+  as a reference to a bug id, and will be used in the topic's bugid
+  field.
+
 Version 1.8.3
 
 * It is now possible to specify multiple metrics associated with a
