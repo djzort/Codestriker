@@ -793,7 +793,7 @@ sub tabadjust ($$$$) {
 
     $_ = $input;
     if ($htmlmode) {
-	1 while s/\t+/'&nbsp' x
+	1 while s/\t+/'&nbsp;' x
 	    (length($&) * $tabwidth - length($`) % $tabwidth)/e;
     }
     else {
