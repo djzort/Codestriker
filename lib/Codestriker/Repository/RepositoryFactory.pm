@@ -11,8 +11,7 @@ package Codestriker::Repository::RepositoryFactory;
 
 use strict;
 
-use Codestriker::Repository::CvsLocal;
-use Codestriker::Repository::CvsPserver;
+use Codestriker::Repository::Cvs;
 use Codestriker::Repository::ViewCvs;
 use Codestriker::Repository::CvsWeb;
 use Codestriker::Repository::Subversion;
@@ -30,16 +29,16 @@ sub get ($$) {
 
     if ($repository =~ /^\s*(\/.*?)\/*\s*$/) {
 	# CVS repository on the local machine.
-	return Codestriker::Repository::CvsLocal->new($1, '');
+	return Codestriker::Repository::Cvs->build_local($1, '');
     } elsif ($repository =~ /^\s*:local:([A-z]:[\\\/].*?)\\*\s*$/) {
       # Windoze "local" CVS repository.
-	return Codestriker::Repository::CvsLocal->new($1, ':local:');
+	return Codestriker::Repository::Cvs->build_local($1, ':local:');
     } elsif ($repository =~ /^\s*([A-z]:[\\\/].*?)\\*\s*$/) {
       # Windoze CVS repository.
-	return Codestriker::Repository::CvsLocal->new($1, '');
+	return Codestriker::Repository::Cvs->build_local($1, '');
     } elsif ($repository =~ /^\s*:pserver(.*):(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Pserver repository.
-	return Codestriker::Repository::CvsPserver->new($1, $2, $3, $4, $5);
+	return Codestriker::Repository::Cvs->build_pserver($1, $2, $3, $4, $5);
     } elsif ($repository =~ /^\s*(https?:\/\/.*viewcvs\.cgi)\/*\s+(.*?)\/*\s*$/i) {
 	# View CVS repository.
 	return Codestriker::Repository::ViewCvs->new($1, $2);

@@ -92,8 +92,16 @@ sub process($$$) {
     $vars->{'rc_ok'} = $Codestriker::OK;
     $vars->{'rc_stale_version'} = $Codestriker::STALE_VERSION;
     $vars->{'rc_invalid_topic'} = $Codestriker::INVALID_TOPIC;
-    
+
+    # Store the bug id information, and any linking URLs.
+    $vars->{'bug_db'} = $Codestriker::bug_db;
     $vars->{'bug_ids'} = $topic->{bug_ids};
+    if (defined $topic->{bug_ids} && $topic->{bug_ids} ne "" &&
+	defined $Codestriker::bugtracker) {
+	my @bug_id_array = split ',', $topic->{bug_ids};
+	$vars->{'bug_id_array'} = \@bug_id_array;
+	$vars->{'bugtracker'} = $Codestriker::bugtracker;
+    }
 
     $vars->{'document_reviewers'} = 
     	Codestriker->filter_email($topic->{reviewers});

@@ -9,6 +9,13 @@ Version 1.8.4
   of a single tag is to create a topic with the full contents of all
   tagged files in the specified module.
 
+* In the "Topic Properties" screen, if the Bug IDs field is being
+  displayed, and $Codestriker::bugtracker is defined, then after this
+  field will be a number of hyperlinks to the associated bug tracking
+  records.
+
+* Refactored CvsPserver and CvsLocal into a single object, Cvs.
+
 Version 1.8.3
 
 * In the add comment window, clicking on the "increase context" or

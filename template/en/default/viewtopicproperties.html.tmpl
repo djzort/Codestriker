@@ -70,12 +70,17 @@ function DeleteTopicConfirm()
   <td>[% document_creation_time | html_entity %]</td>
 </tr>
 
-[% IF bug_ids != '' %]
+[% IF bug_db != '' %]
 <tr class="tt1">
   <td>Bug IDs:</td>
   <td>
     <input type="text" name="bug_ids" value="[% bug_ids %]"
            size="30" maxlength="50">
+    Links:
+    [% FOREACH bug = bug_id_array %]
+        [% IF loop.count() != 1 %], [% END %]
+        <a href="[% bugtracker %][% bug %]">Bug [% bug %]</a>
+    [% END %]
   </td>
 </tr>
 [% END %]

@@ -226,7 +226,7 @@ sub read($$) {
 	}
     }
 
-    # Retrieve the bug relating to this topic.
+    # Retrieve the bug ids relating to this topic.
     my @bugs = ();
     $success &&= $select_bugs->execute($topicid);
     if ($success) {

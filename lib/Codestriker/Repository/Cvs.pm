@@ -1,21 +1,32 @@
 ###############################################################################
-# Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
+# Codestriker: Copyright (c) 2001 - 2004 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
 #
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# CVS repository class with access to a pserver repository.
+# CVS repository class which handles both local and pserver access methods.
 
-package Codestriker::Repository::CvsPserver;
+package Codestriker::Repository::Cvs;
 
 use strict;
 use FileHandle;
 use IPC::Open3;
 
-# Constructor, which takes as a parameter the username, password, hostname
-# and repository path.
-sub new ($$$$$$) {
+# Factory method for creating a local CVS repository object.
+sub build_local {
+    my ($type, $cvsroot, $optional_prefix) = @_;
+
+    my $self = {};
+    $self->{cvsroot} = $cvsroot;
+    $self->{optional_prefix} =
+	defined $optional_prefix ? $optional_prefix : "";
+    $self->{url} = "${optional_prefix}${cvsroot}";
+    bless $self, $type;
+}
+
+# Factory method for creating a pserver CVS repository object.
+sub build_pserver {
     my ($type, $optional_args, $username, $password, $hostname, $cvsroot) = @_;
 
     my $self = {};
@@ -24,16 +35,17 @@ sub new ($$$$$$) {
     $self->{password} = $password;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
-    $self->{url} = ":pserver${optional_args}:${username}:${password}\@${hostname}:${cvsroot}";
+    $self->{url} = ":pserver${optional_args}:${username}:${password}\@" .
+	"${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
 # Retrieve the data corresponding to $filename and $revision.  Store each line
 # into $content_array_ref.
-sub retrieve ($$$\$) {
+sub retrieve {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
-    # Open a pipe to the local CVS repository.
+    # Open a pipe to the CVS repository.
     open(CVS, "\"$Codestriker::cvs\" -q -d \"" . $self->{url} .
 	 "\" co -p -r $revision \"$filename\" |")
 	|| die "Can't open connection to pserver CVS repository: $!";
