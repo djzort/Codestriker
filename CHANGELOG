@@ -3,8 +3,8 @@
 
 Version 1.8.1
 
-* Make sure CvsLocal.pm imports "FileHandle".  Caused compilation
-  errors for some deployments when checksetup.pl was run.
+* Added some missing imports which caused compilation errors for
+  some deployments when checksetup.pl was run.
 
 Version 1.8.0
 

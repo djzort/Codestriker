@@ -26,6 +26,7 @@ use Config;
 eval("use Cwd");
 eval("use File::Path");
 eval("use lib '../lib'");
+eval("use Codestriker");
 eval("use Codestriker::DB::Database");
 eval("use Codestriker::DB::Column");
 eval("use Codestriker::DB::Table");
