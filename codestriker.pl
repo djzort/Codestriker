@@ -784,7 +784,10 @@ sub read_filetable_file($) {
 sub read_cvs_file ($$) {
     my ($filename, $revision) = @_;
 
-    if (! open (CVSFILE, "$cvscmd -r $revision $filename 2>/dev/null |")) {
+    # Expand the CVS command, substituting in the revision and filename.
+    my $command = eval "sprintf(\"$cvscmd\")";
+
+    if (! open (CVSFILE, "$command 2>/dev/null |")) {
 	error_return("Couldn't get CVS data for $filename $revision: $!");
     }
 
