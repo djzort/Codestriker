@@ -287,8 +287,6 @@ sub delta ($$$$$$$$$$) {
 			     $query->td({-class=>$cell_class}, $cell),
 			     "\n");
     	}
-
-        print $query->end_table(), "\n";
     }
 }
 
@@ -310,7 +308,8 @@ sub delta_file_header ($$$$) {
     # Url to the table of contents on the same page.
     my $contents_url =
 	$self->{url_builder}->view_url($self->{topic}, -1,
-				       $self->{mode}, $self->{brmode}, $self->{fview})
+				       $self->{mode}, $self->{brmode},
+				       $self->{fview})
                                        . "#contents";
 				       
     # Variables to store the navigation Urls.	
@@ -341,16 +340,19 @@ sub delta_file_header ($$$$) {
     $fwd_index = ($cfi+1 > $#$filenames ? -1 : $cfi+1);
     $bwd_index = ($cfi-1 < 0 ? -1 : $cfi-1);
 	
-    # Build the urls for next and previous file. Differ through $vmode between all and single file review.
+    # Build the urls for next and previous file. Differ through $vmode
+    # between all and single file review.
     if ($fwd_index != -1) {
 	$fwd_url = $self->{url_builder}->view_url($self->{topic}, -1,
-						  $self->{mode}, $self->{brmode},
+						  $self->{mode},
+						  $self->{brmode},
 						  $vmode == -1 ? -1 : $fwd_index)
                                  	          . "#$$filenames[$fwd_index]";
     }
     if ($bwd_index != -1) {
 	$bwd_url = $self->{url_builder}->view_url($self->{topic}, -1,
-						  $self->{mode}, $self->{brmode},
+						  $self->{mode},
+						  $self->{brmode},
 						  $vmode == -1 ? -1 : $bwd_index)
 		                                  . "#$$filenames[$bwd_index]";
     }
@@ -390,7 +392,6 @@ sub delta_file_header ($$$$) {
 	# the previous and next file (<<, >>).
 	
 	print $query->Tr($cell,     # = file header     
-		
 		         $query->td({-class=>'file', align=>'right'},
 				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
 			            $query->a({href=>$contents_url},"[Top]"),
@@ -400,7 +401,6 @@ sub delta_file_header ($$$$) {
 	print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
 				    "File ",
 				    $query->a({name=>$filename},$filename)),
-                                    
 			 $query->td({-class=>'file', align=>'right'},
 				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
 				    $query->a({href=>$contents_url},"[Top]"),
@@ -869,8 +869,10 @@ sub _coloured_mode_start($) {
     my $mode = $self->{mode};
     my $brmode = $self->{brmode};
     my $fview = $self->{fview};
-    my $display_all_url = $self->{url_builder}->view_url($topic, -1, $mode, $brmode, -1);
-    my $display_single_url = $self->{url_builder}->view_url($topic, -1, $mode, $brmode, 0);
+    my $display_all_url =
+	$self->{url_builder}->view_url($topic, -1, $mode, $brmode, -1);
+    my $display_single_url =
+	$self->{url_builder}->view_url($topic, -1, $mode, $brmode, 0);
 
     
     # Print out the "table of contents".
@@ -886,13 +888,15 @@ sub _coloured_mode_start($) {
     # Include a link to view all files in a topic, if we are in single
     # display mode.
     if ($fview != -1) {
-    	print $query->Tr($query->td($query->a({name=>"contents"}, "Files in Topic: ("),
+    	print $query->Tr($query->td($query->a({name=>"contents"},
+					      "Files in Topic: ("),
 				    $query->a({href=>$display_all_url},
 					      "view all files"), ")"),
 			 $query->td("&nbsp;")), "\n";
     }
     else {
-	print $query->Tr($query->td($query->a({name=>"contents"}, "Files in Topic:")),
+	print $query->Tr($query->td($query->a({name=>"contents"},
+					      "Files in Topic:")),
 			 $query->td("&nbsp;")), "\n";
     }
     
@@ -900,9 +904,11 @@ sub _coloured_mode_start($) {
     for (my $i = 0; $i <= $#$filenames; $i++) {
 	my $filename = $$filenames[$i];
 	my $revision = $$revisions[$i];
-	my $href_filename = $url_builder->view_url($topic, -1, $mode, $brmode, $i) .
+	my $href_filename =
+	    $url_builder->view_url($topic, -1, $mode, $brmode, $i) .
 	    "#" . "$filename";
-	my $anchor_filename = $url_builder->view_url($topic, -1, $mode, $brmode, -1) .
+	my $anchor_filename =
+	    $url_builder->view_url($topic, -1, $mode, $brmode, -1) .
 	    "#" . "$filename";
 	my $tddata = $$binaries[$i] ? $filename :
 	    $query->a({href=>$href_filename}, "$filename");
