@@ -1,0 +1,6 @@
+
+Property changes on: createQABranch.py
+___________________________________________________________________
+Name: svn:eol-stlye
+   + native
+

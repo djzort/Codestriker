@@ -1,0 +1,37 @@
+Index: parseBuildLogs
+===================================================================
+--- parseBuildLogs	(revision 7)
++++ parseBuildLogs	(revision 9)
+@@ -9,10 +9,6 @@
+     if [[ "${MYHOSTNAME}" == "compaq" ]]; then
+         DATABASEHOST="elmo";
+         XMLDIR="$HOME/downloads/cruise-xml"
+-    else
+-        DATABASEHOST="webdev2";
+-        XMLDIR="/export/home/buildmaster/cruisecontrol/logs"
+-    fi
+ fi
+ 
+ if [ -x "/usr/bin/python2" ]; then
+
+Property changes on: createQABranch.py
+___________________________________________________________________
+Name: copyright
+   + (c) 2004 Levy Consulting Inc.
+
+Index: buildCleanup.py
+===================================================================
+--- buildCleanup.py	(revision 7)
++++ buildCleanup.py	(revision 9)
+@@ -28,11 +28,7 @@
+ #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
+ #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
+ 
+-    GCOMDirectories = [ 'testdata/branches/GCOM' ]
+-    EPRODirectories = [ 'testdata/branches/EPRODATA' ]
+     
+-    activeGraingerBuild = database.getActiveBuild("PRD", "gcom")
+-    activeEPROBuild = database.getActiveBuild("PRD", "eprodata")
+ 
+     print activeGraingerBuild.getBranchIdentifier()
+     print activeEPROBuild.getBranchIdentifier()

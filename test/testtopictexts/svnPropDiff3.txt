@@ -1,0 +1,8 @@
+
+Property changes on: createQABranch.py
+___________________________________________________________________
+Name: copyright
+   + (c) 2004 Levy Consulting Inc.
+Name: svn:eol-stlye
+   + native
+
