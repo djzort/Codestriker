@@ -39,12 +39,32 @@ sub parse ($$$) {
 	return @result unless defined $line;
 
 	# For SVN diffs, the start of the diff block is the Index line.
-	return () unless defined $line && $line =~ /^Index: (.*)$/o;
+	# Also check for presence of property set blocks.
+	while ($line =~ /^Property changes on: .*$/o) {
+	    $line = <$fh>;
+	    return () unless defined $line &&
+		$line =~ /^___________________________________________________________________$/o;
+	    
+	    # Keep reading until we either get to an Index: line, a property
+	    # block, or the end of file.
+	    while (defined $line &&
+		   $line !~ /^Index:/o &&
+		   $line !~ /^Property changes on:/o) {
+		$line = <$fh>;
+	    }
+	    
+	    if (! defined $line) {
+		# End of file has been reached, return what we have parsed.
+		return @result;
+	    }
+	}
+
+	return () unless $line =~ /^Index: (.*)$/o;
 	$filename = $1;
 	$line = <$fh>;
 
 	# The separator line appears next.
-	return () unless defined $line && $line =~ /^===================================================================$/;
+	return () unless defined $line && $line =~ /^===================================================================$/o;
 	$line = <$fh>;
 
 	# Check if the delta represents a binary file.

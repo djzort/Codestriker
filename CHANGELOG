@@ -68,6 +68,9 @@ Version 1.8.3
 * Perforce integration has been improved to work with older versions
   of p4.
 
+* The subversion diff parser can now handle diffs which contain
+  property set changes.
+
 * Make sure topics are linked to the default hidden project when
   $allow_projects is set to 0.  This allows the "topic properties"
   screen to work correctly.
