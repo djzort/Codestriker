@@ -38,6 +38,7 @@ sub process($$$) {
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
+    my $project_name = $http_input->get('project_name');
     my $start_tag = $http_input->get('start_tag');
     my $end_tag = $http_input->get('end_tag');
     my $module = $http_input->get('module');
@@ -124,7 +125,9 @@ sub process($$$) {
     my @projects = Codestriker::Model::Project->list();
     my $found_project = 0;
     foreach my $project (@projects) {
-        if ($project->{id} == $projectid) {
+        if ((defined $projectid && $project->{id} == $projectid) ||
+	    (defined $project_name && $project->{name} eq $project_name)) {
+	    $projectid = $project->{id};
             $found_project = 1;
             last;
         }
