@@ -1,7 +1,10 @@
 Version 1.5.7
 
 * Set the attachment field in the HTTP header when downloading the
-  topic text, to make IE happier.
+  topic text, to make IE happier, as it has a filename topicXXXX.txt
+  identified with the text.
+
+* Handle CVS diffs which have whitespace at the start of the review.
 
 Version 1.5.6
 

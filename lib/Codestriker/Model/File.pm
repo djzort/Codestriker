@@ -142,7 +142,8 @@ sub _read_diff_header($$$$$$) {
 	my $line = $$doc_array_ref[$$offset++];
 
 	# Read any ? lines, denoting unknown files to CVS.
-	while ($line =~ /^\?/o) {
+	# Also remove any blank lines.
+	while ($line =~ /^\?/o || $line =~ /^\s*$/) {
 	    $line = $$doc_array_ref[$$offset++];
 	}
 	return 0 unless defined $line;
