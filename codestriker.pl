@@ -38,6 +38,16 @@ $datadir= "/var/www/codestriker";
 # Location of sendmail.
 $sendmail = "/usr/lib/sendmail";
 
+# The URL to the bug tracking system.  The bug number is appended to the
+# end of this string when URLs are generated.
+$bugtracker = "";
+#$bugtracker = "http://localhost.localdomain/show_bug.cgi?num=";
+
+# The URL to the CVS viewing system.  The filename is appended to the end
+# of this string when URLs are generated.
+$cvsviewer = "";
+#$cvsviewer = "http://localhost.localdomain/cgi-bin/cvsweb.cgi/";
+
 # How the CVS repository is accessed.  For local access, this is set as the
 # empty string.
 #$cvsaccess = ":ext:sits\@cvs.cvsplot.sourceforge.net:";
@@ -99,9 +109,6 @@ $context = 2;
 # Default context width for email display.
 $email_context = 8;
 
-# Default context width when viewing cvs files.
-$diff_context = 14;
-
 # Separator to use in email.
 $email_hr = "--------------------------------------------------------------";
 
@@ -129,6 +136,9 @@ $filetable_file = "filetable";
 # The document title.
 $document_title = "";
 
+# The associated document bug number.
+$document_bug_number = "";
+
 # The document description.
 @document_description = ();
 
@@ -140,6 +150,9 @@ $document_cc = "";
 
 # The document author.
 $document_author = "";
+
+# When the document was created.
+$document_creation_time = "";
 
 # Indicates if a comment exists for a specific linenumber.
 %comment_exists = ();
@@ -155,6 +168,18 @@ $document_author = "";
 
 # Indexed by comment number.  Contains the comment date.
 @comment_date = ();
+
+# Indexed by filenumber.  Contains the name of the file.
+@filetable_filename = ();
+
+# Indexed by filenumber.  Contains the revision of the file.
+@filetable_revision = ();
+
+# Indexed by filenumber.  Contains the topic line number offset for the file.
+@filetable_offset = ();
+
+# The cvs document data read.
+@cvs_filedata = ();
 
 # Record if the HTML header has been generated yet or not.
 $header_generated_record = 0;
@@ -176,6 +201,13 @@ $diff_current_filename = "";
 # The corresponding lines they refer to.
 @diff_old_lines_numbers = ();
 
+# A record of added and removed lines for a given diff block when displaying a
+# file in a popup window, along with their offsets.
+@view_file_minus = ();
+@view_file_plus = ();
+@view_file_minus_offset = ();
+@view_file_plus_offset = ();
+
 # Revision number constants used in the filetable with special meanings.
 $ADDED_REVISION = "1.0";
 $REMOVED_REVISION = "0.0";
@@ -184,32 +216,37 @@ $PATCH_REVISION = "0.1";
 # Subroutine prototypes.
 sub edit_topic($$$$$);
 sub view_topic($$$);
+sub download_topic_text($);
 sub submit_comments($$$$$$);
 sub create_topic();
-sub submit_topic($$$$$$$);
-sub view_cvs_file($$$);
+sub submit_topic($$$$$$$$);
+sub view_file($$$);
 sub error_return($);
 sub display_context($$$);
-sub read_document_file($);
+sub read_document_file($$);
 sub read_comment_file($);
+sub read_filetable_file($);
+sub read_cvs_file($$);
 sub lock($);
 sub unlock($);
 sub get_email();
 sub get_reviewers();
 sub get_cc();
 sub build_edit_url($$$$);
+sub build_download_url($);
 sub build_view_url($$$$);
-sub build_view_cvs_file_url($$$);
+sub build_view_file_url($$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$$);
 sub header_generated();
 sub get_comment_digest($);
 sub get_context($$$$);
-sub untaint_topic($);
+sub untaint_digits($$);
 sub untaint_filename($);
 sub untaint_revision($);
 sub untaint_email($);
 sub untaint_emails($);
+sub get_time_string($);
 sub make_canonical_email_list($);
 sub display_data ($$$$$$$$$$$$$);
 sub display_coloured_data ($$$$$$$$$$$$$);
@@ -248,14 +285,18 @@ sub main() {
     my $filename = $query->param('filename');
     my $linenumber = $query->param('linenumber');
     my $mode = $query->param('mode');
+    my $bug_number = $query->param('bug_number');
+    my $new = $query->param('new');
 
     # Untaint the required input.
-    $topic = untaint_topic($topic);
+    $topic = untaint_digits($topic, 'topic');
     $email = untaint_email($email);
     $reviewers = untaint_emails($reviewers);
     $cc = untaint_emails($cc);
     $filename = untaint_filename($filename);
     $revision = untaint_revision($revision);
+    $bug_number = untaint_digits($bug_number, 'bug_number');
+    $new = untaint_digits($new, 'new');
 
     # By default, don't show coloured view.
     $mode = $NORMAL_MODE if (! defined $mode);
@@ -279,10 +320,14 @@ sub main() {
     }
     elsif ($action eq "submit_topic") {
 	submit_topic($topic_title, $email, $topic_text, $topic_description,
-		     $reviewers, $cc, $topic_text_fh);
+		     $reviewers, $cc, $topic_text_fh, $bug_number);
     }
-    elsif ($action eq "view_cvs_file") {
-	view_cvs_file($filename, $revision, $linenumber);
+    elsif ($action eq "download") {
+	download_topic_text($topic);
+	return;
+    }
+    elsif ($action eq "view_file") {
+	view_file($topic, $filename, $new);
     }
     else {
 	create_topic();
@@ -292,18 +337,19 @@ sub main() {
     return;
 }
 
-# Untaint $topic, which should be just a bunch of random digits.
-sub untaint_topic($) {
-    my ($topic) = @_;
+# Untaint $topic, which should be just a bunch of digits.
+sub untaint_digits($$) {
+    my ($value, $name) = @_;
 
-    if (defined $topic && $topic ne "") {
-	if ($topic =~ /^(\d+)$/) {
+    if (defined $value && $value ne "") {
+	if ($value =~ /^(\d+)$/) {
 	    return $1;
 	} else {
-	    error_return("Invalid topic \"$topic\" - you naughty boy.");
+	    error_return("Invalid parameter $name \"$value\" - " .
+			 "you naughty boy.");
 	}
     } else {
-	return $topic;
+	return $value;
     }
 }
 
@@ -419,11 +465,22 @@ sub generate_header($$$$$$) {
 
  function myOpen(url,name) {
      windowHandle = window.open(url,name,
-				'toolbar=no,width=800,height=600,status=no,scrollbars=yes,resize=yes,menubar=no');
+				'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resize=yes,menubar=no');
+     windowHandle.focus();
  }
  //-->
 </SCRIPT>
 EOF
+}
+
+# Return the time as a string.
+sub get_time_string($) {
+    my ($time_value) = @_;
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+	localtime($time_value);
+    $year += 1900;
+    return sprintf("%02d:%02d:%02d $days[$wday], $mday $months[$mon], $year",
+		   $hour, $min, $sec);
 }
 
 # Simple file locking routines.
@@ -454,13 +511,18 @@ sub error_return ($) {
 }
 
 # Read the topic's document file.
-sub read_document_file($) {
-    my ($topic) = @_;
+sub read_document_file($$) {
+    my ($topic, $replace_tabs) = @_;
 
     if (! open(DOCUMENT, "$datadir/$topic/$document_file")) {
 	error_return("Unable to open document file for topic \"$topic\": $!");
     }
-    
+
+    # Get the file's creation time.
+    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+	$atime,$mtime,$ctime,$blksize,$blocks) = stat DOCUMENT;
+    $document_creation_time = get_time_string($ctime);
+
     # Parse the document metadata.
     while (<DOCUMENT>) {
 	my $data = $_;
@@ -468,6 +530,8 @@ sub read_document_file($) {
 	    $document_author = $1;
 	} elsif ($data =~ /^Title: (.+)$/) {
 	    $document_title = $1;
+	} elsif ($data =~ /^Bug: (.*)$/) {
+	    $document_bug_number = $1;
 	} elsif ($data =~ /^Reviewers: (.+)$/) {
 	    $document_reviewers = $1;
 	} elsif ($data =~ /^Cc: (.+)$/) {
@@ -481,7 +545,7 @@ sub read_document_file($) {
 		my $data = <DOCUMENT>;
 		chop $data;
 		# Change tabs with spaces to preserve alignment during display.
-		$data =~ s/\t/        /g;
+		$data =~ s/\t/        /g if ($replace_tabs);
 		push @document_description, $data;
 	    }
 	} elsif ($data =~ /^Text$/) {
@@ -497,7 +561,7 @@ sub read_document_file($) {
 	my $data = $_;
 	
 	# Replace tabs with spaces to preserve alignment during display.
-	$data =~ s/\t/        /g;
+	$data =~ s/\t/        /g if ($replace_tabs);
 	push @document, $data;
     }
     close DOCUMENT;
@@ -535,6 +599,41 @@ sub read_comment_file($) {
 	push @comment_data, $comment_text;
     }
     close COMMENTS;
+}
+
+# Read the filetable metadata into memory.  Return 0 if there were problems
+# reading the filetable.
+sub read_filetable_file($) {
+    my ($topic) = @_;
+
+    if (! open (FILETABLE, "$datadir/$topic/$filetable_file")) {
+	return 0;
+    }
+
+    for (my $i = 0; <FILETABLE>; $i++) {
+	if (/\|(.*)\| ([\d\.]+) (\d+)$/) {
+	    $filetable_filename[$i] = $1;
+	    $filetable_revision[$i] = $2;
+	    $filetable_offset[$i] = $3;
+	}
+	else {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+# Read the specified CVS file and revision into memory.
+sub read_cvs_file ($$) {
+    my ($filename, $revision) = @_;
+
+    if (! open (CVSFILE, "$cvscmd -r $revision $filename 2>/dev/null |")) {
+	error_return("Couldn't get CVS data for $filename $revision: $!");
+    }
+
+    for (my $i = 1; <CVSFILE>; $i++) {
+	$cvs_filedata[$i] = $_;
+    }
 }
 
 # Return the email address stored in the cookie.
@@ -589,7 +688,13 @@ sub build_view_url ($$$$) {
 	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
 	    
-}	    
+}
+
+# Create the URL for downloading the topic text.
+sub build_download_url ($) {
+    my ($topic) = @_;
+    return "?action=download&topic=$topic";
+}
 
 # Create the URL for creating a topic.
 sub build_create_topic_url () {
@@ -602,13 +707,10 @@ sub build_edit_url ($$$$) {
     return "?line=$line&topic=$topic&action=edit&context=$context&mode=$mode";
 }
 
-# Create the URL for viewing a CVS file.
-sub build_view_cvs_file_url ($$$) {
-    my ($file, $rev, $line) = @_;
-    my $viewline = $line - $diff_context;
-    $viewline = 1 if $viewline < 1;
-    return "?action=view_cvs_file&filename=$file&revision=$rev" .
-	"&linenumber=$line#${viewline}";
+# Create the URL for viewing a new file.
+sub build_view_file_url ($$$$) {
+    my ($topic, $filename, $new, $line) = @_;
+    return "?action=view_file&filename=$filename&topic=$topic&new=$new#${line}";
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -635,12 +737,23 @@ sub get_comment_digest($) {
     return $digest;
 }
 
+# Download the topic text as "plain/text".
+sub download_topic_text ($) {
+    my ($topic) = @_;
+
+    read_document_file($topic, 0);
+    print $query->header(-type=>'text/plain');
+    for (my $i = 0; $i <= $#document; $i++) {
+	print "$document[$i]\n";
+    }
+}
+
 # Add a comment to a specific line.
 sub edit_topic ($$$$$) {
     my ($line, $topic, $context, $email, $mode) = @_;
 
     # Read the document and comment file for this topic.
-    read_document_file($topic);
+    read_document_file($topic, 1);
     read_comment_file($topic);
 
     # Display the header of this page.
@@ -722,7 +835,7 @@ sub edit_topic ($$$$$) {
 sub view_topic ($$$) {
     my ($topic, $email, $mode) = @_;
 
-    read_document_file($topic);
+    read_document_file($topic, 1);
     read_comment_file($topic);
 
     # Display header information
@@ -735,26 +848,40 @@ sub view_topic ($$$) {
     print $query->p;
 
     my $escaped_title = CGI::escapeHTML($document_title);
-    print $query->h2("$escaped_title");
+    print $query->h2("$escaped_title"), "\n";
 
     print $query->start_table();
     print $query->Tr($query->td("Author: "),
-		     $query->td($document_author));
+		     $query->td($document_author)), "\n";
+    print $query->Tr($query->td("Created: "),
+		     $query->td($document_creation_time)), "\n";
+    if ($document_bug_number ne "") {
+	my $bug_url = "${bugtracker}${document_bug_number}";
+	print $query->Tr($query->td("Bug: "),
+			 $query->td($query->a({href=>"$bug_url"},
+					      $document_bug_number))), "\n";
+    }
     print $query->Tr($query->td("Reviewers: "),
-		     $query->td($document_reviewers));
+		     $query->td($document_reviewers)), "\n";
     if (defined $document_cc && $document_cc ne "") {
 	print $query->Tr($query->td("Cc: "),
-			 $query->td($document_cc));
+			 $query->td($document_cc)), "\n";
     }
     print $query->Tr($query->td("Number of lines: "),
-		     $query->td($#document + 1));
-    print $query->end_table();
+		     $query->td($#document + 1)), "\n";
+    print $query->end_table(), "\n";
 
     print "<PRE>\n";
+    my $data = "";
     for (my $i = 0; $i <= $#document_description; $i++) {
-	my $data = CGI::escapeHTML($document_description[$i]);
-	print "$data\n";
+	$data .= CGI::escapeHTML($document_description[$i]) . "\n";
     }
+
+    # Replace occurances of bug strings with the appropriate links.
+    if ($bugtracker ne "") {
+	$data =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${bugtracker}$3">$1$2$4<\/A>/mg;
+    }
+    print $data;
     print "</PRE>\n";
 
     my $number_comments = $#comment_linenumber + 1;
@@ -762,12 +889,15 @@ sub view_topic ($$$) {
     if ($number_comments == 1) {
 	print "Only one ", $query->a({href=>"${url}#comments"},
 				     "comment");
-	print " submitted", $query->p;
+	print " submitted.\n", $query->p;
     } elsif ($number_comments > 1) {
 	print "$number_comments ", $query->a({href=>"${url}#comments"},
 					     "comments");
-	print " submitted\n", $query->p;
+	print " submitted.\n", $query->p;
     }
+
+    my $download_url = $query->url() . build_download_url($topic);
+    print $query->a({href=>"$download_url"},"Download"), " topic text.\n";
 
     print $query->p, $query->hr, $query->p;
 
@@ -930,7 +1060,7 @@ sub coloured_mode_start ($) {
 
     # Print out the "table of contents".  If the file table doesn't exist,
     # this could because we are reading an old code review.
-    if (! open (FILETABLE, "$datadir/$topic/$filetable_file")) {
+    if (!read_filetable_file($topic)) {
 	print_coloured_table();
 	return;
     }
@@ -940,10 +1070,9 @@ sub coloured_mode_start ($) {
 			       -border=>'0'}), "\n";
     print $query->Tr($query->td($query->a({name=>"contents"}, "Contents:")),
 		     $query->td("&nbsp;")), "\n";
-    while (<FILETABLE>) {
-	/\|(.*)\| ([\d\.]+)$/;
-	my $filename = $1;
-	my $revision = $2;
+    for (my $i = 0; $i <= $#filetable_filename; $i++) {
+	my $filename = $filetable_filename[$i];
+	my $revision = $filetable_revision[$i];
 	my $href_filename = "#" . "$filename";
 	my $class = "";
 	$class = "af" if ($revision eq $ADDED_REVISION);
@@ -1020,8 +1149,8 @@ sub display_data ($$$$$$$$$$$$$) {
     {
 	my $cvs_url =
 	    $query->url() .
-	    build_view_cvs_file_url($current_file, $current_file_revision,
-				    $current_old_file_linenumber);
+	    build_view_file_url($topic, $current_file, 0,
+				$current_old_file_linenumber);
 	$data =~ /^\@\@ \-([\d,]+) (.*)$/;
 	
 	my $js = "javascript: myOpen('$cvs_url','CVS')";
@@ -1056,18 +1185,27 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	    print_coloured_table();
 
 	    if ($cvsmatch) {
-		# File matches something is CVS repository.
-		my $url_full = $query->url() .
-		    build_view_cvs_file_url($current_file,
-					    $current_file_revision, 1);
-		my $url = "javascript: myOpen('$url_full','CVS')";
-					
-		print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
-					    "Diff for ",
-					    $query->a({href=>"$url",
-						       name=>"$current_file"},
-						      "$current_file"),
-					    "version $current_file_revision"),
+		# File matches something is CVS repository.  Link it to
+		# the CVS viewer if it is defined.
+		my $cell = "";
+		my $revision_text = "revision $current_file_revision";
+		if ($cvsviewer eq "") {
+		    $cell = $query->td({-class=>'file', -colspan=>'3'},
+				       "Diff for ",
+				       $query->a({name=>"$current_file"},
+						 "$current_file"),
+				       "$revision_text");
+		}
+		else {
+		    my $url = "$cvsviewer$current_file";
+		    $cell = $query->td({-class=>'file', -colspan=>'3'},
+				       "Diff for ",
+				       $query->a({href=>"$url",
+						  name=>"$current_file"},
+						 "$current_file"),
+				       "$revision_text");
+		}
+		print $query->Tr($cell,
 				 $query->td({-class=>'file', align=>'right'},
 					     $query->a({href=>"#contents"},
 						       "[Go to Contents]")));
@@ -1090,14 +1228,12 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	    # Display the line numbers corresponding to the patch, with links
 	    # to the CVS file.
 	    my $url_old_full = $query->url() .
-		build_view_cvs_file_url($current_file,
-					$current_file_revision,
-					$current_old_file_linenumber);
+		build_view_file_url($topic, $current_file, 0,
+				    $current_old_file_linenumber);
 	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
 	    my $url_new_full = $query->url() .
-		build_view_cvs_file_url($current_file,
-					$current_file_revision,
-					$current_new_file_linenumber);
+		build_view_file_url($topic, $current_file, 1,
+				    $current_new_file_linenumber);
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 	    
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
@@ -1305,10 +1441,7 @@ sub submit_comments ($$$$$$) {
     }
 
     # get the localtime these comments were received.
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-	localtime(time);
-    $year += 1900;
-    my $dateinfo = "$days[$wday], $mday $months[$mon], $year";
+    my $dateinfo = get_time_string(time);
 
     # Retrieve the comment lines and remove the \r from it.
     my @lines = split /\n/, $comments;
@@ -1319,7 +1452,7 @@ sub submit_comments ($$$$$$) {
 
     # Send an email to the owner of the topic, and CC all people who have
     # submitted comments for this particular line number.
-    read_document_file($topic);
+    read_document_file($topic, 1);
     read_comment_file($topic);
     my %contributors = ();
     $contributors{$email} = 1;
@@ -1377,7 +1510,7 @@ sub submit_comments ($$$$$$) {
     
     # Now display comments relevant to this line, in reverse order.
     # First displayed the comment that has been received.
-    printf $MAIL ("$email %02d:%02d:%02d $dateinfo\n\n", $hour, $min, $sec);
+    print $MAIL "$email $dateinfo\n\n";
     for (my $i = 0; $i <= $#lines; $i++) {
 	print $MAIL "$lines[$i]\n";
     }
@@ -1413,7 +1546,7 @@ sub submit_comments ($$$$$$) {
     # is obtained.
     open (FILE, ">>$datadir/$topic/$comment_file");
     lock(\*FILE);
-    printf FILE ("$metadata %02d:%02d:%02d $dateinfo\n", $hour, $min, $sec);
+    print FILE "$metadata $dateinfo\n";
     for (my $i = 0; $i < $line_length; $i++) {
 	print FILE "$lines[$i]\n";
     }
@@ -1444,19 +1577,22 @@ sub create_topic () {
 			   -rows=>5,
 			   -columns=>70,
 			   -wrap=>'hard');
-
     # Don't wrap the topic text, in case people are cutting and pasting code
     # rather than using the file upload.
     print $query->p, "Topic text: ", $query->br;
     print $query->textarea(-name=>'topic_text',
 			   -rows=>15,
 			   -columns=>70);
-    print $query->p, "Topic text upload: ";
-    print $query->filefield(-name=>'topic_file',
-			    -size=>40,
-			    -maxlength=>200);
 
     print $query->p, $query->start_table();
+    print $query->Tr($query->td("Topic text upload: "),
+		     $query->td($query->filefield(-name=>'topic_file',
+						  -size=>40,
+						  -maxlength=>200)));
+    print $query->Tr($query->td("Bug number: "),
+		     $query->td($query->textfield(-name=>'bug_number',
+						  -size=>30,
+						  -maxlength=>50)));
     my $default_email = get_email();
     print $query->Tr($query->td("Your email address: "),
 		     $query->td($query->textfield(-name=>'email',
@@ -1502,9 +1638,9 @@ sub make_canonical_email_list($) {
 }
 
 # Handle the submission of a new topic.
-sub submit_topic ($$$$$$$) {
+sub submit_topic ($$$$$$$$) {
     my ($topic_title, $email, $topic_text, $topic_description,
-	$reviewers, $cc, $fh) = @_;
+	$reviewers, $cc, $fh, $bug_number) = @_;
 
     # Check that the fields have been filled appropriately.
     if (! defined $topic_title || $topic_title eq "") {
@@ -1525,6 +1661,9 @@ sub submit_topic ($$$$$$$) {
     if ( ! defined $reviewers || $reviewers eq "") {
 	error_return("No reviewers were entered");
     }
+
+    # The bug number is optional.
+    $bug_number = "" if (! defined $bug_number);
 
     # Create a directory where to copy the document, and to create the
     # comment file.
@@ -1552,6 +1691,7 @@ sub submit_topic ($$$$$$$) {
     # Write out the topic metadata.
     print DOCUMENT "Author: $email\n";
     print DOCUMENT "Title: $topic_title\n";
+    print DOCUMENT "Bug: $bug_number\n";
     print DOCUMENT "Reviewers: $reviewers\n";
     print DOCUMENT "Cc: $cc\n" if (defined $cc && $cc ne "");
     print DOCUMENT "Description: $description_length\n";
@@ -1603,6 +1743,7 @@ sub submit_topic ($$$$$$$) {
     print MAIL "Subject: [REVIEW] Topic \"$topic_title\" created\n";
     print MAIL "Topic \"$topic_title\" created\n";
     print MAIL "Author: $email\n";
+    print MAIL "Bug: $bug_number\n" if ($bug_number ne "");
     print MAIL "Reviewers: $reviewers\n";
     print MAIL "URL: $topic_url\n\n";
     print MAIL "Description:\n";
@@ -1651,6 +1792,7 @@ sub process_document($) {
     my $line = <DOCUMENT>;
     my @filenames = ();
     my @revisions = ();
+    my @offsets = ();
     my $filename = "";
     my $revision = "";
     for (my $diff_number = 0;
@@ -1660,12 +1802,14 @@ sub process_document($) {
 	# file.
 	push @filenames, $filename;
 	push @revisions, $revision;
+	push @offsets, $offset;
 
 	if (! open (DIFF, ">$datadir/$dirname/diff.$diff_number")) {
 	    error_return("Could not create diff.$diff_number: $!");
 	}
 
 	while (<DOCUMENT>) {
+	    $offset++;
 	    last if (/^Index/ || /^diff/); # The start of the next diff header.
 	    print DIFF $_;
 	}
@@ -1675,10 +1819,10 @@ sub process_document($) {
 
     # Write out the file table.
     if (! open(FILETABLE, ">$datadir/$dirname/$filetable_file")) {
-	error_return("Could not open filetable in $dirname: $!");
+	error_return("Could not create filetable in $dirname: $!");
     }
     for (my $i = 0; $i <= $#filenames; $i++) {
-	print FILETABLE "|$filenames[$i]| $revisions[$i]\n";
+	print FILETABLE "|$filenames[$i]| $revisions[$i] $offsets[$i]\n";
     }
     close FILETABLE;
 }
@@ -1769,53 +1913,239 @@ sub read_diff_header($$$$$) {
     return 1;
 }
 
+# Print out a line of data with the specified line number suitably aligned,
+# and with tabs replaced by spaces for proper alignment.
+sub render_monospaced_line ($$$$$$) {
+    my ($topic, $linenumber, $data, $offset, $max_digit_width, $class) = @_;
 
-# View the contents of a specific file from CVS.  This will normally by called
-# within a new window, so there is no navigation within it.
-sub view_cvs_file ($$$) {
-    my ($filename, $revision, $line) = @_;
-
-    if (! defined $filename || $filename eq "") {
-	error_return("No filename was entered");
+    my $prefix = "";
+    my $digit_width = length($linenumber);
+    for (my $i = 0; $i < ($max_digit_width - $digit_width); $i++) {
+	$prefix .= "&nbsp;";
     }
-    if (! defined $revision || $revision eq "") {
-	error_return("No revision was entered");
+    my $newdata = CGI::escapeHTML($data);
+    $newdata =~ s/\t/        /g;
+    $newdata =~ s/ /&nbsp;/g;
+    $newdata = "&nbsp;" if ($newdata eq "");
+
+
+    # Render the line data.  If the user clicks on a topic line, the
+    # main window is moved to the edit page.  I'm not sure if this is
+    # the best thing from a useability perspective, but we'll see for
+    # now.
+    my $line_cell = "";
+    if ($offset != -1) {
+	my $edit_url =
+	    $query->url() . build_edit_url($offset, $topic, $context,
+					   $COLOURED_MODE);
+	if (defined $comment_exists{$offset}) {
+	    my $link_title = get_comment_digest($offset);
+	    my $js_title = $link_title;
+	    $js_title =~ s/\'/\\\'/mg;
+	    $line_cell =
+		$query->td({class=>'ms'}, "$prefix" .
+			   $query->a({name=>"$linenumber",
+				      href=>"$edit_url",
+				      class=>'mscom',
+				      target=>"top",
+				      title=>"$js_title",
+				      onmouseover=>
+					  "window.status='$js_title'; " .
+					  "return true;"},
+				     $query->span({-class=>'mscom'},
+						  "$linenumber")));
+	}
+	else {
+	    $line_cell =
+		$query->td({class=>'ms'}, "$prefix" .
+			   $query->a({name=>"$linenumber",
+				      href=>"$edit_url",
+				      target=>"top",
+				      class=>'mscom'},
+				     $query->span({-class=>'msnocom'},
+						  "$linenumber")));
+	}
+    }
+    else {
+	$line_cell = $query->td({class=>'ms'}, "$prefix" .
+				$query->a({name=>"$linenumber"},
+					  "$linenumber"));
     }
 
-    print $query->header();
-    print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
-			     -title=>"$filename v ${revision}",
-			     -bgcolor=>'white');
-    $header_generated = 1;
+    return $query->Tr($line_cell,
+		      $query->td({class=>"$class"}, "&nbsp;$newdata"));
+}
 
-    my $get_cvs_file = "$cvscmd -r $revision $filename 2>/dev/null";
+# Record a plus line.
+sub add_plus_monospace_line ($$) {
+    my ($linedata, $offset) = @_;
+    push @view_file_plus, $linedata;
+    push @view_file_plus_offset, $offset;
+}
 
-    my $number_lines = `$get_cvs_file | wc -l`;
-    $number_lines =~ s/\s//g;
-    my $max_digit_width = length($number_lines);
+# Record a minus line.
+sub add_minus_monospace_line ($$) {
+    my ($linedata, $offset) = @_;
+    push @view_file_minus, $linedata;
+    push @view_file_minus_offset, $offset;
+}
 
-    if (! open (CVSFILE, "$get_cvs_file |")) {
-	error_return("Couldn't retrieve CVS information: $!");
+# Flush the current diff chunk, and update the line count.  Note if the
+# original file is being rendered, the minus lines are used, otherwise the
+# plus lines.
+sub flush_monospaced_lines ($$$$) {
+    my ($topic, $new, $linenumber_ref, $max_digit_width) = @_;
+
+    my $class = "";
+    if ($#view_file_plus != -1 && $#view_file_minus != -1) {
+	# This is a change chunk.
+	$class = "msc";
+    }
+    elsif ($#view_file_plus != -1) {
+	# This is an add chunk.
+	$class = "msa";
+    }
+    elsif ($#view_file_minus != -1) {
+	# This is a remove chunk.
+	$class = "msr";
     }
 
-    print "<PRE>\n";
-    for (my $i = 1; <CVSFILE>; $i++) {
-	# Read a line of data, escape it an change spaces to tab for alignment.
-	my $data = CGI::escapeHTML($_);
-	$data =~ s/\t/        /g;
+    if ($new) {
+	for (my $i = 0; $i <= $#view_file_plus; $i++) {
+	    print render_monospaced_line($topic, $$linenumber_ref,
+					 $view_file_plus[$i],
+					 $view_file_plus_offset[$i],
+					 $max_digit_width, $class), "\n";
+	    $$linenumber_ref++;
+	}
+    }
+    else {
+	for (my $i = 0; $i <= $#view_file_minus; $i++) {
+	    print render_monospaced_line($topic, $$linenumber_ref,
+					 $view_file_minus[$i],
+					 $view_file_minus_offset[$i],
+					 $max_digit_width, $class), "\n";
+	    $$linenumber_ref++;
+	}
+    }
+    $#view_file_minus = -1;
+    $#view_file_minus_offset = -1;
+    $#view_file_plus = -1;
+    $#view_file_plus_offset = -1;
+}	
 
-	# Add the necessary number of spaces for alignment
-	my $digit_width = length($i);
-	for (my $j = 0; $j < ($max_digit_width - $digit_width); $j++) {
-	    print " ";
+# Show the contents of a file, and indicate whether it is the file before
+# modification (pre-patch) or after.
+sub view_file ($$$) {
+    my ($topic, $filename, $new) = @_;
+    
+    # Read the filetable.
+    if (!read_filetable_file($topic)) {
+	error_return("Unable to read filetable for topic $topic: $!");
+    }
+
+    # Locate the file of interest, and retrieve the relevant information.
+    my $offset = "";
+    my $diff_number = "";
+    my $revision = "";
+    my $index;
+    for ($index = 0; $index <= $#filetable_filename; $index++) {
+	if ($filetable_filename[$index] eq $filename) {
+	    $offset = $filetable_offset[$index];
+	    $revision = $filetable_revision[$index];
+	    last;
+	}
+    }
+    if ($index > $#filetable_filename) {
+	error_return("Unable to locate filetable information");
+    }
+
+    # Load the appropriate CVS file into memory.
+    read_cvs_file($filename, $revision);
+
+    # Read the comment file to know which offsets have comments made against
+    # them.
+    read_comment_file($topic);
+
+    # Open the patch file corresponding to this file.
+    if (! open(PATCH, "$datadir/$topic/diff.$index")) {
+	error_return("Could not open patch file for $filename");
+    }
+    
+    # Output the new file, with the appropriate patch applied.
+    my $title = $new ? "New $filename" : "$filename v$revision";
+    generate_header($topic, $title, "", "", "", $diff_background_col);
+
+    print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
+			       -border=>'0'}), "\n";
+
+    my $max_digit_width = length($#cvs_filedata);
+    my $patch_line = <PATCH>;
+    my $linenumber = 1;
+    my $chunk_end = 1;
+    for (my $next_chunk_end = 1 ;; $chunk_end = $next_chunk_end) {
+	# Read the next line of patch information.
+	my $patch_line_start;
+	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@$/) {
+	    $patch_line_start = $1;
+	    $next_chunk_end = $1 + $2;
+	}
+	else {
+	    # Last chunk in the patch file, display to the end of the file.
+	    $patch_line_start = $#cvs_filedata;
+	}
+	
+	# Output those lines leading up to $patch_line_start.  These lines
+	# are not part of the review, so they can't be acted upon.
+	for (my $i = $chunk_end; $i < $patch_line_start; $i++, $linenumber++) {
+	    print render_monospaced_line($topic, $linenumber,
+					 $cvs_filedata[$i], -1,
+					 $max_digit_width, "ms");
+	}
+	
+	# Read the information from the patch, and "apply" it to the
+	# output.
+	while (<PATCH>) {
+	    $offset++;
+	    if (/^\s(.*)$/) {
+		# An unchanged line, output it and anything pending.
+		flush_monospaced_lines($topic, $new, \$linenumber,
+				       $max_digit_width);
+		print render_monospaced_line($topic, $linenumber, $1, $offset,
+					     $max_digit_width, "ms"), "\n";
+		$linenumber++;
+	    } elsif (/^\-(.*)$/) {
+		# A removed line.
+		add_minus_monospace_line($1, $offset);
+	    } elsif (/^\+(.*)$/) {
+		# An added line.
+		add_plus_monospace_line($1, $offset);
+	    } elsif (/^@@/) {
+		# Start of next diff block, exit from loop and flush anything
+		# pending.
+		flush_monospaced_lines($topic, $new, \$linenumber,
+				       $max_digit_width);
+		$patch_line = $_;
+		last;
+	    } else {
+		error_return("Unable to handle patch line: $_");
+	    }
 	}
 
-	if ($i eq $line) {
-	    print $query->a({name=>"$i"}, "<FONT COLOR='red'>$i</FONT>");
-	} else {
-	    print $query->a({name=>"$i"}, $i);
+	if (! defined $_) {
+	    # Reached the end of the patch file.  Flush anything pending.
+	    flush_monospaced_lines($topic, $new, \$linenumber,
+				   $max_digit_width);
+	    last;
 	}
-	print " ", $data;
     }
-    print "</PRE>\n";
+
+    # Display the last part of the file.
+    for (my $i = $chunk_end; $i <= $#cvs_filedata; $i++, $linenumber++) {
+	print render_monospaced_line($topic, $linenumber, $cvs_filedata[$i],
+				     -1, $max_digit_width, "ms");
+    }
+
+    print $query->end_table();
+    print $query->end_html();
 }

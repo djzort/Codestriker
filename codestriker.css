@@ -36,8 +36,28 @@ TD.cf {background-color: #ffff77}
 /* Changed blank text */
 TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
 
+/* Monospaced line with added text */
+TD.msa {background-color: #aaffaa; font-family: Courier, monospaced; font-size: large}
+
+/* Monospaced line with removed text */
+TD.msr {background-color: #ff9999; font-family: Courier, monospaced; font-size: large}
+
+/* Monospaced line with changed text */
+TD.msc {background-color: #ffff77; font-family: Courier, monospaced; font-size: large}
+
+/* Monospaced line with normal text */
+TD.ms {font-family: Courier, monospaced; font-size: large}
+
+/* Monospaced line number with comment */
+SPAN.mscom {color: #ff0000; font-family: Courier, monospaced; font-size: large}
+
+/* Monospaced line number with no comment */
+SPAN.msnocom {font-family: Courier, monospaced; font-size: large}
+
 /* Line number with comment */
 SPAN.com {color: #ff0000; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Line number with no comment */
 SPAN.ncom {font-family: Helvetica, Arial; font-size: smaller}
+
+
