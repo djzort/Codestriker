@@ -466,7 +466,7 @@ sub generate_header($$$$$$) {
 
  function myOpen(url,name) {
      windowHandle = window.open(url,name,
-				'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resize=yes,menubar=no');
+				'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
      if (windowHandle.opener == null) {
 	 windowHandle.opener = self;
      }
