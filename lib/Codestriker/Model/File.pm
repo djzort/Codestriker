@@ -61,7 +61,6 @@ sub create($$$$$) {
 					   $diff, $binary);
     }
 
-    $success ? $dbh->commit : $dbh->rollback;
     die $dbh->errstr unless $success;
 }
 
@@ -90,7 +89,7 @@ sub get($$$$$$) {
 	$select_file->finish();
     }
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 }
 
@@ -122,7 +121,7 @@ sub get_filetable($$$$$$) {
 	}
     }
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 }
 

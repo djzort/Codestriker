@@ -72,8 +72,7 @@ sub create($$$$$$$$$$) {
     $success &&= Codestriker::Model::File->create($dbh, $topicid, $document,
 						  $repository->getRoot());
     
-    $success ? $dbh->commit : $dbh->rollback;
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
 
     die $dbh->errstr unless $success;
 }
@@ -149,7 +148,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     }
 
     # Close the connection, and check for any database errors.
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     if (!$success) {
 	$errmsg = $dbh->errstr unless defined $errmsg;
 	die "$errmsg\n";
@@ -195,7 +194,7 @@ sub exists($$) {
 	$select_topic->finish();
     }
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 
     return $count;
@@ -259,8 +258,7 @@ sub change_state($$$$$) {
 					    $creation_ts, $modified_ts,
 					    $topicid);
     }
-    $dbh->commit if ($success);
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     
     if (!$success) {
 	$errmsg = $dbh->errstr unless defined $errmsg;
@@ -375,7 +373,7 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
 	$select_topic->finish();
     }
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 }
 
@@ -423,8 +421,7 @@ sub delete($$) {
     $success &&= $delete_participant->execute($topicid);
     $success &&= $delete_topicbug->execute($topicid);
 
-    $success ? $dbh->commit : $dbh->rollback;
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
 
     die $dbh->errstr unless $success;
 }

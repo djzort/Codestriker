@@ -18,15 +18,28 @@ use Codestriker;
 sub get_connection($) {
     my ($type) = @_;
 
+    # The latest versions of MySQL do support transaction control, but for
+    # now its easiest to disable it.  Would be nice to know how to do this in
+    # a better fashion.
+    my $autocommit = ($Codestriker::db =~ /^DBI:mysql/) ? 1 : 0;
+
     return DBI->connect($Codestriker::db, $Codestriker::dbuser,
-			$Codestriker::dbpasswd, {AutoCommit=>0, RaiseError=>0})
+			$Codestriker::dbpasswd,
+			{AutoCommit=>$autocommit, RaiseError=>1})
 	|| die "Couldn't connect to database: " . DBI->errstr;
 }
 
-# Release a connection.
-sub release_connection($$) {
-    my ($type, $connection) = @_;
+# Release a connection, and if $success is true and this is a transaction
+# controlled database, commit the transaction, otherwise abort it.
+sub release_connection($$$) {
+    my ($type, $connection, $success) = @_;
 
+    # If the connection is transaction controlled, commit or abort the
+    # transaction depending on the value of $success.
+    if ($connection->{AutoCommit} == 0) {
+	$success ? $connection->commit : $connection->rollback;
+    }
+	    
     $connection->disconnect;
 }
 

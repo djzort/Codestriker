@@ -31,8 +31,7 @@ sub create($$$$$$) {
     $success &&= $insert_comment->execute($topicid, $data, $email, $line,
 					  $timestamp);
 
-    $dbh->commit if ($success);
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr if !$success;
 }
 
@@ -65,7 +64,7 @@ sub read($$\@\@\@\@\%) {
 	$select_comment->finish();
     }
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 }
 
