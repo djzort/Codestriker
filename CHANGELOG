@@ -1,5 +1,9 @@
 Version 1.4.4:
 
+* Added a <BASE> tag which reduces the HTML size.  Also used cookies
+  more intelligently so that the dreaded edit topic and other URLs
+  were cut down to size, which also helped reducing the output.
+
 * Took the gzip compression code from CVSweb and plonked it in.  Works
   nicely with Mozilla/Netscape/Konqueror.  If the Compress::Zlib
   library is installed, that is used for compression, otherwise the

@@ -30,7 +30,6 @@ use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
 use FileHandle;
-use IPC::Open2;
 
 #use diagnostics -verbose;
 
@@ -39,7 +38,7 @@ use vars qw (
 	     $cvsaccess $codestriker_css $default_topic_create_mode
 	     $background_col $diff_background_col $default_tabwidth
 	     $use_compression $gzip $config $NORMAL_MODE $COLOURED_MODE @days
-	     @months $context $email_context $email_hr $context_colour
+	     @months $default_context $email_context $email_hr $context_colour
 	     $comment_line_colour $cookie_name $document_file $comment_file
 	     $filetable_file @document $document_title $document_bug_ids
 	     @document_description $document_reviewers $document_cc
@@ -53,7 +52,7 @@ use vars qw (
 	     @view_file_minus @view_file_plus @view_file_minus_offset
 	     @view_file_plus_offset $ADDED_REVISION $REMOVED_REVISION
 	     $PATCH_REVISION $OLD_FILE $NEW_FILE $BOTH_FILES $tabwidth
-	     $output_compressed $query
+	     $output_compressed $url_prefix $query
 	     );
 
 # BEGIN CONFIGURATION OPTIONS --------------------
@@ -80,7 +79,7 @@ $COLOURED_MODE = 1;
 	   "August", "September", "October", "November", "December");
 
 # Default context width for line-based reviews.
-$context = 2;
+$default_context = 2;
 
 # Default context width for email display.
 $email_context = 8;
@@ -209,6 +208,10 @@ $tabwidth = $default_tabwidth;
 # Indicates whether the output has been sent compressed.
 $output_compressed = 0;
 
+# Indicate what URL is prefixed before relative URLs.  For old
+# netscapes (<= 4), we require the relative path to the script as well.
+$url_prefix = "";
+
 # The CGI query object.
 $query = undef;
 
@@ -232,14 +235,16 @@ sub unlock($);
 sub get_email();
 sub get_reviewers();
 sub get_cc();
+sub get_tabwidth();
+sub get_mode();
 sub tabadjust($$);
-sub build_edit_url($$$$);
+sub build_edit_url($$$);
 sub build_download_url($);
-sub build_view_url($$$$);
-sub build_view_url_with_tabwidth($$$$$);
-sub build_view_file_url($$$$$$);
+sub build_view_url($$$);
+sub build_view_url_extended($$$$$);
+sub build_view_file_url($$$$$);
 sub build_create_topic_url();
-sub generate_header($$$$$$);
+sub generate_header($$$$$$$);
 sub header_generated();
 sub get_comment_digest($);
 sub get_context($$$$);
@@ -313,13 +318,15 @@ sub main() {
     $bug_ids = untaint_bug_ids($bug_ids);
     $new = untaint_digits($new, 'new');
 
-    # Retrieve from the cookie if it is not specified in the URL.
+    # Retrieve the tabwidth from the cookie if it is not specified in the URL.
     if (! defined($tabwidth) || ($tabwidth != 4 && $tabwidth != 8)) {
 	$tabwidth = get_tabwidth();
     }
 
-    # By default, don't show coloured view.
-    $mode = $NORMAL_MODE if (! defined $mode);
+    # Retrieve the mode from the cookie if it is not specified in the URL.
+    if (! defined $mode) {
+	$mode = get_mode();
+    }
 
     # Perform the action specified in the "action" parameter.
     # If the action is not specified, assume a new topic is to be created.
@@ -479,8 +486,8 @@ sub header_generated() {
 }
 
 # Generate the HTTP header and start of the body.
-sub generate_header($$$$$$) {
-    my ($topic, $topic_title, $email, $reviewers, $cc, $bg_colour) = @_;
+sub generate_header($$$$$$$) {
+    my ($topic, $topic_title, $email, $reviewers, $cc, $mode, $bg_colour) = @_;
 
     # Check if the header has already been generated (in the case of an error).
     return if (header_generated());
@@ -493,11 +500,17 @@ sub generate_header($$$$$$) {
 	%cookie_value = $query->cookie("$cookie_name");
     }
 
-    $cookie_value{'email'} = $email if (defined $email && $email ne "");
-    $cookie_value{'reviewers'} = $reviewers
-	if (defined $reviewers && $reviewers ne "");
-    $cookie_value{'cc'} = $cc if (defined $cc && $cc ne "");
+    $email = get_email() if (!defined $email || $email eq "");
+    $reviewers = get_reviewers() if (!defined $reviewers || $reviewers eq "");
+    $cc = get_cc() if (!defined $cc || $cc eq "");
+    $tabwidth = get_tabwidth() if (!defined $tabwidth || $tabwidth eq "");
+    $mode = get_mode() if (!defined $mode || $mode eq "");
+
+    $cookie_value{'email'} = $email;
+    $cookie_value{'reviewers'} = $reviewers;
+    $cookie_value{'cc'} = $cc;
     $cookie_value{'tabwidth'} = $tabwidth;
+    $cookie_value{'mode'} = $mode;
 
     my $cookie_path = $query->url(-absolute=>1);
     my $cookie = $query->cookie(-name=>"$cookie_name",
@@ -515,7 +528,12 @@ sub generate_header($$$$$$) {
 	require Compress::Zlib;
     };
     my $has_zlib = !$@;
-    my $browser = $ENV{'HTTP_USER_AGENT'}; 
+    my $browser = $ENV{'HTTP_USER_AGENT'};
+
+    # Determine what prefix is required for relative URLs.
+    $url_prefix = ($browser =~ m%^Mozilla/(\d)% && $1 <= 4) ?
+	$query->url(-relative=>1) : "";
+
     my $can_compress = ($use_compression &&
 			((defined($ENV{'HTTP_ACCEPT_ENCODING'})
 			  && $ENV{'HTTP_ACCEPT_ENCODING'} =~ m|gzip|)
@@ -550,6 +568,7 @@ sub generate_header($$$$$$) {
 			     -title=>"$title",
 			     -bgcolor=>"$bg_colour",
 			     -style=>{src=>"$codestriker_css"},
+			     -base=>$query->url(),
 			     -link=>'blue',
 			     -vlink=>'purple');
 
@@ -805,6 +824,12 @@ sub get_tabwidth() {
     }
 }
 
+# Return the tabwidth stored in the cookie.
+sub get_mode() {
+    my %cookie = $query->cookie("$cookie_name");
+    return (exists $cookie{'mode'}) ? $cookie{'mode'} : $NORMAL_MODE;
+}
+
 # Retrieve the data that forms the "context" when submitting a comment.	
 sub get_context ($$$$) {
     my ($line, $topic, $context, $html_view) = @_;
@@ -848,42 +873,44 @@ sub tabadjust ($$) {
 }	
 
 # Create the URL for viewing a topic with a specified tabwidth.
-sub build_view_url_with_tabwidth ($$$$$) {
-    my ($topic, $line, $email, $mode, $tabwidth) = @_;
-    return "?topic=$topic&action=view&mode=$mode" .
-	((defined $email && $email ne "") ? "&email=$email" : "") .
+sub build_view_url_extended ($$$$$) {
+    my ($topic, $line, $mode, $tabwidth, $email) = @_;
+    return $url_prefix . "?topic=$topic&action=view&mode=$mode" .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
+	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
 }
 
 # Create the URL for viewing a topic.
-sub build_view_url ($$$$) {
-    my ($topic, $line, $email, $mode) = @_;
-    return build_view_url_with_tabwidth($topic, $line, $email, $mode, "");
+sub build_view_url ($$$) {
+    my ($topic, $line, $mode) = @_;
+    return build_view_url_extended($topic, $line, $mode, "", "");
 }
 
 # Create the URL for downloading the topic text.
 sub build_download_url ($) {
     my ($topic) = @_;
-    return "?action=download&topic=$topic";
+    return $url_prefix . "?action=download&topic=$topic";
 }
 
 # Create the URL for creating a topic.
 sub build_create_topic_url () {
-    return "?action=create";
+    return $url_prefix . "?action=create";
 }	    
 
 # Create the URL for editing a topic.
-sub build_edit_url ($$$$) {
-    my ($line, $topic, $context, $mode) = @_;
-    return "?line=$line&topic=$topic&action=edit&context=$context&mode=$mode";
+sub build_edit_url ($$$) {
+    my ($line, $topic, $context) = @_;
+    return $url_prefix. "?line=$line&topic=$topic&action=edit" .
+	((defined $context && $context ne "") ? "&context=$context" : "");
 }
 
 # Create the URL for viewing a new file.
-sub build_view_file_url ($$$$$$) {
-    my ($topic, $filename, $new, $line, $prefix, $tabwidth) = @_;
-    return "?action=view_file&filename=$filename&topic=$topic&new=$new" .
-	"&tabwidth=$tabwidth#" . "$prefix$line";
+sub build_view_file_url ($$$$$) {
+    my ($topic, $filename, $new, $line, $prefix) = @_;
+    return $url_prefix . 
+	"?action=view_file&filename=$filename&topic=$topic&new=$new#" .
+	"$prefix$line";
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -931,12 +958,16 @@ sub download_topic_text ($) {
 sub edit_topic ($$$$$) {
     my ($line, $topic, $context, $email, $mode) = @_;
 
+    # If the $context is not set, set it to the default value.
+    $context = $default_context if (!defined $context || $context eq "");
+
     # Read the document and comment file for this topic.
     read_document_file($topic, 1);
     read_comment_file($topic);
 
     # Display the header of this page.
-    generate_header($topic, $document_title, $email, "", "", $background_col);
+    generate_header($topic, $document_title, $email, "", "", $mode,
+		    $background_col);
     print $query->h2("Edit topic: $document_title");
     print $query->start_table();
     print $query->Tr($query->td("Author: "),
@@ -949,8 +980,7 @@ sub edit_topic ($$$$$) {
     }
     print $query->end_table();
 
-    my $view_url =
-	$query->url() . build_view_url($topic, $line, $email, $mode);
+    my $view_url = build_view_url($topic, $line, $mode);
     print $query->p, $query->a({href=>"$view_url"},"View topic");
     print $query->p, $query->hr, $query->p;
 
@@ -958,10 +988,8 @@ sub edit_topic ($$$$$) {
     # or decrease it appropriately.
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
-    my $inc_context_url = $query->url() .
-	build_edit_url($line, $topic, $inc_context, $mode);
-    my $dec_context_url = $query->url() .
-	build_edit_url($line, $topic, $dec_context, $mode);
+    my $inc_context_url = build_edit_url($line, $topic, $inc_context);
+    my $dec_context_url = build_edit_url($line, $topic, $dec_context);
     print "Context: (" .
 	$query->a({href=>"$inc_context_url"},"increase") . " | " .
 	$query->a({href=>"$dec_context_url"},"decrease)");
@@ -1020,9 +1048,10 @@ sub view_topic ($$$) {
     # Display header information
     my $bg_colour =
 	($mode == $COLOURED_MODE ? $diff_background_col : $background_col);
-    generate_header($topic, $document_title, $email, "", "", $bg_colour);
+    generate_header($topic, $document_title, $email, "", "", $mode,
+		    $bg_colour);
 
-    my $create_topic_url = $query->url() . build_create_topic_url();
+    my $create_topic_url = build_create_topic_url();
     print $query->a({href=>"$create_topic_url"}, "Create a new topic");
     print $query->p;
 
@@ -1071,7 +1100,7 @@ sub view_topic ($$$) {
     print "</PRE>\n";
 
     my $number_comments = $#comment_linenumber + 1;
-    my $url = $query->url() . build_view_url($topic, -1, $email, $mode);
+    my $url = build_view_url($topic, -1, $mode);
     if ($number_comments == 1) {
 	print "Only one ", $query->a({href=>"${url}#comments"},
 				     "comment");
@@ -1082,19 +1111,17 @@ sub view_topic ($$$) {
 	print " submitted.\n", $query->p;
     }
 
-    my $download_url = $query->url() . build_download_url($topic);
+    my $download_url = build_download_url($topic);
     print $query->a({href=>"$download_url"},"Download"), " topic text.\n";
 
     print $query->p, $query->hr, $query->p;
 
     # Give the user the option of swapping between diff view modes.
     if ($mode == $COLOURED_MODE) {
-	my $url =  $query->url() . build_view_url($topic, -1, $email,
-						  $NORMAL_MODE);
+	my $url =  build_view_url($topic, -1, $NORMAL_MODE);
 	print "View as ", $query->a({href=>"$url"}, "plain"), " diff. ";
     } else {
-	my $url = $query->url() . build_view_url($topic, -1, $email,
-						 $COLOURED_MODE);
+	my $url = build_view_url($topic, -1, $COLOURED_MODE);
 	print "View as ", $query->a({href=>"$url"}, "coloured"), " diff.\n";
     }
     print $query->br;
@@ -1103,13 +1130,13 @@ sub view_topic ($$$) {
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
     my $change_tabwidth_url;
     if ($mode == $NORMAL_MODE) {
-	$change_tabwidth_url = $query->url() .
-	    build_view_url_with_tabwidth($topic, -1, $email, $NORMAL_MODE,
-					 $newtabwidth);
+	$change_tabwidth_url =
+	    build_view_url_extended($topic, -1, $NORMAL_MODE,
+				    $newtabwidth, "");
     } else {
-	$change_tabwidth_url = $query->url() .
-	    build_view_url_with_tabwidth($topic, -1, $email, $COLOURED_MODE,
-					 $newtabwidth);
+	$change_tabwidth_url =
+	    build_view_url_extended($topic, -1, $COLOURED_MODE,
+				    $newtabwidth, "");
     }
 
     print "Tab width set to $tabwidth (";
@@ -1190,7 +1217,7 @@ sub view_topic ($$$) {
 	    $reading_diff_block = 0;
 	}
 
-	my $url = $query->url() . build_edit_url($i, $topic, $context, $mode);
+	my $url = build_edit_url($i, $topic, "");
 
 	# Display the data.
 	if ($mode == $COLOURED_MODE) {
@@ -1227,8 +1254,7 @@ sub view_topic ($$$) {
     # Now display all comments in reverse order.  Put an anchor in for the
     # first comment.
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
-	my $edit_url = $query->url() . build_edit_url($comment_linenumber[$i],
-						      $topic, $context, $mode);
+	my $edit_url = build_edit_url($comment_linenumber[$i], $topic, "");
 	if ($i == $#comment_linenumber) {
 	    print $query->a({name=>"comments"},$query->hr);
 	} else {
@@ -1441,29 +1467,25 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	if ($cvsmatch && $cvsrep ne "") {
 	    # Display the line numbers corresponding to the patch, with links
 	    # to the CVS file.
-	    my $url_old_full = $query->url() .
+	    my $url_old_full =
 		build_view_file_url($topic, $current_file, $OLD_FILE,
-				    $current_old_file_linenumber, "",
-				    $tabwidth);
+				    $current_old_file_linenumber, "");
 	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
 
-	    my $url_old_both_full = $query->url() .
+	    my $url_old_both_full =
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_old_file_linenumber, "L",
-				    $tabwidth);
+				    $current_old_file_linenumber, "L");
 	    my $url_old_both =
 		"javascript: myOpen('$url_old_both_full','CVS')";
 
-	    my $url_new_full = $query->url() .
+	    my $url_new_full =
 		build_view_file_url($topic, $current_file, $NEW_FILE,
-				    $current_new_file_linenumber, "",
-				    $tabwidth);
+				    $current_new_file_linenumber, "");
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 
-	    my $url_new_both_full = $query->url() .
+	    my $url_new_both_full =
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_new_file_linenumber, "R",
-				    $tabwidth);
+				    $current_new_file_linenumber, "R");
 	    my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
 
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
@@ -1685,8 +1707,7 @@ sub render_linenumber($$$$$) {
     my $link_title = get_comment_digest($offset);
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
-    my $edit_url =
-	$query->url() . build_edit_url($offset, $topic, $context, $mode);
+    my $edit_url = build_edit_url($offset, $topic, "");
     $edit_url = "javascript:fetch('$edit_url')" if ($prefix ne "");
     if ($link_title ne "") {
 	return $query->a(
@@ -1760,22 +1781,19 @@ sub submit_comments ($$$$$$) {
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
-    my $topic_url =
-	$query->url() . build_edit_url($line, $topic, $context, $NORMAL_MODE);
-    my ($rdr, $MAIL) = (FileHandle->new, FileHandle->new);
-    open2($rdr, $MAIL, "$sendmail -t") ||
-	error_return("Unable to send email: $!");
-    print $MAIL "From: $email\n";
-    print $MAIL "To: $document_author\n";
+    my $topic_url = build_edit_url($line, $topic, "");
+    open(MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
+    print MAIL "From: $email\n";
+    print MAIL "To: $document_author\n";
 
     if (defined $cc_recipients && $cc_recipients ne "")
     {
-	print $MAIL "Cc: $cc_recipients\n";
+	print MAIL "Cc: $cc_recipients\n";
     }
-    print $MAIL "Bcc: $email\n";
-    print $MAIL "Subject: [REVIEW] Topic \"$document_title\" comment added by $email\n\n";
-    print $MAIL "$email added a comment to Topic \"$document_title\".\n\n";
-    print $MAIL "URL: $topic_url\n\n";
+    print MAIL "Bcc: $email\n";
+    print MAIL "Subject: [REVIEW] Topic \"$document_title\" comment added by $email\n\n";
+    print MAIL "$email added a comment to Topic \"$document_title\".\n\n";
+    print MAIL "URL: $topic_url\n\n";
 
     # Try to determine what file and line number this comment refers to.
     my $filename = "";
@@ -1785,49 +1803,43 @@ sub submit_comments ($$$$$$) {
 			\$accurate);
     if ($filename ne "") {
 	if ($file_linenumber > 0) {
-	    print $MAIL "File: $filename" . ($accurate ? "" : " around") .
+	    print MAIL "File: $filename" . ($accurate ? "" : " around") .
 		" line $file_linenumber.\n\n";
 	}
 	else {
-	    print $MAIL "File: $filename\n\n";
+	    print MAIL "File: $filename\n\n";
 	}
     }
 
-    print $MAIL "Context:\n";
-    print $MAIL "$email_hr\n\n";
-    print $MAIL get_context($line, $topic, $email_context, 0), "\n";
-    print $MAIL "$email_hr\n\n";
+    print MAIL "Context:\n";
+    print MAIL "$email_hr\n\n";
+    print MAIL get_context($line, $topic, $email_context, 0), "\n";
+    print MAIL "$email_hr\n\n";
     
     # Now display comments relevant to this line, in reverse order.
     # First displayed the comment that has been received.
-    print $MAIL "$email $dateinfo\n\n";
+    print MAIL "$email $dateinfo\n\n";
     for (my $i = 0; $i <= $#lines; $i++) {
-	print $MAIL "$lines[$i]\n";
+	print MAIL "$lines[$i]\n";
     }
-    print $MAIL "\n$email_hr\n\n";
+    print MAIL "\n$email_hr\n\n";
 
     # Now display the comments that have already been submitted.
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
 	if ($comment_linenumber[$i] == $line) {
 	    my $data = $comment_data[$i];
 
-	    print $MAIL "$comment_author[$i] $comment_date[$i]\n\n$data\n";
-	    print $MAIL "$email_hr\n\n";
+	    print MAIL "$comment_author[$i] $comment_date[$i]\n\n$data\n";
+	    print MAIL "$email_hr\n\n";
 	}
     }
-    print $MAIL ".\n";
+    print MAIL ".\n";
 
     # Check if there were any error messages from sendmail.
-    my $mail_errors = "";
-    while (<$rdr>) {
-	$mail_errors .= $_;
-    }
-
-    close $MAIL;
-    if ($mail_errors ne "") {
+    if (! close MAIL) {
 	generate_header($topic, $document_title, $email, "", "",
-			$background_col);
-	error_return("Failed to send email: \"$mail_errors\"");
+			$mode, $background_col);
+	error_return("Failed to send email");
     }
 
     # The email was sent successfully, append the comment to the file.
@@ -1847,14 +1859,14 @@ sub submit_comments ($$$$$$) {
     # Redirect the browser to view the topic back at the same line number where
     # they were adding comments to.
     my $redirect_url =
-	$query->url() . build_view_url($topic, $line, $email, $mode);
+	build_view_url_extended($topic, $line, $mode, "", $email);
     print $query->redirect(-URI=>"$redirect_url");
     return;
 }
 
 # Present a new form which will allow a user to create a new topic.
 sub create_topic () {
-    generate_header("", "", "", "", "", $background_col);
+    generate_header("", "", "", "", "", "", $background_col);
     print $query->h1("Create new topic"), $query->p;
     print $query->start_multipart_form();
     $query->param(-name=>'action', -value=>'submit_topic');
@@ -2022,7 +2034,7 @@ sub submit_topic ($$$$$$$$) {
     close COMMENT;
 
     generate_header($dirname, $topic_title, $email, $reviewers, $cc,
-		    $background_col);
+		    "", $background_col);
 
     # Process the document file.  If it is in CVS unidiff format, then
     # extract all the information possible to allow for intelligent
@@ -2030,8 +2042,7 @@ sub submit_topic ($$$$$$$$) {
     process_document($dirname);
 
     # Send the author, reviewers and the cc an email with the same information.
-    my $topic_url = $query->url() . build_view_url($dirname, -1, "",
-						   $default_topic_create_mode);
+    my $topic_url = build_view_url($dirname, -1, $default_topic_create_mode);
     open (MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
     print MAIL "From: $email\n";
     print MAIL "To: $reviewers\n";
@@ -2229,9 +2240,7 @@ sub render_monospaced_line ($$$$$$$) {
     my $line_cell = "";
     if ($offset != -1) {
 	# A line corresponding to the review.
-	my $edit_url =
-	    $query->url() . build_edit_url($offset, $topic, $context,
-					   $COLOURED_MODE);
+	my $edit_url = build_edit_url($offset, $topic, "");
 	if (defined $comment_exists{$offset}) {
 	    my $link_title = get_comment_digest($offset);
 	    my $js_title = $link_title;
@@ -2399,7 +2408,7 @@ sub view_file ($$$) {
     
     # Output the new file, with the appropriate patch applied.
     my $title = $new == $NEW_FILE ? "New $filename" : "$filename v$revision";
-    generate_header($topic, $title, "", "", "", $diff_background_col);
+    generate_header($topic, $title, "", "", "", "", $diff_background_col);
 
     if ($new == $BOTH_FILES) {
 	print_coloured_table();
