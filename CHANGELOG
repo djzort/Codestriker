@@ -3,6 +3,11 @@
 
 Version 1.8.0
 
+* Codestriker now works under IIS as well as Apache.  Use IPC::Open3
+  rather than IPC::Run (which doesn't work under IIS) within the
+  CvsLocal and CvsPserver modules when fetching remote diff data from
+  CVS.  IPC::Run is no longer used.
+
 * A new configuration variable $tmpdir is in codestriker.conf for
   unusual setups which can't use the system default temporary
   directory for the creation of temporary files.  Win32 systems are

@@ -10,7 +10,8 @@
 package Codestriker::Repository::CvsPserver;
 
 use strict;
-use IPC::Run;
+use FileHandle;
+use IPC::Open3;
 
 # Constructor, which takes as a parameter the username, password, hostname
 # and repository path.
@@ -69,13 +70,35 @@ sub toString ($) {
 # the specified file handle.  If the size of the diff goes beyond the
 # limit, then return the appropriate error code.
 sub getDiff ($$$$$) {
-    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
+    my ($self, $start_tag, $end_tag, $module_name,
+	$stdout_fh, $stderr_fh) = @_;
 
-    my @command = ( $Codestriker::cvs, '-q', '-d', $self->{url},
+    my $write_stdin_fh = new FileHandle;
+    my $read_stdout_fh = new FileHandle;
+    my $read_stderr_fh = new FileHandle;
+    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+		    $Codestriker::cvs, '-q', '-d', $self->{url},
 		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
-		    $module_name );
+		    $module_name);
 
-    my $h = IPC::Run::run(\@command, '>', $fh, '2>', $error_fh);
+    # Ideally, we should use IO::Select, but that is broken on Win32.
+    # With CVS, read first from stdout.  If that is empty, then an
+    # error has occurred, and that can be read from stderr.
+    my $buf = "";
+    while (read($read_stdout_fh, $buf, 16384)) {
+	print $stdout_fh $buf;
+    }
+    while (read($read_stderr_fh, $buf, 16384)) {
+	print $stderr_fh $buf;
+    }
+
+    # Wait for the process to terminate.
+    waitpid($pid, 0);
+
+    # Flush the output file handles.
+    $stdout_fh->flush;
+    $stderr_fh->flush;
+
     return $Codestriker::OK;
 }
 

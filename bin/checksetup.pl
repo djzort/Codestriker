@@ -66,10 +66,6 @@ my $modules = [
         version => '1.13' 
     }, 
     { 
-        name => 'IPC::Run', 
-        version => '0' 
-    }, 
-    { 
         name => 'Template', 
         version => '2.06' 
     },
