@@ -36,8 +36,9 @@ build: build-docs
 	$(CP) codestriker.conf README CHANGELOG HACKING LICENSE $(BUILD_DIR)
 
 build-docs:
-	cd doc ; $(MAKE) codestriker.html
+	cd doc ; $(MAKE)
 
 clean:
 	cd doc ; $(MAKE) clean
 	$(RM) -fr build
+	$(RM) -f html/*.html html/*.pdf html/*.rtf html/*.png

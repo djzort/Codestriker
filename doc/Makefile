@@ -1,7 +1,7 @@
 # Makefile template for building the Codestriker documentation.
 
 # Don't remove .tex or .dvi intermediate files.
-.PRECIOUS: %.tex %.dvi %.eps
+.PRECIOUS: %.eps
 
 SOURCES=codestriker.sgml
 DOCBOOK_DIR=.
@@ -76,7 +76,7 @@ EPS_FILES=$(PNG_FILES:.png=.eps)
 %.eps: %.png
 	$(PNG2EPS) $< > $@
 
-install: $(HTML_TARGETS) $(PDF_TARGETS)
+install: $(HTML_TARGETS) $(PDF_TARGETS) $(EPS_FILES)
 	$(CP) $(PDF_TARGETS) *.html *.png ../html
 
 clean:
