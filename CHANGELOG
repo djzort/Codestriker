@@ -1,3 +1,8 @@
+Version 1.5.1:
+
+* Fixed bug where viewing a file in a popup didn't work for those diffs
+  which contained empty lines.
+
 Version 1.5.0:
 
 * Just some documentation changes.  No code changes from 1.5.0b3.
