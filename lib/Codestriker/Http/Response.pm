@@ -13,9 +13,6 @@ package Codestriker::Http::Response;
 use strict;
 use Codestriker::Http::Cookie;
 
-# From codestriker.conf.
-use vars qw ( $codestriker_css );
-
 # Constructor for this class.  Indicate that the response header hasn't been
 # generated yet.
 sub new($$) {
@@ -134,7 +131,7 @@ sub generate_header($$$$$$$$$$) {
     }
 
     # Generate the URL to the codestriker CSS file.
-    $codestriker_css = $query->url();
+    my $codestriker_css = $query->url();
     $codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
 
     # Write the simple open window javascript method for displaying popups.
