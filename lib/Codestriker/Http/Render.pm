@@ -107,6 +107,7 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
 	    }
 	    $dbh->disconnect;
 	    $self->{idhashref} = \%idhash;
+	    $self->{lxr_base_url} = $lxr{url};
 	}
 	else {
 	    # No LXR mapping defined for this repository.
@@ -131,7 +132,7 @@ sub lxr_ident($$) {
     my $idhashref = $self->{idhashref};
     
     if (length($id) >= 4 && defined $$idhashref{$id}) {
-	return "<A HREF=\"${Codestriker::lxr_idlookup_base_url}$id\" " .
+	return "<A HREF=\"" . $self->{lxr_base_url} . "$id\" " .
 	    "CLASS=\"fid\">$id</A>";
     } else {
 	return $id;

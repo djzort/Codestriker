@@ -61,7 +61,7 @@ my $modules = [
     }, 
     { 
         name => 'Template', 
-        version => '2.07' 
+        version => '2.06' 
     },
     { 
         name => 'HTML::Entities', 
@@ -663,7 +663,8 @@ if ($project_count == 0) {
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).
-print "Generating bin/codestriker.pl file...\n";
+print "Generating cgi-bin/codestriker.pl file...\n";
+mkdir '../cgi-bin', 0755;
 open(CODESTRIKER_BASE, "codestriker.pl.base")
     || die "Unable to open codestriker.pl.base file: $!";
 open(CODESTRIKER_PL, ">../cgi-bin/codestriker.pl")
