@@ -760,7 +760,6 @@ sub get_comment_digest($) {
 		# Need to remove the newlines for the data.
 		my $data = $comment_data[$i];
 		$data =~ s/\n/ /mg; # Remove newline characters
-		$data = CGI::escapeHTML($data);
 		$digest .= "$data ------- ";
 	    }
 	}
