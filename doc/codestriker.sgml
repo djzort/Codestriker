@@ -560,7 +560,7 @@ $antispam_email = 0;
       </sect2>
     </sect1>
 
-    <sect1>
+    <sect1 id="running-checksetup.pl">
       <title>Running checksetup.pl</title>
       <para>
         The <filename>checksetup.pl</filename> script located in
@@ -636,10 +636,12 @@ HTML::Entities
 % perl checksetup.pl
 </programlisting>
       </para>
-      This will tell you what missing Perl modules you have, and will
-      then attempt to try and initialise the Codestriker database.
-      Make sure your database is running, and that you have the
-      necessary DBD::Pg/DBD::Mysql modules installed.
+      <para>
+        This will tell you what missing Perl modules you have, and
+        will then attempt to try and initialise the Codestriker
+        database.  Make sure your database is running, and that you
+        have the necessary DBD::Pg/DBD::Mysql modules installed.
+      </para>
     </sect1>
 
     <sect1>
@@ -654,31 +656,213 @@ HTML::Entities
         which is available for download for both *NIX and Window
         platforms.  Apache should be already available for most *NIX
         distributions.
-      </para>	
+      </para>
+      <para>
+        <emphasis>Note any Codestriker or Apache configuration changes
+        require the Apache server to be restarted.</emphasis>  For
+        *NIX, a command like the following is required:
+<programlisting>
+/etc/init.d/httpd restart
+</programlisting>
+        or
+<programlisting>
+/etc/init.d/apache restart
+</programlisting>
+      </para>
+      <para>
+        For Windows, the Apache shell window can be terminated by
+        pressing ^C, and started from the Windows menu.  There are
+        also shortcuts from the menu for editing the Apache
+        configuration file.
+      </para>
       <sect2>
         <title>CGI Script</title>
 	<para>
-	  	  
+	  If you installed Codestriker into
+	  <filename>/var/www/codestriker/codestriker-X.Y.Z</filename>,
+	  the configuration you need in your
+	  <filename>apache.conf</filename> file (normally located in
+	  either
+	  <filename>/etc/httpd.conf</filename>,
+	  <filename>/etc/apache.conf</filename> or
+	  <filename>/etc/httpd/conf/httpd.conf</filename>) is the
+	  following:
+<programlisting>
+ScriptAlias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/"&gt;
+   AllowOverride None
+   Options ExecCGI
+   Order allow,deny
+   Allow from all
+&lt;/Directory&gt;
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/html/"&gt;
+   AllowOverride None
+   Allow from all
+&lt;/Directory&gt;
+</programlisting>
+         For Windows, the configuration is the same, but filename
+         paths should use '/' rather than '\'.  An example
+         configuration could be the following, if Codestriker was
+         installed in
+         <filename>c:\codestriker\codestriker-X.Y.Z</filename>.
+<programlisting>
+ScriptAlias /codestriker/ "C:/codestriker/codestriker-X.Y.Z/cgi-bin/"
+Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
+
+&lt;Directory "C:/codestriker/codestriker-X.Y.Z/cgi-bin/"&gt;
+   AllowOverride None
+   Options ExecCGI
+   Order allow,deny
+   Allow from all
+&lt;/Directory&gt;
+
+&lt;Directory "C:/codestriker/codestriker-X.Y.Z/html/"&gt;
+   AllowOverride None
+   Allow from all
+&lt;/Directory&gt;
+</programlisting>
 	</para>
       </sect2>
       <sect2>
         <title>Apache 1.X mod_perl</title>
-	<para></para>
+	<para>
+	  Using <command>mod_perl</command> provides performance
+	  benefits for Perl-based web applications.  For CGI
+	  deployments, as described in the previous section, each HTTP
+	  request will create a <emphasis>new</emphasis> Perl
+	  interpretor, which needs to initialise, and then parse the
+	  Codestriker source code.  This can add significant latency
+	  for each HTTP request.
+	</para>
+	<para>
+	  Using <command>mod_perl</command>, a pool of Perl
+	  intrepretors which have already parsed the Codestriker
+	  source code is maintained, so that whenever an HTTP request
+	  is issued, the time spent creating a new Perl interpretor
+	  and the parsing of the Codestriker code is removed.
+	</para> 
+	<para>
+	  <command>Mod_perl</command> is available for download from
+	  <ulink
+	  url="http://perl.apache.org">http://perl.apache.org</ulink>.
+	  For most *NIX distributions, it is available by default with
+	  Apache.  For installing <command>mod_perl</command> under
+	  Windows, <ulink
+	  url="http://www.webmatrix.net/log/modperl-win32">http://www.webmatrix.net/log/modperl-win32</ulink>
+	  contains installation information.  One point to note
+	  however, I found I could not run ppm as <command>ppm
+	  --location=...</command> as shown on this site, but had to
+	  run ppm interactively, and issue commands like:
+<programlisting>
+ppm
+set location http://theoryx5.uwinnipeg.ca/ppmpackages
+set save
+install mod_perl
+</programlisting>
+	</para>
+	<para>
+	  The following shows the configuration settings for an Apache
+	  1.X server with <command>mod_perl</command> enabled, for a
+	  Codestriker distribution installed in
+	  <filename>/var/www/codestriker/codestriker-X.Y.Z</filename>.
+<programlisting>
+Alias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/"&gt;
+   SetHandler perl-script
+   PerlHandler Apache::Registry
+   Options +ExecCGI
+&lt;/Directory&gt;
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/html/"&gt;
+   AllowOverride None
+   Allow from all
+&lt;/Directory&gt;
+</programlisting>
+          The settings for Windows are the same, only the pathnames
+          will be different, as per the CGI configuration in the
+          previous section.
+	</para>
+	<para>
+	  For extra security, Codestriker supports Perl taint-mode, so
+	  it is advisable to also have the following option in your
+	  Apache config:
+<programlisting>
+PerlTaintCheck On
+</programlisting>
+          Note if you are using LXR on the same webserver, this option
+          cannot be used.  You'll also need to remove the
+          <option>-T</option> argument from
+          <filename>bin/codestriker.pl.base</filename>, and re-run
+          <command>checksetup.pl</command> again (see <xref
+          linkend="running-checksetup.pl">) if you want to use
+          Codestriker and LXR.
+	</para>
       </sect2>
       <sect2>
         <title>Apache 2.X mod_perl</title>
-	<para></para>
+	<para>
+	  For Apache 2.X, make sure the <command>mod_perl</command>
+	  module is loaded when Apache starts.  Near the top of the
+	  Apache config file, you should see commands like the
+	  following:
+<programlisting>
+LoadModule perl_module modules/mod_perl.so
+PerlModule Apache2
+</programlisting>
+          If these commands aren't present, and a Perl startup file is
+          not being used, make sure these are added in.
+	</para>
+	<para>
+	  The Codestriker configuration for Apache 2.X is very
+	  similar, the only change is the name of the PerlHandler.
+<programlisting>
+Alias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/"&gt;
+   SetHandler perl-script
+   PerlHandler ModPerl::Registry
+   Options +ExecCGI
+&lt;/Directory&gt;
+
+&lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/html/"&gt;
+   AllowOverride None
+   Allow from all
+&lt;/Directory&gt;
+</programlisting>
+	</para>
+	<para>
+	  To enable Perl taint mode checking, using the following
+	  option:
+<programlisting>
+PerlSwitches -T
+</programlisting>
+	</para>
       </sect2>
       <sect2>
         <title>Other Webservers</title>
-	<para></para>
+	<para>
+	  There is no Apache-specific code in Codestriker, so it
+	  should work fine as a vanilla CGI script for other
+	  webservers.  If you have success running it under another
+	  webserver, please pass this information on so that it can be
+	  incorporated into this guide (see <xref linkend="contact">).
+	</para>
       </sect2>
     </sect1>
-
   </chapter>
 
   <chapter>
     <title>User's Guide</title>
+    <sect1>
+      <title>Introduction</title>
+      <para></para>
+    </sect1>
     <sect1>
       <title>Topic List Screen</title>
       <para></para>
@@ -727,17 +911,294 @@ HTML::Entities
     <title>Hacking</title>
     <sect1>
       <title>Codestriker Layout</title>
-      <para></para>
+      <para>
+        This chapter is for developers which wish to contribute to
+	Codestriker, and want a quick birds-eye view as to how the
+	code is structured.  The codestriker modules are broken into
+	the following sub-modules, which are located in
+	<filename>lib/Codestriker</filename>:
+	<variablelist>
+	  <varlistentry>
+	    <term>Action</term>
+	    <listitem>
+	      <para>
+	        Every action or gesture that can be performed on the
+		Codestriker UI has an associated module for handling
+		that action.  The name of the module indicates what
+		action it is handling.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>BugDB</term>
+	    <listitem>
+	      <para>
+	        Support for updating bug tracking systems when topics
+		are created or their state is changed against specific
+		bug reports.  Currently, only Bugzilla is supported,
+		but the API can support other bug-tracking systems.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>DB</term>
+	    <listitem>
+	      <para>
+	        A thin wrapper over the DBI interface, to
+		create/remove database connections.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>FileParser</term>
+	    <listitem>
+	      <para>
+	        These modules are responsible for parsing the input
+		text when topics are created.  Currently, CVS
+		unidiffs, PATCH unidiffs and Subversion diff files are
+		supported.  The API for these parsers is simply to
+		accept input text, and to return an array of delta
+		objects, which describe source code changes made to a
+		specific file on specific lines.  These delta objects
+		are then used for rendering a topic, so that they are
+		agnostic to which source control system they
+		originated from.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Http</term>
+	    <listitem>
+	      <para>
+	        This contains initial HTTP request processing, and
+		support for generating an HTTP response, including the
+		handling of cookies and compressed streams.  This
+		sub-module also contains the all-important Render.pm
+		module, which is the work-horse for generating the
+		complex HTML from the topic deltas.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Model</term>
+	    <listitem>
+	      <para>
+	        This contains the persistent objects of the system,
+		and the associated database operations on them.  These
+		objects include Topics, Comments, Files and Deltas.
+		The Action classes eventually call these model objects
+		when the persistent state of the system needs to be
+		queried or modified.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Repository</term>
+	    <listitem>
+	      <para>
+	        A number of objects implement the Repository API,
+		which is used throughout the system.  Repositories
+		currently supported include a local CVS repository, a
+		remote CVS repository whose data is accessed by HTTP,
+		and Subversion.  Future repositories can be easily
+		added to this framework.  The methods in the
+		repository API include a way of retrieving the entire
+		contents of a specified file and revision (which is
+		used in the ViewFile action module), and the
+		generation of a revision file log URL.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Smtp</term>
+	    <listitem>
+	      <para>
+	        A simple API for sending email messages.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </para>
+
+      <para>
+	In addition to the above modules, the following directories
+	are of interest:
+	<variablelist>
+	  <varlistentry>
+	    <term>bin</term>
+	    <listitem>
+	      <para>
+	        This contains the all-important
+		<filename>checksetup.pl</filename> script, which is
+		used for initialising the system, and for performing
+		upgrades.  This isn't the most pretty script in the
+		world, partly for all of the old data-migration it has
+		to do from old versions to the current version.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>cgi-bin</term>
+	    <listitem>
+	      <para>
+	        This contains the codestriker.pl CGI script.  It reads
+		the "action" parameter from the URL, and delegates the
+		handling of the request to the appropriate action
+		object.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>html</term>
+	    <listitem>
+	      <para>
+	        This contains the <filename>codestriker.css</filename>
+	        file.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+
+	  <varlistentry>
+	    <term>templates</term>
+	    <listitem>
+	      <para>
+	        Almost all of the HTML generated by codestriker (apart
+	        from the actual code rendering) can be customised by
+	        the templates within this directory.  Each Action
+	        object typically has an associated template, where the
+	        view can be easily customized.  There is also a header
+	        and footer template, which is included in every page,
+	        for site customization.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </para>
     </sect1>
     <sect1>
       <title>Database Schema</title>
-      <para></para>
+      <para>
+        The <filename>bin/checksetup.pl</filename> script contains the
+        <command>CREATE TABLE</command> statements that are used when
+        the Codestriker database is initialised, in the
+        <varname>$table</varname> hash.  The following tables are
+        defined:
+	<variablelist>
+	  <varlistentry>
+	    <term>project</term>
+	    <listitem>
+	      <para>
+	        A Codestriker database can consist of a number of
+	        projects, which have a name, id, description and
+	        creation date.  Each code review topic, is linked to a
+	        specific project.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topic</term>
+	    <listitem>
+	      <para>
+	        A topic represents a code review that has been
+	        submitted to Codestriker.  It contains attributes like
+	        the author, title, description, creation date,
+	        repository, and is linked to a member project.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>participant</term>
+	    <listitem>
+	      <para>
+	        A participant is associated with a topic, and contains
+	        an email address, and the type of participant they
+	        are, such as the author, reviewer or observer
+	        (somebody was is CC'ed the review).
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>comment</term>
+	    <listitem>
+	      <para>
+	         A comment is made against a specific review, and
+	         consists of the author and the comment text itself.
+	         It is linked with a specific commentstate object.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>commentstate</term>
+	    <listitem>
+	      <para>
+	        A commentstate row is associated with a comment, and
+	        contains exact information as to what file and
+	        linenumber the comment was made against.  It also
+	        contains state information about the comment, whether
+	        it is marked a "submitted", "complete" or "invalid".
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topicbug</term>
+	    <listitem>
+	      <para>
+	        This table records a many-to-many relationship between
+	        topics and bug ids.  A topic may fix more than one bug
+	        ids, and likewise, a bug id can be fixed by many
+	        topics.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>file</term>
+	    <listitem>
+	      <para>
+	        A topic consists on many file objects, which contain a
+	        filename, revision number and an indicator as to
+	        whether it is a text or binary file.  A file consists
+	        of one or more delta objects.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>delta</term>
+	    <listitem>
+	      <para>
+	        A delta is associated with a specific file object, and
+	        represents a single diff chunk or change.  It
+	        represents for file X, at line number Y, the following
+	        change is a part of the review.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+      </para>
     </sect1>
   </chapter>
 
   <chapter>
     <title>Troubleshooting</title>
-    <para></para>
+    <para>
+      If you have any problems, be sure to check first if it isn't a
+      well-known Perl problem.  The Bugzilla trouble-shooting page at
+      <ulink
+      url="http://www.bugzilla.org/docs216/html/troubleshooting.html">http://www.bugzilla.org/docs216/html/troubleshooting.html</ulink>
+      documents them well.  If the problem doesn't match, send a
+      message (see
+      <xref linkend="contact">), along with any relevant information
+      (including relevant contents of your apache error log file), and
+      I'll be happy to help you out.
+    </para>
   </chapter>
 
   <chapter>
@@ -745,9 +1206,14 @@ HTML::Entities
     <para></para>
   </chapter>
 
-  <chapter>
+  <chapter id="contact">
     <title>Contact Details</title>
-    <para></para>
+    <para>
+      Please mail me any other suggestions you have to
+      <email>codestriker-user@lists.sourceforge.net</email> or to me
+      personally at <email>sits@users.sourceforge.net</email>.
+      Contributions are most welcome!
+    </para>
   </chapter>
       
 </book>
