@@ -3,6 +3,9 @@
 
 Version 1.8.1
 
+* Modified the filename field in the topicfile table back to 255
+  characters instead of 1024 so that MySQL doesn't complain.
+
 * Added some missing imports which caused compilation errors for
   Perl 5.8.3 on Solaris when checksetup.pl was run.
 
