@@ -58,8 +58,10 @@ use Codestriker::Action::ViewTopicProperties;
 use Codestriker::Action::ViewTopicComments;
 use Codestriker::Template::Plugin::AutomagicLinks;
 
-# Set the temp file location
-$CGITempFile::TMPDIRECTORY = $Codestriker::tmpdir;
+# Set the temp file location, if one has been specified.
+if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
+    $CGITempFile::TMPDIRECTORY = $Codestriker::tmpdir;
+}
 
 # Set the PATH to something sane if we aren't running under windows.
 # For a lot of annoying reasons, we can't run Codestriker in
