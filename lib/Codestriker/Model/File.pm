@@ -183,6 +183,13 @@ sub _read_diff_header($$$$$$$) {
 	    $line = $$doc_array_ref[$$offset++];
 	    return 0 unless defined $line;
 	}
+
+	# If we are doing a diff between two revisions, a second revision
+	# line will appear.  Don't care what the value of the second
+	# revision is.
+	if ($line =~ /^retrieving revision (.*)$/o) {
+	    $line = $$doc_array_ref[$$offset++];
+	}
 	
 	# Need to check for binary file differences for patch files.
 	# Unfortunately, when you provide the "-N" argument to diff, then
