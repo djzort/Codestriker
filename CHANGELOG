@@ -1,6 +1,11 @@
+Version 1.4.3:
+
+* Support for "diff -uNp", "diff -uN --show-function-line=regexp",
+  "cvs diff -uNp" and "cvs diff -uN  --show-function-line=regexp".
+
 Version 1.4.2:
 
-* Can now handle diffs which each in: "\ No newline at end of file".
+* Can now handle diffs which end in: "\ No newline at end of file".
 
 * Changed the HTML generation for popup windows displaying old/new
   versions of a file to use <PRE> rather than a table, which cuts down

@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.4
+# Version 1.4.3
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -47,6 +47,7 @@ $bugtracker = "";
 # of this string when URLs are generated.
 $cvsviewer = "";
 #$cvsviewer = "http://localhost.localdomain/cgi-bin/viewcvs.cgi/";
+#$cvsviewer = "http://localhost.localdomain/cgi-bin/cvsweb.cgi/";
 
 # How the CVS repository is accessed.  For local access, this is set as the
 # empty string.
@@ -251,8 +252,8 @@ sub untaint_email($);
 sub untaint_emails($);
 sub get_time_string($);
 sub make_canonical_email_list($);
-sub display_data ($$$$$$$$$$$$$);
-sub display_coloured_data ($$$$$$$$$$$$$);
+sub display_data ($$$$$$$$$$$$$$);
+sub display_coloured_data ($$$$$$$$$$$$$$);
 sub render_linenumber($$$);
 sub add_old_change($$);
 sub add_new_change($$);
@@ -945,6 +946,7 @@ sub view_topic ($$$) {
     my $reading_diff_block = 0;
     my $cvsmatch = 0;
     my $index_filename = "";
+    my $block_description = "";
 
     # Display the data that is being reviewed.
     coloured_mode_start($topic) if ($mode == $COLOURED_MODE);
@@ -958,6 +960,7 @@ sub view_topic ($$$) {
 	    $current_file_revision = "";
 	    $current_old_file_linenumber = "";
 	    $current_new_file_linenumber = "";
+	    $block_description = "";
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
 	} elsif ($document[$i] =~ /^Index: (.*)$/ && $mode == $COLOURED_MODE) {
@@ -983,6 +986,7 @@ sub view_topic ($$$) {
 	    $current_file_revision = "";
 	    $current_old_file_linenumber = "";
 	    $current_new_file_linenumber = "";
+	    $block_description = "";
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
 	} elsif ($document[$i] =~ /^\-\-\- (.*[^\s])\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/ &&
@@ -991,10 +995,11 @@ sub view_topic ($$$) {
 	    # which case this is the start of the diff block.
 	    $current_file = $1;
 	    $index_filename = "";
-	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@$/) {
+	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@(.*)$/) {
 	    # The part identifying the line number.
 	    $current_old_file_linenumber = $1;
 	    $current_new_file_linenumber = $2;
+	    $block_description = $3;
 	    $diff_linenumbers_found = 1;
 	    $reading_diff_block = 0;
 	}
@@ -1009,12 +1014,14 @@ sub view_topic ($$$) {
 				  $current_old_file_linenumber,
 				  $current_new_file_linenumber,
 				  $reading_diff_block, $diff_linenumbers_found,
-				  $topic, $mode, $cvsmatch);
+				  $topic, $mode, $cvsmatch,
+				  $block_description);
 	} else {
 	    display_data($i, $max_digit_width, $data, $url, $current_file,
 			 $current_file_revision, $current_old_file_linenumber,
 			 $current_new_file_linenumber, $reading_diff_block,
-			 $diff_linenumbers_found, $topic, $mode, $cvsmatch);
+			 $diff_linenumbers_found, $topic, $mode, $cvsmatch,
+			 $block_description);
 	}
 
 	# Reset the diff line numbers read, to handle the next diff block.
@@ -1143,11 +1150,12 @@ sub coloured_mode_finish ($$) {
 }
 
 # Display a line for non-coloured data.
-sub display_data ($$$$$$$$$$$$$) {
+sub display_data ($$$$$$$$$$$$$$) {
     my ($line, $max_digit_width, $data, $edit_url, $current_file,
 	$current_file_revision, $current_old_file_linenumber,
 	$current_new_file_linenumber, $reading_diff_block,
-	$diff_linenumbers_found, $topic, $mode, $cvsmatch) = @_;
+	$diff_linenumbers_found, $topic, $mode, $cvsmatch,
+	$block_description) = @_;
 
     # Add the appropriate amount of spaces for alignment before rendering
     # the line number.
@@ -1164,11 +1172,12 @@ sub display_data ($$$$$$$$$$$$$) {
 # Display a line for coloured data.  Note special handling is done for
 # unidiff formatted text, to output it in the "coloured-diff" style.  This
 # requires storing state when retrieving each line.
-sub display_coloured_data ($$$$$$$$$$$$$) {
+sub display_coloured_data ($$$$$$$$$$$$$$) {
     my ($line, $max_digit_width, $data, $edit_url, $current_file,
 	$current_file_revision, $current_old_file_linenumber,
 	$current_new_file_linenumber, $reading_diff_block,
-	$diff_linenumbers_found, $topic, $mode, $cvsmatch) = @_;
+	$diff_linenumbers_found, $topic, $mode, $cvsmatch,
+	$block_description) = @_;
 
     # Don't do anything if the diff block is still being read.  The upper
     # functions are storing the necessary data.
@@ -1223,6 +1232,16 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 
 	print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
 			 $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
+
+	# Output a diff block description if one is available, in a separate
+	# row.
+	if ($block_description ne "") {
+	    my $description = CGI::escapeHTML($block_description);
+	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
+					$description),
+			     $query->td({-class=>'line', -colspan=>'2'},
+					$description));
+	}
 	
 	if ($cvsmatch && $cvsrep ne "") {
 	    # Display the line numbers corresponding to the patch, with links
@@ -1235,21 +1254,22 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 		build_view_file_url($topic, $current_file, 1,
 				    $current_new_file_linenumber);
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
-	    
+
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_old"}, "Line " .
 						  "$current_old_file_linenumber")),
 			     $query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_new"}, "Line " .
-						  "$current_new_file_linenumber"))), "\n";
+						  "$current_new_file_linenumber"))),
+					"\n";
 	} else {
 	    # No match in the repository - or a new file.  Just display
 	    # the headings.
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 					"Line $current_old_file_linenumber"),
 			     $query->td({-class=>'line', -colspan=>'2'},
-					"Line $current_new_file_linenumber"),
-			     "\n");
+					"Line $current_new_file_linenumber")),
+			     "\n";
 	}
     }
     else {
@@ -2133,7 +2153,7 @@ sub view_file ($$$) {
     while (1) {
 	# Read the next line of patch information.
 	my $patch_line_start;
-	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@$/) {
+	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@.*$/) {
 	    $patch_line_start = $1;
 	    $next_chunk_end = $1 + $2;
 	}
@@ -2279,7 +2299,7 @@ sub get_file_linenumber ($$$$$)
     for ($current_topic_linenumber = $filetable_offset[$index];
 	 defined($_=<PATCH>) && $current_topic_linenumber <= $topic_linenumber;
 	 $current_topic_linenumber++) {
-	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@$/) {
+	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@.*$/) {
 	    # Matching diff header, record what the current linenumber is now
 	    # in the new file.
 	    $newfile_linenumber = $1 - 1;
