@@ -184,7 +184,8 @@ sub doit($$$$$$$$$) {
     defined $smtp || die "Unable to connect to mail server: $!";
 
     $smtp->mail($from);
-    $smtp->ok() || die "Couldn't set sender to \"$from\" $!";
+    $smtp->ok() || die "Couldn't set sender to \"$from\" $!, " .
+	$smtp->message();
 
     # $to has to be defined.
     my $recipients = $to;
@@ -193,7 +194,8 @@ sub doit($$$$$$$$$) {
     my @receiver = split /, /, $recipients;
     for (my $i = 0; $i <= $#receiver; $i++) {
 	$smtp->recipient($receiver[$i]);
-	$smtp->ok() || die "Couldn't send email to \"$receiver[$i]\" $!";
+	$smtp->ok() || die "Couldn't send email to \"$receiver[$i]\" $!, " .
+	    $smtp->message();
     }
 
     $smtp->data();
@@ -219,10 +221,10 @@ sub doit($$$$$$$$$) {
     $smtp->datasend("\n");
     $smtp->datasend($body);
     $smtp->dataend();
-    $smtp->ok() || die "Couldn't send email $!";
+    $smtp->ok() || die "Couldn't send email $!, " . smtp->message();
 
     $smtp->quit();
-    $smtp->ok() || die "Couldn't send email $!";
+    $smtp->ok() || die "Couldn't send email $!, " . smtp->message();
 
     return 1;
 }
