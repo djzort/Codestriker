@@ -36,6 +36,10 @@ Version 1.7.8
 * Added "Check All"/"Clear All" links in the view comments page for
   convenience.
 
+* If there is an error in sending an email, make sure a descriptive
+  error message is displayed.  Thanks to Jason Remillard
+  <jremillardshop@yahoo.com> for spotting this.
+
 Version 1.7.7
 
 * The table of contents links on the view topic page didn't include
