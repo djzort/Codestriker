@@ -214,7 +214,10 @@ sub process($) {
     $self->_untaint_digits('tabwidth');
     $self->_untaint_filename('start_tag');
     $self->_untaint_filename('end_tag');
-    $self->_untaint_filename('module');
+    
+    # VSS module names can be things like $/TestProject/Project-name, so 
+    # this needs to be handled in a special way.
+    $self->_untaint('module', '\$?[-_\/\w\.\s]+');
 
     $self->_untaint_digits('scontext');
     $self->_untaint_comma_digits('sstate');

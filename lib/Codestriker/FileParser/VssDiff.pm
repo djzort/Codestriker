@@ -11,7 +11,7 @@
 package Codestriker::FileParser::VssDiff;
 
 use strict;
-use Codestriker::FileParser::UnidiffUtils;
+use Codestriker::FileParser::BasicDiffUtils;
 
 # Return the array of filenames, revision number, linenumber, whether its
 # binary or not, and the diff text.
@@ -26,11 +26,7 @@ sub parse ($$$) {
     while (defined($line)) {
 	# Values associated with the diff.
 	my $revision;
-	my $filename = "";
-	my $old_linenumber = -1;
-	my $new_linenumber = -1;
-	my $binary = 0;
-	my $diff = "";
+	my $filename;
 
 	# Skip whitespace.
 	while (defined($line) && $line =~ /^\s*$/o) {
@@ -38,76 +34,27 @@ sub parse ($$$) {
 	}
 	return @result unless defined $line;
 
-	# For VSS diffs, the start of the diff block is the Index line.
-	return () unless defined $line && $line =~ /^Index:/o;
-
-	# Determine if this chunk represents a binary file.
-	$binary = 1 if $line =~ /^Index: binary/o;
-
-	# Determine if this chunk is a new file.
-	if ($binary) {
-	    if ($line =~ /^Index: binary added/o) {
-		$revision = $Codestriker::ADDED_REVISION;
-		chop $line;
-		$line .= "; 0\n";
-	    } elsif ($line =~ /^Index: binary removed/o) {
-		$revision = $Codestriker::REMOVED_REVISION;
-	    } else {
-		# Extract the revision number for this modified binary file.
-		return () unless 
-		    $line =~ /^Index: binary modified \$.*; (\d+)$/o;
-		$revision = $1;
-	    }
-	}
-	else {
-	    if ($line =~ /^Index: added/o) {
-		$revision = $Codestriker::ADDED_REVISION;
-		chop $line;
-		$line .= "; 0\n";
-	    } elsif ($line =~ /^Index: removed/o) {
-		$revision = $Codestriker::REMOVED_REVISION;
-	    } else {
-		# Extract the revision number for this modified file.
-		return () unless
-		    $line =~ /^Index: modified \$.*; (\d+)$/o;
-		$revision = $1;
-	    }
-	}
-
-	# Extract the filename part off the line.  Note for added files, an
-	# artifical revision number has been appended to make life easier.
-	return () unless $line =~ /^Index: .* \$\/(.*);/o;
+	# For VSS diffs, the start of the diff block is the "Diffing:" line
+	# which contains the filename and version number.
+	return () unless defined $line && $line =~ /^Diffing: (.*);(\d+)$/o;
 	$filename = $1;
+	$revision = $2;
 
-	my $chunk = {};
-	$chunk->{filename} = $filename;
-	$chunk->{revision} = $revision;
-	$chunk->{old_linenumber} = -1;
-	$chunk->{new_linenumber} = -1;
-	$chunk->{binary} = $binary;
-	$chunk->{repmatch} = 1;
-	$chunk->{description} = "";
-	$chunk->{text} = "";
-
-	# Read the diff chunks.
+	# The next line will be the "Against:" line.
 	$line = <$fh>;
-	if ($binary) {
-	    # For a binary file, there is nothing more to read.  Add the chunk
-	    # to the result list.
-	    push @result, $chunk;
-	} else {
-	    return () unless $line =~ /^\-\-\-/o;
-	    $line = <$fh>;
-	    return () unless $line =~ /^\+\+\+/o;
+	return () unless defined $line && $line =~ /^Against:/o;
 
-	    # Now parse the unidiff chunks.
-	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
-		read_unidiff_text($fh, $filename, $revision, 1);
-	    push @result, @file_diffs;
+	# The next part of the diff will be the old style diff format.
+	$line = <$fh>;
+	my $chunk =
+	    Codestriker::FileParser::BasicDiffUtils->read_diff_text(
+		       $fh, $line, $filename, $revision, 1);
 
-	    # Read the next line so the loop can continue processing.
-	    $line = <$fh>;
-	}
+	return () unless defined $chunk;
+	push @result, $chunk;
+
+	# Read the next line.
+	$line = <$fh>;
     }
 
     # Return the found diff chunks.

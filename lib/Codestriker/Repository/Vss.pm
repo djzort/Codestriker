@@ -11,15 +11,15 @@ package Codestriker::Repository::Vss;
 
 use strict;
 use Cwd;
-use File::Temp qw/ tempdir /;
+use File::Temp qw/ tmpnam tempdir /;
 
-# Constructor, which takes as a parameter the repository url.  At the moment,
-# this url is ignored, and is assumed to be localhost.
-sub new ($$) {
-    my ($type, $repository_url) = @_;
+# Constructor, which takes the username and password as parameters.
+sub new {
+    my ($type, $username, $password) = @_;
 
     my $self = {};
-    $self->{repository_url} = $repository_url;
+    $self->{username} = $username;
+    $self->{password} = $password;
     bless $self, $type;
 }
 
@@ -63,7 +63,7 @@ sub retrieve ($$$\$) {
 # Retrieve the "root" of this repository.
 sub getRoot ($) {
     my ($self) = @_;
-    return $self->{repository_url};
+    return "vss:";
 }
 
 # Return a URL which views the specified file and revision.
@@ -78,14 +78,111 @@ sub getViewUrl ($$$) {
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return "vss:" . $self->getRoot();
+    return "vss:" . $self->{username} . ":" . $self->{password};
 }
 
-# The getDiff operation is not supported.
+# Retrieve the specified VSS diff directly using VSS commands.
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
 
-    return $Codestriker::UNSUPPORTED_OPERATION;
+    # Currently we only support either start_tag or end_tag being set.
+    my $tag = '';
+    $tag = $end_tag if $start_tag eq '' && $end_tag ne '';
+    $tag = $start_tag if $start_tag ne '' && $end_tag eq '';
+    return $Codestriker::UNSUPPORTED_OPERATION if $tag eq '';
+
+    # Create a temporary directory where all of the temporary files
+    # will be written to.
+    my $tempdir;
+    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
+    }
+    else {
+	$tempdir = tempdir(CLEANUP => 1);
+    }
+
+    # Execute the VSS command to retrieve all of the entries in this label.
+    open(VSS, "\"$Codestriker::vss\" dir \"$module_name\"" .
+	 " -y" . $self->{username} . "," . $self->{password} .
+	 " -R -VL${tag} -I- |")
+	|| die "Can't open connection to VSS repository: $!";
+
+    # Collect the list of filename and revision numbers into a list.
+    my @files = ();
+    my @versions = ();
+    my $current_dir = '';
+    while (<VSS>) {
+	if (/^(\$\/.*):$/o) {
+	    # Entering a new top-level directory.
+	    $current_dir = $1;
+	} elsif (/^\$[^\/]/o) {
+	    # Sub-directory entry which can be skipped.
+	} elsif (/^\d+ item/o) {
+	    # Item count line which can be skipped.
+	} elsif (/^\s*$/o) {
+	    # Skip blank lines.
+	} elsif (/^(.*);(\d+)$/o) {
+	    # Actual file entry with version number.
+	    push @files, "$current_dir/$1";
+	    push @versions, $2;
+	}
+    }
+    close VSS;
+
+    # Now for each file, we need to retrieve the actual contents and output
+    # it into a diff file.  First, create a temporary directory to store the
+    # files.
+    for (my $i = 0; $i <= $#files; $i++) {
+	# Determine if the file is a text file, and if not, skip it.
+	open(VSS, "\"$Codestriker::vss\" properties \"$files[$i]\"" .
+	     " -y" . $self->{username} . "," . $self->{password} .
+	     " -I- |")
+	    || die "Unable to run ss properties on $files[$i]\n";
+	my $text_type = 0;
+	while (<VSS>) {
+	    if (/Type:\s*Text/o) {
+		$text_type = 1;
+		last;
+	    }
+	}
+	close(VSS);
+	next if $text_type == 0;
+	
+	# Retrieve a read-only copy of the file into a temporary
+	# directory.  Make sure the command output is put into
+	# a temporary file, rather than stdout/stderr.
+	my $command_output = "$tempdir\\___output.txt";
+	system("\"$Codestriker::vss\" get \"$files[$i]\"" .
+	       " -y" . $self->{username} . "," . $self->{password} .
+	       " -VL${tag} -I- -O\"$command_output\" -GWR -GL\"$tempdir\"");
+	unlink $command_output;
+
+	$files[$i] =~ /\/([^\/]+)$/o;
+	my $basefilename = $1;
+	my @data = ();
+	if (open(VSS, "$tempdir/$basefilename")) {
+	    while (<VSS>) {
+		push @data, $_;
+	    }
+	    close VSS;
+	    unlink "$tempdir/$basefilename";
+	}
+	my $data_size = $#data + 1;
+	
+	# Output the file header information in VSS diff format.
+	print $fh "Diffing: $files[$i];$versions[$i]\n";
+	print $fh "Against: \n";
+	print $fh "0a1,$data_size\n";
+	for (my $index = 0; $index <= $#data; $index++) {
+	    print $fh "> " . $data[$index];
+	}
+	print $fh "\n";
+    }
+
+    # Remove the temporary directory.
+    rmdir $tempdir;
+
+    return $Codestriker::OK;
 }
 
 1;

@@ -54,9 +54,9 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*perforce:(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Perforce repository.
 	return Codestriker::Repository::Perforce->new($1, $2, $3, $4);
-    } elsif ($repository =~ /^\s*vss:(.*)$/i) {
+    } elsif ($repository =~ /^\s*vss:(.*):(.*)$/i) {
 	# Visual Source Safe (VSS) repository.
-	return Codestriker::Repository::Vss->new($1);
+	return Codestriker::Repository::Vss->new($1,$2);
     } elsif ($repository =~ /^\s*clearcase:(.*)$/i) {
 	# ClearCase Snapshot repository.
 	return Codestriker::Repository::ClearCaseSnapshot->new($1);
