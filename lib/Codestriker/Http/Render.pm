@@ -849,7 +849,7 @@ sub render_monospaced_line ($$$$$$$$) {
 	$max_line_length, $class) = @_;
 
     # Convert any identifier to their LXR links.
-    my $data = $self->lxr_data(HTML::Entities::encode($data));
+    $data = $self->lxr_data(HTML::Entities::encode($data));
 
     my $prefix = "";
     my $digit_width = length($linenumber);
