@@ -21,9 +21,12 @@ Version 1.8.4
   and removed for each file.  This gives the reviewer a quick idea
   where the major changes in the review are.  From Robert Hudson.
 
-* There is a new configuration option $allow_project_state_change
-  which if enabled, allows a project's state to be modified, and in
-  fact deleted.  By default, this option is disabled.
+* There is a new configuration option @project_states which controls
+  whether a project can have its state changed to 'Closed',
+  which prevents new topics being created within it, and the state
+  'Deleted', which will delete the project and all its member topics.
+  Both of these new states are optional, and are not available by
+  default.  From Robert Hudson.
 
 * When sending emails involving more than one CC recipient, the email
   sending may fail because a space wasn't put after each comma.
