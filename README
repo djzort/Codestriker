@@ -1,4 +1,4 @@
-Codestriker v1.5.7
+Codestriker v1.6.0
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 (see the CHANGELOG file for details on changes).
@@ -129,7 +129,6 @@ other distributions):
       cd /var/www/codestriker
       tar zxvf /from/installed/location/codestriker.X.Y.Z.tar.gz
       chown -R apache.apache /var/www/codestriker
-      cp /var/www/codestriker/codestriker.X.Y.Z/html/codestriker.css ../html
 
 To create all of the necessary database tables, do the following:
 
@@ -138,7 +137,8 @@ To create all of the necessary database tables, do the following:
 
 Note checksetup.pl can be executed again and again.  It should be run
 whenever codestriker is updated, as it will automatically adjust the
-database accordingly, and check that the necessary tables exist.
+database accordingly, check that the necessary tables exist, and that
+the prerequisite modules are installed on the system.
 
 Put the following lines in your httpd.conf file (probably located in
 /etc/httpd/conf), so that the
@@ -148,12 +148,18 @@ codestriker.
 ----
 
 Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker.X.Y.Z/html/
 
-<Location /codestriker>
- SetHandler  perl-script
- PerlHandler Apache::Registry
- Options +ExecCGI
-</Location>
+<Directory "/var/www/codestriker/codestriker.X.Y.Z/cgi-bin/">
+   SetHandler perl-script
+   PerlHandler Apache::Registry
+   Options +ExecCGI
+</Directory>
+
+<Directory "/var/www/codestriker/codestriker.X.Y.Z/html/">
+   AllowOverride None
+   Allow from all
+</Directory>
 
 PerlTaintCheck On
 

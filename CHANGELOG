@@ -4,6 +4,11 @@ Version 1.6.0
   easily customised without modifying any perl code.  The templates
   live in template/en/default, where they can be modified in-place.
 
+* Modified the Apache configuration instructions to use <Directory>
+  instead of <Location>.  Also modified so that the copying of the CSS
+  file into the site's main HTML area is no longer necessary, by using
+  an additional <Directory> directive.
+
 Version 1.5.7
 
 * Set the attachment field in the HTTP header when downloading the

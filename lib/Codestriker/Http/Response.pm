@@ -132,7 +132,10 @@ sub generate_header($$$$$$$$$$) {
     if (defined $topic_title && $topic_title ne "") {
 	$title .= ": \"$topic_title\"";
     }
-    $codestriker_css = "/codestriker.css";
+
+    # Generate the URL to the codestriker CSS file.
+    $codestriker_css = $query->url();
+    $codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
 
     # Write the simple open window javascript method for displaying popups.
     # Note gotoAnchor can't simply be:
