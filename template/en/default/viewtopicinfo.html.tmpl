@@ -14,90 +14,78 @@
 <input type="hidden" name="mode" value="[% mode %]">
 <input type="hidden" name="version" value="[% topic_version %]">
 
-[%# Display the topic metrics #%]
+<h3>Comment Metrics</h3>
+
 <table cellpadding="2" cellspacing="2" border="0">
-<tr class="tt1">
- <td>&nbsp;</td><td colspan="5"></td>
-</tr>
+    [% FOREACH metric = comment_metrics %]
+    [%# Output the metric header on its own line #%]
+    <tr>
+        <td class="tth">[% metric.name %]</td>
+
+        [%# Now output the metric's enumerated values #%]
+        [% FOREACH value = metric.values %]
+        <td class="tt0">[% value %]</td>
+        [% END %]
+    </tr>
+
+    [%# Now output the values #%]
+    <tr>
+        <td>&nbsp;</td>
+        [% FOREACH value = metric.values %]
+        <td>[% comment_metric_tally.${metric.name}.$value %]</td>
+        [% END %]
+    </tr>
+
+    [% END %]
+
+    [%# Output the comment count metrics #%]
+    <tr>
+        <td class="tth">Total</td>
+	<td class="tt0">Comment Threads</td>
+	<td class="tt0">Submitted Comments</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>[% number_comment_threads %]</td>
+        <td>[% number_comments %]</td>
+    </tr>
+</table>
+
+<h3>Topic Metrics</h3>
+
+<table cellpadding="2" cellspacing="2" border="0">
+    <tr class="tth">
+	<td>Lines</td>
+
+	[% FOREACH topic_metrics %]
+        <td onmouseover="(window.status='[% description %]'); return true"
+	    onmouseout="(window.status=''); return true">[% name %]
+            [% IF description != '' %]
+            <FONT SIZE="-2">
+                <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
+            </FONT>
+            [% END %]
+        </td>
+	[% END %]
+    </tr>
+    <tr>
+        <td>[% number_of_lines %]</td>
+
+	[% FOREACH topic_metrics %]
+	[% IF enabled %]
+	<td><input name="topic_metric" type="text" size="6" value="[% value %]"></td>
+        [% ELSE %]
+	<td>[% value %]</td>
+	[% END %]
+	[% END %]
+    </tr>
+</table>
+
+<h3>User Metrics</h3>
+
+<table cellpadding="2" cellspacing="2" border="0">
 
 <tr class="tth">
- <td>Comments</td>
-</tr>
-
-<tr class="tt0">
- <td>Comment Threads</td>
- <td>Comments</td>
-</tr>
-<tr>
- <td>[% number_comment_threads %]</td>
- <td>[% number_comments %]</td>
-</tr>
-
-<tr><td>&nbsp;</td></tr>
-
-[% FOREACH metric = comment_metrics %]
-
-   [%# Output the headers #%]
-   <tr class="tt0">
-   <td>[% metric.name %]</td>
-   [% FOREACH value = metric.values %]
-   <td>[% value %]</td>   
-   [% END %]
-   </tr>
-
-   [%# Now output the values #%]
-   <tr>
-   <td>&nbsp;</td>
-   [% FOREACH value = metric.values %]
-   <td>[% comment_metric_tally.${metric.name}.$value %]</td>
-   [% END %]
-   </tr>
-
-[% END %]
-
-<tr><td>&nbsp;</td></tr>
- 
-<tr class="tth">
-    <td>Topic</td>
-</tr>
-
-<tr class="tt0">
-<td>Lines</td>
-[% FOREACH topic_metrics %]
-    <td onmouseover="(window.status='[% description %]'); return true"
-	onmouseout="(window.status=''); return true">[% name %]
-
-    [% IF description != '' %]
-    <FONT SIZE="-2">
-    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
-    </FONT>
-    [% END %]
-    </td>
-[% END %]
-</tr>
-<tr class="tt1">
-    <td>[% number_of_lines %]</td>
-
-[% FOREACH topic_metrics %]
-    [% IF enabled %]
-    <td><input name="topic_metric" type="text" size="6" value="[% value %]"></td>
-    [% ELSE %]
-    <td>[% value %]</td>
-    [% END %]
-[% END %]
-
-</tr>
-
-[% type = 1 %]
-
-<tr class="tt[% type mod 2 %]">
- [% type = type + 1 %]
- <td>&nbsp;</td><td colspan="5"></td>
-</tr>
-
-<tr class="tt[% type mod 2 %]">
- [% type = type + 1 %]
-    
     <td>User</td>
 
     [% FOREACH author_metrics %]
@@ -114,7 +102,9 @@
     [% END %]
 </tr>
 
-<tr>
+[% type = 0 %]
+<tr class="tt[% type mod 2 %]">
+    [% type = type + 1 %]
     <td>[% author %]</td>
     [% FOREACH author_metrics %]
     
@@ -132,7 +122,8 @@
 </tr>
 
 [% FOREACH reviewer_metrics %]
-<tr>
+<tr class="tt[% type mod 2 %]">
+    [% type = type + 1 %]
     [% SET reviewerindex = loop.index() %]
     <td>[% reviewer %]</td>
     [% FOREACH metric=user_metrics %]
@@ -152,43 +143,39 @@
 [% END %]
 
 <tr class="tt[% type mod 2 %]">
- [% type = type + 1 %]
-    
-    <td></td>
+    [% type = type + 1 %]
+    <td>&nbsp;</td>
 
     [% FOREACH total_metrics %]
-
         <td>[% value %]</td>
-
     [% END %]
 </tr>
-
-
 </table>
 
 <p>
-[%# Render the submit button #%]
-<input type="submit" name="button" value="Save" 
-       onClick="return DeleteTopicConfirm();"> 
 
+[% IF enabled %]
+[%# Render the submit button #%]
+<input type="submit" name="button" value="Update Metrics" 
+       onClick="return DeleteTopicConfirm();"> 
+[% END %]
 </form>
 
-<HR>
-
-Activity Log:
+<h3>Activity Log</h3>
 
 <table border="1">
-    <tr><td>who</td><td>when</td><td>change</td></tr>
+    <tr class="tth"><td>Who</td><td>When</td><td>When</td></tr>
 
+    [% type = 0 %]
     [% FOREACH activity=activity_list %]
-    <tr><td>[% activity.email | html_entity%]</td>
+    <tr class="tt[% type mod 2 %]">
+        <td>[% activity.email | html_entity%]</td>
 	<td>[% activity.date | html_entity%]</td>
-	<td>[% activity.description | html_entity | $AutomagicLinks %]</td></tr>
+	<td>[% activity.description | html_entity | $AutomagicLinks %]</td>
+    </tr>
+    [% type = type + 1 %]
     [% END %]
-
 </table>
-
-
 
 [% PROCESS trailer.html.tmpl %]
 

@@ -331,7 +331,9 @@ my $commentstatemetric_table =
 	columns => [col(name=>"id", type=>$INT32, pk=>1),
 		    col(name=>"name", type=>$VARCHAR, length=>80, pk=>1),
 		    col(name=>"value", type=>$VARCHAR, length=>80)
-		    ]);
+		    ],
+	indexes => [dbindex(name=>"csm_id_idx", column_names=>["id"]),
+		    dbindex(name=>"csm_name_idx", column_names=>["name"])]);
 		    
 # Holds information relating to how a commentstate has changed over time.
 # Only changeable commentstate attributes are recorded in this table.

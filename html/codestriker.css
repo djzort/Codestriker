@@ -111,12 +111,15 @@ TR.commentc {background-color: #eeeeee} /* context */
 
 /* Topic title heading */
 TR.tth {background-color: #aaffaa; font-family: Helvetica, Arial}
+TD.tth {background-color: #aaffaa; font-family: Helvetica, Arial}
 
 /* Topic title row type 0 */
 TR.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
+TD.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
 
 /* Topic title row type 1 */
 TR.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
+TD.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
 /* Codestriker heading */
 TD.heading {text-align: center; background-color: #000000; font-family: Helvetica, Arial; font-size: x-large}

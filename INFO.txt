@@ -1,3 +1,19 @@
+drop table commentdata;
+drop table commentstate;
+drop table commentstatehistory;
+drop table commentstatemetric;
+drop table delta;
+drop table participant;
+drop table project;
+drop table topic;
+drop table topicbug;
+drop table topicfile;
+drop table topichistory;
+drop table topicmetric;
+drop table topicusermetric;
+drop table topicviewhistory;
+
+
 Creating the codestriker database.
 
 /usr/local/pgsql/bin/postmaster -D /usr/local/pgsql/data

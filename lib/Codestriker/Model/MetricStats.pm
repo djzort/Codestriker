@@ -163,44 +163,31 @@ sub get_download_headers {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my @base_headers = qw(
-	id
-	author
-	title
-	state
-	creation
-	project	
+	TopicID
+	Author
+	Title
+	State
+	Creation
+	Project
 	);
 
-    # Comment counts.
-    my $comment_states = $dbh->selectall_arrayref(
-	    'SELECT distinct state 
-	     FROM commentstate 
-	     ORDER BY state
+    # Comment metric counts.
+    my @comment_metric_headers;
+    my $comment_metrics = $dbh->selectall_arrayref(
+	    'SELECT DISTINCT name
+	     FROM commentstatemetric 
+	     ORDER BY name
 	    ');
-
-
-    my $comment_state_count = scalar(@Codestriker::comment_states);
-
-    # States in db may be larger than current configuration.
-    if (@$comment_states > 0 &&
-	$comment_states->[-1]->[0] >= $comment_state_count) {
-	$comment_state_count = ($comment_states->[-1]->[0])+1;
+    foreach my $metric (@$comment_metrics) {
+	push @comment_metric_headers, $metric->[0];
     }
 
-    my @state_headers;
+    # Do the built-in comment metrics.
+    push @comment_metric_headers, 'Comment Threads';
+    push @comment_metric_headers, 'Submitted Comments';
 
-    for(my $state = 0; $state < $comment_state_count; ++$state) {
-	if ($state < @Codestriker::comment_states) {
-	    push @state_headers, $Codestriker::comment_states[$state];
-	} 
-	else {
-	    push @state_headers, $state;
-	}
-    }
-
+    # Topic metrics counts.
     my @topic_metric_headers;
-
-    # Topic metrics counts
     my $topic_metrics = $dbh->selectall_arrayref(
 	    'SELECT DISTINCT metric_name 
 	     FROM topicmetric
@@ -212,8 +199,8 @@ sub get_download_headers {
     }
 
     # Do the built in topic metrics.
-
-    for(my $state = 0; $state < scalar(@Codestriker::topic_states); ++$state) {
+    for (my $state = 0; $state < scalar(@Codestriker::topic_states);
+	 ++$state) {
 	push @topic_metric_headers, 
 	    'Time In ' . $Codestriker::topic_states[$state];
     }
@@ -239,10 +226,10 @@ sub get_download_headers {
     
     my $headers = 
     {
-	base=>\@base_headers,
-	state=>\@state_headers,
-	topic=>\@topic_metric_headers,
-	user=>\@topic_user_metric_headers
+	base => \@base_headers,
+	comment => \@comment_metric_headers,
+	topic => \@topic_metric_headers,
+	user => \@topic_user_metric_headers
     };
 
     # Close the connection, and check for any database errors.
@@ -271,7 +258,6 @@ sub get_raw_metric_data {
 	    WHERE topic.id = ? AND 
 		  topic.projectid = project.id',{}, $topicid);
 
-
     if ($basic_topic_info[3] < @Codestriker::topic_states) {
 	$basic_topic_info[3] = 
 	    @Codestriker::topic_states[$basic_topic_info[3]];
@@ -285,28 +271,41 @@ sub get_raw_metric_data {
 
     my @row;
 
-    push @row,@basic_topic_info;
+    push @row, @basic_topic_info;
 
-    # Get comment state counts.
-    my $comment_states = $dbh->selectall_arrayref(
-	    'SELECT state, COUNT(id)
+    # Process the comment metric values.
+    my $count_query =
+	$dbh->prepare_cached('SELECT COUNT(*) ' .
+			     'FROM topic, commentstate, commentstatemetric ' .
+			     'WHERE topic.id = ? AND ' .
+                             'topic.id = commentstate.topicid AND ' .
+			     'commentstate.id = commentstatemetric.id AND '.
+			     'commentstatemetric.name = ? ');
+    foreach my $metric (@{$headers->{comment}}) {
+	# Get the count for this metric name.
+	$count_query->execute($topicid, $metric);
+	my ($count) = $count_query->fetchrow_array();
+	$count_query->finish();
+	push @row, $count;
+    }
+
+    # Now process the 'Comment Threads' metric.
+    my $comment_threads = $dbh->selectall_arrayref(
+	    'SELECT COUNT(id)
 	     FROM commentstate 
 	     WHERE topicid = ?
-	     GROUP BY state
 	    ',{}, $topicid);
+    push @row, $comment_threads->[0]->[0];
+
+    # Now process the 'Submitted Comments' metric.
+    my $submitted_comments = $dbh->selectall_arrayref(
+	    'SELECT COUNT(id)
+	     FROM commentstate, commentdata
+	     WHERE commentstate.topicid = ?
+             AND commentstate.id = commentdata.commentstateid
+	    ',{}, $topicid);
+    push @row, $submitted_comments->[0]->[0];
     
-    for (my $commentindex = 0; 
-	 $commentindex < scalar(@{$headers->{state}}); 
-	 ++$commentindex) {
-	my $count = 0;
-
-	foreach my $row ( @$comment_states ) {
-	    $count = $row->[1] if ($row->[0] == $commentindex);
-	}
-
-	push @row, $count;
-    } 
-
     my $topic = Codestriker::Model::Topic->new($basic_topic_info[0]);     
 
     my $metrics = $topic->get_metrics();
@@ -356,41 +355,83 @@ sub get_raw_metric_data {
     return @row;
 }
 
-# Returns 12 months of data with a break down of comment types.
+# Returns 12 months of comment metrics data.
 #
 # returns a collection of the following hash references
 # {
-#   name  = the metric name
-#   counts = array ref to metric counts per month
-#   monthnames = array ref to month names
+#   name  = the comment metric name
+#   results = collection ref to 
+#             {
+#               name = the comment value name. 
+#               counts = array ref to metric counts per month
+#               monthnames = array ref to month names
+#             }
 # }
 sub get_comment_metrics {
-    my $query = 
-	'SELECT commentstate.state, COUNT(commentstate.id) 
-	FROM commentstate
-	WHERE commentstate.creation_ts >  ? AND
-   	      commentstate.creation_ts <= ?
-	GROUP BY commentstate.state
-	ORDER BY commentstate.state';
+    # Stores the collection results.
+    my @results = ();
 
-    my @metrics = _get_monthly_metrics(12, $query);
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
 
-    foreach my $metric (@metrics) {
-	if ($metric->{name} < @Codestriker::comment_states) {
-	    $metric->{name} = $Codestriker::comment_states[$metric->{name}];
+    # Get the comment metric totals.
+    foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	my $metric_name = $metric_config->{name};
+	my $query =
+	    "SELECT commentstatemetric.value, COUNT(commentstate.id) " .
+	    "FROM commentstate, commentstatemetric " .
+	    "WHERE commentstatemetric.id = commentstate.id AND " .
+	    "commentstatemetric.name = " . $dbh->quote($metric_name) . " AND " .
+	    "commentstate.creation_ts > ? AND " .
+	    "commentstate.creation_ts <= ? " .
+	    "GROUP BY commentstatemetric.value " .
+	    "ORDER BY commentstatemetric.value";
+
+	my @metrics = _get_monthly_metrics(12, $query);
+	my $months_ref = $metrics[0]->{monthnames};
+
+	# Make sure all enumerated values are catered for.
+	my %handled_value = ();
+	foreach my $value (@metrics) {
+	    $handled_value{$value->{name}} = 1;
 	}
+	foreach my $value (@{ $metric_config->{values} }) {
+	    if (! defined $handled_value{$value}) {
+		push @metrics, { name => $value,
+				 counts => [0,0,0,0,0,0,0,0,0,0,0,0],
+				 monthnames => $months_ref };
+	    }
+	}
+
+	my $result = { name => $metric_name, results => \@metrics };
+	push @results, $result;
     }
 
-    # Get totals.
-    my @total = _get_monthly_metrics(12,
-	'SELECT \'Total Comments\', COUNT(commentstate.id) 
+    # Get comment thread totals.
+    my @total_metrics = ();
+    my @thread_total = _get_monthly_metrics(12,
+	'SELECT \'Comment Threads\', COUNT(commentstate.id) 
 	FROM commentstate
 	WHERE commentstate.creation_ts >  ? AND
 	      commentstate.creation_ts <= ?');
+    push @total_metrics, @thread_total;
 
-    push @metrics, @total;
+    # Get submitted comment totals.
+    my @submitted_total = _get_monthly_metrics(12,
+	'SELECT \'Submitted Comments\', COUNT(commentstate.id) 
+	FROM commentstate, commentdata
+	WHERE commentstate.id = commentdata.commentstateid AND
+              commentstate.creation_ts >  ? AND
+	      commentstate.creation_ts <= ?');
+    push @total_metrics, @submitted_total;
 
-    return @metrics;
+    my $result = { name => 'Total', results => \@total_metrics };
+    push @results, $result;
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
+
+    return @results;
 }
 
 # Returns 12 months of data with a break down of topic metrics.
@@ -425,7 +466,7 @@ sub get_topic_metrics {
 
     push @metrics, @total;
 
-    # Get totals for the topic metrics.
+    # Get totals for the topic user metrics.
     @total = _get_monthly_metrics(12,
 	'SELECT topicusermetric.metric_name, SUM(topicusermetric.value) 
 	FROM topicusermetric,topic
@@ -523,7 +564,7 @@ sub _get_monthly_metrics {
     return @metrics;
 }
 
-# Return a list of dbi time stamp on 1 month bondaries back for n months. This
+# Return a list of dbi time stamp on 1 month boundaries back for n months. This
 # is used to do db queries to get data cut up by month.
 sub _dbi_month_time_stamp {
     my ($number_months_back) = @_;

@@ -23,52 +23,73 @@
 
     [% FOREACH user_metrics %]
 
-    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+    <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
 	<td>[% name | html %]</td>
-	<td>[% date_last_authored %]</td>
-	<td>[% date_last_participated %]</td>
-	<td>[% total_codestriker_time %]</td>
-	<td>[% total_topics %]</td>
+	<td>[% IF date_last_authored != '' %][% date_last_authored %][% ELSE %]&nbsp;[% END %]</td>
+	<td>[% IF date_last_participated != '' %][% date_last_participated %][% ELSE %]&nbsp;[% END %]</td>
+	<td>[% IF total_codestriker_time != '' %][% total_codestriker_time %][% ELSE %]&nbsp;[% END %]</td>
+	<td>[% IF total_topics != '' %][% total_topics %][% ELSE %]&nbsp;[% END %]</td>
     </tr>
 
     [% END %]
 
 </table>
 
-<hr>
-<h3>Topic Metrics</h3>
-
+<h3>Comment Metrics</h3>
 <table cellpadding="5%">
-
+    [%# Output the last 12 month headers #%]
     <tr class="tl2">
-        <td></td>
-
+        <td>&nbsp;</td>
 	[% FOREACH month = comment_metrics_month_names %]
 	    <td>[% month %]</td>
 	[% END %]
     </tr>
 
-    <tr class="tlh"><td colspan="13" align="center"> Comment Metrics</td></tr>
+    [%# Now cycle through each comment metric type #%]
+    [% FOREACH comment_metric = comment_metrics %]
+    
+        [%# Display the comment metric type as a header #%]    
+	<tr class="tlh">
+            <td colspan="13" align="center">[% comment_metric.name %]</td>
+        </tr>
 
+	[%# Now display each enumerated value for this comment type #%]
+	[% FOREACH result = comment_metric.results %]
+        <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
+	    <td>[% result.name | html %]</td>
 
-    [% FOREACH comment_metrics %]
+	    [% FOREACH count = result.counts %]
+	        <td>[% count %]</td>
+	    [% END %]
+        </tr>
+        [% END %]
+    [% END %]
 
-    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
-	<td>[% name | html %]</td>
+    [%# Output the last 12 month headers #%]
+    <tr class="tl2">
+        <td>&nbsp;</td>
+	[% FOREACH month = comment_metrics_month_names %]
+	    <td>[% month %]</td>
+	[% END %]
+    </tr>
+</table>
 
-	[% FOREACH scount = counts %]
-	    <td>[% scount %]</td>
+<h3>Topic Metrics</h3>
+
+<table cellpadding="5%">
+    [%# Output the last 12 month headers #%]
+    <tr class="tl2">
+        <td>&nbsp;</td>
+	[% FOREACH month = comment_metrics_month_names %]
+	    <td>[% month %]</td>
 	[% END %]
     </tr>
 
-    [% END %]
-
-    <tr><td></td></tr>
     <tr class="tlh"><td colspan="13" align="center"> Topic Metrics</td></tr>
 
     [% FOREACH topic_metrics %]
 
-    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+    <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
 	<td>[% name | html %]</td>
 
 	[% FOREACH scount = counts %]

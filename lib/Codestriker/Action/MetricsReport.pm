@@ -40,7 +40,8 @@ sub process($$$) {
     my @comment_metrics =
 	Codestriker::Model::MetricStats::get_comment_metrics();
     $vars->{comment_metrics} = \@comment_metrics;
-    $vars->{comment_metrics_month_names} = $comment_metrics[0]->{monthnames};
+    $vars->{comment_metrics_month_names} =
+	$comment_metrics[0]->{results}->[0]->{monthnames};
 
     # Get the topic metrics.
     my @topic_metrics = Codestriker::Model::MetricStats::get_topic_metrics();
@@ -65,7 +66,7 @@ sub process_download($$$) {
 
     my $columns = Codestriker::Model::MetricStats::get_download_headers();
 
-    print join "\t", @{$columns->{base}},@{$columns->{state}},
+    print join "\t", @{$columns->{base}},@{$columns->{comment}},
                @{$columns->{topic}}, @{$columns->{user}};
     print "\n";
 
