@@ -3,6 +3,9 @@
 
 Version 1.7.6
 
+* Fixed bug where created topics for deployments which had projects
+  disabled were not handled correctly.
+
 * Fixed bug found by Jason Remillard <jremillardshop@yahoo.com> where
   emails were being sent for those lines which already had a comment,
   but $allow_comment_email was false.
