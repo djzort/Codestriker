@@ -325,28 +325,34 @@ sub process($$$) {
     
     # Now display all comments in reverse order.  Put an anchor in for the
     # first comment.
+    print $query->a({name=>"comments"}, $query->hr);
+    print $query->p;
+
+    $vars = {};
+    my @comments = ();
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
+	my $comment = {};
 	my $edit_url =
 	    $url_builder->edit_url($comment_linenumber[$i], $topic, "", "C$i",
 				   "");
-	if ($i == $#comment_linenumber) {
-	    print $query->a({name=>"comments"},$query->hr);
-	} else {
-	    print $query->hr;
-	}
-	print $query->a({href=>"javascript:myOpen('$edit_url','e')",
-			 name=>"C$i"},
-			"line $comment_linenumber[$i]"), ": ";
 	my $author;
 	if ($Codestriker::antispam_email) {
 	    $author = Codestriker->make_antispam_email($comment_author[$i]);
 	} else {
 	    $author = $comment_author[$i];
 	}
-	print "$author $comment_date[$i]", $query->br, "\n";
-	print $query->pre($http_response->escapeHTML($comment_data[$i])) .
-	    $query->p;
+
+	$comment->{'lineurl'} = "javascript:myOpen('$edit_url', 'e')";
+	$comment->{'linename'} = "C$i";
+	$comment->{'line'} = "line $comment_linenumber[$i]";
+	$comment->{'author'} = $author;
+	$comment->{'date'} = $comment_date[$i];
+	$comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
+	push @comments, $comment;
     }
+    $vars->{'comments'} = \@comments;
+    my $listcomments = Codestriker::Http::Template->new("listcomments");
+    $listcomments->process($vars) || die $listcomments->error();
 
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");

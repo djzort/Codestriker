@@ -107,6 +107,9 @@ sub process($$$) {
 	    $comment->{'author'} = $author;
 	    $comment->{'date'} = $comment_date[$i];
 	    $comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
+	    $comment->{'line'} = "";
+	    $comment->{'lineurl'} = "";
+	    $comment->{'linename'} = "";
 	    push @comments, $comment;
 	}
     }

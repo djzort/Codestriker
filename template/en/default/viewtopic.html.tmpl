@@ -14,6 +14,8 @@
     | <a href="[% search_url %]">Search</a>
 [% END %]
 
+<HR>
+
 <p>
 [%# Display the "updated" text if necessary. #%]
 [% IF updated == 1 %]
@@ -21,51 +23,66 @@
     <p>
 [% END %]
 
-[%# Display the topic title #%]
-<h2>[% escaped_title %]</h2>
+[%# Create a table illustrating the title, author, creation date, bug
+    ids, reviewers, number of lines and the current state. #%]
 
-[%# Create a table illustrating the author, creation date, bug ids, reviewers,
-    number of lines and the current state. #%]
+<table cellpadding="2" cellspacing="2" border="0">
 
-<table>
+<tr class="tth">
+ <td><b>Title:</b></td>
+ <td><b>[% escaped_title %]</b></td>
+</th>
 
-<tr>
+[% SET type = 0 %]
+
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Author:</td>
  <td>[% document_author %]</td>
 </tr>
 
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Created:</td>
  <td>[% document_creation_time %]</td>
 </tr>
 
 [% IF bug_string != '' %]
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Bug IDs:</td>
  <td>[% bug_string %]</td>
 </tr>
 [% END %]
 
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Reviewers:</td>
  <td>[% document_reviewers %]</td>
 </tr>
 
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Number of lines:</td>
  <td>[% number_of_lines %]</td>
 </tr>
 
-[% IF repository != '' %]
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>Repository:</td>
  <td>[% repository %]</td>
 </tr>
-[% END %]
+
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
+ <td valign="top">Description:</td>
+ <td><pre>[% description %]</pre></td>
+</tr>
 
 [%# Display the form for changing the topic state #%]
 <form method="post" enctype="application/x-www-form-urlencoded">
-<tr>
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
  <td>State:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 When a topic is created, it is initialised in state \'open\'.\n
@@ -105,32 +122,31 @@ retrieving lists of topics from the search page.
  </td>
 </tr>
 
+<tr class="tth"><td colspan="2">&nbsp</td></tr>
+
 [%# Render a "delete" button, for deleting topics, if enabled #%]
 [% IF delete_enabled != 0 %]
 <tr>
- <td>
+ <td colspan="2">
   <input type="submit" name="button" value="Delete"
      onclick="return confirm('Are you sure you want to delete this topic?')">
  </td>
 </tr>
+
 [% END %]
 </form>
 </table>   
 
-[%# Now display the description #%]
-<pre>
-[% description %]
-</pre>
-
 [%# Now display the number of comments made, with a link to the
     comment section. #%]
+<p>
 [% IF number_comments == 1 %]
     Only one <a href="[% comment_url %]">comment</a> submitted.
 [% ELSIF number_comments > 1 %]
     [% number_comments %] <a href="[% comment_url %]">comments</a> submitted.
 [% END %]
 
-<p>
+<br>
 
 [%# Display the "Download topic text" link #%]
 <a href="[% download_url %]">Download</a> topic text.

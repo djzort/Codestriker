@@ -39,6 +39,9 @@ Version 1.6.1
   what all the input form elements mean.  Also added help for the
   update topic status button in the view topic screen.
 
+* Changed the look-n-feel slightly for the view topic and edit topic
+  screens.
+
 Version 1.6.0
 
 * Modified to use the "Template Toolkit" so that the HTML pages can be

@@ -1,0 +1,24 @@
+[%# Display a list of comments #%]
+
+<TABLE CELLPADDING="1" CELLSPACING="1" BORDER="0">
+<TR CLASS="comments"><TD><B>Comments:</B></TD></TR>
+<TR CLASS="commentb"><TD>&nbsp;</TD></TR>
+[% FOREACH comment = comments %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+<TR CLASS="commenth">
+<TD>
+[% IF comment.line != "" %]
+<A HREF="[% comment.lineurl %]" NAME="[% comment.linename %]">
+[% comment.line %]</A>
+[% END %]
+
+[% comment.author %]&nbsp;[% comment.date %]
+</TD>
+</TR>
+<TR CLASS="commentb">
+<TD>
+<PRE>[% comment.text %]</PRE></TD>
+</TR>
+<TR CLASS="commentb"><TD>&nbsp;</TD></TR>
+[% END %]
+</TABLE>

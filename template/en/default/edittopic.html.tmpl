@@ -34,17 +34,12 @@
 
 <P>
 <HR>
-
-[%# Display all of the comments made on this line #%]
-[% FOREACH comment = comments %]
-[% FLUSH IF loop.count() % 10 == 1 %]
 <P>
-[% comment.author %]&nbsp;[% comment.date %] <BR>
-<PRE>[% comment.text %]</PRE><P><HR>
-[% END %]
 
+[% PROCESS listcomments.html.tmpl comments = comments %]
+   
 <P>
-Enter comments:
+Enter new comment:
 <P>
 
 <FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">

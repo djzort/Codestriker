@@ -99,3 +99,22 @@ TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
 /* Colour to use for matching identifier */
 A.fid {color: #777777; text-decoration: none}
+
+/* Style comment listings. */
+TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial}
+TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial}
+TR.commentb {background-color: #eeeeee}
+
+
+/* Style for topic title headings. */
+
+/* Topic title heading */
+TR.tth {background-color: #aaffaa; font-family: Helvetica, Arial}
+
+/* Topic title row type 0 */
+TR.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
+
+/* Topic title row type 1 */
+TR.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
+
+
