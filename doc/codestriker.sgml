@@ -781,6 +781,24 @@ $default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
 	</para>
       </sect2>
       <sect2>
+        <title>Default View Topic File View Mode</title>
+	<para>
+	  As explained by the comments in the configuration file, it
+	  it possible to specify by default, whether topics display
+	  the deltas for all files in the review, or just a single
+	  file at a time by default.  The viewing mode can be changed
+	  dynamically on the view topic screen.
+	  <programlisting>
+# When displaying a topic, if this value is -1, then all files in the
+# topic are displayed in the one page (default old Codestriker
+# behaviour).  If the value is 0, then only the first file is shown,
+# with links to display the other files.  This is useful for those
+# deployments that review a large amount of code.
+$default_file_to_view = -1;
+	  </programlisting>
+	</para>
+      </sect2>
+      <sect2>
         <title>Metrics Support</title>
         <para>
 	  As explained by the comments in the configuration file, it

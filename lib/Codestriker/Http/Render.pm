@@ -95,6 +95,8 @@ sub new ($$$$$$$\%\@$$\@\@\@$$) {
     # Also have a number of additional private variables which need to
     # be initialised.
     $self->{diff_current_filename} = "";
+    $self->{diff_current_revision} = "";
+    $self->{diff_current_repmatch} = 0;
 
     # Check if the repository has an associated LXR mapping, and if so, read
     # all the identifiers into a massive hashtable (gasp!).
@@ -243,7 +245,7 @@ sub delta ($$$$$$$$$$) {
 
     my $query = $self->{query};
 
-    if ($delta->is_delta_new_file() == 0 )
+    if ($delta->is_delta_new_file() == 0)
     {
         # Check if the file heading needs to be output.
         if ($self->{diff_current_filename} ne $filename) {
@@ -303,6 +305,8 @@ sub delta_file_header ($$$$) {
     # Close the table, update the current filename, and open a new table.
     print $query->end_table();
     $self->{diff_current_filename} = $filename;
+    $self->{diff_current_revision} = $revision;
+    $self->{diff_current_repmatch} = $repmatch;
     $self->print_coloured_table();
 
     # Url to the table of contents on the same page.
@@ -960,6 +964,14 @@ sub print_coloured_table($)
 # Finish topic view display hook for coloured mode.
 sub _coloured_mode_finish ($) {
     my ($self) = @_;
+
+    if ($self->{fview} != -1) {
+	# Show the current file header again for navigation purposes when
+	# viewing a single file at a time.
+	$self->delta_file_header($self->{diff_current_filename},
+				 $self->{diff_current_revision},
+				 $self->{diff_current_repmatch});
+    }
 
     print "</TABLE>\n";
 }
