@@ -28,6 +28,10 @@ optionally linked with a bug tracking system, such as
 bugzilla, and a CVS web viewing system, such as CVS web to
 obtain further information necessary to complete a review.
 
+The Template Toolkit is used for generating HTML output, so the
+appearance of Codestriker can be modified without changing any Perl
+code.
+
 A tutorial on how to use codestriker can be seen at
 http://codestriker.sourceforge.net
 
