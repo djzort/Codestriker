@@ -33,13 +33,14 @@ sub process($$$) {
     # Perform some error checking here on the parameters.
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read_filtered($topicid,
-    	$show_comments_by_state,
-	$show_comments_from_user);
+    my @comments =
+	Codestriker::Model::Comment->read_filtered($topicid,
+						   $show_comments_by_state,
+						   $show_comments_from_user);
 
     # Display the data, with each topic title linked to the view topic screen.
-    $http_response->generate_header($topicid, "Comment list", $email, "", "", "",
-				    "", "", "", "", 0, 0);
+    $http_response->generate_header($topicid, "Comment list", $email, "", "",
+				    "", "", "", "", "", 0, 0);
 
     # Retrieve the appropriate topic details.           
     my $topic = Codestriker::Model::Topic->new($topicid);     

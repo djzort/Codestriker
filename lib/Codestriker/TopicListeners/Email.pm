@@ -5,7 +5,7 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Topic Listeners to do email notification. All email sent from Codestriker
+# Topic Listener for email notification. All email sent from Codestriker
 # is sent from this file when an topic event happens.
 
 use strict;
@@ -48,8 +48,8 @@ sub topic_create($$) {
     return '';
 }
 
-sub topic_changed($$$) {
-    my ($self, $topic_orig, $topic) = @_;
+sub topic_changed($$$$) {
+    my ($self, $user, $topic_orig, $topic) = @_;
 
     # Any topic property changes need to be sent to all parties involved
     # for now, including parties which have been removed from the topic.
@@ -101,6 +101,8 @@ sub topic_changed($$$) {
 
     # Send off the email to the revelant parties.
     $self->_send_topic_email($topic, "Modified", 1, $from, $to, $cc, $bcc);
+
+    return '';
 }
 
 sub comment_create($$$) {
@@ -214,15 +216,6 @@ sub _send_topic_email {
 
     # Send the email notification out.
     $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
-}
-
-sub comment_state_change($$$) {
-    my ($self, $topic, $comment, $newstate) = @_;
-
-    # Default version of function that does nothing, and allowed the
-    # event to continue.
-    
-    return '';    
 }
 
 # Send an email with the specified data.  Return false if the mail can't be

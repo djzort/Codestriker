@@ -27,7 +27,7 @@ sub new {
 }
 
 sub topic_create($$) { 
-    my ($self,$topic) = @_;
+    my ($self, $topic) = @_;
 
     # If Codestriker is linked to a bug database, and this topic is associated
     # with some bugs, update them with an appropriate message.
@@ -57,8 +57,8 @@ sub topic_create($$) {
     return '';
 }
 
-sub topic_changed($$$) {
-    my ($self, $topic_orig, $topic) = @_;
+sub topic_changed($$$$) {
+    my ($self, $user, $topic_orig, $topic) = @_;
 
     # If Codestriker is linked to a bug database, and this topic is associated
     # with some bugs, update them with an appropriate message.

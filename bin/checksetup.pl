@@ -196,6 +196,20 @@ $table{topic} =
      projectid int NOT NULL,
      PRIMARY KEY (id)";
 
+# Holds information relating to how a topic has changed over time.  Only
+# changeable topic attributes are recorded in this table.
+$table{topichistory} =
+    "id int NOT NULL,
+     author varchar(255) NOT NULL,
+     title varchar(255) NOT NULL,
+     description text NOT NULL,
+     state smallint NOT NULL,
+     modified_ts timestamp NOT NULL,
+     version int NOT NULL,
+     repository text,
+     projectid int NOT NULL,
+     modified_by_user varchar(255) NOT NULL,
+     PRIMARY KEY (id, version)";
 
 # Holds all of the metric data that is owned by a specific user on a specific 
 # topic. One row per metric. Metric data that is left empty does not get a row.
@@ -236,6 +250,16 @@ $table{commentstate} =
 
 $index{commentstate} =
     "CREATE INDEX commentstate_topicid_idx ON commentstate(topicid)";
+
+# Holds information relating to how a commentstate has changed over time.
+# Only changeable commentstate attributes are recorded in this table.
+$table{commentstatehistory} =
+    "id int NOT NULL,
+     state smallint NOT NULL,
+     version int NOT NULL,
+     modified_ts timestamp NOT NULL,
+     modified_by_user varchar(255) NOT NULL,
+     PRIMARY KEY (id, version)";
 
 $table{participant} =
     "email varchar(255) NOT NULL,

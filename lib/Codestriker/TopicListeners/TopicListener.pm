@@ -21,7 +21,7 @@ sub new {
 }
 
 sub topic_create($$) { 
-    my ($self, $topic) = @_;
+    my ($self, $user, $topic) = @_;
     
     # Default version of function that does nothing, and allowed the
     # event to continue.
@@ -30,7 +30,7 @@ sub topic_create($$) {
 }
 
 sub topic_changed($$$) {
-    my ($self, $topic_orig, $topic) = @_;
+    my ($self, $user, $topic_orig, $topic) = @_;
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
@@ -47,8 +47,8 @@ sub comment_create($$$) {
     return '';    
 }
 
-sub comment_state_change($$$) {
-    my ($self, $topic, $comment, $newstate) = @_;
+sub comment_state_change($$$$$) {
+    my ($self, $user, $old_state_id, $topic, $comment) = @_;
 
     # Default version of function that does nothing, and allowed the
     # event to continue.

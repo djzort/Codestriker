@@ -99,7 +99,8 @@ sub process($$$) {
     }
 
     # Indicate to the topic listeners that the topic has changed.
-    Codestriker::TopicListeners::Manager::topic_changed($topic_orig, $topic);
+    Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
+							$topic);
 
     # Direct control to the appropriate action class, depending on the result
     # of the above operation, and what screens are enabled.

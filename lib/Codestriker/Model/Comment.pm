@@ -16,7 +16,8 @@ use Codestriker::DB::DBI;
 sub new {
     my $class = shift;
     my $self = {};
-    
+
+    $self->{id} = 0;
     $self->{topicid} = 0;
     $self->{fileline} = 0;
     $self->{filenumber} = 0;
@@ -26,6 +27,8 @@ sub new {
     $self->{date} = Codestriker->get_timestamp(time);
     $self->{state} = 0;
     $self->{version} = 0;
+    $self->{creation_ts} = "";
+    $self->{modified_ts} = "";
     
     bless $self, $class;
     return $self;
@@ -34,7 +37,8 @@ sub new {
 # Create a new comment with all of the specified properties.  Ensure that the
 # associated commentstate record is created/updated.
 sub create($$$$$$$$$) {
-    my ($self, $topicid, $fileline, $filenumber, $filenew, $author, $data, $state) = @_;
+    my ($self, $topicid, $fileline, $filenumber, $filenew, $author, $data,
+	$state) = @_;
             
     my $timestamp = Codestriker->get_timestamp(time);
     
@@ -43,20 +47,24 @@ sub create($$$$$$$$$) {
 
     # Check if a comment has been made against this line before.
     my $select_commentstate =
-	$dbh->prepare_cached('SELECT version, id ' .
+	$dbh->prepare_cached('SELECT version, id, creation_ts ' .
 			     'FROM commentstate ' .
 			     'WHERE topicid = ? AND fileline = ? AND '.
 			     'filenumber = ? AND filenew = ?');
     my $success = defined $select_commentstate;
     $success &&= $select_commentstate->execute($topicid, $fileline,
 					       $filenumber, $filenew);
+    my $commentstateid = 0;
+    my $version = 0;
+    my $creation_ts = "";
     if ($success) {
-	my ($version, $commentstateid) =
+	($version, $commentstateid, $creation_ts) =
 	    $select_commentstate->fetchrow_array();
 	$success &&= $select_commentstate->finish();
 	if (! defined $version) {
 	    # A comment has not been made on this particular line yet,
 	    # create the commentstate row now.
+	    $creation_ts = $timestamp;
 	    my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
 					      '(topicid, fileline, ' .
 					      'filenumber, filenew, state, ' .
@@ -67,21 +75,22 @@ sub create($$$$$$$$$) {
 	    $success &&= $insert->execute($topicid, $fileline, $filenumber,
 					  $filenew,
 					  $Codestriker::COMMENT_SUBMITTED, 0,
-					  $timestamp, $timestamp);
+					  $creation_ts, $creation_ts);
 	    $success &&= $insert->finish();
 	} else {
 	    # Update the commentstate record.
 	    my $update = $dbh->prepare_cached('UPDATE commentstate SET ' .
 					      'version = ?, state = ?, ' .
+					      'creation_ts = ?, ' .
 					      'modified_ts = ? ' .
 					      'WHERE topicid = ? AND ' .
 					      'fileline = ? AND ' .
 					      'filenumber = ? AND ' .
 					      'filenew = ?');
 	    $success &&= defined $update;
-	    $success &&= $update->execute($version+1,
+	    $success &&= $update->execute(++$version,
 					  $Codestriker::COMMENT_SUBMITTED,
-					  $timestamp,
+					  $creation_ts, $timestamp,
 					  $topicid, $fileline, $filenumber,
 					  $filenew);
 	    $success &&= $update->finish();
@@ -110,6 +119,7 @@ sub create($$$$$$$$$) {
 	$success &&= $insert_comment->finish();
     }
 
+    $self->{id} = $commentstateid;
     $self->{topicid} =  $topicid;
     $self->{fileline} = $fileline;
     $self->{filenumber} = $filenumber;
@@ -118,12 +128,15 @@ sub create($$$$$$$$$) {
     $self->{data} = $data;
     $self->{date} = $timestamp;
     $self->{state} = $state;
-    $self->{version} = 0;
+    $self->{version} = $version;
+    $self->{creation_ts} = $creation_ts;
+    $self->{modified_ts} = $timestamp;
         
     # get the filename, for the new comment.
     my $get_filename = $dbh->prepare_cached('SELECT filename ' .
-	   	                'FROM file ' .
-			        'WHERE topicid = ? AND sequence = ?');
+					    'FROM file ' .
+					    'WHERE topicid = ? AND ' .
+					    'sequence = ?');
     $success &&= defined $get_filename;
     $success &&= $get_filename->execute($topicid, $filenumber);
                 
@@ -150,7 +163,7 @@ sub read_authors
 
     # Retrieve all of the comment information for the specified topicid.
     my $select_comment =
-	$dbh->prepare_cached('SELECT distinct( comment.author) ' .
+	$dbh->prepare_cached('SELECT distinct(comment.author) ' .
 			     'FROM comment, commentstate ' .
 			     'WHERE commentstate.topicid = ? ' .
 			     'AND commentstate.id = comment.commentstateid ');
@@ -195,7 +208,10 @@ sub read_all_comments_for_topic($$) {
 			     'comment.creation_ts, ' .
 			     'commentstate.state, ' .
 			     'file.filename, ' .
-			     'commentstate.version ' .
+			     'commentstate.version, ' .
+			     'commentstate.id, ' .
+			     'commentstate.creation_ts, ' .
+			     'commentstate.modified_ts ' .
 			     'FROM comment, commentstate, file ' .
 			     'WHERE commentstate.topicid = ? ' .
 			     'AND commentstate.id = comment.commentstateid ' .
@@ -224,6 +240,9 @@ sub read_all_comments_for_topic($$) {
 	    $comment->{state} = $data[6];
 	    $comment->{filename} = $data[7];
 	    $comment->{version} = $data[8];
+	    $comment->{id} = $data[9];
+	    $comment->{creation_ts} = Codestriker->format_timestamp($data[10]);
+	    $comment->{modified_ts} = Codestriker->format_timestamp($data[11]);
 	    push @results, $comment;
 	}
 	$select_comment->finish();
@@ -243,23 +262,25 @@ sub read_filtered($$$$) {
     # Read all of the comments from the database. 
     my @comments = $type->read_all_comments_for_topic($topicid);
 
-    # Now filter out comments that don't match the comment state and author filter.
+    # Now filter out comments that don't match the comment state and
+    # author filter.
     @comments = grep { 
         my $comment = $_;
         my $keep_comment = 1;
                                 
-        # check for filter via the state of the comment.
+        # Check for filter via the state of the comment.
         $keep_comment = 0 if ($filtered_by_state_index ne ""  && 
 			      $filtered_by_state_index ne $comment->{state} );
         
-        # check for filters via the comment author name, handle email SPAM filtering.
-        my $filteredAuthor = 
+        # Check for filters via the comment author name, handle email
+        # SPAM filtering.
+        my $filteredAuthor =
             	    Codestriker->filter_email($comment->{author});
-        my $filteredByAuthor = 
+        my $filteredByAuthor =
             	    Codestriker->filter_email($filtered_by_author);
 
         $keep_comment = 0 if ($filteredByAuthor ne "" && 
-			      $filteredAuthor ne $filteredByAuthor);                                   
+			      $filteredAuthor ne $filteredByAuthor);
 
  	$keep_comment;
     } @comments;
@@ -279,12 +300,14 @@ sub change_state($$) {
 
     # Check that the version reflects the current version in the DB.
     my $select_comments =
-	$dbh->prepare_cached('SELECT version, state FROM commentstate ' .
+	$dbh->prepare_cached('SELECT version, state, creation_ts ' .
+			     'FROM commentstate ' .
 			     'WHERE topicid = ? AND fileline = ? AND ' .
 			     'filenumber = ? AND filenew = ?');
     my $update_comments =
 	$dbh->prepare_cached('UPDATE commentstate SET version = ?, ' .
-			     'state = ? WHERE topicid = ? AND fileline = ? ' .
+			     'state = ?, creation_ts = ?, modified_ts = ? ' .
+			     'WHERE topicid = ? AND fileline = ? ' .
 			     'AND filenumber = ? AND filenew = ?');
 
     my $success = defined $select_comments && defined $update_comments;
@@ -297,9 +320,9 @@ sub change_state($$) {
 					   $self->{filenew});
 
     # Make sure that the topic still exists, and is therefore valid.
-    my ($current_version, $current_stateid);
+    my ($current_version, $current_stateid, $creation_ts);
     if ($success && 
-	! (($current_version, $current_stateid)
+	! (($current_version, $current_stateid, $creation_ts)
 	   = $select_comments->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
@@ -318,8 +341,11 @@ sub change_state($$) {
     if ($new_stateid != $self->{state}) {
     	$self->{version} = $self->{version} + 1;
         $self->{state} = $new_stateid;
-	$success &&= $update_comments->execute($self->{version} ,
+	$self->{modified_ts} = $timestamp;
+	$success &&= $update_comments->execute($self->{version},
  					       $self->{state},
+					       $self->{creation_ts},
+					       $timestamp,
 					       $self->{topicid}, 
                                                $self->{fileline},
 					       $self->{filenumber}, 

@@ -3,6 +3,10 @@
 
 Version 1.8.0
 
+* Added in a new topic listener which records all changes to a
+  comment's state, and any property changes to a topic.  Two new
+  database tables have been added to store this information.
+
 * Added in the ability for the topic's properties to be changed,
   including the title, author, bug ids, reviewers, cc, repository,
   project, description and state.  Updated the topic listeners to now
@@ -14,7 +18,7 @@ Version 1.8.0
   here later).
 
 * The $Codestriker::allow_repository configuration variable is removed
-  since this boolean value can be dervived from the length of the
+  since this boolean value can be derived from the length of the
   @valid_repositories list.  From Jason Remillard.
 
 * Use tempfile() in Parser.pm to close a potential security hole, from

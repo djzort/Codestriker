@@ -30,6 +30,7 @@ sub new {
     $self->{creation_ts} = "";
     $self->{modified_ts} = "";
     $self->{topic_state} = "";
+    $self->{topic_state_id} = 0;
     $self->{version} = 0;
     $self->{repository} = "";
     $self->{project_id} = "";
@@ -127,6 +128,7 @@ sub create($$$$$$$$$$$$) {
     $self->{creation_ts} = $timestamp;
     $self->{modified_ts} = $timestamp;
     $self->{topic_state} = 0;
+    $self->{topic_state_id} = 0;
     $self->{project_id} = $projectid;
     $self->{version} = 0;
     $self->{repository} = $repository;
@@ -145,12 +147,10 @@ sub create($$$$$$$$$$$$) {
 
     # Create all of the necessary rows.  It is assumed state 0 is the initial
     # state.
-    my $repository_string = "";
-    $repository_string = $repository->toString() if defined $repository;
     $success &&= $insert_topic->execute($topicid, $author, $title,
 					$description, $document, 0,
 					$timestamp, $timestamp, 0,
-					$repository_string, $projectid);
+					$repository, $projectid);
 	
     # Insert the associated bug records.
     $success &&= $self->_insert_bug_ids($dbh, $bug_ids);
@@ -268,6 +268,7 @@ sub read($$) {
 	$self->{creation_ts} = $creationtime;
 	$self->{modified_ts} = $modifiedtime;
 	$self->{topic_state} = $Codestriker::topic_states[$state];
+	$self->{topic_state_id} = $state;
 	$self->{project_id} = $projectid;
 	$self->{project_name} = $projectname;
 	$self->{version} = $version;
@@ -291,7 +292,7 @@ sub read($$) {
 sub read_comments {
     my ($self) = shift;
 
-    if ( scalar(@{$self->{comments}}) == 0) {
+    if (scalar(@{$self->{comments}}) == 0) {
 	my @comments = Codestriker::Model::Comment->read_all_comments_for_topic($self->{topicid});
     
 	$self->{comments} = \@comments;
@@ -416,6 +417,7 @@ sub update($$$$$$$$$$) {
     $self->{description} = $new_description;
     $self->{modified_ts} = $modified_ts;
     $self->{topic_state} = $new_state;
+    $self->{topic_state_id} = $new_stateid;
 
     # Now update the database with the new properties.  Note due to a weird
     # MySQL bug, we need to also retrieve the creation_ts and store

@@ -91,12 +91,6 @@ function ClearAll()
 // -->
 </SCRIPT>
 
-[%# Display any "feedback" to the user if necessary. #%]
-[% IF feedback != '' %]
-    <font color="red">[% feedback %]</font>
-    <p>
-[% END %]
-
 <FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="SelectFilter(1)">
 <INPUT TYPE="hidden" NAME="action" VALUE="change_comments_state">
 <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">

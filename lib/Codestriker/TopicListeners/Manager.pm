@@ -14,6 +14,7 @@ package Codestriker::TopicListeners::Manager;
 
 use Codestriker::TopicListeners::Email;
 use Codestriker::TopicListeners::Bugzilla;
+use Codestriker::TopicListeners::HistoryRecorder;
 
 our @topic_listeners;
 
@@ -89,8 +90,14 @@ sub comment_state_change {
 # them into module variable @topic_listeners.
 sub _create_listeners {
    if (scalar(@topic_listeners) == 0) {
-       push @topic_listeners, Codestriker::TopicListeners::Bugzilla->new();
-       push @topic_listeners, Codestriker::TopicListeners::Email->new();       
+       push @topic_listeners,
+            Codestriker::TopicListeners::Bugzilla->new();
+
+       push @topic_listeners,
+            Codestriker::TopicListeners::Email->new();
+
+       push @topic_listeners,
+            Codestriker::TopicListeners::HistoryRecorder->new();
    }
 }
 

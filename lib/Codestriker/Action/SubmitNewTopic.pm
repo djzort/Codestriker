@@ -110,9 +110,10 @@ sub process($$$) {
 	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
 	if (! defined $repository) {
-	    $feedback .= "The repository value \"$repository_url\" is invalid.\n";
-	    $feedback .= "Please correct this value in your codestriker.conf " .
-		"file, and try again.\n";
+	    $feedback .=
+		"The repository value \"$repository_url\" is invalid.\n" .
+		"Please correct this value in your codestriker.conf file, " .
+		"and try again.\n";
 	}
     }
 
@@ -120,7 +121,8 @@ sub process($$$) {
     # with the message.
     if ($feedback ne "") {
 	if (defined $fh) {
-	    $feedback .= "For security reasons, please re-enter the " .
+	    $feedback .=
+		"For security reasons, please re-enter the " .
 		"file name to upload, if required.\n";
 	}
 	_forward_create_topic($error_vars, $feedback);
@@ -216,10 +218,11 @@ sub process($$$) {
         $Codestriker::maximum_topic_size_lines ne "" &&
         $Codestriker::maximum_topic_size_lines < $new_topic_length)
     {        
-	$feedback .= "The topic length of $new_topic_length lines is too long. " . 
-                     "Topics cannot exceed $Codestriker::maximum_topic_size_lines " . 
-                     "lines long. Please remove content from topic, or break the topic " .
-                     "into several independent topics.\n";
+	$feedback .=
+	    "The topic length of $new_topic_length lines is too long. " . 
+	    "Topics cannot exceed $Codestriker::maximum_topic_size_lines " . 
+	    "lines long. Please remove content from topic, or break the " .
+	    "topic into several independent topics.\n";
                      
         _forward_create_topic($error_vars, $feedback);
         $http_response->generate_footer();
@@ -231,7 +234,7 @@ sub process($$$) {
     $topic->create($topicid, $email, $topic_title,
 		   $bug_ids, $reviewers, $cc,
 		   $topic_description, $topic_text,
-		   $repository, $projectid,
+		   $repository_url, $projectid,
 		   \@deltas);
                                                                   
     # tell all of the topic listener classes that a topic has 

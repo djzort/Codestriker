@@ -109,6 +109,7 @@ sub process($) {
     $self->{bug_ids} = "" if ! defined $self->{bug_ids};
     $self->{sstate} = "" if ! defined $self->{sstate};
     $self->{sproject} = "" if ! defined $self->{sproject};
+    $self->{sauthor} = "" if ! defined $self->{sauthor};
     $self->{a} = "" if ! defined $self->{a};
     $self->{updated} = 0 if ! defined $self->{updated};
     $self->{repository} = "" if ! defined $self->{repository};
