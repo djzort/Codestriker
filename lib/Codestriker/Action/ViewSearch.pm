@@ -16,7 +16,14 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-    $http_response->generate_header("", "Search", "", "", "", "", "", "", 0, 0);
+
+    # Check if this action is allowed.
+    if ($Codestriker::allow_searchlist == 0) {
+	$http_response->error("This function has been disabled");
+    }
+
+    $http_response->generate_header("", "Search", "", "", "", "", "", "", "",
+				    0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};

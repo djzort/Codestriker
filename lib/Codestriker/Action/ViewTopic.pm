@@ -30,14 +30,20 @@ sub process($$$) {
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
 	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version);
+	$topic_state, $version, $repository_url);
     Codestriker::Model::Topic->read($topic, \$document_author,
 				    \$document_title, \$document_bug_ids,
 				    \$document_reviewers, \$document_cc,
 				    \$description, \$topic_data,
 				    \$document_creation_time,
 				    \$document_modified_time, \$topic_state,
-				    \$version);
+				    \$version, \$repository_url);
+
+    # Retrieve the reposiory object.
+    print STDERR "Getting repository for: \"$repository_url\"\n";
+    my $repository =
+	Codestriker::Repository::RepositoryFactory->get($repository_url);
+    my $repository_root = defined $repository ? $repository->getRoot() : "";
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $description;
@@ -51,7 +57,8 @@ sub process($$$) {
 				      \@comment_date, \%comment_exists);
 
     $http_response->generate_header($topic, $document_title, $email,
-				    "", "", $mode, $tabwidth, "", 0, 1);
+				    "", "", $mode, $tabwidth, $repository_url,
+				    "", 0, 1);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -74,6 +81,12 @@ sub process($$$) {
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated') ? 1 : 0;
 
+    # Indicate if the "delete" button should be visible or not.
+    $vars->{'delete_enabled'} = $Codestriker::allow_delete;
+
+    # Indicate if the "list/search" functionality is available or not.
+    $vars->{'searchlist_enabled'} = $Codestriker::allow_searchlist;
+
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
     $vars->{'escaped_title'} = CGI::escapeHTML($document_title);
@@ -95,6 +108,7 @@ sub process($$$) {
     }
 
     $vars->{'document_reviewers'} = $document_reviewers;
+    $vars->{'repository'} = $repository_url;
     $vars->{'number_of_lines'} = $#document + 1;
 
     # Prepare the data for displaying the state update option.
@@ -178,7 +192,8 @@ sub process($$$) {
 						$max_digit_width, $topic,
 						$mode, \%comment_exists,
 						\@comment_linenumber,
-						\@comment_data, $tabwidth);
+						\@comment_data, $tabwidth,
+						$repository);
 
     # Record of the current CVS file being diffs (if the file is a
     # unidiff diff file).
@@ -216,7 +231,7 @@ sub process($$$) {
 		 ($mode == $Codestriker::COLOURED_MODE ||
 		  $mode == $Codestriker::COLOURED_MONO_MODE)) {
 	    next;
-	} elsif ($document[$i] =~ /^RCS file: $Codestriker::cvsrep\/(.*),v$/) {
+	} elsif ($document[$i] =~ /^RCS file: $repository_root\/(.*),v$/) {
 	    # The part identifying the file.
 	    $current_file = $1;
 	    $cvsmatch = 1;

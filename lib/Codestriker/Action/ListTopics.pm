@@ -12,11 +12,16 @@ package Codestriker::Action::ListTopics;
 use strict;
 use Codestriker::Http::Template;
 
-# If the input is valid, create the appropriate topic into the database.
+# If the input is valid, list the appropriate topics.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
+
+    # Check if this action is allowed.
+    if ($Codestriker::allow_searchlist == 0) {
+	$http_response->error("This function has been disabled");
+    }
 
     # Check that the appropriate fields have been filled in.
     my $sauthor = $http_input->get('sauthor') || "";
@@ -43,7 +48,7 @@ sub process($$$) {
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
-				    0, 0);
+				    "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};

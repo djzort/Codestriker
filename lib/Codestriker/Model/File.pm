@@ -14,8 +14,8 @@ use strict;
 # Go through the document text, and if it is a diff file (CVS or patch),
 # create a new row for each file in the file table.  Note this gets called
 # from Topic::create(), which controls the transaction commit/rollback.
-sub create($$$$) {
-    my ($type, $dbh, $topicid, $document_text) = @_;
+sub create($$$$$) {
+    my ($type, $dbh, $topicid, $document_text, $repository_root) = @_;
 
     # Break the document into lines, and remove any \r characters.
     my @document = split /\n/, $document_text;
@@ -37,7 +37,7 @@ sub create($$$$) {
     my $binary = 0;
     for (my $sequence_number = 0;
 	 $success && _read_diff_header(\@document, \$offset, \$filename,
-				       \$revision, \$binary);
+				       \$revision, \$binary, $repository_root);
 	 $sequence_number++) {
 
 	# Record the offset marking the start of program code.
@@ -128,8 +128,9 @@ sub get_filetable($$$$$$) {
 
 # Read from $fh, and return true if we have read a diff header, with all of
 # the appropriate values set to the reference variables passed in.
-sub _read_diff_header($$$$$$) {
-    my ($doc_array_ref, $offset, $filename, $revision, $binary) = @_;
+sub _read_diff_header($$$$$$$) {
+    my ($doc_array_ref, $offset, $filename, $revision, $binary,
+	$repository_root) = @_;
 
     # Files are text by default.
     $$binary = 0;
@@ -164,7 +165,7 @@ sub _read_diff_header($$$$$$) {
 	# repository, and if not, it is probably a new file.  if there is no
 	# such line, we could still be dealing with an ordinary patch file.
 	my $cvs_diff = 0;
-	if ($line =~ /^RCS file: $Codestriker::cvsrep\/(.*),v$/) {
+	if ($line =~ /^RCS file: $repository_root\/(.*),v$/) {
 	    $$filename = $1;
 	    $line = $$doc_array_ref[$$offset++];
 	    return 0 unless defined $line;

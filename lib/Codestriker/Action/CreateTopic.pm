@@ -18,18 +18,25 @@ sub process($$$) {
 
     my $query = $http_response->get_query();
     $http_response->generate_header("", "Create new topic", "", "", "", "",
-				    "", "", 0, 0);
+				    "", "", "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};
 
-    # Retrieve the email, reviewers and cc from the cookie.
+    # Retrieve the email, reviewers, cc and repository from the cookie.
     $vars->{'email'} =
 	Codestriker::Http::Cookie->get_property($query, 'email');
     $vars->{'reviewers'} =
 	Codestriker::Http::Cookie->get_property($query, 'reviewers');
     $vars->{'cc'} =
 	Codestriker::Http::Cookie->get_property($query, 'cc');
+    $vars->{'repository'} =
+	Codestriker::Http::Cookie->get_property($query, 'repository');
+
+    # Set the default repository.
+    if ($vars->{'repository'} eq "") {
+	$vars->{'repository'} = $Codestriker::default_repository;
+    }
 
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars) || die $template->error();

@@ -29,6 +29,14 @@ Codestriker->initialise();
 # completely stolen more-or-less verbatim from Bugzilla)
 my $modules = [ 
     { 
+        name => 'LWP::UserAgent', 
+        version => '0' 
+    }, 
+    { 
+        name => 'CGI', 
+        version => '0' 
+    }, 
+    { 
         name => 'CGI::Carp', 
         version => '0' 
     }, 
@@ -155,6 +163,7 @@ $table{topic} =
      creation_ts timestamp NOT NULL,
      modified_ts timestamp NOT NULL,
      version int NOT NULL,
+     repository text,
      PRIMARY KEY (id)";
 
 $index{topic} = "CREATE INDEX author_idx ON topic(author)";
@@ -203,7 +212,7 @@ $table{version} =
     "id text NOT NULL,
      sequence smallint NOT NULL";
 
-# MySQL specific function adapted from Bugzilla.
+# MySQL specific functions adapted from Bugzilla.
 sub get_field_def ($$)
 {
     my ($table, $field) = @_;
@@ -215,6 +224,18 @@ sub get_field_def ($$)
         return $ref;
    }
 }
+sub add_field ($$$)
+{
+    my ($table, $field, $definition) = @_;
+
+    my $ref = get_field_def($table, $field);
+    return if $ref; # already added?
+
+    print "Adding new field $field to table $table ...\n";
+    $dbh->do("ALTER TABLE $table
+              ADD COLUMN $field $definition");
+}
+
 
 # Create any missing tables.
 my @existing_tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
@@ -254,6 +275,9 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
 	    die "Could not alter file table: " . $dbh->errstr;
     }
 }
+
+# Add appropriate fields to the database tables as things have evolved.
+add_field('topic', 'repository', 'text');
     
 # Insert the version number into the table, if required.
 my $stmt = $dbh->prepare_cached('SELECT id, sequence FROM version');

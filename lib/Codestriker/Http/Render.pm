@@ -54,7 +54,7 @@ my $COMMENT_LINE_COLOUR = "red";
 sub new ($$$$$$$\%\@\@$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comment_exists_ref, $comment_linenumber_ref,
-	$comment_data_ref, $tabwidth) = @_;
+	$comment_data_ref, $tabwidth, $repository) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -69,6 +69,7 @@ sub new ($$$$$$$\%\@\@$) {
     $self->{comment_linenumber_ref} = $comment_linenumber_ref;
     $self->{comment_data_ref} = $comment_data_ref;
     $self->{tabwidth} = $tabwidth;
+    $self->{repository} = $repository;
 
     # Also have a number of additional private variables which need to
     # be initialised.
@@ -232,11 +233,12 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 		$self->{url_builder}->view_url($self->{topic}, -1,
 					       $self->{mode}) .	"#contents";
 	    if ($cvsmatch) {
-		# File matches something is CVS repository.  Link it to
+		# File matches something in CVS repository.  Link it to
 		# the CVS viewer if it is defined.
 		my $cell = "";
 		my $revision_text = "revision $current_file_revision";
-		if ($Codestriker::cvsviewer eq "") {
+		if (!defined $self->{repository} ||
+		    $self->{repository}->getViewUrl($current_file) eq "") {
 		    $cell = $query->td({-class=>'file', -colspan=>'3'},
 				       "Diff for ",
 				       $query->a({name=>"$current_file"},
@@ -244,7 +246,7 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 				       "$revision_text");
 		}
 		else {
-		    my $url = "$Codestriker::cvsviewer$current_file";
+		    my $url = $self->{repository}->getViewUrl($current_file);
 		    $cell = $query->td({-class=>'file', -colspan=>'3'},
 				       "Diff for ",
 				       $query->a({href=>"$url",
@@ -281,7 +283,8 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 					$description));
 	}
 	
-	if ($cvsmatch && $Codestriker::cvsrep ne "") {
+	if ($cvsmatch && defined $self->{repository} &&
+	    $self->{repository}->getRoot() ne "") {
 	    # Display the line numbers corresponding to the patch, with links
 	    # to the CVS file.
 	    my $url_builder = $self->{url_builder};

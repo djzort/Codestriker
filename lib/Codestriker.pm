@@ -14,17 +14,17 @@ use strict;
 use Time::Local;
 
 # Export codestriker.conf configuration variables.
-use vars qw ( $datadir $mailhost $use_compression $gzip $bugtracker
-	      $cvsviewer $cvsrep $cvscmd
-	      $default_topic_create_mode $default_tabwidth
-	      $db $dbuser $dbpasswd
+use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
+	      $default_repository $default_topic_create_mode $default_tabwidth
+	      $file_reviewer $db $dbuser $dbpasswd
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
+	      $allow_delete $allow_searchlist
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.5.5";
+$Codestriker::VERSION = "1.6.1";
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

@@ -6,9 +6,11 @@
 [%# Show the top-level links for "Create new topic", "List open topics"
     and "search" #%]
 <p>
-    <a href="[% create_topic_url %]">Create new topic</a> | 
-    <a href="[% list_url %]">List open topics</a> | 
-    <a href="[% search_url %]">Search</a>
+    <a href="[% create_topic_url %]">Create new topic</a>
+[% IF searchlist_enabled != 0 %]
+    | <a href="[% list_url %]">List open topics</a>
+    | <a href="[% search_url %]">Search</a>
+[% END %]
 
 <p>
 [%# Display the "updated" text if necessary. #%]
@@ -52,6 +54,13 @@
  <td>[% number_of_lines %]</td>
 </tr>
 
+[% IF repository != '' %]
+<tr>
+ <td>Repository:</td>
+ <td>[% repository %]</td>
+</tr>
+[% END %]
+
 [%# Display the form for changing the topic state #%]
 <form method="post" enctype="application/x-www-form-urlencoded">
 <tr>
@@ -78,13 +87,15 @@
  </td>
 </tr>
 
-[%# Render a "delete" button, for deleting topics #%]
+[%# Render a "delete" button, for deleting topics, if enabled #%]
+[% IF delete_enabled != 0 %]
 <tr>
  <td>
   <input type="submit" name="button" value="Delete"
      onclick="return confirm('Are you sure you want to delete this topic?')">
  </td>
 </tr>
+[% END %]
 </form>
 </table>   
 

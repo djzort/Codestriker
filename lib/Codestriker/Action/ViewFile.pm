@@ -14,9 +14,7 @@ use strict;
 use Codestriker::Model::File;
 use Codestriker::Model::Comment;
 use Codestriker::Http::Render;
-
-# Prototypes.
-sub _read_cvs_file( $$$$$ );
+use Codestriker::Repository::RepositoryFactory;
 
 # If the input is valid, display the topic.
 sub process($$$) {
@@ -29,6 +27,19 @@ sub process($$$) {
     my $tabwidth = $http_input->get('tabwidth');
     my $filename = $http_input->get('filename');
     my $new = $http_input->get('new');
+
+    # Retrieve the appropriate topic details.
+    my ($document_author, $document_title, $document_bug_ids,
+	$document_reviewers, $document_cc, $description,
+	$topic_data, $document_creation_time, $document_modified_time,
+	$topic_state, $version, $repository);
+    Codestriker::Model::Topic->read($topic, \$document_author,
+				    \$document_title, \$document_bug_ids,
+				    \$document_reviewers, \$document_cc,
+				    \$description, \$topic_data,
+				    \$document_creation_time,
+				    \$document_modified_time, \$topic_state,
+				    \$version, \$repository);
 
     # Retrieve information regarding the file of interest.
     my ($offset, $revision, $diff_text);
@@ -44,9 +55,10 @@ sub process($$$) {
 
     # Load the appropriate CVS file into memory.
     my ($cvs_filedata_max_line_length, @cvs_filedata);
-    if (!_read_cvs_file($filename, $revision, $tabwidth, \@cvs_filedata,
-			\$cvs_filedata_max_line_length)) {
-	$http_response->error("Couldn't get CVS data for $filename " .
+    if (!_read_repository_file($filename, $revision, $tabwidth, $repository,
+			       \@cvs_filedata,
+			       \$cvs_filedata_max_line_length)) {
+	$http_response->error("Couldn't get repository data for $filename " .
 			      "$revision: $!");
     }
 
@@ -71,7 +83,7 @@ sub process($$$) {
     my $title = $new == $UrlBuilder::NEW_FILE ?
 	"New $filename" : "$filename v$revision";
     $http_response->generate_header($topic, $title, "", "", "", $mode,
-				    $tabwidth, "", 0, 1);
+				    $tabwidth, $repository, "", 0, 1);
 
     my $parallel = ($new == $UrlBuilder::BOTH_FILES) ? 1 : 0;
     my $max_digit_width = length($#cvs_filedata);
@@ -175,13 +187,14 @@ sub process($$$) {
 		$patch_line = $_;
 		last;
 	    } else {
-		# An unchanged line, output it and anything pending, and remove the
-		# leading space for alignment reasons.
+		# An unchanged line, output it and anything pending, and remove
+		# the leading space for alignment reasons.
 		my $linedata = $_;
 		$linedata =~ s/^\s//;
 		$render->flush_monospaced_lines(\$linenumber,
 						$max_line_length, $new);
-		print $render->render_monospaced_line($linenumber, $linedata, $offset,
+		print $render->render_monospaced_line($linenumber, $linedata,
+						      $offset,
 						      $max_line_length, "");
 		$linenumber++;
 	    }
@@ -230,39 +243,34 @@ sub process($$$) {
     print $query->end_html();
 }
 
-# Read the specified CVS file and revision into memory.  Return true if
+# Read the specified repository file and revision into memory.  Return true if
 # successful, false otherwise.
-sub _read_cvs_file ($$$$$) {
-    my ($filename, $revision, $tabwidth, $cvsdata_array_ref,
+sub _read_repository_file ($$$$$$) {
+    my ($filename, $revision, $tabwidth, $repository_url, $cvsdata_array_ref,
 	$maxline_length_ref) = @_;
 
-    # Expand the CVS command, use the proper namespace for $cvsrep and
-    # substitute in the revision and filename.
-    my $cvscmd = $Codestriker::cvscmd;
-    $cvscmd =~ s/\$cvsrep/\$Codestriker::cvsrep/g;
-    my $command = eval "sprintf(\"$cvscmd\")";
+    # Create the repository object.
+    my $repository =
+	Codestriker::Repository::RepositoryFactory->get($repository_url);
 
-    # The command is set in the configuration file, so I am a little confused
-    # why this needs to be untainted...
-    if ($command =~ /^(.+)$/) {
-	$command = $1;
-    } else {
-	die "Bad data in CVS configuration variables";
+    if (! defined $repository) {
+	die "Unable to handle repository: $repository_url";
     }
 
-    return 0 if (! open (CVSFILE, "$command 2>/dev/null |"));
+    # Read the file data.
+    $repository->retrieve($filename, $revision, $cvsdata_array_ref);
 
+    # Determine the maximum line length, and replace tabs with spaces.
     $$maxline_length_ref = 0;
-    for (my $i = 1; <CVSFILE>; $i++) {
-	chop;
+    for (my $i = 1; $i <= $#$cvsdata_array_ref; $i++) {
 	$$cvsdata_array_ref[$i] =
-	    Codestriker::Http::Render->tabadjust($tabwidth, $_, 0);
+	    Codestriker::Http::Render->tabadjust($tabwidth,
+						 $$cvsdata_array_ref[$i], 0);
 	my $line_length = length($$cvsdata_array_ref[$i]);
 	if ($line_length > $$maxline_length_ref) {
 	    $$maxline_length_ref = $line_length;
 	}
     }
-    close CVSFILE;
     return 1;
 }
 

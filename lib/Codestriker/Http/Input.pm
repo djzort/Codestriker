@@ -83,6 +83,7 @@ sub process($) {
     $self->{redirect} = $query->param('redirect');
     $self->{a} = $query->param('a');
     $self->{updated} = $query->param('updated');
+    $self->{repository} = $query->param('repository');
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
@@ -91,6 +92,7 @@ sub process($) {
     $self->{sstate} = "" if ! defined $self->{sstate};
     $self->{a} = "" if ! defined $self->{a};
     $self->{updated} = 0 if ! defined $self->{updated};
+    $self->{repository} = "" if ! defined $self->{repository};
 
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
@@ -115,6 +117,8 @@ sub process($) {
     $self->_set_property_from_cookie('tabwidth',
 				     $Codestriker::default_tabwidth);
     $self->_set_property_from_cookie('email', "");
+    $self->_set_property_from_cookie('repository',
+				     $Codestriker::default_repository);
 
     # Untaint the required input.
     $self->_untaint_name('action');

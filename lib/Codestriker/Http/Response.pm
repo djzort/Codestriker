@@ -33,9 +33,9 @@ sub get_query($) {
 
 # Generate the initial HTTP response header, with the initial HTML header.
 # Most of the input parameters are used for storage into the user's cookie.
-sub generate_header($$$$$$$$$$) {
+sub generate_header($$$$$$$$$$$) {
     my ($self, $topic, $topic_title, $email, $reviewers, $cc, $mode,
-	$tabwidth, $load_anchor, $reload, $cache) = @_;
+	$tabwidth, $repository, $load_anchor, $reload, $cache) = @_;
 
     # If the header has already been generated, do nothing.
     return if ($self->{header_generated});
@@ -63,12 +63,17 @@ sub generate_header($$$$$$$$$$) {
     if (!defined $mode || $mode eq "") {
 	$mode = Codestriker::Http::Cookie->get_property($query, 'mode');
     }
+    if (!defined $repository || $repository eq "") {
+	$repository = Codestriker::Http::Cookie->get_property($query,
+							     'repository');
+    }
 
     $cookie{'email'} = $email if $email ne "";
     $cookie{'reviewers'} = $reviewers if $reviewers ne "";
     $cookie{'cc'} = $cc if $cc ne "";
     $cookie{'tabwidth'} = $tabwidth if $tabwidth ne "";
     $cookie{'mode'} = $mode if $mode ne "";
+    $cookie{'repository'} = $repository if $repository ne "";
 
     my $cookie_obj = Codestriker::Http::Cookie->make($query, \%cookie);
 

@@ -11,7 +11,7 @@ package Codestriker::Action::EditTopic;
 
 use strict;
 
-# Create an appropriate form for creating a new topic.
+# Create an appropriate form for adding a comment to a topic.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
@@ -32,14 +32,14 @@ sub process($$$) {
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
 	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version);
+	$topic_state, $version, $repository);
     Codestriker::Model::Topic->read($topic, \$document_author,
 				    \$document_title, \$document_bug_ids,
 				    \$document_reviewers, \$document_cc,
 				    \$description, \$topic_data,
 				    \$document_creation_time,
 				    \$document_modified_time, \$topic_state,
-				    \$version);
+				    \$version, \$repository);
 
     # Retrieve the comment details for this topic.
     my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
@@ -54,7 +54,7 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
-				    $mode, $tabwidth, "", 0, 0);
+				    $mode, $tabwidth, $repository, "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};

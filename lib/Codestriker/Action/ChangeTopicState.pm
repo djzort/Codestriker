@@ -25,18 +25,23 @@ sub process($$$) {
     my $topic_state = $http_input->get('topic_state');
     my $email = $http_input->get('email');
 
+    # Check if this action is allowed.
+    if ($Codestriker::allow_delete == 0 && $button eq "Delete") {
+	$http_response->error("This function has been disabled");
+    }
+
     # Retrieve the appropriate topic details (for the bug_ids).
     my ($_document_author, $_document_title, $_document_bug_ids,
 	$_document_reviewers, $_document_cc, $_description,
 	$_topic_data, $_document_creation_time, $_document_modified_time,
-	$_topic_state, $_version);
+	$_topic_state, $_version, $_repository);
     Codestriker::Model::Topic->read($topic, \$_document_author,
 				    \$_document_title, \$_document_bug_ids,
 				    \$_document_reviewers, \$_document_cc,
 				    \$_description, \$_topic_data,
 				    \$_document_creation_time,
 				    \$_document_modified_time, \$_topic_state,
-				    \$_version);
+				    \$_version, \$_repository);
     # Update the topic's state.
     if ($button eq "Delete") {
 	Codestriker::Model::Topic->delete($topic);
@@ -69,10 +74,17 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $redirect_url = "";
     if ($button eq "Delete") {
-	my @topic_states = (0);
-	$redirect_url =
-	    $url_builder->list_topics_url("", "", "", "", "", "", "",
-					  "", "", \@topic_states);
+	if ($Codestriker::allow_searchlist) {
+	    # Redirect to the topic list screen.
+	    my @topic_states = (0);
+	    $redirect_url =
+		$url_builder->list_topics_url("", "", "", "", "", "", "",
+					      "", "", \@topic_states);
+	} else {
+	    # Redirect to the create topic screen.
+	    $redirect_url = $url_builder->create_topic_url();
+	}
+	
     } else {
 	$redirect_url =
 	    $url_builder->view_url_extended($topic, -1, $mode, "", "",

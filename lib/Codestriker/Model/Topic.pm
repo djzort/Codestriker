@@ -17,7 +17,7 @@ use Codestriker::Model::File;
 # Create a new topic with all of the specified properties.
 sub create($$$$$$$$$$) {
     my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document, $timestamp) = @_;
+	$description, $document, $timestamp, $repository) = @_;
     
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
@@ -30,8 +30,8 @@ sub create($$$$$$$$$$) {
     my $insert_topic =
 	$dbh->prepare_cached('INSERT INTO topic (id, author, title, ' .
 			     'description, document, state, creation_ts, ' .
-			     'modified_ts, version) VALUES ' .
-			     '(?, ?, ?, ?, ?, ?, ?, ?, ?)');
+			     'modified_ts, version, repository) VALUES ' .
+			     '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $insert_bugs =
 	$dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
 			     'VALUES (?, ?)');
@@ -47,7 +47,8 @@ sub create($$$$$$$$$$) {
     # state.
     $success &&= $insert_topic->execute($topicid, $author, $title,
 					$description, $document, 0,
-					$timestamp, $timestamp, 0);
+					$timestamp, $timestamp, 0,
+					$repository->toString());
 					
     for (my $i = 0; $i <= $#bug_ids; $i++) {
 	$success &&= $insert_bugs->execute($topicid, $bug_ids[$i]);
@@ -68,7 +69,8 @@ sub create($$$$$$$$$$) {
     }
 
     # Create the appropriate file rows, if we diff file is being reviewed.
-    $success &&= Codestriker::Model::File->create($dbh, $topicid, $document);
+    $success &&= Codestriker::Model::File->create($dbh, $topicid, $document,
+						  $repository->getRoot());
     
     $success ? $dbh->commit : $dbh->rollback;
     Codestriker::DB::DBI->release_connection($dbh);
@@ -81,7 +83,8 @@ sub create($$$$$$$$$$) {
 sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     my ($type, $topicid, $author_ref, $title_ref, $bug_ids_ref, $reviewers_ref,
 	$cc_ref, $description_ref, $document_ref, $creation_time_ref,
-	$modified_time_ref, $topic_state_ref, $version_ref) = @_;
+	$modified_time_ref, $topic_state_ref, $version_ref,
+	$repository_ref) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -90,7 +93,8 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     my $select_topic = $dbh->prepare_cached('SELECT id, author, title, ' .
 					    'description, document, state, ' .
 					    'creation_ts, modified_ts, ' .
-					    'version FROM topic WHERE id = ?');
+					    'version, repository ' .
+					    'FROM topic WHERE id = ?');
     my $select_bugs =
 	$dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
     my $select_participants =
@@ -105,10 +109,10 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     $success &&= $select_topic->execute($topicid);
 
     my ($id, $author, $title, $description, $document, $state,
-	$creationtime, $modifiedtime, $version);
+	$creationtime, $modifiedtime, $version, $repository);
     if ($success) {
 	($id, $author, $title, $description, $document, $state,
-	 $creationtime, $modifiedtime, $version)
+	 $creationtime, $modifiedtime, $version, $repository)
 	    = $select_topic->fetchrow_array();
 	$select_topic->finish();
 
@@ -163,6 +167,13 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     $$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
     $$topic_state_ref = $Codestriker::topic_states[$state];
     $$version_ref = $version;
+
+    # Set the repository to the default system value if it is not defined.
+    if (!defined $repository || $repository eq "") {
+	$$repository_ref = $Codestriker::default_repository;
+    } else {
+	$$repository_ref = $repository;
+    }
 }
 
 # Determine if the specified topic id exists in the table or not.

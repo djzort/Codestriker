@@ -3,6 +3,23 @@ Version 1.6.1
 * Modified to use Net::SMTP to allow Codestriker to run under Windows,
   and to not hardwire the mail sending program to "sendmail".
 
+* Allow for the list/search topics and topic deletion to possibly be
+  disabled.  This is required for a codestriker server which is
+  handling "anonymous" reviews.
+
+* Added a "repository" attribute associated with a topic.  This is the
+  source code repository associated with the review, and by default is
+  set to the value of $default_repository in codestriker.conf.  This
+  can be an absolute path, which indicates the CVSROOT of a local cvs
+  repository, or a cvsweb or viewcvs URL, followed by a space,
+  followed by the CVSROOT.  Other repository types, such as pserver
+  CVS, BitKeeper, or Subzero can be added in the future.
+
+  For example, when reviewing a codestriker change, the repository
+  would be set as:
+
+  http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot
+
 Version 1.6.0
 
 * Modified to use the "Template Toolkit" so that the HTML pages can be

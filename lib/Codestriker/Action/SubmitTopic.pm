@@ -15,6 +15,7 @@ use Codestriker::Model::Topic;
 use Codestriker::Smtp::SendEmail;
 use Codestriker::Http::Render;
 use Codestriker::BugDB::BugDBConnectionFactory;
+use Codestriker::Repository::RepositoryFactory;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -31,6 +32,7 @@ sub process($$$) {
     my $cc = $http_input->get('cc');
     my $fh = $http_input->get('fh');
     my $bug_ids = $http_input->get('bug_ids');
+    my $repository_url = $http_input->get('repository');
 
     if ($topic_title eq "") {
 	$http_response->error("No topic title was entered");
@@ -51,8 +53,21 @@ sub process($$$) {
 	$http_response->error("No reviewers were entered");
     }
 
+    # Set the repository to the default if it is not entered.
+    if ($repository_url eq "") {
+	$repository_url = $Codestriker::default_repository;
+    }
+
+    # Check if the repository argument is valid.
+    my $repository =
+	Codestriker::Repository::RepositoryFactory->get($repository_url);
+    if (! defined $repository) {
+	$http_response->error("Unable to handle repository: " .
+			      "\"$repository_url\"");
+    }
+
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
-				    $cc, "", "", "", 0, 0);
+				    $cc, "", "", $repository, "", 0, 0);
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
@@ -81,7 +96,7 @@ sub process($$$) {
     Codestriker::Model::Topic->create($topicid, $email, $topic_title,
 				      $bug_ids, $reviewers, $cc,
 				      $topic_description, $topic_text,
-				      $timestamp);
+				      $timestamp, $repository);
     
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
