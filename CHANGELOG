@@ -8,6 +8,16 @@ Version 1.8.6
   specific line.  This allows reviewers to create file-level or
   topic-level comments.
 
+* There are patches available for Bugzilla 2.16 and Bugzilla 2.18 in
+  the bin subdirectory, where the view bug screen is modified to
+  include the "Create a New Codestriker Topic" and "View All" links
+  directly under the "Create a New Attachment" and "View All" links.
+  When a new topic is created via this link, the topic title will be
+  set initially to the bug title, and the bug id field will be set to
+  the id of the bug record.  Before applying the patch, the
+  codestriker_url variable must be set to the URL of your Codestriker
+  deployment.
+
 * Extra options are now available in the codestriker.conf file in
   regards to when emails are sent out.  It is now possible to control
   whether emails are sent to the topic author and/or the comment

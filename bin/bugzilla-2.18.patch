@@ -1,0 +1,32 @@
+diff -u -r /home/sits/bugzilla/bugzilla-2.18/template/en/default/attachment/list.html.tmpl template/en/default/attachment/list.html.tmpl
+--- /home/sits/bugzilla/bugzilla-2.18/template/en/default/attachment/list.html.tmpl	Fri Sep 10 08:25:07 2004
++++ template/en/default/attachment/list.html.tmpl	Tue Feb 15 20:23:17 2005
+@@ -97,5 +97,16 @@
+       </td>
+     [% END %]
+   </tr>
++  <tr>
++    [%# *** Set the base codestriker URL here *** %]
++    [% SET codestriker_url = "http://localhost.localdomain/codestriker/codestriker.pl" %]
++    <td colspan="[% show_attachment_flags ? 5 : 4 %]">
++      <a href="[% codestriker_url %]?action=create&amp;bug_ids=[% bugid %]&amp;topic_title=[% bugtitle | uri | html_entity %]">Create a New Codestriker Topic</a>
++    </td>
++    <td colspan="1">
++      <a href="[% codestriker_url %]?action=list_topics&amp;sbugid=[% bugid %]">View All</a>
++    </td>
++  </tr>
++
+ </table>
+ <br>
+diff -u -r /home/sits/bugzilla/bugzilla-2.18/template/en/default/bug/edit.html.tmpl template/en/default/bug/edit.html.tmpl
+--- /home/sits/bugzilla/bugzilla-2.18/template/en/default/bug/edit.html.tmpl	Sat Jan 15 15:24:08 2005
++++ template/en/default/bug/edit.html.tmpl	Tue Feb 15 20:29:40 2005
+@@ -403,6 +403,7 @@
+   [% PROCESS attachment/list.html.tmpl
+              attachments = bug.attachments
+              bugid       = bug.bug_id
++             bugtitle    = bug.short_desc
+              num_attachment_flag_types = bug.num_attachment_flag_types
+              show_attachment_flags = bug.show_attachment_flags
+    %]
+
