@@ -6,6 +6,8 @@ Version 1.5.3:
   within the context of displaying a bug.  Support for other
   bug-tracking systems should be easy to implement.
 
+* Make sure topic titles are HTML escaped in the topic list view.
+
 Version 1.5.2:
 
 * Fixed minor rendering bug in view single file mode.

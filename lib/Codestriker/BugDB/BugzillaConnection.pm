@@ -20,7 +20,7 @@ sub get_connection($) {
     # Return a connection with the bugzilla database.
     my $self = {};
     $self->{dbh} =
-	DBI->connect("DBI:mysql:dbname=bugs",
+	DBI->connect("DBI:mysql:dbname=bugs;host=$Codestriker::bug_db_host",
 		     $Codestriker::bug_db_name, $Codestriker::bug_db_password,
 		     { RaiseError => 1, AutoCommit => 1 });
     bless $self, $type;

@@ -70,7 +70,7 @@ sub process($$$) {
 	my @accum_reviewers = ();
 	my @accum_cc = ();
 	my $accum_id = $id[$index];
-	my $accum_title = $title[$index];
+	my $accum_title = CGI::escapeHTML($title[$index]);
 	my $accum_author = $author[$index];
 	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
 	my $accum_state = $Codestriker::topic_states[$state[$index]];
