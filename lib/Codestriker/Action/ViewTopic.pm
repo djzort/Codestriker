@@ -53,11 +53,9 @@ sub process($$$) {
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
 
-    $http_response->generate_header($topic->{topicid}, $topic->{document_title}, 
-    			            "",
-				    "", "", $mode, $tabwidth,
-				    "",
-				    "", "", 0, 1);
+    $http_response->generate_header(topic=>$topic->{topicid}, topic_title=>$topic->{document_title}, 
+				    mode=>$mode, tabwidth=>$tabwidth,
+				    reload=>0, cache=>1);
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;

@@ -47,7 +47,7 @@
 	files in their entirety to assist in the review process.
 	Codestriker can be optionally linked with a bug tracking
 	system, such as Bugzilla.  Other SCM systems, such as
-	ClearCase, Perforce and VSS will be added in future releases, given help
+	ClearCase will be added in future releases, given help
 	from the developer community.  Codestriker can also be linked
 	with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
@@ -56,7 +56,7 @@
       </para>
       <para>
         Codestriker is written in Perl in a cross-platform style.  It
-        can run on any variant of *NIX (Linux, *BSD) and has been
+        can run on any variant of UNIX (Linux, *BSD) and has been
         deployed on Win32 systems (Windows 98 and above).  It can be
         used in conjunction with a number of relational databases,
         including MySQL, PostgreSQL, Oracle, SQL Server, and other
@@ -147,14 +147,14 @@
       <sect2>
         <title>Using MySQL</title>
 	<para>
-	  MySQL can be used on either *NIX or Window platforms.  It is
+	  MySQL can be used on either UNIX or Window platforms.  It is
 	  available for download from
 	  <ulink
 	  url="http://www.mysql.com">http://www.mysql.com</ulink>.
 	  For Linux RedHat distributions, the necessary packages
 	  required are mysql mysql-devel, mysql-server, which may or
 	  may not already be present on your system.  Depending on
-	  your *NIX distribution, starting mysql will be something
+	  your UNIX operating system, starting mysql will be something
 	  like the following:
 	  <programlisting>
 /etc/rc.d/init.d/mysql start
@@ -164,8 +164,8 @@
 	</para>
 	<para>
 	  Once mysql is running, it is necessary to create the
-	  codestriker database and create the codestriker user.  Under
-	  *NIX, a command like the following will be required:
+	  Codestriker database and create the codestriker user.  Under
+	  UNIX, a command like the following will be required:
 	  <programlisting>
 % mysql -u root mysql
           </programlisting>
@@ -208,7 +208,7 @@ DROP DATABASE codestrikerdb;
         <title>Using PostgreSQL</title>
 	<para>
 	  At the time of writing PostgreSQL was only available for
-	  *NIX platforms, however it is quite possible by the time you
+	  UNIX platforms, however it is quite possible by the time you
 	  are reading this that a version for Windows is available.
 	  The project page for PostgreSQL is:
 	  <ulink
@@ -311,7 +311,7 @@ DROP DATABASE codestrikerdb;
       <para>
         This section is concerned with unpacking the Codestriker
         distribution into a suitable location, and then configuring
-        it.  For *NIX distribution, the following commands may be
+        it.  For UNIX distribution, the following commands may be
         appropriate on your system:
 	<programlisting>
 % mkdir /var/www/codestriker
@@ -417,7 +417,8 @@ $use_compression = 0;
 	  (there may not be any, if it is just a simple patch or text
 	  file).  For many Codestriker deployments, there may only be
 	  a single SCM system.  There is currently support for CVS,
-	  Subversion and Perforce.  An example setting could be the
+	  Subversion, Perforce, and Visual Source Safe.  An example 
+          setting could be the
 	  following:
 	  <programlisting>
 @valid_repositories =
@@ -446,12 +447,17 @@ $use_compression = 0;
 	</para>
 	<para>
 	  Codestriker can also work with other source control systems.
-	  There is currently support for Subversion (<ulink
-	  url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
-	  and in the future, VSS, ClearCase, and any other SCM system
+	  There is currently support for CVS, Subversion 
+          (<ulink url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
+          Perforce (<ulink url="http://www.perforce.com/">http://www.perforce.com/</ulink>),
+	  and Visual Source Safe (<ulink url="msdn.microsoft.com/ssafe/">msdn.microsoft.com/ssafe/</ulink>).
+          In the future ClearCase and any other SCM system
 	  depending on demand and contributions.  The third string
 	  <filename>svn:http://svn.collab.net/repos/svn/trunk</filename>
-	  is a Subversion repository URL prefixed by "svn:".
+	  is a Subversion repository URL prefixed by "svn:". Codestriker works 
+          with both http style repositories, and the stand alone 
+          Subversion server. The Subversion repository can be on
+	  another computer than the one running Codestriker.
 	</para>
 	<para>
 	  The next value which is likely to be common for many
@@ -493,7 +499,7 @@ $file_viewer =
 	<para>
 	  Finally, if you are using CVS, please make sure the
 	  <varname>$cvs</varname> setting is set to the correct path.
-	  For *NIX, this is likely to be something like:
+	  For UNIX, this is likely to be something like:
 	  <programlisting>
 # Location of the cvs binary.
 $cvs = '/usr/bin/cvs';
@@ -702,7 +708,7 @@ $antispam_email = 0;
 # system. Codestriker measures that length of the topic by counting 
 # the number of lines in the topic text.
 #
-# The codestriker default of not enforcing any limits is specified by
+# The Codestriker default of not enforcing any limits is specified by
 # settings either option to an empty string. If you are not sure 
 # what a reasonable limit would be, start with a suggested_topic_size_lines
 # set to 350, and adjust with experience.
@@ -721,7 +727,7 @@ $suggested_topic_size_lines = '';
 	  some team processes, and can be changed by setting
 	  <varname>$allow_comment_email</varname> to 0.
 	   <programlisting>
-# If true, codestriker will send out emails to the topic owner and
+# If true, Codestriker will send out emails to the topic owner and
 # comment submitter when a comment is added. If this option is false,
 # no email will be sent to either the topic owner or the comment
 # submitter. Emails about each comment may not be needed if a meeting
@@ -846,12 +852,12 @@ $metric_config = "none";
       flag must be removed for Win32 users, due to very obscure reasons.</emphasis>
       </para>
       <para>
-        Perl is available by default for all *NIX systems.  For
+        Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
       </para>
       <para>
-        To run <filename>checksetup.pl</filename> under *NIX, do the
+        To run <filename>checksetup.pl</filename> under UNIX, do the
         following:
 <programlisting>
 % cd /codestriker/install/location/bin
@@ -883,14 +889,14 @@ $metric_config = "none";
         configuration details are specific for the Apache webserver
         (<ulink
         url="http://httpd.apache.org">http://httpd.apache.org</ulink>),
-        which is available for download for both *NIX and Window
-        platforms.  Apache should be already available for most *NIX
+        which is available for download for both UNIX and Window
+        platforms.  Apache should be already available for most UNIX
         distributions.
       </para>
       <para>
         <emphasis>Note any Codestriker or Apache configuration changes
         require the Apache server to be restarted.</emphasis>  For
-        *NIX, a command like the following is required:
+        UNIX, a command like the following is required:
 <programlisting>
 /etc/init.d/httpd restart
 </programlisting>
@@ -980,7 +986,7 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
 	  <command>Mod_perl</command> is available for download from
 	  <ulink
 	  url="http://perl.apache.org">http://perl.apache.org</ulink>.
-	  For most *NIX distributions, it is available by default with
+	  For most UNIX distributions, it is available by default with
 	  Apache.  For installing <command>mod_perl</command> under
 	  Windows, <ulink
 	  url="http://www.webmatrix.net/log/modperl-win32">http://www.webmatrix.net/log/modperl-win32</ulink>
@@ -1515,7 +1521,43 @@ C:\Perl\bin\perl.exe "%s" %s
 	  </programlisting>
 	  This file should then be selected for the "Topic text
 	  upload" field.  The "Start tag", "End tag" and "Module"
-	  fields have no relevance in this situation.
+	  fields have no relevance in this situation. Because of an 
+          issue in Subversion, running the <command>svn diff</command>
+	  command <emphasis>outside</emphasis> of the repository root
+	  will not allow Codestriker to download and review the full
+	  file (although the patch segments can still be reviewed). If
+	  you commit your code first, then let Codestriker make the
+	  diff, as explained in the next section, then you can avoid
+	  this limitation. If you really don't want to commit your
+	  code, you will need to modify the diff file to include the
+	  paths on the Index: +++, and --- lines generated by
+	  <command>svn diff</command>.
+	</para>
+	<para>
+	  In some development processes, branches are used as the
+          logical unit of work that should be reviewed. Rather than
+          generating the review text via the <command>svn
+          diff</command> command, as specified in the previous
+          section, the review text can be created by entering in the
+          "Start tag", "End tag" and "Module" values into their
+          respective fields.  Codestriker will then fetch the review
+          text from the nominated repository automatically, by
+          executing the following command:
+	  <programlisting>
+% svn diff --non-interactive -r START_TAG:END_TAG --old repository_url MODULE
+	  </programlisting>
+          In Subversion the tags can be a repository revision number
+          or HEAD, The HEAD shortcut indicates the latest revision
+          number in the repository.  If you would like to review a
+          single check in, you should enter the revision number of the
+          check in as -1, and the revision number of the check in. The
+          module name should be entered as period(.). If you would
+          like to review a branch before merging then enter the start
+          tag as the version number of the branch creation. The end
+          tag should be HEAD, and the module path should be the path
+          into the branch directory relative to the repository
+          location. All topics created by Codestriker have a builtin
+          workaround for the Subversion diff problem.
 	</para>
       </sect2>
       <sect2>
@@ -2156,7 +2198,7 @@ C:\Perl\bin\perl.exe "%s" %s
       <para>
         This chapter is for developers which wish to contribute to
 	Codestriker, and want a quick birds-eye view as to how the
-	code is structured.  The codestriker modules are broken into
+	code is structured.  The Codestriker modules are broken into
 	the following sub-modules, which are located in
 	<filename>lib/Codestriker</filename>:
 	<variablelist>
@@ -2324,7 +2366,7 @@ C:\Perl\bin\perl.exe "%s" %s
 	    <term>templates</term>
 	    <listitem>
 	      <para>
-	        Almost all of the HTML generated by codestriker (apart
+	        Almost all of the HTML generated by Codestriker (apart
 	        from the actual code rendering) can be customised by
 	        the templates within this directory.  Each Action
 	        object typically has an associated template, where the

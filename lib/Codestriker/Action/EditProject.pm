@@ -27,8 +27,7 @@ sub process($$$) {
     my $feedback = $http_input->get('feedback');
     $feedback =~ s/\n/<BR>/g;
 
-    $http_response->generate_header("", "Edit project", "", "", "", "",
-				    "", "", "", "", 0, 1);
+    $http_response->generate_header(topic_title=> "Edit project", reload=>0, cache=>1);
 
     # Read the project information from the model.
     my $project = Codestriker::Model::Project->read($projectid);

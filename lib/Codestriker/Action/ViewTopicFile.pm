@@ -86,8 +86,9 @@ sub process($$$) {
 	$title = $new ? "New $filename" : "$filename v$revision";
     }
 
-    $http_response->generate_header($topicid, $title, "", "", "", $mode,
-				    $tabwidth, $topic->{repository}, "", "", 0, 1);
+    $http_response->generate_header(topic=>$topicid, topic_title=>$title, mode=>$mode,
+				    tabwidth=>$tabwidth, repository=>$topic->{repository}, 
+                                    reload=>0, cache=>1);
 
     # Render the HTML header.
     my $vars = {};

@@ -99,6 +99,7 @@ sub process($) {
     $self->{start_tag} = $query->param('start_tag');
     $self->{end_tag} = $query->param('end_tag');
     $self->{module} = $query->param('module');
+    $self->{topic_sort_change} = $query->param('topic_sort_change');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
@@ -116,6 +117,7 @@ sub process($) {
     $self->{repository} = "" if ! defined $self->{repository};
     $self->{project_name} = "" if ! defined $self->{project_name};
     $self->{project_description} = "" if ! defined $self->{project_description};
+    $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;
@@ -180,6 +182,9 @@ sub process($) {
     $self->_set_property_from_cookie('repository', "");
     $self->_set_property_from_cookie('projectid', 0);
     $self->_set_property_from_cookie('module', "");
+    $self->_set_property_from_cookie('topicsort', "");
+
+    $self->_untaint('topic_sort_change', '(title)|(author)|(created)|(state)');
 
     # Untaint the required input.
     $self->_untaint_name('action');
@@ -232,7 +237,6 @@ sub make_canonical_email_list($$) {
     my ($type, $emails) = @_;
 
     if (defined $emails && $emails ne "") {
-
         # Chew off white space that is around the emails addresses.
         $emails =~ s/^[\s]*//;
         $emails =~ s/[\s]*$//;

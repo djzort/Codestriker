@@ -8,6 +8,7 @@
 # Subversion repository access package.
 
 package Codestriker::Repository::Subversion;
+use IPC::Open3;
 
 use strict;
 
@@ -26,8 +27,8 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local Subversion repository.
-    open(SVN, "svn cat --revision $revision " . $self->{repository_url} .
-	 "/$filename 2>/dev/null |")
+    open(SVN, "svn cat --revision $revision \"" . $self->{repository_url} .
+	 "/$filename\" 2>/dev/null |")
 	|| die "Can't retrieve information from Subversion repository: $!";
 
     # Read the data.
@@ -59,11 +60,63 @@ sub toString ($) {
     return "svn:" . $self->getRoot();
 }
 
-# The getDiff operation is not supported.
+# The getDiff operation, pull out a change set based on the start and end 
+# revision number, confined to the specified moduled_name.
 sub getDiff ($$$$$) {
-    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
+    my ($self, $start_tag, $end_tag, $module_name, $stdout_fh, $stderr_fh) = @_;
 
-    return $Codestriker::UNSUPPORTED_OPERATION;
+    my $cmd = "svn diff --non-interactive -r $start_tag:$end_tag " . 
+              "--old \"$self->{repository_url}\" \"$module_name\"";
+
+    my $write_stdin_fh = new FileHandle;
+    my $read_stdout_fh = new FileHandle;
+    my $read_stderr_fh = new FileHandle;
+
+    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,$cmd);
+
+    # make sure the moduel does not end or start with a / 
+    $module_name =~ s/\\$//;
+    $module_name =~ s/^\\//;
+
+    while(<$read_stdout_fh>) {
+        my $line = $_;
+
+        # If the user specifies a path (a branch in Subversion), the
+        # diff file does not come back with a path rooted from the
+        # repository base making it impossible to pull the entire file
+        # back out. This code attempts to change the diff file on the
+        # fly to ensure that the full path is present. This is a bug
+        # against Subversion, so eventually it will be fixed, so this
+        # code can't break when the diff command starts returning the
+        # full path.
+        if ($line =~ /^--- / || $line =~ /^\+\+\+ / || $line =~ /^Index: /) {
+            # Check if the bug has been fixed.
+            if ($line =~ /^\+\+\+ $module_name/ == 0 && 
+                $line =~ /^--- $module_name/ == 0 &&
+                $line =~ /^Index: $module_name/ == 0) {
+
+                $line =~ s/^--- /--- $module_name\// or
+                $line =~ s/^Index: /Index: $module_name\// or
+                $line =~ s/^\+\+\+ /\+\+\+ $module_name\//;
+            }
+        }
+
+        print $stdout_fh $line;
+    }
+
+    my $buf;
+    while (read($read_stderr_fh, $buf, 16384)) {
+	print $stderr_fh $buf;
+    }
+
+    # Wait for the process to terminate.
+    waitpid($pid, 0);
+
+    # Flush the output file handles.
+    $stdout_fh->flush;
+    $stderr_fh->flush;
+
+    return $Codestriker::OK;
 }
 
 1;

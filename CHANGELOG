@@ -3,6 +3,17 @@
 
 Version 1.8.2
 
+* Codestriker can now sort by the column headers in the topic list
+  view, from Jason Remilliard.
+
+* It is now possible to create Subversion topics by entering values
+  in the START_TAG, END_TAG and MODULE fields on the create topic
+  page, from Jason Remilliard.  See the manual for more details.
+
+* In addition to the existing Subversion HTTP server support, it is
+  now possible to integrate with a native Subversion server as well,
+  from Jason Remilliard.
+
 * Codestriker can now accept basic diff files (non unidiff and context
   diff), and also ClearCase serial diffs.  A very basic ClearCase
   repository object has been written by Kannan Goundan which needs

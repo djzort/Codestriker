@@ -53,10 +53,12 @@ sub process($$$) {
     }
     
     # Only show open topics if codestriker.pl was run without parameters.
-    if (defined($http_input->{query}->param) == 0)
-    {
+    if (defined($http_input->{query}->param) == 0 || !defined($sstate)) {
     	$sstate = 0; 
     }
+
+    # handle the sort order of the topics.
+    my @sort_order = _get_topic_sort_order($http_input);
 
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
@@ -66,6 +68,7 @@ sub process($$$) {
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
 				     $scomments, $sbody, $sfilename,
+                                     \@sort_order,
 				     \@id, \@title,
 				     \@author, \@ts, \@state, \@bugid,
 				     \@email, \@type, \@version);
@@ -78,8 +81,10 @@ sub process($$$) {
 	@project_ids = split ',', $sproject;
     }
     my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
-    $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
-				    $projectid_cookie, "", 0, 0);
+    $http_response->generate_header(topic_title=>"Topic list", 
+				    projectid=>$projectid_cookie, 
+                                    topicsort=>join(',',@sort_order),
+                                    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -97,6 +102,17 @@ sub process($$$) {
     $vars->{'scomments'} = $scomments;
     $vars->{'sbody'} = $sbody;
     $vars->{'sfilename'} = $sfilename;
+
+    # The url generated here includes all of the search parameters, so
+    # that the current list of topics the user it viewing does not
+    # revert back to the default open topic list.  The search is
+    # applied each time they change the sort order.
+    $vars->{'list_sort_url'} = 
+	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
+				      $stext, $stitle,
+				      $sdescription, $scomments,
+				      $sbody, $sfilename,
+				      [ split ','. $sstate] , \@project_ids);
 
     # The list of topics.
     my @topics;
@@ -179,6 +195,79 @@ sub process($$$) {
     $template->process($vars);
 
     $http_response->generate_footer();
+}
+
+# Process the topic_sort_change input request (if any), and the current sort 
+# cookie (topicsort), and returns a list that defines the topic sort order
+# that should be used for this request. The function will ensure that 
+# column types are not repeated, and will sort in the opposite direction
+# if the user clicks on the same column twice.
+sub _get_topic_sort_order {
+    my ($http_input) = @_;
+
+    my $topic_sort_change = $http_input->get('topic_sort_change');
+    my $topicsort = $http_input->get('topicsort');
+
+    my @sort_order = split(/,/,$topicsort); # this is always from the cookie.
+
+    if ($topic_sort_change ne "") {
+        if (scalar(@sort_order) > 0) {
+
+            # If the user clicked on the same column twice in a row, reverse
+            # the direction of the sort.
+            
+            $sort_order[0] =~ s/\+$topic_sort_change/\-$topic_sort_change/ or
+            $sort_order[0] =~ s/\-$topic_sort_change/\+$topic_sort_change/ or        
+            unshift @sort_order, "+" . $topic_sort_change;
+        }
+        else {
+            unshift @sort_order, "+" . $topic_sort_change;
+        }
+
+        # look for duplicate sort keys, and remove
+        my %sort_hash;
+
+        for ( my $index = 0; 
+              $index < scalar( @sort_order); 
+              # Incremented in the if...
+              ) {
+
+            # chew off the leading +-
+            my $current = $sort_order[$index];
+
+            if ($current =~ s/^[\+\-]//) {
+                if (exists $sort_hash{$current}) {
+                    # remove from the list.
+                    splice @sort_order, $index,1;
+                }
+                else {
+                    # have not seem this before, keep it, and look at the next
+                    # string.
+                    ++$index;                
+                }
+
+                $sort_hash{$current} = 1;
+            } 
+        }
+    }
+
+
+    # Pull out any elements that are not valid (from a bad cookie or from a bad
+    # input.
+
+    for (my $index = 0; $index < scalar(@sort_order) ; ++$index) {
+
+        if ($sort_order[$index] ne "+title" && $sort_order[$index] ne "-title" &&
+            $sort_order[$index] ne "+author" && $sort_order[$index] ne "-author" &&
+            $sort_order[$index] ne "+created" && $sort_order[$index] ne "-created" &&
+            $sort_order[$index] ne "+state" && $sort_order[$index] ne "-state") {
+            
+            splice @sort_order,$index,1;
+            --$index;
+        }
+    }
+
+    return @sort_order;
 }
 
 # Append an element into an array if it doesn't exist already.  Note this is

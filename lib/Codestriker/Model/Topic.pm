@@ -604,9 +604,9 @@ sub update($$$$$$$$$$) {
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
+sub query($$$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
-	$stitle, $sdescription, $scomments, $sbody, $sfilename,
+	$stitle, $sdescription, $scomments, $sbody, $sfilename, $sort_order,
 	$id_array_ref, $title_array_ref,
 	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
 	$bugid_array_ref, $email_array_ref, $type_array_ref,
@@ -766,7 +766,47 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     }
 
     # Order the result by the creation date field.
+    if (scalar( @$sort_order ) == 0) {
+        # no sort order, defaults to topic creation.
     $query .= " ORDER BY topic.creation_ts ";
+    }
+    else {
+
+        my @sort_terms;
+
+        foreach my $sortItem (@$sort_order) {
+            
+            if ($sortItem eq "+title") {
+                push @sort_terms, "topic.title";
+            }
+            elsif ($sortItem eq "-title") {
+                push @sort_terms, "topic.title DESC";
+            }
+            elsif ($sortItem eq "+author") {
+                push @sort_terms, "topic.author ";
+            }
+            elsif ($sortItem eq "-author") {
+                push @sort_terms, "topic.author DESC";
+            }
+            elsif ($sortItem eq "+created") {
+                push @sort_terms, "topic.creation_ts ";
+            }
+            elsif ($sortItem eq "-created") {
+                push @sort_terms, "topic.creation_ts DESC";
+            }
+            elsif ($sortItem eq "+state") {
+                push @sort_terms, "topic.state ";
+            }
+            elsif ($sortItem eq "-state") {
+                push @sort_terms, "topic.state DESC";
+            }
+            else {
+                die "unknown sort key $sortItem";
+            }
+        }
+
+        $query .= " ORDER BY " . join(',',@sort_terms) . " ";
+    }
 
     my $select_topic = $dbh->prepare_cached($query);
     my $success = defined $select_topic;

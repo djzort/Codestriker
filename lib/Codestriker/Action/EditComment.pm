@@ -45,9 +45,9 @@ sub process($$$) {
     my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn, $line, $new);
 
     # Display the header of this page.
-    $http_response->generate_header($topicid, $topic->{title}, $email, "", "",
-				    $mode, $tabwidth, $topic->{repository}, "", "",
-				    0, 0);
+    $http_response->generate_header(topic=>$topicid, topic_title=>$topic->{title}, email=>$email, 
+    				    mode=>$mode, tabwidth=>$tabwidth, repository=>$topic->{repository}, 
+				    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};

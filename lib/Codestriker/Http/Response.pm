@@ -34,10 +34,24 @@ sub get_query($) {
 
 # Generate the initial HTTP response header, with the initial HTML header.
 # Most of the input parameters are used for storage into the user's cookie.
-sub generate_header($$$$$$$$$$$$) {
-    my ($self, $topic, $topic_title, $email, $reviewers, $cc, $mode,
-	$tabwidth, $repository, $projectid, $load_anchor,
-	$reload, $cache) = @_;
+sub generate_header {
+    
+    my ($self,%params) = @_;
+
+    my $topic = "";
+    my $topic_title = "";
+    my $email = "";
+    my $reviewers = "";
+    my $cc = "";
+    my $mode = "";
+    my $tabwidth = "";
+    my $repository = "";
+    my $projectid = "";
+    my $load_anchor = "";
+    my $topicsort = "";
+
+    my $reload = $params{reload};
+    my $cache =  $params{cache};
 
     # If the header has already been generated, do nothing.
     return if ($self->{header_generated});
@@ -48,30 +62,65 @@ sub generate_header($$$$$$$$$$$$) {
     # $tabwidth parameters.
     my %cookie = ();
 
-    if (!defined $email || $email eq "") {
+    if (!exists $params{email} || $params{email} eq "") {
 	$email = Codestriker::Http::Cookie->get_property($query, 'email');
     }
-    if (!defined $reviewers || $reviewers eq "") {
+    else {
+        $email = $params{email};
+    }
+
+    if (!exists $params{reviewers} || $params{reviewers} eq "") {
 	$reviewers = Codestriker::Http::Cookie->get_property($query,
 							     'reviewers');
     }
-    if (!defined $cc || $cc eq "") {
+    else {
+        $reviewers = $params{reviewers};
+    }
+
+    if (!exists $params{cc} || $params{cc} eq "") {
 	$cc = Codestriker::Http::Cookie->get_property($query, 'cc');
     }
-    if (!defined $tabwidth || $tabwidth eq "") {
+    else {
+        $cc = $params{cc};
+    }
+
+    if (!exists $params{tabwidth} || $params{tabwidth} eq "") {
 	$tabwidth = Codestriker::Http::Cookie->get_property($query,
 							    'tabwidth');
     }
-    if (!defined $mode || $mode eq "") {
+    else {
+        $tabwidth = $params{tabwidth};
+    }
+
+    if (!exists $params{mode} || $params{mode} eq "") {
 	$mode = Codestriker::Http::Cookie->get_property($query, 'mode');
     }
-    if (!defined $repository || $repository eq "") {
+    else {
+        $mode = $params{mode};
+    }
+
+    if (!exists $params{repository} || $params{repository} eq "") {
 	$repository = Codestriker::Http::Cookie->get_property($query,
 							     'repository');
     }
-    if (!defined $projectid || $projectid eq "") {
+    else {
+        $repository = $params{repository};
+    }
+
+    if (!exists $params{projectid} || $params{projectid} eq "") {
 	$projectid = Codestriker::Http::Cookie->get_property($query,
 							     'projectid');
+    }
+    else {
+        $projectid = $params{projectid};
+    }
+
+    if (!exists $params{topicsort} || $params{topicsort} eq "") {
+	$topicsort = Codestriker::Http::Cookie->get_property($query,
+							     'topicsort');
+    }
+    else {
+        $topicsort = $params{topicsort};
     }
 
     $cookie{'email'} = $email if $email ne "";
@@ -81,6 +130,7 @@ sub generate_header($$$$$$$$$$$$) {
     $cookie{'mode'} = $mode if $mode ne "";
     $cookie{'repository'} = $repository if $repository ne "";
     $cookie{'projectid'} = $projectid if $projectid ne "";
+    $cookie{'topicsort'} = $topicsort if $topicsort ne "";
 
     my $cookie_obj = Codestriker::Http::Cookie->make($query, \%cookie);
 

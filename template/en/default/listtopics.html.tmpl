@@ -33,15 +33,15 @@
 
     [%# Display the table header #%]
     <tr class="tlh">
-        <th colspan="2">Title</th>
-        <th>Author</th>
+        <th colspan="2"><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=title">Title</a></th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=author">Author</a></th>
         <th>Reviewer</th>
         <th>Cc</th>
-        <th>Created</th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=created">Created</a></th>
 	[% IF bugdb_enabled != 0 %]
         <th>Bug IDs</th>
 	[% END %]
-        <th>State</th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=state">State</a></th>
     </tr>
 
     [%# Display each topic row, alternating the background colour #%]

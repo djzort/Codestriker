@@ -25,8 +25,7 @@ sub process($$$) {
     my $feedback = $http_input->get('feedback');
     $feedback =~ s/\n/<BR>/g;
 
-    $http_response->generate_header("", "Create new project", "", "", "", "",
-				    "", "", "", "", 0, 1);
+    $http_response->generate_header(topic_title=>"Create new project",reload=>0, cache=>1);
 
     # Obtain a URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

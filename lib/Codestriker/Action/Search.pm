@@ -24,8 +24,7 @@ sub process($$$) {
 	$http_response->error("This function has been disabled");
     }
 
-    $http_response->generate_header("", "Search", "", "", "", "", "", "", "",
-				    "", 0, 1);
+    $http_response->generate_header(topic_title=>"Search", reload=>0, cache=>1);
 
     # Obtain a URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

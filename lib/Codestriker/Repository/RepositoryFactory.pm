@@ -47,7 +47,10 @@ sub get ($$) {
 	# CVS web repository.
 	return Codestriker::Repository::CvsWeb->new($1, $2);
     } elsif ($repository =~ /^\s*svn:(https?:\/\/.*)\s*$/i) {
-	# Subversion repository.
+	# webdav Subversion repository.
+	return Codestriker::Repository::Subversion->new($1);
+    } elsif ($repository =~ /^\s*svn:(svn?:\/\/.*)\s*$/i) {
+	# native Subversion repository.
 	return Codestriker::Repository::Subversion->new($1);
     } elsif ($repository =~ /^\s*perforce:(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Perforce repository.

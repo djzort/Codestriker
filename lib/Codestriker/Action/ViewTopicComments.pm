@@ -39,8 +39,8 @@ sub process($$$) {
 						   $show_comments_from_user);
 
     # Display the data, with each topic title linked to the view topic screen.
-    $http_response->generate_header($topicid, "Comment list", $email, "", "",
-				    "", "", "", "", "", 0, 0);
+    $http_response->generate_header(topic=>$topicid, topic_title=>"Comment list", email=>$email, 
+                                    reload=>0, cache=>0);
 
     # Retrieve the appropriate topic details.           
     my $topic = Codestriker::Model::Topic->new($topicid);     
