@@ -141,8 +141,8 @@ function verify() {
 
 	   [% ELSE %]
 
+             [% SET found_current_value = 0 %]
 	     [% FOREACH value = metric.values %]
-	       [% SET found_current_value = 0 %]
 
 	       [% IF value == metric.current_value %]
 	         <OPTION SELECTED VALUE="[% value %]">[% value %]</OPTION>
