@@ -1,6 +1,11 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.1
+
+* Make sure CvsLocal.pm imports "FileHandle".  Caused compilation
+  errors for some deployments when checksetup.pl was run.
+
 Version 1.8.0
 
 * Initial support for Perforce integration.  Can handle topic text

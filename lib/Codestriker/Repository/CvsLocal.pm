@@ -10,6 +10,7 @@
 package Codestriker::Repository::CvsLocal;
 
 use strict;
+use FileHandle;
 use IPC::Open3;
 
 # Constructor, which takes as a parameter the CVSROOT.
