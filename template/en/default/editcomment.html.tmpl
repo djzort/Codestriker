@@ -1,3 +1,6 @@
+[% USE AutomagicLinks %]
+[% USE JavascriptEscape %]
+
 <SCRIPT LANGUAGE="JavaScript">
 
 // FOR getCookie() and setCookie()
@@ -121,14 +124,12 @@ function add_other_reviewer(reviewer) {
 // reviewers to the Cc: field.
 function add_other_reviewers() {
   [% FOREACH reviewer = reviewers %]
-    add_other_reviewer("[% reviewer %]");
+    add_other_reviewer("[% reviewer | $JavascriptEscape %]");
   [% END %]
 }
 </Script>
 
 [%# Screen for the add comment form. #%]
-
-[% USE AutomagicLinks %]
 
 [% PROCESS header.html.tmpl displaymenu = 0 version = version help = "x483.html#ADD-COMMENT" %]
 

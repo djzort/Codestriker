@@ -60,6 +60,7 @@ use Codestriker::Action::ViewTopicComments;
 [% IF has_rss %]use Codestriker::Action::ListTopicsRSS; [% END %]
 
 use Codestriker::Template::Plugin::AutomagicLinks;
+use Codestriker::Template::Plugin::JavascriptEscape;
 
 # Set the temp file location, if one has been specified.
 if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
