@@ -22,7 +22,7 @@ my $_TYPE = {
     $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
     $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
     $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "timestamp",
+    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "datetime",
     $Codestriker::DB::Column::TYPE->{FLOAT}	=> "float"
 };
 

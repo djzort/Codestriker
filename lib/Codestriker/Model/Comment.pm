@@ -49,7 +49,7 @@ sub create {
 
     # Check if a comment has been made against this line before.
     my $select_commentstate =
-	$dbh->prepare_cached('SELECT version, id, creation_ts ' .
+	$dbh->prepare_cached('SELECT version, id ' .
 			     'FROM commentstate ' .
 			     'WHERE topicid = ? AND fileline = ? AND '.
 			     'filenumber = ? AND filenew = ?');
@@ -60,7 +60,7 @@ sub create {
     my $version = 0;
     my $creation_ts = "";
     if ($success) {
-	($version, $commentstateid, $creation_ts) =
+	($version, $commentstateid) =
 	    $select_commentstate->fetchrow_array();
 	$success &&= $select_commentstate->finish();
 	if (! defined $version) {
@@ -85,7 +85,6 @@ sub create {
 	    # Update the commentstate record.
 	    my $update = $dbh->prepare_cached('UPDATE commentstate SET ' .
 					      'version = ?, ' .
-					      'creation_ts = ?, ' .
 					      'modified_ts = ? ' .
 					      'WHERE topicid = ? AND ' .
 					      'fileline = ? AND ' .
@@ -93,7 +92,7 @@ sub create {
 					      'filenew = ?');
 	    $success &&= defined $update;
 	    $success &&= $update->execute(++$version,
-					  $creation_ts, $timestamp,
+					  $timestamp,
 					  $topicid, $fileline, $filenumber,
 					  $filenew);
 	    $success &&= $update->finish();
@@ -393,13 +392,13 @@ sub change_state {
 
     # Check that the version reflects the current version in the DB.
     my $select_comments =
-	$dbh->prepare_cached('SELECT id, version, creation_ts ' .
+	$dbh->prepare_cached('SELECT id, version ' .
 			     'FROM commentstate ' .
 			     'WHERE topicid = ? AND fileline = ? AND ' .
 			     'filenumber = ? AND filenew = ?');
     my $update_comments =
 	$dbh->prepare_cached('UPDATE commentstate SET version = ?, ' .
-			     'creation_ts = ?, modified_ts = ? ' .
+			     'modified_ts = ? ' .
 			     'WHERE id = ?');
 
     my $update_metrics =
@@ -417,9 +416,9 @@ sub change_state {
 					   $self->{filenew});
 
     # Make sure that the topic still exists, and is therefore valid.
-    my ($id, $current_version, $creation_ts);
+    my ($id, $current_version);
     if ($success && 
-	! (($id, $current_version, $creation_ts)
+	! (($id, $current_version)
 	   = $select_comments->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
@@ -439,7 +438,6 @@ sub change_state {
     $self->{metrics}->{$metric_name} = $metric_value;
     $self->{modified_ts} = Codestriker->format_timestamp($timestamp);
     $success &&= $update_comments->execute($self->{version},
-					   $creation_ts,
 					   $timestamp,
 					   $id);
     $success &&= $update_metrics->execute($metric_value, $id, $metric_name);

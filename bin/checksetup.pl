@@ -566,6 +566,42 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
     }
 }
 
+# If we are using MySQL, and we are upgrading from a version of the database
+# which used TIMESTAMP instead of DATETIME for certain fields, update the
+# appropriate table columns.
+if ($Codestriker::db =~ /^DBI:mysql/i) {
+
+    my @old_time_fields = ( 
+        [ 'topic','creation_ts'],
+        [ 'topic','modified_ts'],
+        [ 'topichistory','modified_ts'],
+        [ 'topicviewhistory','creation_ts'],
+        [ 'commentdata','creation_ts'],
+        [ 'commentstate','creation_ts' ],
+        [ 'commentstate','modified_ts'],
+        [ 'commentstatehistory','modified_ts'],
+        [ 'participant','modified_ts'],
+        [ 'project','creation_ts'],
+        [ 'project','modified_ts']
+        );
+
+    foreach my $fields (@old_time_fields)
+    {
+        my $table = $fields->[0];
+        my $field = $fields->[1];
+
+        my $ref = $database->get_field_def($table, $field);
+        my $text_type = $database->_map_type($DATETIME);
+        if ($$ref[1] ne $text_type) {
+	    print "Updating $table table for $field field to be $text_type...\n";
+	    $dbh->do("ALTER TABLE $table CHANGE $field $field $text_type") ||
+	        die "Could not alter " . $table . " table: " . $dbh->errstr;
+        }
+    }
+
+}
+
+
 # Determine if the commentdata and/or commentstate tables are old.
 my $old_comment_table = $database->column_exists("commentdata", "line");
 my $old_commentstate_table = $database->column_exists("commentstate", "line");

@@ -67,6 +67,9 @@ Version 1.8.4
 * Fixed the "Attempt to bless into a reference" error when using
   Bugzilla integration and Perl 5.8.
 
+* Migrated the MySQL datetime type from TIMESTAMP to DATETIME, as it
+  should have always been.  From Jason Remillard.
+
 Version 1.8.3
 
 * It is now possible to specify multiple metrics associated with a

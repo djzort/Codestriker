@@ -448,16 +448,13 @@ sub change_state($$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
     
-    # Check that the version reflects the current version in the DB.  Note due
-    # to a weird MySQL bug, we need to also retrieve the creation_ts and store
-    # the same value when updating the record, otherwise it gets set to the
-    # current time!
+    # Check that the version reflects the current version in the DB.  
     my $select_topic =
-	$dbh->prepare_cached('SELECT version, creation_ts ' .
+	$dbh->prepare_cached('SELECT version ' .
 			     'FROM topic WHERE id = ?');
     my $update_topic =
 	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
-			     'creation_ts = ?, modified_ts = ? WHERE id = ?');
+			     'modified_ts = ? WHERE id = ?');
     my $success = defined $select_topic && defined $update_topic;
     my $rc = $Codestriker::OK;
     
@@ -465,8 +462,8 @@ sub change_state($$) {
     $success &&= $select_topic->execute($self->{topicid});
     
     # Make sure that the topic still exists, and is therefore valid.
-    my ($current_version, $creation_ts);
-    if ($success && ! (($current_version, $creation_ts) =
+    my ($current_version);
+    if ($success && ! (($current_version) =
 		       $select_topic->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
@@ -485,7 +482,7 @@ sub change_state($$) {
     if ($new_state ne $self->{topic_state}) {
     	$self->{version} = $self->{version} + 1;
 	$success &&= $update_topic->execute($self->{version}, $new_stateid,
-					    $creation_ts, $modified_ts,
+					    $modified_ts,
 					    $self->{topicid});
     }
     
@@ -507,16 +504,16 @@ sub update($$$$$$$$$$) {
     # database.
     my $dbh = Codestriker::DB::DBI->get_connection();
     my $select_topic =
-	$dbh->prepare_cached('SELECT version, creation_ts ' .
+	$dbh->prepare_cached('SELECT version ' .
 			     'FROM topic WHERE id = ?');
     my $success = defined $select_topic;
     my $rc = $Codestriker::OK;
 
     # Make sure that the topic still exists, and is therefore valid.
     $success &&= $select_topic->execute($self->{topicid});
-    my ($current_version, $creation_ts);
+    my $current_version;
     if ($success && 
-	! (($current_version, $creation_ts) =
+	! (($current_version) =
 	   $select_topic->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
@@ -553,13 +550,10 @@ sub update($$$$$$$$$$) {
     $self->{topic_state} = $new_state;
     $self->{topic_state_id} = $new_stateid;
 
-    # Now update the database with the new properties.  Note due to a weird
-    # MySQL bug, we need to also retrieve the creation_ts and store
-    # the same value when updating the record, otherwise it gets set to the
-    # current time!
+    # Now update the database with the new properties. 
     my $update_topic =
 	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
-			     'creation_ts = ?, modified_ts = ?, ' .
+			     'modified_ts = ?, ' .
 			     'title = ?, author = ?, ' .
 			     'repository = ?, projectid = ?, ' .
 			     'description = ? WHERE id = ?');
@@ -570,7 +564,7 @@ sub update($$$$$$$$$$) {
     if ($success) {
     	$self->{version} = $self->{version} + 1;
 	$success &&= $update_topic->execute($self->{version}, $new_stateid,
-					    $creation_ts, $modified_ts,
+					    $modified_ts,
 					    $new_title, $new_author,
 					    $new_repository, $new_projectid,
 					    $new_description,
