@@ -385,7 +385,17 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	    $query = _add_condition($query, $cond, undef,
 				    \@values, \$first_condition);
 	    for (my $i = 0; $i <= $#text_cond; $i++) {
-		push @values, "%${stext}%"; # Add wildcards
+		# Replace '*' wildcards with SQL wildcards, and make sure the
+		# expression is wildcard-wrapped.
+		my $wildcard = $stext;
+		$wildcard =~ s/\*/%/g;
+		if (! ($wildcard =~ /^%/o) ) {
+		    $wildcard = "%${wildcard}";
+		}
+		if (! ($wildcard =~ /%$/o) ) {
+		    $wildcard = "${wildcard}%";
+		}
+		push @values, $wildcard;
 	    }
 	}
     }

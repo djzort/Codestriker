@@ -18,6 +18,9 @@ Version 1.7.3
 * Added a filename checkbox to the search form, so reviews can be
   retrieved which contain a certain filename.
 
+* The "Contains text" search field can now handle wildcards, to enable
+  more sophisticated topic searches.
+
 * Addressed some LXR highlighting issues when the identifier names
   clash with HTML entity names.
 
