@@ -97,9 +97,22 @@ sub read_diff_text($$$$$$) {
     }
     
     # If there is both old and new text, read the separator line.
+    # Note bloody VSS for some versions will put the --- at the end of
+    # the previous line rather than on a new line!
     if ($old_length > 0 && $new_length > 0) {
+	my $previous_line = $line;
+	my $pos = $fh->getpos;
 	$line = <$fh>;
-	return undef unless defined $line && $line =~ /^\-\-\-$/;
+	return undef unless defined $line;
+	if ($line !~ /^\-\-\-$/o && $chunk_text =~ /^(.*)\-\-\-$/os) {
+	    # Stupid VSS diff format, chop off the seperator characters
+	    # and move the file pointer back.
+	    $chunk_text = "$1\n";
+	    $fh->setpos($pos);
+	} elsif ($line !~ /^\-\-\-$/o) {
+	    # Didn't match standard separator, some other format.
+	    return undef;
+	}
     }
     
     # Now read the new lines, if any.
