@@ -50,7 +50,7 @@ sub process($$$) {
 	my @ids = split /, /, $_document_bug_ids;
 	my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 	my $topic_url = $url_builder->view_url_extended($topic, -1, "", "",
-							"", $query->url());
+							"", $query->url(), 0);
 	my $text = "Codestriker topic: $topic_url\n" .
 	    "State changed to \"$topic_state\" by $email.\n";
 	for (my $i = 0; $i <= $#ids; $i++) {
@@ -61,7 +61,9 @@ sub process($$$) {
 
     # Redirect the user to the view topic page.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $redirect_url = $url_builder->view_url($topic, -1, $mode);
+    my $redirect_url = $url_builder->view_url_extended($topic, -1, $mode,
+						       "", "", $query->url(),
+						       1);
     print $query->redirect(-URI=>$redirect_url);
 }
 

@@ -131,6 +131,9 @@ sub get_filetable($$$$$$) {
 sub _read_diff_header($$$$$$) {
     my ($doc_array_ref, $offset, $filename, $revision, $binary) = @_;
 
+    # Files are text by default.
+    $$binary = 0;
+
     # Note we only iterate while handling empty diff blocks.
     my @document = @$doc_array_ref;
     my $size = $#document;
@@ -228,12 +231,10 @@ sub _read_diff_header($$$$$$) {
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $$revision = $Codestriker::ADDED_REVISION;
-	    $$binary = 0;
 	} elsif ($cvs_diff == 0 &&
 		 $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o) {
 	    $$filename = $1;
 	    $$revision = $Codestriker::PATCH_REVISION;
-	    $$binary = 0;
 	} elsif (! $line =~ /^\-\-\-/o) {
 	    return 0;
 	}
@@ -243,7 +244,6 @@ sub _read_diff_header($$$$$$) {
 	if ($line =~ /^\+\+\+ \/dev\/null/o) {
 	    # File has been removed.
 	    $$revision = $Codestriker::REMOVED_REVISION;
-	    $$binary = 0;
 	} elsif (! $line =~ /^\+\+\+/o) {
 	    return 0;
 	}

@@ -63,6 +63,12 @@ sub process($$$) {
     print $query->a({href=>$search_url}, "Search") . "\n";
     print $query->p;
 
+    # Display the "update" message if the topic state has been changed.
+    if ($http_input->get('updated')) {
+	print "<font color=\"red\">Topic state has been updated.</font>\n" .
+	    $query->p;
+    }
+
     # Display the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
     my $escaped_title = CGI::escapeHTML($document_title);
@@ -177,7 +183,7 @@ sub process($$$) {
     my $change_tabwidth_url;
     $change_tabwidth_url =
 	$url_builder->view_url_extended($topic, -1, $mode, $newtabwidth,
-					"", "");
+					"", "", 0);
 
     print "Tab width set to $tabwidth (";
     print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");

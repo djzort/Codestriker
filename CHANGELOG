@@ -1,3 +1,15 @@
+Version 1.5.4:
+
+* When the topic state is updated, add a confirmation message to the
+  top of the view topic screen.
+
+* If the uploaded file doesn't exist, output an appropriate error
+  message.
+
+* Fixed the table of contents display if a binary file is present.
+  Text files after a binary file weren't hyperlinked.  This was a
+  database load problem, not a rendering problem.
+
 Version 1.5.3:
 
 * Further integration with Bugzilla.  When a topic is created, or the

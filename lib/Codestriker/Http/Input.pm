@@ -81,6 +81,7 @@ sub process($) {
     $self->{version} = $query->param('version');
     $self->{redirect} = $query->param('redirect');
     $self->{a} = $query->param('a');
+    $self->{updated} = $query->param('updated');
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
@@ -88,6 +89,7 @@ sub process($) {
     $self->{bug_ids} = "" if ! defined $self->{bug_ids};
     $self->{sstate} = "" if ! defined $self->{sstate};
     $self->{a} = "" if ! defined $self->{a};
+    $self->{updated} = 0 if ! defined $self->{updated};
 
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {

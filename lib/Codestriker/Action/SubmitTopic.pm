@@ -45,7 +45,7 @@ sub process($$$) {
 	$http_response->error("No topic text or filename was entered");
     }
     if (defined $fh && $topic_text ne "") {
-	$http_response->error("Both topic text and uploaded file was entered");
+	$http_response->error("Topic text and uploaded file were entered");
     }
     if ($reviewers eq "") {
 	$http_response->error("No reviewers were entered");
@@ -58,6 +58,9 @@ sub process($$$) {
     if (defined $fh) {
 	while (<$fh>) {
 	    $topic_text .= $_;
+	}
+	if ($topic_text eq "") {
+	    $http_response->error("Uploaded file doesn't exist or is empty!");
 	}
     }
 
@@ -83,7 +86,7 @@ sub process($$$) {
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
-						    $query->url());
+						    $query->url(), 0);
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated

@@ -33,10 +33,12 @@ sub new($$) {
 }
 
 # Create the URL for viewing a topic with a specified tabwidth.
-sub view_url_extended ($$$$$$$) {
-    my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix) = @_;
+sub view_url_extended ($$$$$$$$) {
+    my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
+	$updated) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
 	"?topic=$topic&action=view" .
+	($updated ? "&updated=updated" : "") .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
 	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .
