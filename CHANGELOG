@@ -19,6 +19,9 @@ Version 1.8.6
   the other reviewers of the topic, for important comments that needs
   to be sent to all reviewers.
 
+* When creating new topics linked to Bugzilla, also include the topic
+  description field in the Bugzilla comment.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

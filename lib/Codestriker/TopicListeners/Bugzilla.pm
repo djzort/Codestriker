@@ -44,7 +44,8 @@ sub topic_create($$) {
 	my $text = "Codestriker topic: $topic_url created.\n" .
 	    "Author: $topic->{author}\n" .
 	    "Reviewer(s): $topic->{reviewers}\n" .
-	    "Title: $topic->{title}\n";
+            "Title: $topic->{title}\n" .
+            "Description:\n" . "$topic->{description}\n"; 
             
 	for (my $i = 0; $i <= $#ids; $i++) {
 	    $bug_db_connection->update_bug($ids[$i], $text);
