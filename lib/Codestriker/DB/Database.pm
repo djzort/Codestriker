@@ -59,7 +59,8 @@ sub _get_connection {
     $self->{dbh} = DBI->connect($Codestriker::db, $Codestriker::dbuser,
 				$Codestriker::dbpasswd,
 				{AutoCommit=>$auto_commit,
-				 RaiseError=>$raise_error});
+				 RaiseError=>$raise_error,
+				 LongReadLen=>1024000});
 
     # Return the new connection.
     return $self->{dbh};

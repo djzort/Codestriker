@@ -4,7 +4,8 @@
 Version 1.8.0
 
 * Reworked the Database creation/upgrade code so that it is properly
-  modularised, and so checksetup.pl is far more maintainable.
+  modularised, and so checksetup.pl is far more maintainable.  Adding
+  support for new Databases will be a snap.
 
 * Ported ODBC-specific code from an anonymous author, so that MS-SQL
   Server and other ODBC-compatible databases can be used with

@@ -51,6 +51,10 @@ sub create($$$$) {
 	}
 
 	# Add the new delta entry.
+	if ($delta->{description} eq "") {
+	    $delta->{description} = "AAAA";
+	}
+	print STDERR "Delta is: \"" . $delta->{description} . "\"\n";
 	$success &&= $insert_delta->execute($topicid, $file_sequence,
 					    ++$delta_sequence,
 					    $delta->{old_linenumber},

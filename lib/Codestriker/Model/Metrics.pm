@@ -111,7 +111,7 @@ sub get_topic_metrics {
 	# the configured metric is found in the database, it is removed 
 	# from the stored_metric list to find any data that is in the 
 	# database, but is not configured.
-	foreach my $metric_schema (@Codestriker::metrics_schema) {
+	foreach my $metric_schema (Codestriker::get_metric_schema()) {
 	    if ($metric_schema->{scope} eq 'topic') {
 		my $metric =
 		    { # This is the topic metric.
@@ -284,7 +284,7 @@ sub get_user_metrics {
 	    Codestriker::DB::DBI->release_connection($dbh, 1);
 	}
 
-	foreach my $metric_schema (@Codestriker::metrics_schema) {
+	foreach my $metric_schema (Codestriker::get_metric_schema()) {
 	    if ($metric_schema->{scope} ne 'topic') {
 		my $metric = 
 		{ 

@@ -22,7 +22,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist 
               $allow_projects $antispam_email $VERSION $title $BASEDIR
-	      @metrics_schema
+	      $metric_config
 	      );
 
 # Version of Codestriker.
@@ -80,33 +80,37 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 @Codestriker::short_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
+$metric_config = "";
 
+# name => The short name of the metric. This name will be used in the
+# SQL table, in the data download, in the input tables, and perhaps in
+# the .conf file.
+#
+# description => The long description of the item. Displayed as online help (?)
+#
+# enabled => If 1, the metrics are enabled by default in "basic"
+# configs. Otherwise the $metric_config option on the .conf will
+# override this.
+#
+# scope => This will be "topic", "reviewer", "author".  A "topic"
+# metric that has a 1 to 1 relationship with the topic itself.  If it
+# is not a topic metric, it is a kind of user metric. User metrics have
+# a 1-1 relationship with each user in the topic. If the type is
+# reviewer, it is only needed by a user that is a reviewer (but not
+# author), of the topic. If the type is author, it is only needed by
+# the author of the metric, and if it is participants, it is needed by
+# all users regardless of the role.
+#
+# filter => The type of data being stored. "hours" or "count". Data
+# will not be stored to the database if it does not pass the format
+# expected for the filter type.
 
-# name => The short name of the metric. This name will be used in the SQL table, in the data download, and in the input tables.
-#
-# description => The long description of the item. Displayed as online help.
-#
-# enabled=> If 1, the metrics are enabled by default on new installs of codestriker. After 
-#             the system has been configured, it is up to the local admin. 
-#
-# Scope => This will be "topic", "reviewer","author".
-#	    A "topic" metric that has a 1 to 1 relationship with the topic itself.
-#           If it is not a topic metric, it is a kind  of user metric. User metrics 
-#           have a 1-1 relationship with each user in the topic. If the type is 
-#           reviewer, it is only needed by a user that is a reviewer (but not author), 
-#           of the topic. If the type is author, it is only needed by the author of the 
-#           metric, and if it is participants, it is needed by all users regardless 
-#           of the role.
-#
-# filter => The type of data being stored. "hours" or "count". Data will not be stored to 
-#           the database if it does not pass the format expected for the filter type.
-
-@metrics_schema = 
+our @metrics_schema = 
 ( 
   # planning time
   {
   name=>"entry time",
-  description=>"Work hours spent by the inspection leader to check that entry conditions are met, and to work towards meeting them",
+  description=>"Work hours spent by the inspection leader to check that entry conditions are met, and to work towards meeting them.",
   enabled=>0,
   scope=>"author",
   filter=>"hours"
@@ -136,28 +140,28 @@ $Codestriker::COMMENT_SUBMITTED = 0;
   },
   {
   name=>"lines studied",
-  description=>"The number of lines which have been closly scrutinized at or near optimum checking rate",
+  description=>"The number of lines which have been closly scrutinized at or near optimum checking rate.",
   scope=>"participant",
   enabled=>0,
   filter=>"count"
   },
   {
   name=>"lines scanned",
-  description=>"The number of lines which have been looked at higher then the optimum checking rate",
+  description=>"The number of lines which have been looked at higher then the optimum checking rate.",
   scope=>"participant",
   enabled=>0,
   filter=>"count"
   },
   {
   name=>"studied time",
-  description=>"The time in hours spent closely scrutinized at or near optimum checking rate",
+  description=>"The time in hours spent closely scrutinized at or near optimum checking rate.",
   scope=>"participant",
   enabled=>0,
   filter=>"hours"
   },
   {
   name=>"scanned time",
-  description=>"The time in hours spent looking at the topic at higher then the optimum checking rate",
+  description=>"The time in hours spent looking at the topic at higher then the optimum checking rate.",
   scope=>"participant",
   enabled=>0,
   filter=>"hours"
@@ -212,7 +216,7 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 
   {
   name=>"edit time",
-  description=>"The total time spent editing all items",
+  description=>"The total time spent editing all items.",
   scope=>"author",
   enabled=>0,
   filter=>"hours"
@@ -243,6 +247,37 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 
 );
 
+# Return the schema for the codestriker metric support. It insures that the 
+# settings in the conf file are applied to the schema.
+sub get_metric_schema {
+
+    # Make each of the metrics schema's are enabled according to the .conf file.
+    foreach my $metric (@metrics_schema) {
+	if ((! defined $metric_config) || $metric_config eq "" ||
+	    $metric_config eq "none") {
+	    $metric->{enabled} = 0;	
+	}
+	elsif ($metric_config eq "basic") {
+	    # Leave the default enabled values.
+	}
+	elsif ($metric_config eq "all") {
+	    $metric->{enabled} = 1;	
+	}
+	else {
+	    # Make sure it matches the entire thing.
+	    my $regex = "(^|,)$metric->{name}(,|\$)";
+
+	    if ($metric_config =~ /$regex/) {
+		$metric->{enabled} = 1;	
+	    }
+	    else {
+		$metric->{enabled} = 0;
+	    }
+	}
+    }
+
+    return @metrics_schema;
+}
 
 # Initialise codestriker, by loading up the configuration file and exporting
 # those values to the rest of the system.
