@@ -1,3 +1,7 @@
+Version 1.5.6
+
+* Initial LXR integration support.
+
 Version 1.5.5 (if upgrading, make sure you run checksetup.pl, see below):
 
 * Modified database schema for MySQL so that review text is not

@@ -94,27 +94,83 @@ sub new ($$$$$$$\%\@\@$) {
     bless $self, $type;
 }
 
+# Given an identifier, wrap it within the appropriate <A HREF> tag if it
+# is a known identifier to LXR, otherwise just return the id.  To avoid
+# excessive crap, only consider those identifiers which are at least 4
+# characters long.
+sub lxr_ident($$) {
+    my ($self, $id) = @_;
+    
+    my $idhashref = $self->{idhashref};
+    
+    if (length($id) >= 4 && defined $$idhashref{$id}) {
+	return "<A HREF=\"${Codestriker::lxr_idlookup_base_url}$id\" " .
+	    "CLASS=\"fid\">$id</A>";
+    } else {
+	return $id;
+    }
+}
+
 # Parse the line and product the appropriate hyperlinks to LXR.
+# Currently, this is very Java/C/C++ centric, but it will do for now.
 sub lxr_data($$) {
     my ($self, $data) = @_;
-
+    
+    # If the line is just a comment, don't do any processing.  Note this code
+    # isn't bullet-proof, but its good enough most of the time.
+    $_ = $data;
+    return $data if (/^(\s|&nbsp;)*\/\// || /^(\s|&nbsp;){0,10}\*/ ||
+		     /^(\s|&nbsp;){0,10}\/\*/ ||
+		     /^(\s|&nbsp;)*\*\/(\s|&nbsp;)*$/);
+    
+    # Handle package Java statements.
+    if ($data =~ /^(package\s+)([\w\.]+)(\s*)$/) {
+	return $1 . $self->lxr_ident($2) . $3;
+    }
+    
+    # Handle Java import statements.
+    if ($data =~ /^(import\s+)([\w\.]+)\.(\w+)(\s*)(.*)$/) {
+	return $1 . $self->lxr_ident($2) . "." . $self->lxr_ident($3) . "$4$5";
+    }
+    
+    # Handle #include statements.  Note, these aren't identifier lookups, but
+    # need to be mapped to http://localhost.localdomain/lxr/xxx/yyy/incfile.h
+    # Should include the current filename in the object for matching purposes.
+#    if (/^(\#\s*include\s+[\"<])(.*?)([\">].*)$/) {
+#	return $1 . $self->lxr_ident($2) . $3;
+#    }
+    
     # Break the string into potential identifiers, and look them up to see
     # if they can be hyperlinked to an LXR lookup.
     my $idhashref = $self->{idhashref};
-    my @data_tokens = split /([A-Za-z][A-Za-z0-9_]+)/, $data;
+    my @data_tokens = split /([A-Za-z][\w]+)/, $data;
     my $newdata = "";
+    my $in_comment = 0;
+    my $eol_comment = 0;
     for (my $i = 0; $i <= $#data_tokens; $i++) {
 	my $token = $data_tokens[$i];
-	if ($token =~ /^[A-Za-z]/ && 
-	    defined $$idhashref{$token}) {
-	    $newdata .=
-		"<A HREF=\"${Codestriker::lxr_idlookup_base_url}$token\">" .
-		"$token</A>";
+	if ($token =~ /^[A-Za-z]/) {
+	    if ($eol_comment || $in_comment) {
+		# Currently in a comment, don't LXRify.
+		$newdata .= $token;
+	    } else {
+		$newdata .= $self->lxr_ident($token);
+	    }
 	} else {
 	    $newdata .= $token;
+	    $token =~ s/\s//g;
+	    
+	    # Check if we are entering or exiting a comment.
+	    if ($token =~ /^\/\//) {
+		$eol_comment = 1;
+	    } elsif ($token =~ /^\/\*/) {
+		$in_comment = 1;
+	    } elsif ($token =~ /^\*+\//) {
+		$in_comment = 0;
+	    }
 	}
     }
-    
+
     return $newdata;
 }
 
@@ -124,7 +180,7 @@ sub display_data ($$$$$$$$$$$) {
 	$current_old_file_linenumber, $current_new_file_linenumber,
 	$reading_diff_block, $diff_linenumbers_found, $cvsmatch,
 	$block_description) = @_;
-
+    
     # Escape the data and add LXR links to it.
     $data = $self->lxr_data(CGI::escapeHTML($data));
 

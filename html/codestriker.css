@@ -97,3 +97,5 @@ TR.tl1 {background-color: #cccccc; font-family: Helvetica, Arial}
 /* Topic list row type 1 */
 TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
+/* Colour to use for matching identifier */
+A.fid {color: #777777; text-decoration: none}
