@@ -98,6 +98,10 @@ sub parse ($$$) {
 	if ($line =~ /^retrieving revision (.*)$/o) {
 	    $line = <$fh>;
 	}
+
+	# For some rdiffs, if there is a binary file which has changed, no
+	# other information is posted, so process the next header.
+	next if ($line =~ /^Index:/o);
 	
 	# Now read in the diff line, followed by the legend lines.  If this is
 	# not present, then we know we aren't dealing with a diff file of any
@@ -162,6 +166,14 @@ sub parse ($$$) {
 	    if ($line =~ /^\+\+\+ \/dev\/null/o) {
 		# File has been removed.
 		$revision = $Codestriker::REMOVED_REVISION;
+	    }
+
+	    # If it is an added file, and the filename hasn't been extracted
+	    # (remote diffs), do so now.
+	    if ($revision == $Codestriker::ADDED_REVISION &&
+		$filename eq "" &&
+		$line =~ /^\+\+\+ (.*)\t/) {
+		$filename = $1;
 	    }
 	    
 	    # Now read in the multiple chunks.
