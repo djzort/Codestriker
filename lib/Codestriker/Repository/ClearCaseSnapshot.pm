@@ -6,7 +6,7 @@
 # the terms of the GPL.
 
 # Handler for ClearCase Snapshot Views.
-# Initially contributed by "Kannan Goundan" <kannan@letterboxes.org>.
+# Contributed by "Kannan Goundan" <kannan@letterboxes.org>.
 
 package Codestriker::Repository::ClearCaseSnapshot;
 
@@ -45,26 +45,38 @@ sub retrieve ($$$\$) {
     my $error_msg;
 
     # Call 'cleartool get' to load the element
-    my $ret = system(CLEARTOOL, "\"$Codestriker::cleartool\" get " .
-                                "-to \"$tempfile\" \"$full_element_name\" " .
-                                "2> \"$errorfile\"");
+    my $command = "\"$Codestriker::cleartool\" get " .
+                  "-to \"$tempfile\" \"$full_element_name\" " .
+                  "2> \"$errorfile\"";
+    my $ret = system($command);
 
-    if ($ret > 0) {
-        # If there was an error, the message will be in the error file.
-        # Read in that file and store it in the "$error_msg" variable
-        # so that we can return it to the caller.
-        open ERRORFILE, "<$errorfile";
-        my (@errorlines) = <ERRORFILE>;
-        $error_msg = "Error from cleartool: " . join(" ", @errorlines);
-        close ERRORFILE;
-    } else {
-        # Operation was succesful.  Load the file into the given array.
-        open CONTENTFILE, "<$tempfile";
-        for (my $i = 1; <CONTENTFILE>; $i++) {
-            chop;
-            $$content_array_ref[$i] = $_;
+    eval {
+
+        if ($ret != 0) {
+            # If there was an error, the message will be in the error file.
+            # Read in that file and store it in the "$error_msg" variable
+            # so that we can return it to the caller.
+            open ERRORFILE, "<$errorfile"
+                || die "ClearTool returned an error, but Codestriker couldn't read from the error file.";
+            my (@errorlines) = <ERRORFILE>;
+            $error_msg = "Error from ClearTool: " . join(" ", @errorlines);
+            close ERRORFILE;
+        } else {
+            # Operation was succesful.  Load the file into the given array.
+            open CONTENTFILE, "<$tempfile"
+                || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
+            for (my $i = 1; <CONTENTFILE>; $i++) {
+                chop;
+                $$content_array_ref[$i] = $_;
+            }
+            close CONTENTFILE;
         }
-        close CONTENTFILE;
+
+    };
+
+    # See if anything called 'die' in the 'eval' block.
+    if ($@) {
+        $error_msg = $@;
     }
 
     if (defined($tempdir)) {

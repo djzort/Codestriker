@@ -84,12 +84,14 @@ sub parse ($$$) {
 		return () unless defined $line;
 	    }
 	    elsif ($line =~ /^\<\<\< directory 1\: (.*)\@\@(.*)$/o) {
-		# Currently we don't really support directory operations.
-		# ClearCase captures added/deleted directories and deleted files as
-		# a directory change, but unfortunately added files go straight into
-		# the VOB - great.  Try to fidge this so that we treat the directory
-		# as a file, where the contents are the diff file itself - better than
-		# nothing.
+		# Currently we don't really support directory
+		# operations.  ClearCase captures added/deleted
+		# sub-directories and deleted files as a directory change,
+		# but unfortunately added files go straight into the
+		# VOB - great.  Try to fddge this so that we treat the
+		# directory as a file, where the contents are the diff
+		# file itself - better than nothing, and the reviewers
+		# can at least see what is going on.
 		$filename = $1;
 		$revision = $2;
 
@@ -111,7 +113,8 @@ sub parse ($$$) {
 		return () unless
 		    defined $line && $line =~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o;
 
-		# Keep reading text until there is nothing left for this segment.
+		# Keep reading text until there is nothing left for this
+		# segment.
 		my $text = "";
 		$line = <$fh>;
 		while (defined $line &&
@@ -122,13 +125,13 @@ sub parse ($$$) {
 		    $line = <$fh>;
 		}
 		
-		# Create the chunk, indicating there is not a repository match, since
-		# this is for a directory.
+		# Create the chunk, indicating there is not a repository match,
+		# since this is for a directory entry with some basic text.
 		my $chunk = {};
 		$chunk->{filename} = $filename;
 		$chunk->{revision} = $revision;
 		$chunk->{old_linenumber} = 0;
-		$chunk->{new_linenumber} = 0;
+		$chunk->{new_linenumber} = 1;
 		$chunk->{binary} = 0;
 		$chunk->{text} = $text;
 		$chunk->{description} = "";
