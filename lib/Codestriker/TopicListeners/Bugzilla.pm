@@ -39,7 +39,6 @@ sub topic_create($$) {
         
 	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
-	$bug_db_connection->get_connection();
 	my @ids = split /, /, $topic->{bug_ids};
         
 	my $text = "Codestriker topic: $topic_url created.\n" .
@@ -72,7 +71,6 @@ sub topic_changed($$$$) {
 					    $query->url(), 0);
  	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
-	$bug_db_connection->get_connection();
         
 	my @ids = split /, /, $topic->{bug_ids};
                                                                     

@@ -46,8 +46,13 @@ sub process($$$) {
 
     # Retrieve the deltas corresponding to this file.
     my @deltas = Codestriker::Model::Delta->get_deltas($topicid, $fn);
-    my $filename = $deltas[0]->{filename};
-    my $revision = $deltas[0]->{revision};
+
+    # We need to untaint the filename and revision values, as they will
+    # potentially be used to launch an external program.
+    $deltas[0]->{filename} =~ /^(.*)$/o;
+    my $filename = $1;
+    $deltas[0]->{revision} =~ /^(.*)$/o;
+    my $revision = $1;
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();

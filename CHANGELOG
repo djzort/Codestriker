@@ -62,6 +62,11 @@ Version 1.8.4
   surrounded by parenthesis in the topic list page.  From Jason
   Remilliard.
 
+* Fixed a number of taint-mode problems when using Perl 5.8.
+
+* Fixed the "Attempt to bless into a reference" error when using
+  Bugzilla integration and Perl 5.8.
+
 Version 1.8.3
 
 * It is now possible to specify multiple metrics associated with a
