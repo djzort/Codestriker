@@ -20,9 +20,12 @@ Version 1.8.4
 * Refactored CvsPserver and CvsLocal into a single object, Cvs.
 
 * It is now possible to specify CVS repositories using the :ext access
-  method with ssh, providing that the user running the Codestriker
-  web application can ssh into the specified host without entering a
-  password interactively.
+  method with ssh, providing that the user running the Codestriker web
+  application can ssh into the specified host without requiring a
+  password (ie setting up an authorized_keys file on the destination
+  host).  The Codestriker configuration file has an example :ext
+  repository, and requires the path to ssh to be specified in the $ssh
+  setting.
 
 Version 1.8.3
 
