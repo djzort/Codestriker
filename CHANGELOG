@@ -29,6 +29,9 @@ Version 1.8.6
 * When creating new topics linked to Bugzilla, also include the topic
   description field in the Bugzilla comment.
 
+* Searching on the bugid and cc fields was not working ocrrectly.
+  This has now been fixed.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

@@ -835,9 +835,8 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
     my $first_condition = $using_oracle ? 0 : 1;
     $query = _add_condition($query, $author_part, \$first_condition);
     $query = _add_condition($query, $reviewer_part, \$first_condition);
-    $query = _add_condition($query, $cc_part, $scc, \$first_condition);
-    $query = _add_condition($query, $bugid_part, $sbugid,
-			    \$first_condition);
+    $query = _add_condition($query, $cc_part, \$first_condition);
+    $query = _add_condition($query, $bugid_part, \$first_condition);
 
     # Handle the state set.
     if ($state_part ne "") {
