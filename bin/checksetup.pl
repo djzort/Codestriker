@@ -35,7 +35,7 @@ my $modules = [
     }, 
     { 
         name => 'CGI', 
-        version => '0' 
+        version => '2.56' 
     }, 
     { 
         name => 'CGI::Carp', 
