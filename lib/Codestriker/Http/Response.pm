@@ -13,14 +13,6 @@ package Codestriker::Http::Response;
 use strict;
 use Codestriker::Http::Cookie;
 
-# Prototypes.
-sub new( $$ );
-sub get_query( $ );
-sub generate_header( $$$$$$$$ );
-sub generate_footer( $ );
-sub error( $$ );
-sub escapeHTML( $$ );
-
 # From codestriker.conf.
 use vars qw ( $codestriker_css );
 
@@ -44,9 +36,9 @@ sub get_query($) {
 
 # Generate the initial HTTP response header, with the initial HTML header.
 # Most of the input parameters are used for storage into the user's cookie.
-sub generate_header($$$$$$$$) {
+sub generate_header($$$$$$$$$$) {
     my ($self, $topic, $topic_title, $email, $reviewers, $cc, $mode,
-	$tabwidth) = @_;
+	$tabwidth, $load_anchor, $reload) = @_;
 
     # If the header has already been generated, do nothing.
     return if ($self->{header_generated});
@@ -106,6 +98,9 @@ sub generate_header($$$$$$$$) {
 	($has_zlib || ($Codestriker::gzip ne "" &&
 		       open(GZIP, "| $Codestriker::gzip -1 -c")))) {
 	print $query->header(-cookie=>$cookie_obj,
+#			     -expires=>'+1d',
+#			     -cache_control=>'no-store',
+#			     -pragma=>'no-cache'
 			     -content_encoding=>'x-gzip',
 			     -vary=>'Accept-Encoding');
 
@@ -117,7 +112,11 @@ sub generate_header($$$$$$$$) {
 	select(GZIP);
 	$output_compressed = 1;
     } else {
-	print $query->header(-cookie=>$cookie_obj);
+	print $query->header(-cookie=>$cookie_obj,
+#			     -expires=>'+1d',
+#			     -cache_control=>'no-store',
+#			     -pragma=>'no-cache'
+			     );
     }
 
     my $title = "Codestriker";
@@ -125,6 +124,42 @@ sub generate_header($$$$$$$$) {
 	$title .= ": \"$topic_title\"";
     }
     $codestriker_css = "/codestriker.css";
+
+    # Write the simple open window javascript method for displaying popups.
+    # Note gotoAnchor can't simply be:
+    #
+    # opener.location.hash = "#" + anchor;
+    #
+    # As the old netscapes don't handle it properly.
+    my $jscript=<<END;
+    var windowHandle = '';
+
+    function myOpen(url,name) {
+	windowHandle = window.open(url,name,
+				   'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
+	if (windowHandle.opener == null) {
+	    windowHandle.opener = self;
+	}
+	windowHandle.focus();
+    }
+
+    function gotoAnchor(anchor, reload) {
+	if (anchor == "" || opener == null) return;
+
+	var index = opener.location.href.lastIndexOf("#");
+	if (index != -1) {
+	    opener.location.href =
+		opener.location.href.substr(0, index) + "#" + anchor;
+	}
+	else {
+	    opener.location.href += "#" + anchor;
+	}
+		
+	if (reload) opener.location.reload(reload);
+	opener.focus();
+    }
+END
+
     print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
 			     -charset=>'ISO-8859-1',
 			     -title=>"$title",
@@ -132,33 +167,13 @@ sub generate_header($$$$$$$$) {
 			     -style=>{src=>"$codestriker_css"},
 			     -base=>$query->url(),
 			     -link=>'blue',
-			     -vlink=>'purple');
+			     -vlink=>'purple',
+			     -script=>$jscript,
+			     -onLoad=>"gotoAnchor('$load_anchor', $reload)");
 
     # Write a comment indicating if this was compressed or not.
     print "\n<!-- Source was" . (!$output_compressed ? " not" : "") .
 	" sent compressed. -->\n";
-
-    # Write the simple open window javascript method for displaying popups.
-    print <<EOF;
-<SCRIPT LANGUAGE="JavaScript"><!--
- var windowHandle = '';
-
- function myOpen(url,name) {
-     windowHandle = window.open(url,name,
-				'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
-     if (windowHandle.opener == null) {
-	 windowHandle.opener = self;
-     }
-     windowHandle.focus();
- }
-
-    function fetch(url) {
-	opener.location = url;
-	opener.focus();
-    }
- //-->
-</SCRIPT>
-EOF
 }
 
 # Generate the footer of the HTML output.
@@ -166,7 +181,12 @@ sub generate_footer($) {
     my ($self) = @_;
 
     my $query = $self->{query};
-    print $query->end_html();
+
+    # Fix for bug relating to IE 5 + caching of documents, see:
+    # http://support.microsoft.com/default.aspx?scid=kb;EN-US;q222064
+#    print "</BODY><HEAD>\n" .
+#	'<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">' .
+#	"</HEAD></HTML>\n";
 }
 
 # Generate an error page response if bad input was passed in.

@@ -16,8 +16,6 @@ use Codestriker::Model::Comment;
 use Codestriker::Http::Render;
 
 # Prototypes.
-sub process( $$$ );
-
 sub _read_cvs_file( $$$$$ );
 
 # If the input is valid, display the topic.
@@ -73,7 +71,7 @@ sub process($$$) {
     my $title = $new == $UrlBuilder::NEW_FILE ?
 	"New $filename" : "$filename v$revision";
     $http_response->generate_header($topic, $title, "", "", "", $mode,
-				    $tabwidth);
+				    $tabwidth, "", 0);
 
     my $parallel = ($new == $UrlBuilder::BOTH_FILES) ? 1 : 0;
     my $max_digit_width = length($#cvs_filedata);

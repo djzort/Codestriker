@@ -41,7 +41,8 @@ sub process($$$) {
 				     \@email, \@type);
 
     # Display the data, with each topic title linked to the view topic screen.
-    $http_response->generate_header("", "Topic list", "", "", "", "", "");
+    $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
+				    0);
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

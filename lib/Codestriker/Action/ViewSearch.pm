@@ -16,7 +16,7 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-    $http_response->generate_header("", "Search", "", "", "", "");
+    $http_response->generate_header("", "Search", "", "", "", "", "", "", 0);
 
     print $query->h1("Topic search"), $query->p;
     print $query->start_form();

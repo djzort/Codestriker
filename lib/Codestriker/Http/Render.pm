@@ -467,21 +467,22 @@ sub render_linenumber($$$$) {
     my $link_title = $self->get_comment_digest($offset);
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
+    my $anchor = "$prefix$line";
     my $edit_url =
-	$self->{url_builder}->edit_url($offset, $self->{topic}, "", "");
-    $edit_url = "javascript:fetch('$edit_url')" if ($prefix ne "");
+	$self->{url_builder}->edit_url($offset, $self->{topic}, "", $anchor,
+				       "");
+    $edit_url = "javascript:myOpen('$edit_url','e')";
 
     my $query = $self->{query};
     if ($link_title ne "") {
 	return $query->a(
-			 {name=>"$prefix$line",
+			 {name=>$anchor,
 			  href=>$edit_url,
 			  title=>$link_title,
 			  onmouseover=>"window.status='$js_title'; " .
-			      "return true;"}, "$linedata");
+			      "return true;"}, $linedata);
     } else {
-	return $query->a({name=>"$prefix$line", href=>"$edit_url"},
-			 "$linedata");
+	return $query->a({name=>$anchor, href=>"$edit_url"}, $linedata);
     }
 }
 
@@ -680,7 +681,8 @@ sub render_monospaced_line ($$$$$$) {
     if ($offset != -1) {
 	# A line corresponding to the review.
 	my $edit_url =
-	    $self->{url_builder}->edit_url($offset, $self->{topic}, "", "");
+	    $self->{url_builder}->edit_url($offset, $self->{topic}, "",
+					   $linenumber, "");
 	my $comment_exists_ref = $self->{comment_exists_ref};
 	if (defined $$comment_exists_ref{$offset}) {
 	    my $link_title = $self->get_comment_digest($offset);
@@ -688,7 +690,7 @@ sub render_monospaced_line ($$$$$$) {
 	    $js_title =~ s/\'/\\\'/mgo;
 	    $line_cell = "$prefix" .
 		$query->a({name=>"$linenumber",
-			   href=>"javascript:fetch('$edit_url')",
+			   href=>"javascript:myOpen('$edit_url','e')",
 			   title=>$js_title,
 			   onmouseover=> "window.status='$js_title'; " .
 			       "return true;" },
@@ -698,7 +700,7 @@ sub render_monospaced_line ($$$$$$) {
 	else {
 	    $line_cell = "$prefix" .
 		$query->a({name=>"$linenumber",
-			   href=>"javascript:fetch('$edit_url')"},
+			   href=>"javascript:myOpen('$edit_url','e')"},
 			  $query->span({-class=>$no_comment_class},
 				       "$linenumber"));
 	}

@@ -62,11 +62,12 @@ sub create_topic_url ($) {
 }	    
 
 # Create the URL for editing a topic.
-sub edit_url ($$$$$) {
-    my ($self, $line, $topic, $context, $prefix) = @_;
+sub edit_url ($$$$$$) {
+    my ($self, $line, $topic, $context, $anchor, $prefix) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
 	"?line=$line&topic=$topic&action=edit" .
-	    ((defined $context && $context ne "") ? "&context=$context" : "");
+	((defined $anchor && $anchor ne "") ? "&a=$anchor" : "") .
+	((defined $context && $context ne "") ? "&context=$context" : "");
 }
 
 # Create the URL for viewing a new file.

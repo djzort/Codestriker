@@ -25,6 +25,8 @@ sub process($$$) {
     my $context = $http_input->get('context');
     my $email = $http_input->get('email');
     my $mode = $http_input->get('mode');
+    my $tabwidth = $http_input->get('tabwidth');
+    my $anchor = $http_input->get('a');
 
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
@@ -52,7 +54,7 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
-				    $mode);
+				    $mode, $tabwidth, "", 0);
     print $query->h2("Edit topic: $document_title");
     print $query->start_table();
     print $query->Tr($query->td("Author: "),
@@ -74,18 +76,18 @@ sub process($$$) {
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
-	$url_builder->edit_url($line, $topic, $inc_context, "");
+	$url_builder->edit_url($line, $topic, $inc_context, "", "");
     my $dec_context_url =
-	$url_builder->edit_url($line, $topic, $dec_context, "");
+	$url_builder->edit_url($line, $topic, $dec_context, "", "");
     print "Context: (" .
 	$query->a({href=>"$inc_context_url"},"increase") . " | " .
-	$query->a({href=>"$dec_context_url"},"decrease)");
+	$query->a({href=>"$dec_context_url"},"decrease)") . "\n";
     
     print $query->p .
 	$query->pre(Codestriker::Http::Render->get_context($line, $topic,
 							   $context, 1,
 							   \@document)) .
-							   $query->p;
+							   $query->p . "\n";
 
     # Display the comments which have been made for this line number
     # thus far in reverse order.
@@ -97,34 +99,47 @@ sub process($$$) {
 		$query->p;
 	}
     }
-    
+
     # Create a form which will allow the user to enter in some comments.
-    print $query->hr, $query->p("Enter comments:"), $query->p;
-    print $query->start_form();
+    print $query->hr . $query->p("Enter comments:") . $query->p . "\n";
+    print $query->start_form() . "\n";
     $query->param(-name=>'action', -value=>'submit_comment');
-    print $query->hidden(-name=>'action', -default=>'submit_comment');
-    print $query->hidden(-name=>'line', -default=>"$line");
-    print $query->hidden(-name=>'topic', -default=>"$topic");
-    print $query->hidden(-name=>'mode', -default=>"$mode");
+    print $query->hidden(-name=>'action', -default=>'submit_comment') . "\n";
+    print $query->hidden(-name=>'line', -default=>$line) . "\n";
+    print $query->hidden(-name=>'topic', -default=>$topic) . "\n";
+    print $query->hidden(-name=>'mode', -default=>$mode) . "\n";
+    print $query->hidden(-name=>'a', -default=>$anchor) . "\n";
     print $query->textarea(-name=>'comments',
 			   -rows=>15,
 			   -columns=>75,
-			   -wrap=>'hard');
+			   -wrap=>'hard') . "\n";
 
-    print $query->p, $query->start_table();
+    print $query->p, $query->start_table() . "\n";
     print $query->Tr($query->td("Your email address: "),
 		     $query->td($query->textfield(-name=>'email',
 						  -size=>50,
 						  -default=>"$email",
 						  -override=>1,
-						  -maxlength=>100)));
+						  -maxlength=>100))) . "\n";
     print $query->Tr($query->td("Cc: "),
 		     $query->td($query->textfield(-name=>'comment_cc',
 						  -size=>50,
-						  -maxlength=>150)));
-    print $query->end_table(), $query->p;
-    print $query->submit(-value=>'Submit');
-    print $query->end_form();
+						  -maxlength=>150))) . "\n";
+    print $query->end_table() . $query->p . "\n";
+
+    # Display two buttons, one which will submit the comment, the other, which
+    # will submit the comment, and refresh the opener's window.
+    print $query->submit(-name=>'submit',
+			 -value=>'Submit',
+			 -onClick=>'opener.focus()');
+
+# Don't enable the "Submit+Refresh" option for now...
+#    print "&nbsp;&nbsp;&nbsp;";
+#    print $query->submit(-name=>'submit',
+#			 -value=>'Submit+Refresh',
+#			 -onClick=>"opener.focus()") . "\n";
+
+    print $query->end_form() . "\n";
 }
 
 1;

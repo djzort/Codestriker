@@ -51,7 +51,7 @@ sub process($$$) {
 				      \@comment_date, \%comment_exists);
 
     $http_response->generate_header($topic, $document_title, $email,
-				    "", "", $mode, $tabwidth);
+				    "", "", $mode, $tabwidth, "", 0);
     
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -302,13 +302,15 @@ sub process($$$) {
     # first comment.
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
 	my $edit_url =
-	    $url_builder->edit_url($comment_linenumber[$i], $topic, "", "");
+	    $url_builder->edit_url($comment_linenumber[$i], $topic, "", "C$i",
+				   "");
 	if ($i == $#comment_linenumber) {
 	    print $query->a({name=>"comments"},$query->hr);
 	} else {
 	    print $query->hr;
 	}
-	print $query->a({href=>"$edit_url"},
+	print $query->a({href=>"javascript:myOpen('$edit_url','e')",
+			 name=>"C$i"},
 			"line $comment_linenumber[$i]"), ": ";
 	print "$comment_author[$i] $comment_date[$i]", $query->br, "\n";
 	print $query->pre($http_response->escapeHTML($comment_data[$i])) .

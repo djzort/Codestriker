@@ -29,6 +29,7 @@ sub process($$$) {
     my $email = $http_input->get('email');
     my $cc = $http_input->get('comment_cc');
     my $mode = $http_input->get('mode');
+    my $anchor = $http_input->get('a');
     
     # Check that the fields have been filled appropriately.
     if ($comments eq "" || !defined $comments) {
@@ -46,7 +47,8 @@ sub process($$$) {
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
-    my $edit_url = $url_builder->edit_url($line, $topic, "", $query->url());
+    my $edit_url = $url_builder->edit_url($line, $topic, "", "",
+					  $query->url());
 
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
@@ -147,12 +149,23 @@ sub process($$$) {
 					    $subject, $body)) {
 	$http_response->error("Failed to send topic creation email");
     }
-    
-    # Redirect the browser to view the topic back at the same line number where
-    # they were adding comments to.
-    my $redirect_url =
-	$url_builder->view_url_extended($topic, $line, $mode, "", $email, "");
-    print $query->redirect(-URI=>$redirect_url);
+
+    # Display a simple screen indicating that the comment has been registered.
+    # Clicking the Close button simply dismisses the edit popup.  Leaving it
+    # up will ensure the next editing topic will be handled quickly, as the
+    # overhead of bringing up a new window is removed.
+    my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
+    $http_response->generate_header($topic, "Comment submitted", $email, "",
+				    "", "", "", $anchor, $reload);
+    print $query->h2("Comment submitted") . $query->p . "\n";
+    print "Topic URL: " . $query->a({href=>"$edit_url"},$edit_url) .
+	$query->p . "\n";
+    print $query->pre($comments) . $query->p . "\n";
+    print $query->start_form();
+    print $query->p, $query->submit(-value=>'Close',
+				    -onClick=>'window.close()');
+    print $query->end_form();
+
     return;
 }
 
