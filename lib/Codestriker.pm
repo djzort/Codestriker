@@ -15,7 +15,7 @@ use Time::Local;
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
-	      $cvsviewer $cvsrep $cvscmd $codestriker_css
+	      $cvsviewer $cvsrep $cvscmd
 	      $default_topic_create_mode $default_tabwidth
 	      $db $dbuser $dbpasswd
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
