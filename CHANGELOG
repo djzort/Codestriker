@@ -1,6 +1,17 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.0
+
+* Introduction of per-user and per-topic metrics functionality from
+  Jason Remillard.  In the process, the UI has been changed (more
+  needs to go here later), plus some general refactoring (more info
+  here later).
+
+* The $Codestriker::allow_repository configuration variable is removed
+  since this boolean value can be dervived from the length of the
+  @valid_repositories list.  From Jason Remillard.
+
 Version 1.7.8
 
 * If a badly-formatted repository value from codestriker.conf is used

@@ -20,7 +20,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_map $allow_comment_email $default_topic_br_mode
-	      $allow_delete $allow_searchlist $allow_repositories
+	      $allow_delete $allow_searchlist 
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      @metrics_schema
 	      );

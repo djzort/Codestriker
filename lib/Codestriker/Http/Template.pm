@@ -80,7 +80,7 @@ sub process($$) {
     $vars->{'main_title'} = $Codestriker::title;
 
     # Indicate if the repository field should be displayed.
-    $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+    $vars->{'allow_repositories'} = scalar(@Codestriker::valid_repositories) ? 1 : 0;
 
     # Display the topic size limit if any.
     $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 

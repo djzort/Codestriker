@@ -60,7 +60,7 @@ sub process($$$) {
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;
-    if ($Codestriker::allow_repositories) {
+    if (scalar(@Codestriker::valid_repositories)) {
 	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
     } else {

@@ -30,7 +30,7 @@ sub process($$$) {
     my $parallel = $http_input->get('parallel');
 
     # Check if this action is allowed.
-    if ($Codestriker::allow_repositories == 0) {
+    if (scalar(@Codestriker::valid_repositories) == 0) {
 	$http_response->error("This function has been disabled");
     }
 

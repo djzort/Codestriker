@@ -51,7 +51,7 @@ sub process($$$) {
 	$retrieve_text_from_rep = 1;
 
 	# Check if this action is permitted.
-	if ($Codestriker::allow_repositories == 0) {
+	if (scalar(@Codestriker::valid_repositories) == 0) {
 	    $feedback .= "Repository functionality has been disabled.  " .
 		"Can't create topic text usings tags.\n";
 	}
@@ -89,7 +89,6 @@ sub process($$$) {
     $error_vars->{'email'} = $email;
     $error_vars->{'reviewers'} = $reviewers;
     $error_vars->{'cc'} = $cc;
-    $error_vars->{'allow_repositories'} = $Codestriker::allow_repositories;
     $error_vars->{'topic_file'} = $topic_file;
     $error_vars->{'topic_description'} = $topic_description;
     $error_vars->{'topic_title'} = $topic_title;
@@ -99,23 +98,16 @@ sub process($$$) {
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
-    $error_vars->{'maximum_topic_size_lines'} =
-	$Codestriker::maximum_topic_size_lines eq "" ?
-	0 : $Codestriker::maximum_topic_size_lines;
-                                          
-    $error_vars->{'suggested_topic_size_lines'} =
-	$Codestriker::suggested_topic_size_lines eq "" ?
-	0 : $Codestriker::suggested_topic_size_lines;
 
     my $repository = undef;
-    if ($Codestriker::allow_repositories) {
+    if (scalar(@Codestriker::valid_repositories)) {
 	# Set the repository to the default if it is not entered.
 	if ($repository_url eq "") {
 	    $repository_url = $Codestriker::valid_repositories[0];
 	}
 
 	# Check if the repository argument is valid.
-	my $repository =
+	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
 	if (! defined $repository) {
 	    $feedback .= "The repository value \"$repository_url\" is invalid.\n";
@@ -142,8 +134,8 @@ sub process($$$) {
     # create a temporary file to store the topic text.
     my $temp_topic_filename = "";
     my $temp_error_filename = "";
-    if ($retrieve_text_from_rep && defined $repository) {
 
+    if ($retrieve_text_from_rep && defined $repository) {
 	# Store the topic text into this temporary file.
 	$temp_topic_filename = "topictext.$topicid";
 	$temp_error_filename = "errortext.$topicid";
