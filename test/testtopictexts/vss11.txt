@@ -1,0 +1,5 @@
+Diffing: $/TestProject/CODESTRIKER-SS/html/viewtopicdetail.png
+Against: C:\work\codestriker-ss\html\viewtopicdetail.png
+
+The files are different.
+

@@ -1,0 +1,90 @@
+Diffing: $/TestProject/CODESTRIKER-SS
+Against: C:\work\codestriker-ss
+
+Diffing: $/TestProject/CODESTRIKER-SS/bin
+Against: C:\work\codestriker-ss\bin
+
+Local files not in the current project:
+  checksetup.pl~  zot.txt
+SourceSafe files different from local files:
+  checksetup.pl
+
+Diffing: $/TestProject/CODESTRIKER-SS/doc
+Against: C:\work\codestriker-ss\doc
+
+Diffing: $/TestProject/CODESTRIKER-SS/html
+Against: C:\work\codestriker-ss\html
+
+Diffing: $/TestProject/CODESTRIKER-SS/html-docs
+Against: C:\work\codestriker-ss\html-docs
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib
+Against: C:\work\codestriker-ss\lib
+
+Local files not in the current project:
+  Codestriker.pm~
+SourceSafe files different from local files:
+  Codestriker.pm
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker
+Against: C:\work\codestriker-ss\lib\Codestriker
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Action
+Against: C:\work\codestriker-ss\lib\Codestriker\Action
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/BugDB
+Against: C:\work\codestriker-ss\lib\Codestriker\BugDB
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/DB
+Against: C:\work\codestriker-ss\lib\Codestriker\DB
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/FileParser
+Against: C:\work\codestriker-ss\lib\Codestriker\FileParser
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Http
+Against: C:\work\codestriker-ss\lib\Codestriker\Http
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Model
+Against: C:\work\codestriker-ss\lib\Codestriker\Model
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Repository
+Against: C:\work\codestriker-ss\lib\Codestriker\Repository
+
+Local files not in the current project:
+  Cvs.pm~  Perforce.pm~  Subversion.pm~  Vss.pm~
+SourceSafe files different from local files:
+  Cvs.pm
+  Perforce.pm
+  Subversion.pm
+  Vss.pm
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Template
+Against: C:\work\codestriker-ss\lib\Codestriker\Template
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Template/Plugin
+Against: C:\work\codestriker-ss\lib\Codestriker\Template\Plugin
+
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/TopicListeners
+Against: C:\work\codestriker-ss\lib\Codestriker\TopicListeners
+
+Diffing: $/TestProject/CODESTRIKER-SS/screenshots
+Against: C:\work\codestriker-ss\screenshots
+
+Diffing: $/TestProject/CODESTRIKER-SS/template
+Against: C:\work\codestriker-ss\template
+
+Diffing: $/TestProject/CODESTRIKER-SS/template/en
+Against: C:\work\codestriker-ss\template\en
+
+Diffing: $/TestProject/CODESTRIKER-SS/template/en/default
+Against: C:\work\codestriker-ss\template\en\default
+
+Diffing: $/TestProject/CODESTRIKER-SS/test
+Against: C:\work\codestriker-ss\test
+
+Diffing: $/TestProject/CODESTRIKER-SS/test/CodestrikerTest
+Against: C:\work\codestriker-ss\test\CodestrikerTest
+
+Diffing: $/TestProject/CODESTRIKER-SS/test/testtopictexts
+Against: C:\work\codestriker-ss\test\testtopictexts
+

@@ -1,0 +1,72 @@
+Diffing: $/TestProject/CODESTRIKER-SS/bin/checksetup.pl
+Against: C:\work\codestriker-ss\bin\checksetup.pl
+
+  #!/usr/bin/perl -w
+  
+  
+###############################################################################
+  # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
+  # sits@users.sourceforge.net
+5a6,10
+> 
+> Here is some
+> next text
+> try this out.
+> 
+  #
+  # This program is free software; you can redistribute it and modify it under
+  # the terms of the GPL.
+  
+  # This script is similar to bugzilla's checksetup.pl.  It can be run whenever
+********
+  eval("use Codestriker::DB::Database");
+  eval("use Codestriker::DB::Column");
+  eval("use Codestriker::DB::Table");
+  eval("use Codestriker::DB::Index");
+  eval("use Codestriker::Action::SubmitComment");
+35,41d39
+< eval("use Codestriker::Repository::RepositoryFactory");
+< eval("use Codestriker::FileParser::Parser");
+< eval("use Codestriker::FileParser::UnknownFormat");
+< 
+< # Set this variables, to avoid compilation warnings below.
+< $Codestriker::COMMENT_SUBMITTED = 0;
+< @Codestriker::valid_repositories = ();
+  
+  # Initialise Codestriker, load up the configuration file.
+  Codestriker->initialise(cwd() . '/..');
+  
+  # Indicate which modules are required for codestriker (this code is
+********
+  				 'FROM commentstatehistory ' .
+  				 'WHERE state >= 0');
+      $stmt->execute();
+      
+      $update = $dbh->prepare_cached('UPDATE commentstatehistory ' .
+876,877c874,875
+< 				   'SET metric_name = ?, metric_value = ?, ' .
+< 				   ' state = ?, modified_ts = ? ' .
+---
+> 				   'SET metric_value = ?, metric_value = ?, ' .
+> 				   ' state_value = ?, modified_ts = ? ' .
+  				   'WHERE id = ? AND version = ?');
+      $count = 0;
+      @update_rows = ();
+      while (my ($id, $state, $version, $modified_ts) =
+  	   $stmt->fetchrow_array()) {
+********
+  close CODESTRIKER_BASE;
+  close CODESTRIKER_PL;
+  
+  # Make sure the generated file is executable.
+  chmod 0755, '../cgi-bin/codestriker.pl';
+936a935,937
+> 
+> And some more.
+> 
+  
+  # Clean out the contents of the data and template directory, but don't
+  # remove them.
+  print "Removing old generated templates...\n";
+  chdir('../cgi-bin') ||
+

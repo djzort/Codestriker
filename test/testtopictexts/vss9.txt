@@ -1,0 +1,17 @@
+Diffing: $/TestProject/CODESTRIKER-SS/lib/Codestriker/Repository/Cvs.pm
+Against: C:\work\codestriker-ss\lib\Codestriker\Repository\Cvs.pm
+
+ 16    Del: # Factory method for creating a local CVS repository object.
+ 17    Del: sub build_local {
+ 18    Del:     my ($type, $cvsroot, $optional_prefix) = @_;
+ 19    Del: 
+ 20    Del:     my $self = {};
+ 21    Del:     $self->{cvsroot} = $cvsroot;
+ 34 Change:     $self->{username} = $username;
+        To:     $self->{username} = $username_2;
+ 35 Change:     $self->{password} = $password;
+        To:     $self->{password} = $password_2;
+ 74    Ins: 
+ 75    Ins: more stuff here
+ 76    Ins: and here too
+

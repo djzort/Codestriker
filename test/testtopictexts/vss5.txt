@@ -1,0 +1,51 @@
+Diffing: $/TestProject/CODESTRIKER-SS/bin/checksetup.pl
+Against: C:\work\codestriker-ss\bin\checksetup.pl
+
+********
+            ##################################################################
+            # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights 
+            # sits@users.sourceforge.net
+  6    Ins: 
+  7    Ins: Here is some
+  8    Ins: next text
+  9    Ins: try this out.
+ 10    Ins: 
+            #
+            # This program is free software; you can redistribute it and modif
+            # the terms of the GPL.
+********
+            eval("use Codestriker::DB::Table");
+            eval("use Codestriker::DB::Index");
+            eval("use Codestriker::Action::SubmitComment");
+ 35    Del: eval("use Codestriker::Repository::RepositoryFactory");
+ 36    Del: eval("use Codestriker::FileParser::Parser");
+ 37    Del: eval("use Codestriker::FileParser::UnknownFormat");
+ 38    Del: 
+ 39    Del: # Set this variables, to avoid compilation warnings below.
+ 40    Del: $Codestriker::COMMENT_SUBMITTED = 0;
+ 41    Del: @Codestriker::valid_repositories = ();
+            
+            # Initialise Codestriker, load up the configuration file.
+            Codestriker->initialise(cwd() . '/..');
+********
+                $stmt->execute();
+                
+                $update = $dbh->prepare_cached('UPDATE commentstatehistory ' .
+876 Change: 				   'SET metric_name = ?, metric_value = ?, ' .
+        To: 				   'SET metric_value = ?, metric_value = ?, ' .
+877 Change: 				   ' state = ?, modified_ts = ? ' .
+        To: 				   ' state_value = ?, modified_ts = ? ' .
+            				   'WHERE id = ? AND version = ?');
+                $count = 0;
+                @update_rows = ();
+********
+            
+            # Make sure the generated file is executable.
+            chmod 0755, '../cgi-bin/codestriker.pl';
+935    Ins: 
+936    Ins: And some more.
+937    Ins: 
+            
+            # Clean out the contents of the data and template directory, but d
+            # remove them.
+

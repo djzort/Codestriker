@@ -1,0 +1,23 @@
+Diffing: $/TestProject/CODESTRIKER-SS/bin/checksetup.pl
+Against: C:\work\codestriker-ss\bin\checksetup.pl
+
+  6    Ins: 
+  7    Ins: Here is some
+  8    Ins: next text
+  9    Ins: try this out.
+ 10    Ins: 
+ 35    Del: eval("use Codestriker::Repository::RepositoryFactory");
+ 36    Del: eval("use Codestriker::FileParser::Parser");
+ 37    Del: eval("use Codestriker::FileParser::UnknownFormat");
+ 38    Del: 
+ 39    Del: # Set this variables, to avoid compilation warnings below.
+ 40    Del: $Codestriker::COMMENT_SUBMITTED = 0;
+ 41    Del: @Codestriker::valid_repositories = ();
+876 Change: 				   'SET metric_name = ?, metric_value = ?, ' .
+        To: 				   'SET metric_value = ?, metric_value = ?, ' .
+877 Change: 				   ' state = ?, modified_ts = ? ' .
+        To: 				   ' state_value = ?, modified_ts = ? ' .
+935    Ins: 
+936    Ins: And some more.
+937    Ins: 
+

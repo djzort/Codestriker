@@ -1,0 +1,28 @@
+Diffing: $/TestProject/CODESTRIKER-SS/bin/checksetup.pl
+Against: C:\work\codestriker-ss\bin\checksetup.pl
+
+5a6,10
+> 
+> Here is some
+> next text
+> try this out.
+> 
+35,41d39
+< eval("use Codestriker::Repository::RepositoryFactory");
+< eval("use Codestriker::FileParser::Parser");
+< eval("use Codestriker::FileParser::UnknownFormat");
+< 
+< # Set this variables, to avoid compilation warnings below.
+< $Codestriker::COMMENT_SUBMITTED = 0;
+< @Codestriker::valid_repositories = ();
+876,877c874,875
+< 				   'SET metric_name = ?, metric_value = ?, ' .
+< 				   ' state = ?, modified_ts = ? ' .
+---
+> 				   'SET metric_value = ?, metric_value = ?, ' .
+> 				   ' state_value = ?, modified_ts = ? ' .
+936a935,937
+> 
+> And some more.
+> 
+
