@@ -63,7 +63,7 @@ sub parse ($$$) {
 	$line = <$fh>;
 
 	# The separator line appears next, for diffs, but not rdiffs.
-	return () unless defined $line;
+	return @result unless defined $line;
 	if ($line =~ /^===================================================================$/) {
 	    $line = <$fh>;
 	}
