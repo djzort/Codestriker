@@ -1294,7 +1294,7 @@ C:\Perl\bin\perl.exe "%s" %s
       <para>
         Further information on setting up IIS with Perl CGI can be
         found from <ulink
-	url="http://www.mhuffman.com/notes/cgi/cgi_config.html">http://www.mhuffman.com/notes/cgi/cgi_config.html</ulink>.
+	url="http://support.microsoft.com/kb/q245225">http://support.microsoft.com/kb/q245225</ulink>.
       </para>
     </sect1>
 
