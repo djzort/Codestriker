@@ -620,13 +620,10 @@ sub update($$$$$$$$$$) {
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$$$$\\@@\@\@\@\@\@\@\@\@) {
+sub query($$$$$$$$$$$$$$\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
 	$stitle, $sdescription, $scomments, $sbody, $sfilename, $sort_order,
-	$id_array_ref, $title_array_ref, $description_array_ref,
-	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
-	$bugid_array_ref, $email_array_ref, $type_array_ref,
-	$version_array_ref) = @_;
+        $topic_query_results_ref) = @_;
 
     # Obtain a database connection.
     my $database = Codestriker::DB::Database->get_database();
@@ -829,24 +826,83 @@ sub query($$$$$$$$$$$$$$\\@@\@\@\@\@\@\@\@\@) {
     my $success = defined $select_topic;
     $success &&= $select_topic->execute();
     if ($success) {
-	my ($id, $title, $description, $author, $creation_ts,
-	    $state, $bugid, $email, $type, $version);
-	while (($id, $title, $description, $author,
-		$creation_ts, $state, $bugid,
-		$email, $type, $version) = $select_topic->fetchrow_array()) {
-	    push @$id_array_ref, $id;
-	    push @$title_array_ref, $title;
-	    push @$description_array_ref, $description;
-	    push @$author_array_ref, $author;
-	    push @$creation_ts_array_ref, $creation_ts;
-	    push @$state_array_ref, $state;
-	    push @$bugid_array_ref, $bugid;
-	    push @$email_array_ref, $email;
-	    push @$type_array_ref, $type;
-	    push @$version_array_ref, $version;
+	my ($id, $title, $author, $description, $creation_ts, $state, $bugid,
+	    $email, $type, $version);
+              
+	while (($id, $title, $description, $author, $creation_ts, $state,
+		$bugid, $email, $type, $version) =
+	       $select_topic->fetchrow_array()) {
+            
+            my $topic_query_row = {
+                id => $id,
+                title => $title,
+                description => $description,
+                author => $author,
+                ts => $creation_ts,
+                state => $state,
+                bugid => $bugid,
+                email => $email,
+                type => $type,
+                version => $version,
+            };
+
+            push @$topic_query_results_ref, $topic_query_row;
 	}
 	$select_topic->finish();
     }
+
+    # get the visited flag and the comment state metric.
+    my $comment_metric_counts = [];
+    my $lastid;
+
+    foreach my $topicrow (@$topic_query_results_ref) {
+        # If they configured the comment metrics to be on the main
+        # page then do the queries here. Because we have a row per
+        # topic per reviewer, it will make the page load faster if the
+        # query is only done once per topic.
+        if ( !defined($lastid) || $topicrow->{id} ne $lastid ) {
+            $comment_metric_counts = [];
+            $lastid = $topicrow->{id};
+
+            foreach my $comment_state_metric
+		(@{$Codestriker::comment_state_metrics}) {
+                if ( exists($comment_state_metric->{show_on_mainpage}) ) {
+                    foreach my $value
+			(@{$comment_state_metric->{show_on_mainpage}}) {
+                    
+			    my $count = $dbh->selectrow_array('
+                            SELECT count(commentstatemetric.value) 
+                            FROM commentstatemetric, commentstate 
+                            WHERE  commentstate.topicid = ? and
+                                   commentstate.id = commentstatemetric.id and
+                                   commentstatemetric.name = ? and
+                                   commentstatemetric.value = ?',
+                                   {}, $topicrow->{id},
+				   $comment_state_metric->{name}, $value);
+
+                        push @$comment_metric_counts,
+			     { name => $comment_state_metric->{name},
+			       value => $value,
+			       count => $count };
+                    }
+                }
+            }
+        }
+
+        $topicrow->{commentmetrics} = $comment_metric_counts;
+
+        # See if the specified user has hit the topic yet.
+	# TODO: This should be in the HistoryRecorder module, called
+	# From ListTopics.pm, not from here.
+        my $visited = $dbh->selectrow_array('
+            SELECT count(creation_ts) FROM topicviewhistory 
+            WHERE  topicid = ? and
+                   email = ?',
+                   {}, $topicrow->{id}, $topicrow->{email});
+
+        $topicrow->{visitedtopic} = $visited;
+    }
+
 
     $database->release_connection();
     die $dbh->errstr unless $success;

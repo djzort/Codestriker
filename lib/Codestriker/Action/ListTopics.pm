@@ -61,18 +61,12 @@ sub process($$$) {
     my @sort_order = _get_topic_sort_order($http_input);
 
     # Query the model for the specified data.
-    my (@state_group_ref, @text_group_ref);
-    my (@id, @title, @description, @author, @ts, @state, @bugid, @email,
-	@type, @version);
-
+    my @topic_query_results;
     Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
 				     $scomments, $sbody, $sfilename,
-                                     \@sort_order,
-				     \@id, \@title, \@description,
-				     \@author, \@ts, \@state, \@bugid,
-				     \@email, \@type, \@version);
+                                     \@sort_order, \@topic_query_results);
 
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
@@ -105,6 +99,20 @@ sub process($$$) {
     $vars->{'sbody'} = $sbody;
     $vars->{'sfilename'} = $sfilename;
 
+    # Collect the comment metric counts that they want to show on the main page.
+    my @comment_metric_names;
+    foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
+        if (exists($comment_state_metric->{show_on_mainpage})) {
+            foreach my $value (@{$comment_state_metric->{show_on_mainpage}}) {
+                push @comment_metric_names,
+		     { name => $comment_state_metric->{name},
+		       value => $value };
+            }
+        }
+    }
+
+    $vars->{'commentmetrics'} = \@comment_metric_names;
+
     # The url generated here includes all of the search parameters, so
     # that the current list of topics the user it viewing does not
     # revert back to the default open topic list.  The search is
@@ -120,44 +128,55 @@ sub process($$$) {
     my @topics;
 
     # For each topic, collect all the reviewers, CC, and bugs, and display it
-    # as a row in the table.  Each bug should be linked appropriately.
-    for (my $index = 0, my $row = 0; $index <= $#id; $row++) {
+    # as a row in the table.  Each bug should be linked appropriately. The 
+    # query function will return a row per topic, per reviewer so this loop
+    # needs to combine rows that are from the same topic.
+    for (my $index = 0; $index < scalar(@topic_query_results); ++$index) {
+        my $topic_row = $topic_query_results[$index];
+
 	my @accum_bugs = ();
 	my @accum_reviewers = ();
+        my @accum_reviewers_not_visited = ();
 	my @accum_cc = ();
-	my $accum_id = $id[$index];
-	my $accum_version = $version[$index];
-	my $accum_title = $title[$index];
-	my $accum_description = $description[$index];
-	my $accum_author = $author[$index];
-	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
-	my $accum_state = $Codestriker::topic_states[$state[$index]];
+	my $accum_id = $topic_row->{id};
+
+	# Onl include the username part of the email address to save space.
+        $topic_row->{author} =~ s/\@.*$//o;
+	my $accum_author = $topic_row->{author};
 
 	# Accumulate the bug ids, reviewers and cc here for the same topic.
 	# Note these will be only a few elements long, if that.
-	for (; $index <= $#id && $accum_id == $id[$index]; $index++) {
-	    if (defined $bugid[$index]) {
-		_insert_nonduplicate(\@accum_bugs, $bugid[$index]);
+	for (; $index < scalar(@topic_query_results) &&
+	       $accum_id == $topic_row->{id}; 
+	     $index++, $topic_row = $topic_query_results[$index]) {
+
+	    if (defined $topic_row->{bugid}) {
+		_insert_nonduplicate(\@accum_bugs, $topic_row->{bugid});
 	    }
-	    if (defined $email[$index]) {
-		if ($type[$index] == $Codestriker::PARTICIPANT_REVIEWER) {
-		    _insert_nonduplicate(\@accum_reviewers, $email[$index]);
+
+	    # Output the accumulated information into the row.  Only
+	    # include the username part of an email address for now to
+	    # save some space.  This should be made a dynamic option
+	    # in the future.
+            $topic_row->{email} =~ s/\@.*$//o;
+
+	    if (defined $topic_row->{email}) {
+		if ($topic_row->{type} == $Codestriker::PARTICIPANT_REVIEWER) {
+                    
+                    if (!$topic_row->{visitedtopic}) {
+                        $topic_row->{email} = "(" . $topic_row->{email} . ")";
+                    }
+
+		    _insert_nonduplicate(\@accum_reviewers,
+					 $topic_row->{email});
 		} else {
-		    _insert_nonduplicate(\@accum_cc, $email[$index]);
+		    _insert_nonduplicate(\@accum_cc, $topic_row->{email});
 		}
 	    }
 	}
 
-	# Output the accumulated information into the row.  Only include the
-	# username part of an email address for now to save some space.  This
-	# should be made a dynamic option in the future.
-	$accum_author =~ s/\@.*$//o;
-	for (my $i = 0; $i <= $#accum_reviewers; $i++) {
-	    $accum_reviewers[$i] =~ s/\@.*$//o;
-	}
-	for (my $i = 0; $i <= $#accum_cc; $i++) {
-	    $accum_cc[$i] =~ s/\@.*$//o;
-	}
+        --$index;
+        $topic_row = $topic_query_results[$index];
 
 	my $reviewer_text = join ', ', @accum_reviewers;
 	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "";
@@ -175,15 +194,17 @@ sub process($$$) {
 	    $url_builder->view_url($accum_id, -1, $mode,
 				   $Codestriker::default_topic_br_mode);
 	$topic->{'id'} = $accum_id;
-	$topic->{'title'} = $accum_title;
-	$topic->{'description'} = $accum_description;
+	$topic->{'title'} = $topic_row->{title};
+	$topic->{'description'} = $topic_row->{description};
 	$topic->{'author'} = $accum_author;
 	$topic->{'reviewer'} = $reviewer_text;
 	$topic->{'cc'} = $cc_text;
-	$topic->{'created'} = $accum_ts;
+	$topic->{'created'} =
+	    Codestriker->format_short_timestamp($topic_row->{ts});
 	$topic->{'bugids'} = $bugid_text;
-	$topic->{'state'} = $accum_state;
-	$topic->{'version'} = $accum_version;
+	$topic->{'state'} = $Codestriker::topic_states[$topic_row->{state}];
+	$topic->{'version'} = $topic_row->{version};
+        $topic->{'commentmetrics'} = $topic_row->{commentmetrics};
 	push @topics, $topic;
     }
     $vars->{'topics'} = \@topics;

@@ -76,7 +76,8 @@ sub process($$$) {
 	if ($rc == $Codestriker::OK) {
 	    # Fire a topic changed listener event.
 	    my $topic_new = Codestriker::Model::Topic->new($topicid);
-	    Codestriker::TopicListeners::Manager::topic_changed($email, $topic_orig,
+	    Codestriker::TopicListeners::Manager::topic_changed($email,
+								$topic_orig,
 								$topic_new);
 	}
     }
