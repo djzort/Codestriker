@@ -168,7 +168,7 @@ sub parse ($$$$$) {
     foreach my $curr (@diffs) {
 	if ($curr->{filename} =~ /\.(\w+)$/o) {
 	    push @trimmed_diffs, $curr
-		unless grep(/$1/, @Codestriker::exclude_file_types);
+		unless grep(/^$1$/, @Codestriker::exclude_file_types);
 	}
     }
 	
