@@ -15,7 +15,7 @@ use File::Temp qw/ tmpnam tempdir /;
 use IO::Handle;
 
 # Switch for emitting debug information.
-my $_DEBUG = 1;
+my $_DEBUG = 0;
 
 # Constructor, which takes the username and password as parameters.
 sub new {
@@ -162,7 +162,13 @@ sub getDiff ($$$$$) {
     # Collect the list of filename and revision numbers into a list.
     my @files = ();
     my @versions = ();
+
+    # Initialise this in case module just refers to a single file.
     my $current_dir = '';
+    if ($module_name =~ /^(.*)\/[^\/]+$/o) {
+	$current_dir = $1;
+    }
+
     while (<VSS>) {
 	if (/^(\$\/.*):$/o) {
 	    # Entering a new top-level directory.
