@@ -81,10 +81,8 @@ sub process($$$) {
     
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $default_mode = $Codestriker::default_topic_create_mode;
-    my $topic_url =
-	     $url_builder->view_url_extended($topicid, -1, $default_mode,
-					     "", $email, $query->url());
+    my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
+						    $query->url());
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
@@ -104,8 +102,8 @@ sub process($$$) {
 	"$topic_description\n";
 
     # Send the email notification out.
-    if (Codestriker::Smtp::SendEmail->doit($from, $to, $cc, $bcc, $subject,
-					   $body)) {
+    if (!Codestriker::Smtp::SendEmail->doit($from, $to, $cc, $bcc, $subject,
+					    $body)) {
 	$http_response->error("Failed to send topic creation email");
     }
 

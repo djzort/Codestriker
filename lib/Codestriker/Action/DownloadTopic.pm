@@ -27,13 +27,15 @@ sub process($$$) {
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time);
+	$topic_data, $document_creation_time, $document_modified_time,
+	$topic_state, $version);
     Codestriker::Model::Topic->read($topic, \$document_author,
 				    \$document_title, \$document_bug_ids,
 				    \$document_reviewers, \$document_cc,
 				    \$description, \$topic_data,
 				    \$document_creation_time,
-				    \$document_modified_time);
+				    \$document_modified_time, \$topic_state,
+				    \$version);
 
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain');

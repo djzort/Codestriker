@@ -78,10 +78,10 @@ sub create($$$$$$$$$$) {
 
 # Read the contents of a specific topic, and return the results in the
 # provided reference variables.
-sub read($$\$\$\$\$\$\$\$\$\$) {
+sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     my ($type, $topicid, $author_ref, $title_ref, $bug_ids_ref, $reviewers_ref,
 	$cc_ref, $description_ref, $document_ref, $creation_time_ref,
-	$modified_time_ref) = @_;
+	$modified_time_ref, $topic_state_ref, $version_ref) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -89,8 +89,8 @@ sub read($$\$\$\$\$\$\$\$\$\$) {
     # Setup the prepared statements.
     my $select_topic = $dbh->prepare_cached('SELECT id, author, title, ' .
 					    'description, document, state, ' .
-					    'creation_ts, modified_ts '.
-					    'FROM topic WHERE id = ?');
+					    'creation_ts, modified_ts, ' .
+					    'version FROM topic WHERE id = ?');
     my $select_bugs =
 	$dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
     my $select_participants =
@@ -104,10 +104,11 @@ sub read($$\$\$\$\$\$\$\$\$\$) {
     $success &&= $select_topic->execute($topicid);
 
     my ($id, $author, $title, $description, $document, $state,
-	$creationtime, $modifiedtime);
+	$creationtime, $modifiedtime, $version);
     if ($success) {
 	($id, $author, $title, $description, $document, $state,
-	 $creationtime, $modifiedtime) = $select_topic->fetchrow_array();
+	 $creationtime, $modifiedtime, $version)
+	    = $select_topic->fetchrow_array();
 	$select_topic->finish();
     }
 
@@ -151,6 +152,8 @@ sub read($$\$\$\$\$\$\$\$\$\$) {
     $$document_ref = $document;
     $$creation_time_ref = Codestriker->format_timestamp($creationtime);
     $$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
+    $$topic_state_ref = $Codestriker::topic_states[$state];
+    $$version_ref = $version;
 }
 
 # Determine if the specified topic id exists in the table or not.
@@ -169,6 +172,7 @@ sub exists($$) {
     my $count;
     if ($success) {
 	($count) = $select_topic->fetchrow_array();
+	$select_topic->finish();
     }
 
     Codestriker::DB::DBI->release_connection($dbh);
@@ -183,11 +187,12 @@ sub change_state($$$$$) {
     my ($type, $topicid, $new_state, $modified_ts, $version) = @_;
 
     # Map the new state to its number.
-    my $state;
-    for ($state = 0; $state <= $#Codestriker::topic_states; $state++) {
-	last if ($Codestriker::topic_states[$state] eq $new_state);
+    my $new_stateid;
+    for ($new_stateid = 0; $new_stateid <= $#Codestriker::topic_states;
+	 $new_stateid++) {
+	last if ($Codestriker::topic_states[$new_stateid] eq $new_state);
     }
-    if ($state == $#Codestriker::topic_states) {
+    if ($new_stateid > $#Codestriker::topic_states) {
 	die "Unable to change topic to invalid state: \"$new_state\"";
     }
 	
@@ -195,8 +200,8 @@ sub change_state($$$$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     # Check that the version reflects the current version in the DB.
-    my $select_topic = $dbh->prepare_cached('SELECT version FROM topic ' .
-					    'WHERE id = ?');
+    my $select_topic = $dbh->prepare_cached('SELECT version, state ' .
+					    'FROM topic WHERE id = ?');
     my $update_topic = $dbh->prepare_cached('UPDATE topic SET ' .
 					    'version = ?, state = ?, ' .
 					    'modified_ts = ? WHERE id = ?');
@@ -206,9 +211,10 @@ sub change_state($$$$$) {
     # Retrieve the current topic data.
     $success &&= $select_topic->execute($topicid);
 
-    my $current_version;
+    my ($current_version, $current_stateid);
     if ($success && 
-	! (($current_version) = $select_topic->fetchrow_array())) {
+	! (($current_version, $current_stateid)
+	   = $select_topic->fetchrow_array())) {
 	# Invalid topic id.
 	$errmsg = "Invalid topic id: $topicid";
 	$success = 0;
@@ -218,13 +224,16 @@ sub change_state($$$$$) {
     # Check the version number.
     if ($success && $version != $current_version) {
 	$errmsg = "Topic state has been modified by another user while " .
-	    " you were viewing it.\n";
+	    " you were viewing it.\nGo back and refresh the topic screen.";
 	$success = 0;
     }
 
-    # Update the actual topic.
-    $success &&= $update_topic->execute($version+1, $state, $modified_ts,
-					$topicid);
+    # If the state hasn't changed, don't do anything, otheriwse update the
+    # topic.
+    if ($new_stateid != $current_stateid) {
+	$success &&= $update_topic->execute($version+1, $new_stateid,
+					    $modified_ts, $topicid);
+    }
     $dbh->commit if ($success);
     Codestriker::DB::DBI->release_connection($dbh);
     
@@ -317,7 +326,10 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
 		push @values, "%${stext}%"; # Add wildcards
 	    }
 	}
-    }	
+    }
+
+    # Order the result by the creation date field.
+    $query .= " ORDER BY topic.creation_ts ";
 
     my $select_topic = $dbh->prepare_cached($query);
     my $success = defined $select_topic;

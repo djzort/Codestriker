@@ -16,9 +16,6 @@ use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
 
-# Prototypes.
-sub process( $$$ );
-
 # If the input is valid, display the topic.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
@@ -27,17 +24,20 @@ sub process($$$) {
     my $topic = $http_input->get('topic');
     my $mode = $http_input->get('mode');
     my $tabwidth = $http_input->get('tabwidth');
+    my $email = $http_input->get('email');
 
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time);
+	$topic_data, $document_creation_time, $document_modified_time,
+	$topic_state, $version);
     Codestriker::Model::Topic->read($topic, \$document_author,
 				    \$document_title, \$document_bug_ids,
 				    \$document_reviewers, \$document_cc,
 				    \$description, \$topic_data,
 				    \$document_creation_time,
-				    \$document_modified_time);
+				    \$document_modified_time, \$topic_state,
+				    \$version);
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $description;
@@ -50,7 +50,7 @@ sub process($$$) {
 				      \@comment_data, \@comment_author,
 				      \@comment_date, \%comment_exists);
 
-    $http_response->generate_header($topic, $document_title, $document_author,
+    $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth);
     
     # Obtain a new URL builder object.
@@ -93,6 +93,22 @@ sub process($$$) {
     }
     print $query->Tr($query->td("Number of lines: "),
 		     $query->td($#document + 1)), "\n";
+
+    # Display the current topic state, and a simple form for changing it.
+    print $query->start_form();
+    $query->param(-name=>'action', -value=>'change_topic_state');
+    print $query->hidden(-name=>'action', -default=>'change_topic_state');
+    print $query->hidden(-name=>'topic', -default=>"$topic");
+    print $query->hidden(-name=>'mode', -default=>"$mode");
+    print $query->hidden(-name=>'version', -default=>"$version");
+    my $state_cell =
+	$query->popup_menu(-name=>'topic_state',
+			   -values=>\@Codestriker::topic_states,
+			   -default=>$topic_state)
+	. $query->submit(-value=>'Update');
+    print $query->Tr($query->td("State: "),
+		     $query->td($state_cell)) . "\n";
+    print $query->end_form();
     print $query->end_table(), "\n";
 
 

@@ -37,38 +37,21 @@ Installation
 Please read the CHANGELOG file for functionality changes between
 releases.
 
-I use codestriker as a tool behind our company's firewall for
-performing code reviews within our engineering team.  For RedHat 7.1,
-the installation is simply the following as root on the internal web
-server (for simple CGI script use not using mod_perl):
-
-	    cd /var/www/cgi-bin
-	    cp /from/installed/location/codestriker.pl .
-	    cp /from/installed/location/codestriker.css ../html
-	    mkdir /var/www/codestriker
-	    chown apache.apache /var/www/codestriker
-	    cp /from/installed/location/codestriker.conf /var/www/codestriker
-
-The CSS file can be located elsewhere of course, but if it is stored
-in another location, be sure to update its location in codestriker.pl.
-
-To use Codestriker with mod_perl, which reduces the startup costs of
+I use Codestriker with mod_perl, which reduces the startup costs of
 creating a new Perl interpreter and parsing the Codestriker script for
-each request, I do the following:
+each request.  The installation is as follows:
 
 	    mkdir /var/www/codestriker
 	    chown apache.apache /var/www/codestriker
 	    cd /var/www/codestriker
-	    cp /from/installed/location/codestriker.css ../html
-	    cp /from/installed/location/codestriker.pl .
-	    cp /from/installed/location/codestriker.conf .
+            tar zxvf /from/installed/location/codestriker.X.Y.Z.tar.gz
 
 Put the following lines in your httpd.conf file (probably located in
 /etc/httpd/conf), so that the
 http://yoursite.yourdomain/codestriker/codestriker.pl is the URL to
 codestriker.
 
-Alias /codestriker/  /var/www/codestriker/
+Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
 
 <Location /codestriker>
  SetHandler  perl-script
@@ -105,13 +88,9 @@ experiment to see what works best for you.
 Data storage
 ------------
 
-Codestriker stores all of its topic data and comments by default in
-"/var/www/codestriker".  This location can be changed by the
-configuration variable at the start of the script.  This directory
-needs to be owned by the user which runs httpd, since the script
-creates files and directories under the "/var/www/codestriker"
-directory.  The username is typically either nobody or apache.  Use
-the "ps auxww | grep httpd" command to find out.
+Codestriker now stores all of its topic data and comments into a
+database.  Both PostgreSQL and MySQL have been tested.  Other
+databases should work, since Perl's DBI interface is used.
 
 Codestriker settings
 --------------------

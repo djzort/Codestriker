@@ -44,6 +44,9 @@ $Codestriker::EMAIL_CONTEXT = 8;
 			"July", "August", "September", "October", "November",
 			"December");
 
+# Short day strings
+@Codestriker::short_days = ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
+
 # Short month strings
 @Codestriker::short_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -54,7 +57,7 @@ sub initialise($) {
     my ($type) = @_;
 
     # Load up the configuration file.
-    my $config = "/var/www/codestriker/codestriker.conf";
+    my $config = "../codestriker.conf";
     if (-f $config) {
 	do $config;
     } else {
@@ -101,7 +104,9 @@ sub format_short_timestamp($$) {
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	    localtime($time_value);
 	$year += 1900;
-	return sprintf("$mday $Codestriker::short_months[$mon], $year");
+	return sprintf("%02d:%02d:%02d $Codestriker::short_days[$wday], " .
+		       "$mday $Codestriker::short_months[$mon], $year",
+		       $hour, $min, $sec);
     } else {
 	return $timestamp;
     }

@@ -74,7 +74,7 @@ sub process($$$) {
 						  -override=>1,
 						  -maxlength=>150)));
     print $query->end_table();
-    print $query->p, $query->submit(-value=>'submit');
+    print $query->p, $query->submit(-value=>'Submit');
     print $query->end_form();
 }
 

@@ -87,6 +87,7 @@ sub get($$$$$$) {
 	$$offset_ref = $offset;
 	$$revision_ref = $revision;
 	$$diff_ref = $diff;
+	$select_file->finish();
     }
 
     Codestriker::DB::DBI->release_connection($dbh);

@@ -18,11 +18,7 @@ use strict;
 use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
-# Location of codestriker distribution, which contains the configuration file
-# and the codestriker modules.
-my $codestriker_dir = "/var/www/codestriker";
-use lib "/var/www/codestriker/lib";
-
+use lib "../lib";
 use Codestriker;
 use Codestriker::Http::Input;
 use Codestriker::Http::Response;
@@ -36,6 +32,7 @@ use Codestriker::Action::ViewSearch;
 use Codestriker::Action::SubmitSearch;
 use Codestriker::Action::ListTopics;
 use Codestriker::Action::DownloadTopic;
+use Codestriker::Action::ChangeTopicState;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -85,6 +82,9 @@ sub main() {
     } elsif ($action eq "download") {
 	Codestriker::Action::DownloadTopic->process($http_input,
 						    $http_response);
+    } elsif ($action eq "change_topic_state") {
+        Codestriker::Action::ChangeTopicState->process($http_input,
+						       $http_response);
     } else {
 	# Default action is to list topics that are in state open.
 	Codestriker::Action::ListTopics->process($http_input, $http_response);

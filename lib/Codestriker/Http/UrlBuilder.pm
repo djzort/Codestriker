@@ -11,16 +11,6 @@ package Codestriker::Http::UrlBuilder;
 
 use strict;
 
-# Prototypes.
-sub new( $$ );
-sub edit_url( $$$$$ );
-sub download_url( $$ );
-sub view_url( $$$$ );
-sub view_url_extended( $$$$$$$ );
-sub view_file_url( $$$$$$$ );
-sub create_topic_url( $ );
-sub search_url( $ );
-
 # Constants for different viewing file modes - set by the type CGI parameter.
 $UrlBuilder::OLD_FILE = 0;
 $UrlBuilder::NEW_FILE = 1;

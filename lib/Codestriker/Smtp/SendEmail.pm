@@ -31,7 +31,7 @@ sub doit($$$$$$$) {
     print MAIL "$body";
     print MAIL ".\n";
     
-    # Check if there were ant error messages from sendmail.
+    # Check if there were any error messages from sendmail.
     if (! close MAIL) {
 	return 0;
     } else {

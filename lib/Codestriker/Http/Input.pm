@@ -59,7 +59,7 @@ sub process($) {
     $self->{topic_description} = $query->param('topic_description');
     $self->{reviewers} = $query->param('reviewers');
     $self->{cc} = $query->param('cc');
-    $self->{topic_text_fh} = $query->upload('topic_file');
+    $self->{topic_state} = $query->param('topic_state');
     $self->{revision} = $query->param('revision');
     $self->{filename} = $query->param('filename');
     $self->{linenumber} = $query->param('linenumber');
@@ -77,11 +77,13 @@ sub process($) {
     $self->{scomment} = $query->param('scomment');
     $self->{sbody} = $query->param('sbody');
     $self->{sstate} = $query->param('sstate');
+    $self->{version} = $query->param('version');
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
     $self->{reviewers} = "" if ! defined $self->{reviewers};
     $self->{bug_ids} = "" if ! defined $self->{bug_ids};
+    $self->{sstate} = "" if ! defined $self->{sstate};
 
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
