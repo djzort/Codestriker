@@ -29,8 +29,20 @@ sub process($$$) {
 
     my $project_state = $http_input->get('project_state');
 
+    # Check that the state parameter is valid.
+    my $found = 0;
+    foreach my $state (@Codestriker::project_states) {
+	if ($project_state eq $state) {
+	    $found = 1;
+	    last;
+	}
+    }
+    if (!$found) {
+	$http_response->error("Invalid project state specified: $project_state");
+    }
+
     # Check if this action is allowed.
-    if ($Codestriker::allow_delete == 0 && $project_state eq "Deleted") {
+    if ($project_state eq "Deleted") {
 	$http_response->error("This function has been disabled");
     }
 
