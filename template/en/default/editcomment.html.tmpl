@@ -1,7 +1,7 @@
 [% USE AutomagicLinks %]
 [% USE JavascriptEscape %]
 
-<SCRIPT LANGUAGE="JavaScript">
+<SCRIPT type="text/javascript">
 
 // FOR getCookie() and setCookie()
 // Original JavaScript code by Duncan Crombie: dcrombie at chirp.com.au
@@ -208,7 +208,6 @@ function add_other_reviewers() {
  <TABLE>
  <TR>
   <TD>Your email address: </TD>
-  </SCRIPT>
   <TD>
     <INPUT TYPE="text" NAME="email" SIZE=50 MAXLENGTH=100>
   </TD>
@@ -256,10 +255,9 @@ function add_other_reviewers() {
 
 <hr>
 <P>Context: (<A onClick="save_form_data()" HREF="[% inc_context_url %]">increase</A> | <A onClick="save_form_data()" HREF="[% dec_context_url %]">decrease)</A>
-<PRE>[% context %]
-</PRE>
+[% context %]
 
-<SCRIPT>
+<SCRIPT type="text/javascript">
   // Now that the form has loaded, set the form fields.
   set_form_fields();
 </SCRIPT>
