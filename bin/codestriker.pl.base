@@ -26,6 +26,7 @@ require 5.000;
 
 use strict;
 
+use Config;
 use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
