@@ -55,7 +55,7 @@ $cvscmd = "/usr/bin/cvs -d ${cvsaccess}${cvsrep} co -p";
 # If the repository is local, this setting won't be required, as $cvsrep will
 # just be the local pathname.  Make sure this is in a secure location.
 #$ENV{'CVS_RSH'} = "ssh -i /var/www/codestriker/identity";
-$ENV{'CVS_RSH'} = "ssh";
+#$ENV{'CVS_RSH'} = "ssh";
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -811,6 +811,7 @@ sub view_topic ($$$) {
 	    $current_old_file_linenumber = "";
 	    $current_new_file_linenumber = "";
 	    $reading_diff_block = 1;
+	    $cvsmatch = 0;
 	} elsif ($document[$i] =~ /^Index: (.*)$/ && $mode == $COLOURED_MODE) {
 	    $index_filename = $1;
 	    next;
@@ -975,8 +976,12 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 
     if ($diff_linenumbers_found) {
 	if ($diff_current_filename ne $current_file) {
-	    # A new file is being handled, output the appropriate information.
-	    print $query->end_table() if (! $diff_first_time);
+	    # A new file is being handled, output the appropriate information,
+	    # including any diff information which has accumulated.
+	    if (! $diff_first_time) {
+		render_changes($topic, $mode);
+		print $query->end_table();
+	    }
 	    $diff_first_time = 0;
 
 	    $diff_current_filename = $current_file;
@@ -1201,8 +1206,7 @@ sub render_linenumber($$$$) {
 	    $linedata = "<FONT FACE=\"$face\" SIZE=\"$diff_font_size\" " .
 		"COLOR=\"$comment_line_colour\">$line</FONT>";
 	} else {
-	    $linedata = "<FONT SIZE=\"$diff_font_size\" " .
-		"COLOR=\"$comment_line_colour\">$line</FONT>";
+	    $linedata = "<FONT COLOR=\"$comment_line_colour\">$line</FONT>";
 	}
     } else {
 	if (defined $face && $face ne "") {
@@ -1587,6 +1591,7 @@ sub view_cvs_file ($$$) {
     $header_generated = 1;
 
     my $get_cvs_file = "$cvscmd -r $revision $filename 2>/dev/null";
+
     my $number_lines = `$get_cvs_file | wc -l`;
     $number_lines =~ s/\s//g;
     my $max_digit_width = length($number_lines);
