@@ -239,7 +239,7 @@ sub delta_file_header ($$$$) {
 	my $revision_text = "revision $revision";
 	my $file_url = "";
 	if (defined $self->{repository}) {
-	    $file_url = $self->getViewUrl($filename);
+	    $file_url = $self->{repository}->getViewUrl($filename);
 	}
 
 	if ($file_url eq "") {
