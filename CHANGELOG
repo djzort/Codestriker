@@ -8,6 +8,9 @@ Version 1.4.3:
 
 * Allow the bug field to accept multiple bug IDs.
 
+* Introduced codestriker.conf, which isolates a site's configuration
+  into a single file.  This simplifies upgrading.
+
 Version 1.4.2:
 
 * Can now handle diffs which end in: "\ No newline at end of file".

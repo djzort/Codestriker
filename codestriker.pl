@@ -22,71 +22,26 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Constants for viewing modes.
-$NORMAL_MODE = 0;
-$COLOURED_MODE = 1;
+use vars qw (
+	     $datadir $sendmail $bugtracker $cvsviewer $cvsrep $cvscmd
+	     $cvsaccess $codestriker_css $default_topic_create_mode
+	     $background_col $diff_background_col
+	     );
 
 # BEGIN CONFIGURATION OPTIONS --------------------
 
-# Location of where to store the code review data.  Make sure the
-# permissions are set appropriately.  If running apache, make sure the
-# following directory is writable to the user running httpd (usually
-# "nobody" or "apache").  Each topic is stored in its own sub-directory,
-# whose name is just a random bunch of digits.
-$datadir= "/var/www/codestriker";
+# Location of configuration file, which contains all of the other
+# configuration options.
+$config = "/var/www/codestriker/codestriker.conf";
 
-# Location of sendmail.
-$sendmail = "/usr/lib/sendmail";
-
-# The URL to the bug tracking system.  The bug number is appended to the
-# end of this string when URLs are generated.
-$bugtracker = "";
-#$bugtracker = "http://localhost.localdomain/show_bug.cgi?id=";
-
-# The URL to the CVS viewing system.  The filename is appended to the end
-# of this string when URLs are generated.
-$cvsviewer = "";
-#$cvsviewer = "http://localhost.localdomain/cgi-bin/viewcvs.cgi/";
-#$cvsviewer = "http://localhost.localdomain/cgi-bin/cvsweb.cgi/";
-
-# How the CVS repository is accessed.  For local access, this is set as the
-# empty string.
-#$cvsaccess = ":ext:sits\@cvs.cvsplot.sourceforge.net:";
-$cvsaccess = "";
-
-# Set this to the path of the CVS repository.
-$cvsrep = "";
-#$cvsrep = "/usr/local/cvsroot";
-#$cvsrep = "/home/sits/cvs";
-
-# The CVS command to execute in order to retrieve file data.  The revision
-# argument and filename is appended to the end of this string.
-$cvscmd = "/usr/bin/cvs -d ${cvsaccess}${cvsrep} co -p";
-
-# The location of the codestriker.css file on this site.
-$codestriker_css = "/codestriker.css";
-
-# The default viewing mode to use in the URL when creating a topic.
-$default_topic_create_mode = $NORMAL_MODE;
-
-# Set the CVS_RSH environment variable appropriately.  The indentity
-# file refers to a user which has ssh access to the above CVS repository.
-# If the repository is local, this setting won't be required, as $cvsrep will
-# just be the local pathname.  Make sure this is in a secure location.
-#$ENV{'CVS_RSH'} = "ssh -i /var/www/codestriker/identity";
-#$ENV{'CVS_RSH'} = "ssh";
+# END OF CONFIGURATION OPTIONS --------------------
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
 
-# Don't allow posts larger than 500K.
-$CGI::POST_MAX=1024 * 500;
-
-# Background colours for normal and diff modes.
-$background_col = "#ffffff";
-$diff_background_col = "#eeeeee";
-
-# END OF CONFIGURATION OPTIONS --------------------
+# Constants for viewing modes.
+$NORMAL_MODE = 0;
+$COLOURED_MODE = 1;
 
 use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
@@ -295,6 +250,14 @@ sub main() {
     my $mode = $query->param('mode');
     my $bug_ids = $query->param('bug_ids');
     my $new = $query->param('new');
+
+    # Load up the configuration file.
+    if (-f $config) {
+	do $config;
+    } else {
+	error_return("Couldn't find configuration file: \"$config\".\n<BR>" .
+		     "Please fix the \$config setting in codestriker.pl.");
+    }
 
     # Untaint the required input.
     $topic = untaint_digits($topic, 'topic');

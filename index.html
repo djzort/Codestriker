@@ -18,8 +18,8 @@
 	</p>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.2.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.2.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -222,8 +222,8 @@
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.2.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.2.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -241,6 +241,7 @@
 	    cp /from/installed/location/codestriker.css ../html
 	    mkdir /var/www/codestriker
 	    chown apache.apache /var/www/codestriker
+	    cp /from/installed/location/codestriker.conf /var/www/codestriker
 	    </pre>
 	</p>
 	<p>
@@ -260,13 +261,17 @@
 	    auxww | grep httpd</code> command to find out.
 	</p>
 	<p><font color="red">
+
 	    Read through the configuration options within
-            codestriker.pl to ensure all the settings are correct for
-            your site.</font>  Among other things, these include
-	    settings such as the location of your CVS repository, the
-	    base URL to your bug tracking system, and the base URL to
-	    your CVS viewing system.  Note these settings can be left
-	    blank, they aren't required in order to use Codestriker.
+            codestriker.pl and codestriker.conf to ensure all the
+            settings are correct for your site.</font> It is intended
+            that codestriker.conf will remain fairly static, so
+            upgrades should be fairly painless.  Among other things,
+            the settings include the location of your CVS repository,
+            the base URL to your bug tracking system, and the base URL
+            to your CVS viewing system.  Note these settings can be
+            left blank, they aren't required in order to use
+            Codestriker.
         </p> 
 	<p>
 	    For deployments outside an intranet, I would suggest using

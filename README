@@ -1,4 +1,4 @@
-Codestriker v1.4.2
+Codestriker v1.4.3
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 --------------------------
@@ -43,6 +43,7 @@ server:
 	    cp /from/installed/location/codestriker.css ../html
 	    mkdir /var/www/codestriker
 	    chown apache.apache /var/www/codestriker
+	    cp /from/installed/location/codestriker.conf /var/www/codestriker
 
 The CSS file can be located elsewhere of course, but if it is stored
 in another location, be sure to update its location in codestriker.pl.
@@ -55,8 +56,14 @@ creates files and directories under the "/var/www/codestriker"
 directory.  The username is typically either nobody or apache.  Use
 the "ps auxww | grep httpd" command to find out.
 
-Read through the configuration options within codestriker.pl to ensure
-all the settings are correct for your site.
+Read through the configuration options within codestriker.pl and
+codestiker.conf to ensure all the settings are correct for your site.
+It is intended that codestriker.conf will remain fairly static, so
+upgrades should be fairly painless.  Among other things, the settings
+include the location of your CVS repository, the base URL to your bug
+tracking system, and the base URL to your CVS viewing system.  Note
+these settings can be left blank, they aren't required in order to use
+Codestriker.
 
 For deployments outside an intranet, I would suggest using apache's
 ".htaccess" mechanism to limit access as to who can execute the
