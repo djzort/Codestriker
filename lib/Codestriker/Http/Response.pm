@@ -141,32 +141,31 @@ sub generate_header($$$$$$$$$$) {
     #
     # As the old netscapes don't handle it properly.
     my $jscript=<<END;
-    var initiator;
     var windowHandle = '';
 
     function myOpen(url,name) {
 	windowHandle = window.open(url,name,
 				   'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
 	// Indicate who initiated this operation.
-        windowHandle.initiator = self;
+        windowHandle.opener = window;
 
 	windowHandle.focus();
     }
 
     function gotoAnchor(anchor, reload) {
-	if (anchor == "" || initiator == null) return;
+	if (anchor == "" || opener == null) return;
 
-	var index = initiator.location.href.lastIndexOf("#");
+	var index = opener.location.href.lastIndexOf("#");
 	if (index != -1) {
-	    initiator.location.href =
-		initiator.location.href.substr(0, index) + "#" + anchor;
+	    opener.location.href =
+		opener.location.href.substr(0, index) + "#" + anchor;
 	}
 	else {
-	    initiator.location.href += "#" + anchor;
+	    opener.location.href += "#" + anchor;
 	}
 		
-	if (reload) initiator.location.reload(reload);
-	initiator.focus();
+	if (reload) opener.location.reload(reload);
+	opener.focus();
     }
 END
 
