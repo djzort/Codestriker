@@ -44,15 +44,44 @@ function SelectFilter(post)
 // This function checks all comment checkboxes.
 function CheckAll()
 {
-    for (var i = 0; i < document.form.selected_comments.length; i++) {
+    if (document.form.selected_comments == null)
+    {
+        return;  // No comments.
+    }
+
+    if (document.form.selected_comments.length == null)
+    {
+        // Only one comment, older browsers don't represent checkboxes
+        // in array notation when there is only one element.
+        document.form.selected_comments.checked = true;
+        return;
+    }
+
+    // Check all the arrays.    
+    for (var i = 0; i < document.form.selected_comments.length; i++)
+    {
         document.form.selected_comments[i].checked = true;
     }    
 }
 
-// This function unchecks all comment checkboxes.
-function UnCheckAll()
+// This function clear all comment checkboxes.
+function ClearAll()
 {
-    for (var i = 0; i < document.form.selected_comments.length; i++) {
+    if (document.form.selected_comments == null)
+    {
+        return;  // No comments.
+    }
+
+    if (document.form.selected_comments.length == null)
+    {
+        // Only one comment, older browsers don't represent checkboxes
+        // in array notation when there is only one element.
+        document.form.selected_comments.checked = false;
+        return;
+    }
+
+    for (var i = 0; i < document.form.selected_comments.length; i++)
+    {
         document.form.selected_comments[i].checked = false;
     }    
 }
@@ -114,7 +143,7 @@ state and
 
     <TR>
         <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:UnCheckAll()">Clear All</A>
+            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
         </TD>
     </TR>
 [% last_fileline = -1 %]
@@ -165,7 +194,7 @@ state and
 
     <TR>
         <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:UnCheckAll()">Clear All</A>
+            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
         </TD>
     </TR>
 

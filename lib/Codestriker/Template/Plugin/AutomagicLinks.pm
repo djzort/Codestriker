@@ -14,7 +14,7 @@ sub filter {
     my ($self, $text) = @_;
     
     # First handle any URL linking.
-    my @words = split /([\s\n\t])/, $text;
+    my @words = split /(\s)/, $text;
     my $result = "";
     for (my $i = 0; $i <= $#words; $i++) {
 	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {

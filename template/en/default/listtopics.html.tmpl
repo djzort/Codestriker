@@ -60,10 +60,10 @@
         <td><a href="[% topic.view_topic_url %]">[% topic.title | html_entity %]</a></td>
         <td>[% topic.author | html_entity %]</td>
         <td>[% topic.reviewer | html_entity %]</td>
-        <td>[% topic.cc | html_entity %]</td>
+        <td>[% IF topic.cc == "" %]&nbsp;[% ELSE %][% topic.cc | html_entity %][% END %]</td>
         <td>[% topic.created | html_entity %]</td>
 	[% IF bugdb_enabled != 0 %]
-        <td>[% topic.bugids %]</td>
+        <td>[% IF topic.bugids == "" %]&nbsp;[% ELSE %][% topic.bugids %][% END %]</td>
 	[% END %]
         <td>[% topic.state %]</td>
     </tr>

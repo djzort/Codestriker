@@ -30,7 +30,7 @@ summary of the code change.  The title used in the\n
 subject of sent emails, and in the topic list screen.
 ')">(What's this?)</A></FONT>
 <BR>
-<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html %]" SIZE=70 MAXLENGTH=70>
+<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The topic description input field #%]
@@ -43,7 +43,7 @@ notification email to all reviewers.
 ')">(What's this?)</A></FONT>
 <BR>
 <TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[%
-topic_description | html %]</TEXTAREA>
+topic_description | html_entity %]</TEXTAREA>
 <P>
 
 <TABLE>
@@ -77,7 +77,7 @@ This should be left blank if you are reviewing files\n
 directly from a repository.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html %]" SIZE=40 MAXLENGTH=200></TD>
+ <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
 
 [% IF allow_repositories != 0 %]

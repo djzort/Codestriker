@@ -18,7 +18,10 @@ require 5.000;
 # in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
 # checking turned out to be a major headache.  For mod_perl, setting this
 # ensures the first time Codestiker is loaded, it can be compiled properly,
-# even if @INC is blatted later.
+# even if @INC is blatted later.  Also note all the use declarations below
+# effectively "pre-load" all of the Codestriker modules in the system, as the
+# modules below load all of their supporting modules.  That is why the
+# template plugins are "pre-loaded" here.
 @CODESTRIKER_LIB_DECLARATION@
 
 use strict;
@@ -48,6 +51,7 @@ use Codestriker::Action::EditProject;
 use Codestriker::Action::CreateProject;
 use Codestriker::Action::SubmitProject;
 use Codestriker::Action::SubmitEditProject;
+use Codestriker::Template::Plugin::AutomagicLinks;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";

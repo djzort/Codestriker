@@ -158,8 +158,7 @@ sub process($$$) {
 	}
 
 	my $reviewer_text = join ', ', @accum_reviewers;
-	$reviewer_text = "&nbsp;" if $reviewer_text eq "";
-	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "&nbsp;";
+	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "";
 
 	for (my $i = 0; $i <= $#accum_bugs; $i++) {
 	    $accum_bugs[$i] =
@@ -167,7 +166,6 @@ sub process($$$) {
 			  $accum_bugs[$i]);
 	}
 	my $bugid_text = join ', ', @accum_bugs;
-	$bugid_text = "&nbsp;" if $bugid_text eq "";
 
 	# Add this row to the list of topics.
 	my $topic = {};
