@@ -100,7 +100,12 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
 	    my %lxr = %{ $value };
 	    my %idhash = ();
 
-	    my $dbh = DBI->connect($lxr{db}, $lxr{user}, $lxr{passwd},
+	    my $passwd = $lxr{password};
+	    if (! defined $passwd) {
+		# For backwards compatibility.
+		$passwd = $lxr{passwd};
+	    }
+	    my $dbh = DBI->connect($lxr{db}, $lxr{user}, $passwd,
 				   {AutoCommit=>0, RaiseError=>1})
 		|| die "Couldn't connect to database: " . DBI->errstr;
 	    my $select_ids =

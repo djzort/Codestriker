@@ -47,13 +47,13 @@ sub get_basic_user_metrics {
     my @users_metrics;
 
     foreach my $row (@$author_list) {
-	my ($name, $date, $count) = @$row;
+	my ($name, $last_authored_date, $count) = @$row;
 
 	my $metrics = 
 	{
 	    name=>$name,
 	    date_last_authored=>
-		int((time() - Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
+		int((time() - Codestriker->convert_date_timestamp_time($last_authored_date))/(60*60*24)),
 	    date_last_participated=>'',
 	    total_codestriker_time => 
 		calculate_topic_view_time_for_user($date,$name),
@@ -78,14 +78,14 @@ sub get_basic_user_metrics {
 	     ORDER BY 2 desc',{}, $date);
      
     foreach my $row (@$participant_list) {
-	my ($name, $date, $count) = @$row;
+	my ($name, $last_participated_date, $count) = @$row;
 
 	my $found = 0;
 	foreach my $user (@users_metrics) {
 	    if ($user->{name} eq $name) {
 		$user->{date_last_participated} = 
 		    int((time() - 
-		    Codestriker->convert_date_timestamp_time($date))/(60*60*24));
+		    Codestriker->convert_date_timestamp_time($last_participated_date))/(60*60*24));
 		$user->{total_topics} += $count;
 		$found = 1;
 	    }
@@ -98,7 +98,7 @@ sub get_basic_user_metrics {
 		date_last_authored=>'',
 		date_last_participated=>
 		    int((time() - 
-		    Codestriker->convert_date_timestamp_time($date))/(60*60*24)),
+		    Codestriker->convert_date_timestamp_time($last_participated_date))/(60*60*24)),
 		total_topics=>$count,
 		total_codestriker_time => 
 		    calculate_topic_view_time_for_user($date,$name),

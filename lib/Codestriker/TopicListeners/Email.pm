@@ -54,7 +54,7 @@ sub topic_create($$) {
         "Description: \n" .  
 	"$topic->{description}\n\n" .
 	"$EMAIL_HR\n\n" .
-        "The topic was created, the following files were modified.\n" .
+        "The topic was created with the following files:\n\n" .
         join("\n",@filenames);
 
     $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc,$notes);

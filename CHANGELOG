@@ -9,10 +9,16 @@ Version 1.8.1
 * Made checksetup.pl more graceful when DBI.pm is not installed, and
   it is checking what other database modules are required.
 
+* Fixed bug found by Philipp Frauenfelder where LXR integration was
+  not working when the LXR database was password protected.
+
 The following changes were from Jason Remillard:
 
-* A bug in the metric support has been fixed, which prevented the
+* Fixed bug in the metric support has been fixed, which prevented the
   metric data from being usable if more than one reviewer was present.
+
+* Fixed bug where the wrong Codestriker time number was reported in
+  the metric summary page.
 
 * Emails sent from topic property changes now include more information
   such as what specific properties were changes.  Topic creation
