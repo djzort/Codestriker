@@ -15,7 +15,9 @@ Version 1.8.5
   include links if the topic being viewed has been obsoleted or
   superseeds other topics.
 
-Version 1.8.4
+* Minor fix for handing CVS rdiff text which end in a binary entry.
+  Problem found by "Clendenan, Dave" <dave.clendenan@polycom.com>.
+  Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and
   module parameters if they were used when the topic was created.
