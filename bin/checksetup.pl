@@ -19,19 +19,6 @@
 
 use strict;
 
-use Cwd;
-use File::Path;
-
-use lib '../lib';
-use Codestriker::DB::DBI;
-use Codestriker::Action::SubmitComment;
-use Codestriker::Repository::RepositoryFactory;
-use Codestriker::FileParser::Parser;
-use Codestriker::FileParser::UnknownFormat;
-
-# Initialise Codestriker, load up the configuration file.
-Codestriker->initialise(cwd() . '/..');
-
 # Indicate which modules are required for codestriker (this code is
 # completely stolen more-or-less verbatim from Bugzilla)
 my $modules = [ 
@@ -150,6 +137,24 @@ if (%missing) {
     exit;
 }
 
+# Now load up the required modules.  Do this is a lazy fashion so that Perl
+# doesn't try to grab this during compile time, otherwise nasty-looking
+# error messages will appear to the user.
+eval("use Cwd");
+eval("use File::Path");
+eval("use lib '../lib'");
+eval("use Codestriker::DB::DBI");
+eval("use Codestriker::Action::SubmitComment");
+eval("use Codestriker::Repository::RepositoryFactory");
+eval("use Codestriker::FileParser::Parser");
+eval("use Codestriker::FileParser::UnknownFormat");
+
+# Set this variables, to avoid compilation warnings below.
+$Codestriker::COMMENT_SUBMITTED = 0;
+@Codestriker::valid_repositories = ();
+
+# Initialise Codestriker, load up the configuration file.
+Codestriker->initialise(cwd() . '/..');
 
 # Obtain a database connection.
 my $dbh = Codestriker::DB::DBI->get_connection();
@@ -516,7 +521,8 @@ if ($old_comment_table) {
 
 	    # Create a commentstate row for this comment.
 	    my $id = create_commentstate($topicid, $line,
-					 $Codestriker::COMMENT_SUBMITTED, 0);
+					 $Codestriker::COMMENT_SUBMITTED,
+					 0);
 	    $topicoffset_map{"$topicid|$line"} = $id;
 	}
 	$stmt->finish();

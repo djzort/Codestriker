@@ -1,6 +1,26 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.3
+
+* Make sure comments are properly HTML-escaped in the list comments
+  screen, to avoid display problems when comments contain HTML tags.
+
+* Tooltip comments should not be HTML-escaped, for correct rendering.
+
+* Make sure after conducting a search, that pressing the "back" button
+  will go back to the form with the search parameters still present.
+
+* Modified checksetup.pl so that the module dependencies are checked
+  before compiling Codestriker, so that meaningful error messages
+  about missing modules are reported.
+
+* Added a filename checkbox to the search form, so reviews can be
+  retrieved which contain a certain filename.
+
+* Addressed some LXR highlighting issues when the identifier names
+  clash with HTML entity names.
+
 Version 1.7.2
 
 * Modified so that Codestriker can run on a Windows box with a local

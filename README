@@ -1,4 +1,4 @@
-Codestriker v1.7.2
+Codestriker v1.7.3
 Copyright (c) 2001, 2002, 2003 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 
@@ -171,6 +171,12 @@ to install perl modules easily off the web.  The first time you run
 install DBI
 
 will install the DBI package on your system.
+
+Make sure the bin/checksetup.pl and bin/codestriker.pl.base files are
+modified so that the first line contains the path to your perl
+interpretor.  Eg:
+
+#!c:/perl -w
 
 ----------------------------------------------------------------------
 

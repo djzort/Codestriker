@@ -98,10 +98,11 @@ sub process($$$) {
     my @projectids = ($projectid);
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", \@topic_states, undef);
+				      "", "", "", \@topic_states, undef);
     $vars->{'list_url_in_project'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", \@topic_states, \@projectids);
+				      "", "", "", \@topic_states,
+				      \@projectids);
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
 
@@ -171,7 +172,7 @@ sub process($$$) {
 	$data .= $document_description[$i] . "\n";
     }
     
-    HTML::Entities::encode($data);
+    $data = HTML::Entities::encode($data);
 
     # Replace occurances of bug strings with the appropriate links.
     if ($Codestriker::bugtracker ne "") {

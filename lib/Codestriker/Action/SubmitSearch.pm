@@ -31,6 +31,7 @@ sub process($$$) {
     my $search_description = 0;
     my $search_comments = 0;
     my $search_body = 0;
+    my $search_filename = 0;
     if ($stext ne "") {
 	for (my $i = 0; $i <= $#text_group; $i++) {
 	    if ($text_group[$i] eq "title") {
@@ -41,6 +42,8 @@ sub process($$$) {
 		$search_comments = 1;
 	    } elsif ($text_group[$i] eq "body") {
 		$search_body = 1;
+	    } elsif ($text_group[$i] eq "filename") {
+		$search_filename = 1;
 	    }
 	}
     }
@@ -80,7 +83,8 @@ sub process($$$) {
 	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
 				      $stext, $search_title,
 				      $search_description, $search_comments,
-				      $search_body, \@stateids, \@projectids);
+				      $search_body, $search_filename,
+				      \@stateids, \@projectids);
 
     print $query->redirect(-URI=>$redirect_url);
 }

@@ -277,9 +277,9 @@ sub change_state($$$$$) {
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
+sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
-	$stitle, $sdescription, $scomments, $sbody,
+	$stitle, $sdescription, $scomments, $sbody, $sfilename,
 	$id_array_ref, $title_array_ref,
 	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
 	$bugid_array_ref, $email_array_ref, $type_array_ref,
@@ -320,6 +320,7 @@ sub query($$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my $text_title_part = "lower(topic.title) LIKE ?";
     my $text_description_part = "lower(topic.description) LIKE ?";
     my $text_body_part = "lower(topic.document) LIKE ?";
+    my $text_filename_part = "lower(file.filename) LIKE ?";
     my $text_comment_part = "lower(comment.commentfield) LIKE ?";
 
     # Build up the base query.
@@ -335,6 +336,11 @@ sub query($$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	$query .= 'LEFT OUTER JOIN commentstate ON ' .
 	    'topic.id = commentstate.topicid LEFT OUTER JOIN comment ON ' .
 	    'commentstate.id = comment.commentstateid ';
+    }
+
+    # Join with the file table if required.
+    if ($stext ne "" && $sfilename) {
+	$query .= 'LEFT OUTER JOIN file ON file.topicid = topic.id ';
     }
 
     # Combine the "AND" conditions together.
@@ -371,6 +377,7 @@ sub query($$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	push @text_cond, $text_title_part if $stitle;
 	push @text_cond, $text_description_part if $sdescription;
 	push @text_cond, $text_body_part if $sbody;
+	push @text_cond, $text_filename_part if $sfilename;
 	push @text_cond, $text_comment_part if $scomments;
 
 	if ($#text_cond >= 0) {

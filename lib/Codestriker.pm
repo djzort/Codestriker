@@ -25,10 +25,10 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.2";
+$Codestriker::VERSION = "1.7.3";
 
-# The maximum size of a diff file to accept.  At the moment, this is 10Mb.
-$Codestriker::DIFF_SIZE_LIMIT = 10000 * 1024;
+# The maximum size of a diff file to accept.  At the moment, this is 20Mb.
+$Codestriker::DIFF_SIZE_LIMIT = 20000 * 1024;
 
 # Indicate what base directory Codestriker is running in.  This may be set
 # in cgi-bin/codestriker.pl, depending on the environment the script is

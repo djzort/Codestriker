@@ -81,6 +81,7 @@ sub process($) {
     $self->{sdescription} = $query->param('sdescription');
     $self->{scomments} = $query->param('scomments');
     $self->{sbody} = $query->param('sbody');
+    $self->{sfilename} = $query->param('sfilename');
     $self->{sstate} = $query->param('sstate');
     $self->{sproject} = $query->param('sproject');
     $self->{version} = $query->param('version');

@@ -24,7 +24,7 @@ sub process($$$) {
     }
 
     $http_response->generate_header("", "Search", "", "", "", "", "", "", "",
-				    "", 0, 0);
+				    "", 0, 1);
 
     # Create the hash for the template variables.
     my $vars = {};

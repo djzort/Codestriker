@@ -87,10 +87,10 @@ sub search_url ($) {
 }
 
 # Create the URL for listing the topics.
-sub list_topics_url ($$$$$$$$$$\@\@) {
+sub list_topics_url ($$$$$$$$$$$\@\@) {
     my ($self, $sauthor, $sreviewer, $scc, $sbugid, $stext,
-	$stitle, $sdescription, $scomments, $sbody, $state_array_ref,
-	$project_array_ref) = @_;
+	$stitle, $sdescription, $scomments, $sbody, $sfilename,
+	$state_array_ref, $project_array_ref) = @_;
 
     my $sstate = defined $state_array_ref ? (join ',', @$state_array_ref) : "";
     my $sproject = defined $project_array_ref ?
@@ -105,6 +105,7 @@ sub list_topics_url ($$$$$$$$$$\@\@) {
 	($sdescription ne "" ? "&sdescription=$sdescription" : "") .
 	($scomments ne "" ? "&scomments=$scomments" : "") .
 	($sbody ne "" ? "&sbody=$sbody" : "") .
+	($sfilename ne "" ? "&sfilename=$sfilename" : "") .
 	($sstate ne "" ? "&sstate=$sstate" : "") .
 	($sproject ne "" ? "&sproject=$sproject" : "");
 }

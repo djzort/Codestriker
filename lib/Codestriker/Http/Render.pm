@@ -411,7 +411,7 @@ sub display_coloured_data ($$$$) {
     my $query = $self->{query};
 
     # Escape the data.
-    HTML::Entities::encode($data);
+    $data = HTML::Entities::encode($data);
 
     my $leftline = $self->{old_linenumber};
     my $rightline = $self->{new_linenumber};
@@ -675,7 +675,6 @@ sub get_comment_digest($$$$) {
 	    # Need to remove the newlines for the data.
 	    my $data = $comment->{data};
 	    $data =~ s/\n/ /mg; # Remove newline characters
-	    HTML::Entities::encode($data);
 	    $digest .= "$data ------- ";
 	}
 	# Chop off the last 9 characters.

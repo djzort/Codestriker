@@ -37,7 +37,17 @@ sub process($$$) {
     my $sdescription = $http_input->get('sdescription') || 0;
     my $scomments = $http_input->get('scomments') || 0;
     my $sbody = $http_input->get('sbody') || 0;
+    my $sfilename = $http_input->get('sfilename') || 0;
     my $feedback = $http_input->get('feedback');
+    my $projectid = $http_input->get('projectid');
+
+    # If $sproject has been set to -1, then retrieve the value of the projectid
+    # from the cookie as the project search value.  This is done to facilate
+    # integration with other systems, which jump straight to this URL, and
+    # set the cookie explicitly.
+    if ($sproject eq "-1") {
+	$sproject = (defined $projectid) ? $projectid : "";
+    }
     
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
@@ -46,7 +56,8 @@ sub process($$$) {
     Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
-				     $scomments, $sbody, \@id, \@title,
+				     $scomments, $sbody, $sfilename,
+				     \@id, \@title,
 				     \@author, \@ts, \@state, \@bugid,
 				     \@email, \@type, \@version);
 
@@ -86,6 +97,7 @@ sub process($$$) {
     $vars->{'sdescription'} = $sdescription;
     $vars->{'scomments'} = $scomments;
     $vars->{'sbody'} = $sbody;
+    $vars->{'sfilename'} = $sfilename;
 
     # Display the "Create a new topic", "List Projects" and "Search" links.
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();

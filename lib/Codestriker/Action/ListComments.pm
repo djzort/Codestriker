@@ -11,6 +11,7 @@ package Codestriker::Action::ListComments;
 
 use strict;
 use Codestriker::Http::Template;
+use HTML::Entities;
 
 # If the input is valid, list the appropriate comments for a topic.
 sub process($$$) {
@@ -83,6 +84,9 @@ sub process($$$) {
 
 	my $state = $comment->{state};
 	$comment->{state} = $Codestriker::comment_states[$state];
+
+	# Make sure the comment data is HTML escaped.
+	$comment->{data} = HTML::Entities::encode($comment->{data});
     }
 
     # Indicate what states the comments can be transferred to.
