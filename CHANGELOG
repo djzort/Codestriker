@@ -1,6 +1,11 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.5
+
+* Modified log_accum.pl so that deleted files are also included in the
+  topic.
+
 Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and

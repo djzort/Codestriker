@@ -508,7 +508,8 @@ for ($i = 0; ; $i++) {
 &append_to_file("$CHANGED_FILE.$i.$id", $dir, @changed_files);
 &append_to_file("$REMOVED_FILE.$i.$id", $dir, @removed_files);
 if ($rcsidinfo) {
-    &change_summary("$SUMMARY_FILE.$i.$id", (@changed_files, @added_files));
+    &change_summary("$SUMMARY_FILE.$i.$id",
+		    (@changed_files, @added_files, @removed_files));
 }
 
 #
