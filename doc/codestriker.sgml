@@ -47,7 +47,7 @@
 	files in their entirety to assist in the review process.
 	Codestriker can be optionally linked with a bug tracking
 	system, such as Bugzilla.  Other SCM systems, such as
-	ClearCase and VSS will be added in future releases, given help
+	ClearCase, Perfoce and VSS will be added in future releases, given help
 	from the developer community.  Codestriker can also be linked
 	with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
@@ -57,7 +57,10 @@
       <para>
         Codestriker is written in Perl in a cross-platform style.  It
         can run on any variant of *NIX (Linux, *BSD) and has been
-        tested and installed on Window systems (Windows 98 and above).
+        deployed on Win32 systems (Windows 98 and above).  It can be
+        used in conjunction with a number of relational databases,
+        including MySQL, PostgreSQL, Oracle, SQL Server, and other
+        ODBC-complaint databases.
         The Codestriker home page is located at:
 	<ulink
 	url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>.
@@ -250,13 +253,49 @@ DROP DATABASE codestrikerdb;
 	 </para>
       </sect2>
       <sect2>
+        <title>Using Oracle</title>
+	<para>
+	  Codestriker has been deployed under Linux 2.4 using
+	  Oracle 8i.  If you have Oracle installed, you most likely
+	  will have somebody that can easily create a new Codestriker
+	  database for you.  Install the DBD::Oracle Perl module, modify the
+	  <varname>$db</varname> variable in the
+	  <filename>codestriker.conf</filename> file appropriately so
+	  that Codestriker knows how to connect to its database.  An
+	  example is given in the configuration file.  For more
+	  advanced connection strings, please consult the DBD::Oracle
+	  man page.
+	</para>
+      </sect2>
+      <sect2>
+        <title>Using SQL Server</title>
+	<para>
+          Codestriker has been deployed using SQL Server, via the ODBC
+          interface.  The first step is to create a "Codestriker"
+          system data source, by going to "Control Panel" ->
+	  "Administrative Tools" -> "Data Sources".  From here, select
+          the "System DSN" tab, enter in "Codestriker" for the data
+          source name, and choose the driver for SQL Server, then
+          "OK".  Modify the <varname>$db</varname> variable in the
+	  <filename>codestriker.conf</filename> file appropriately so
+	  that Codestriker knows how to connect to this datasource.
+	  An example is given in the configuration file.
+	  Starting and stopping SQL Server can be controlled 
+	  via the "Services" program within "Administrative Tools".
+	</para>
+      </sect2>
+      <sect2>
         <title>Other Databases</title>
 	<para>
-	  Codestriker is written using the Perl DBI package, which
-	  makes it portable for use between different databases.
-	  Apart from the specifics of creating the database and
-	  starting it, Codestriker should work without change for
-	  other databases.
+	  Codestriker uses the Perl DBI package, a portable API that
+	  supports all the major database systems.  The database
+	  creation code is abstracted so that it can work on a
+	  diverse range of database systems.  Support for a new
+	  database system involves writing a single Perl module in the
+	  <filename>Codestriker::DB</filename> package and registering
+	  it in the <filename>Codestriker::DB::Database</filename>
+	  module.  There are a number of example database modules
+	  there.
 	</para>
       </sect2>
     </sect1>
@@ -1044,8 +1083,8 @@ PerlSwitches -T
     <sect1>
       <title>IIS configuration</title>
       <para>
-        This section deals with deploying Codestriker under IIS, as an
-        ordinary CGI script.  These instructions were perfomed on a
+        This section deals with deploying Codestriker under IIS, as
+        a CGI script.  These instructions were perfomed on a
         Windows 2000 machine, so hopefully this provides an indication
         as to what needs to be performed for other Win32
         configurations.  Startup the IIS configuration application by
@@ -1059,22 +1098,43 @@ PerlSwitches -T
         Assuming you are deploying Codestriker under the "Default Web
         site", right-click this entry on the left hand frame of the
         window, and select "New" -> "Virtual Directory" -> "Next".
-        Enter in <filename>codestriker</filename> for the Alias
-        textfield, then "Next".  Then enter the
+        Enter in <filename>codestriker</filename> into the Alias
+        textfield, then click "Next".  Then enter the
         <filename>cgi-bin</filename> directory of your unpacked
         Codestriker distribution into the "Directory" textfield, then
-        "Next".  Make sure the "Execute" access permission checkbox is
-        selected, then "Next" then "Finished".
+        click "Next".  Make sure the "Execute" access permission
+        checkbox is selected, then click "Next", click then "Finished".
+      </para>
+      <para>
+        It is important that the <filename>codestriker</filename>
+        virtual directory is setup to be able to execute Perl scripts.
+        Right-click the <filename>codestriker</filename> virtual
+        directory and select "Properties".  Click on the
+        "Configuration..." button.  Check that there is an entry for
+        <filename>.pl</filename> files, and that the "Executable Path"
+        entry looks like (substitute the path to your local
+	Perl installation):
+	<programlisting>
+C:\Perl\bin\perl.exe -T "%s" %s	  
+	</programlisting>
+	If the <option>-T</option> flag is missing, it is very
+	important you modify the entry to include it, otherwise you
+	will get errors when you try to deploy Codestriker.  If there
+	is no mapping for <filename>.pl</filename> files (which would
+	be odd, since the ActiveState install does this for you
+	automatically), add a new entry in with the above setting,
+	limited to "GET,HEAD,POST".  Make sure you enter the quotes,
+	as shown above.
       </para>
       <para>
         Follow a similar process for the
         <filename>codestrikerhtml</filename> directory.  Right-click
         "Default Web site" and select "New" -> "Virtual Directory" ->
-        "Next".  Enter in <filename>codestrikerhtml</filename> for the
-        Alias textfield, then "Next".  Then enter the
+        "Next".  Enter in <filename>codestrikerhtml</filename> into the
+        Alias textfield, then click "Next".  Then enter the
         <filename>html</filename> directory of your unpacked
         Codestriker distribution into the "Directory" textfield, then
-        "Next".  Make sure the "Read" and "Browse" access permission
+        click "Next".  Make sure the "Read" and "Browse" access permission
         checkboxes are selected, then "Next", then "Finished".
       </para>
       <para>
@@ -1089,10 +1149,15 @@ PerlSwitches -T
         Right-click "Default Web site" and select "Start" if the
         website is not currently running, and test it.
       </para>
+      <para>
+        Further information on setting up IIS with Perl CGI can be
+        found from <ulink
+	url="http://www.mhuffman.com/notes/cgi/cgi_config.html">http://www.mhuffman.com/notes/cgi/cgi_config.html</ulink>.
+      </para>
     </sect1>
 
     <sect1>
-      <title>Upgrading</title>
+      <title>Upgrading Codestriker</title>
       <para>
         To upgrade, extract the distribution into another directory,
         check the <filename>CHANGELOG</filename> file to see if any
