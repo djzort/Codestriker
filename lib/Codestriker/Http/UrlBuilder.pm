@@ -105,4 +105,11 @@ sub list_topics_url ($$$$$$$$$$\@) {
 	($sstate ne "" ? "&sstate=$sstate" : "");
 }
 
+# Create the URL for viewing comments.
+sub view_comments_url ($$) {
+    my ($self, $topic) = @_;
+
+    return $self->{query}->url() . "?action=list_comments&topic=$topic";
+}
+
 1;

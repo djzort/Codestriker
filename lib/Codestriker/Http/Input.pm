@@ -62,6 +62,7 @@ sub process($) {
     $self->{cc} = $query->param('cc');
     $self->{comment_cc} = $query->param('comment_cc');
     $self->{topic_state} = $query->param('topic_state');
+    $self->{comment_state} = $query->param('comment_state');
     $self->{revision} = $query->param('revision');
     $self->{filename} = $query->param('filename');
     $self->{linenumber} = $query->param('linenumber');
@@ -86,6 +87,8 @@ sub process($) {
     $self->{repository} = $query->param('repository');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
+    my @selected_comments = $query->param('selected_comments');
+    $self->{selected_comments} = \@selected_comments;
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};

@@ -11,7 +11,7 @@
 
 <TR CLASS="commenth">
 <TD>
-[% IF comment.line != "" %]
+[% IF comment.line != '' %]
 <A HREF="[% comment.lineurl %]" NAME="[% comment.linename %]">
 [% comment.line %]</A>
 [% END %]
@@ -21,7 +21,7 @@
 </TR>
 <TR CLASS="commentb">
 <TD>
-<PRE>[% comment.text %]</PRE></TD>
+<PRE>[% comment.data %]</PRE></TD>
 </TR>
 <TR CLASS="commentb"><TD>&nbsp;</TD></TR>
 [% END %]

@@ -5,15 +5,15 @@
 
 [% PROCESS header.html.tmpl %]
 
-[%# Show the top-level links for "Create new topic", "List open topics"
-    and "search" #%]
+[%# Show the top-level links for "Create new topic", "List open topics",
+    "search", and "View all comments" #%]
 <p>
     <a href="[% create_topic_url %]">Create new topic</a>
 [% IF searchlist_enabled != 0 %]
     | <a href="[% list_url %]">List open topics</a>
     | <a href="[% search_url %]">Search</a>
 [% END %]
-
+    | <a href="[% view_comments_url %]">View all comments</a>
 <HR>
 
 <p>

@@ -21,6 +21,7 @@ use strict;
 
 use lib '../lib';
 use Codestriker::DB::DBI;
+use Codestriker::Action::SubmitComment;
 
 # Initialise Codestriker, load up the configuration file.
 Codestriker->initialise();
@@ -176,7 +177,16 @@ $table{comment} =
      creation_ts timestamp NOT NULL";
 
 $index{comment} = "CREATE INDEX comment_tid_idx ON comment(topicid)";
-     
+
+$table{commentstate} =
+    "topicid int NOT NULL,
+     line int NOT NULL,
+     state smallint NOT NULL,
+     filename text,
+     fileline int,
+     version int NOT NULL,
+     PRIMARY KEY (topicid, line)";
+
 $table{participant} =
     "email varchar(255) NOT NULL,
      topicid int NOT NULL,
@@ -289,9 +299,41 @@ Codestriker::DB::DBI->release_connection($dbh, 1);
 $dbh = Codestriker::DB::DBI->get_connection();
 
 add_field('topic', 'repository', 'text');
+
+# Ensure all comments are accounted for in the commentstate table.  Note,
+# since MySQL doesn't have nested statements, this has to be done the hard
+# way.
+my $stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line FROM comment');
+$stmt->execute();
+while (my ($topicid, $line) = $stmt->fetchrow_array()) {
+    # Check if there is an associated record in the commentstate table, and if
+    # not, create it.
+    my $check = $dbh->prepare_cached('SELECT COUNT(*) FROM commentstate ' .
+				     'WHERE topicid = ? AND line = ?');
+    $check->execute($topicid, $line);
+    my ($count) = $check->fetchrow_array();
+    $check->finish();
+    next if ($count != 0);
+
+    # Associated record doesn't exist, create it.
+    print "Creating commentstate row for topicid $topicid line $line\n";
+    my ($filename, $file_linenumber, $accurate);
+    Codestriker::Action::SubmitComment->_get_file_linenumber($topicid, $line,
+							     \$filename,
+							     \$file_linenumber,
+							     \$accurate);
+    my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
+				      '(topicid, line, state, filename, ' .
+				      'fileline, version) VALUES '.
+				      '(?, ?, ?, ?, ?, ?)');
+    $insert->execute($topicid, $line, $Codestriker::COMMENT_SUBMITTED,
+		     $filename, $file_linenumber, 0);
+    $insert->finish();
+}
+$stmt->finish();
     
 # Insert the version number into the table, if required.
-my $stmt = $dbh->prepare_cached('SELECT id, sequence FROM version');
+$stmt = $dbh->prepare_cached('SELECT id, sequence FROM version');
 $stmt->execute();
 my $found = 0;
 my $max_sequence = 0;

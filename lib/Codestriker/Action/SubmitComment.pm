@@ -12,6 +12,7 @@ package Codestriker::Action::SubmitComment;
 use strict;
 
 use Codestriker::Model::Comment;
+use Codestriker::Model::File;
 use Codestriker::Smtp::SendEmail;
 
 # If the input is valid, create the appropriate topic into the database.
@@ -39,16 +40,27 @@ sub process($$$) {
 	$http_response->error("No email address was entered");
     }
 
+    # Try to determine what file and line number this comment refers to.
+    my $filename = "";
+    my $file_linenumber = 0;
+    my $accurate = 0;
+    $type->_get_file_linenumber($topic, $line, \$filename, \$file_linenumber,
+				\$accurate);
+
     # Create the comment in the database.
     my $timestamp = Codestriker->get_timestamp(time);
     Codestriker::Model::Comment->create($topic, $line, $email, $comments,
-					$timestamp);
+					$timestamp,
+					$Codestriker::COMMENT_SUBMITTED,
+					$filename, $file_linenumber);
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
     my $edit_url = $url_builder->edit_url($line, $topic, "", "",
 					  $query->url());
+    my $view_topic_url = $url_builder->view_url($topic, $line, $mode);
+    my $view_comments_url = $url_builder->view_comments_url($topic);
 
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
@@ -72,20 +84,17 @@ sub process($$$) {
     }
 
     # Retrieve the comment details for this topic.
-    my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
-	%comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comment_linenumber,
-				      \@comment_data, \@comment_author,
-				      \@comment_date, \%comment_exists);
+    my (@comments, %comment_exists);
+    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
     my %contributors = ();
     $contributors{$email} = 1;
     my $cc_recipients = "";
-    for (my $i = 0; $i <= $#comment_linenumber; $i++) {
-	if ($comment_linenumber[$i] == $line &&
-	    $comment_author[$i] ne $document_author &&
-	    ! exists $contributors{$comment_author[$i]}) {
-	    $contributors{$comment_author[$i]} = 1;
-	    $cc_recipients .= "$comment_author[$i], ";
+    for (my $i = 0; $i <= $#comments; $i++) {
+	if ($comments[$i]{line} == $line &&
+	    $comments[$i]{author} ne $document_author &&
+	    ! exists $contributors{$comments[$i]{author}}) {
+	    $contributors{$comments[$i]{author}} = 1;
+	    $cc_recipients .= "$comments[$i]{author}, ";
 	}
     }
     
@@ -117,12 +126,6 @@ sub process($$$) {
 	"$email added a comment to Topic \"$document_title\".\n\n" .
 	"URL: $edit_url\n\n";
 
-    # Try to determine what file and line number this comment refers to.
-    my $filename = "";
-    my $file_linenumber = 0;
-    my $accurate = 0;
-    _get_file_linenumber($topic, $line, \$filename, \$file_linenumber,
-			 \$accurate);
     if ($filename ne "") {
 	if ($file_linenumber > 0) {
 	    $body .= "File: $filename" . ($accurate ? "" : " around") .
@@ -143,11 +146,11 @@ sub process($$$) {
     $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";    
     
     # Now display the comments that have already been submitted.
-    for (my $i = $#comment_linenumber; $i >= 0; $i--) {
-	if ($comment_linenumber[$i] == $line) {
-	    my $data = $comment_data[$i];
+    for (my $i = $#comments; $i >= 0; $i--) {
+	if ($comments[$i]{line} == $line) {
+	    my $data = $comments[$i]{data};
 
-	    $body .= "$comment_author[$i] $comment_date[$i]\n\n$data\n\n";
+	    $body .= "$comments[$i]{author} $comments[$i]{date}\n\n$data\n\n";
 	    $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";    
 	}
     }
@@ -168,7 +171,8 @@ sub process($$$) {
 				    "", "", "", $repository, $anchor,
 				    $reload, 0);
     my $vars = {};
-    $vars->{'topic_url'} = $edit_url;
+    $vars->{'view_topic_url'} = $view_topic_url;
+    $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
     my $template = Codestriker::Http::Template->new("submitcomment");
     $template->process($vars) || die $template->error();
@@ -182,7 +186,7 @@ sub process($$$) {
 # $linenumber_ref and $accurate_ref references.
 sub _get_file_linenumber ($$$$$)
 {
-    my ($topic, $topic_linenumber,
+    my ($type, $topic, $topic_linenumber,
 	$filename_ref, $linenumber_ref, $accurate_ref) = @_;
     
     # Find the appropriate file that $topic_linenumber refers to.

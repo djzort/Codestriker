@@ -34,6 +34,8 @@ use Codestriker::Action::ListTopics;
 use Codestriker::Action::DownloadTopic;
 use Codestriker::Action::ChangeTopicState;
 use Codestriker::Action::ChangeTopics;
+use Codestriker::Action::ListComments;
+use Codestriker::Action::ChangeComments;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -89,6 +91,12 @@ sub main() {
     } elsif ($action eq "change_topics") {
         Codestriker::Action::ChangeTopics->process($http_input,
 						   $http_response);
+    } elsif ($action eq "list_comments") {
+	Codestriker::Action::ListComments->process($http_input,
+						   $http_response);
+    } elsif ($action eq "change_comments") {
+	Codestriker::Action::ChangeComments->process($http_input,
+						     $http_response);
     } else {
 	# Default action is to list topics that are in state open if the
 	# list functionality is enabled, otherwise go to the create topic

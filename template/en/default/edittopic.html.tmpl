@@ -2,6 +2,11 @@
 
 [% PROCESS header.html.tmpl %]
 
+<P>
+<A HREF="[% view_topic_url %]">View topic</A> |
+<A HREF="[% view_comments_url %]">View all comments</A>
+<HR>
+
 <H2>[% topic_title %]</H2>
 <TABLE>
 <TR>
@@ -19,9 +24,6 @@
 </TR>
 [% END %]
 </TABLE>
-
-<P>
-<A HREF="[% view_url %]">View topic</A>
 
 <P>
 <HR>

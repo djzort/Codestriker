@@ -1,5 +1,19 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 
+Version 1.6.4
+
+* Comments associated with a specific line in a review now have the
+  notion of state, which includes "Submitted" (the initial state),
+  "Invalid" (indicating an invalid comment) and "Completed" (indicated
+  that the comments have been addressed).  The new screen "list
+  comments" allows an author of the review to see all the comments
+  appropriately listed (order by line, then date), and allows for the
+  mass changing of states.
+
+  This is likely to be easier to handle than wading through a mass of
+  emails.  The screen also allows for replies to comments to be easily
+  made against existing comments.
+
 Version 1.6.3
 
 * In the topic list screen, it is now possible to selected multiple

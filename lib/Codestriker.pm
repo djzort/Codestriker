@@ -25,7 +25,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.6.2";
+$Codestriker::VERSION = "1.6.4";
 
 # Error codes from the model routines.
 $Codestriker::OK = 1;
@@ -43,6 +43,14 @@ $Codestriker::PARTICIPANT_CC = 1;
 
 # Default email context to use.
 $Codestriker::EMAIL_CONTEXT = 8;
+
+# Valid comment states.
+$Codestriker::COMMENT_SUBMITTED = 1;
+$Codestriker::COMMENT_INVALID = 2;
+$Codestriker::COMMENT_COMPLETED = 3;
+
+# Textual representations of the above states.
+@Codestriker::comment_states = ("Submitted", "Invalid", "Completed");
 
 # Day strings
 @Codestriker::days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",

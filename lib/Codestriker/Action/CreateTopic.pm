@@ -18,7 +18,7 @@ sub process($$$) {
 
     my $query = $http_response->get_query();
     $http_response->generate_header("", "Create new topic", "", "", "", "",
-				    "", "", "", 0, 0);
+				    "", "", "", 0, 1);
 
     # Create the hash for the template variables.
     my $vars = {};

@@ -51,10 +51,9 @@ my @view_file_plus_offset = ();
 my $COMMENT_LINE_COLOUR = "red";
 
 # Constructor for rendering complex data.
-sub new ($$$$$$$\%\@\@$) {
+sub new ($$$$$$$\%\@$$\@\@\@) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
-	$mode, $comment_exists_ref, $comment_linenumber_ref,
-	$comment_data_ref, $tabwidth, $repository,
+	$mode, $comment_exists_ref, $comments, $tabwidth, $repository,
 	$filenames_ref, $revisions_ref, $binaries_ref) = @_;
 
     # Record all of the above parameters as instance variables, which remain
@@ -67,8 +66,7 @@ sub new ($$$$$$$\%\@\@$) {
     $self->{topic} = $topic;
     $self->{mode} = $mode;
     $self->{comment_exists_ref} = $comment_exists_ref;
-    $self->{comment_linenumber_ref} = $comment_linenumber_ref;
-    $self->{comment_data_ref} = $comment_data_ref;
+    $self->{comments} = $comments;
     $self->{tabwidth} = $tabwidth;
     $self->{repository} = $repository;
     $self->{filenames_ref} = $filenames_ref;
@@ -605,12 +603,12 @@ sub get_comment_digest($$) {
     my $digest = "";
     my $comment_exists_ref = $self->{comment_exists_ref};
     if ($$comment_exists_ref{$line}) {
-	my $comment_linenumber_ref = $self->{comment_linenumber_ref};
-	my $comment_data_ref = $self->{comment_data_ref};
-	for (my $i = 0; $i <= $#$comment_linenumber_ref; $i++) {
-	    if ($$comment_linenumber_ref[$i] == $line) {
+	my $comments = $self->{comments};
+	for (my $i = 0; $i <= $#$comments; $i++) {
+	    my $comment = $$comments[$i];
+	    if ($comment->{line} == $line) {
 		# Need to remove the newlines for the data.
-		my $data = $$comment_data_ref[$i];
+		my $data = $comment->{data};
 		$data =~ s/\n/ /mg; # Remove newline characters
 
 		if ($CGI::VERSION < 2.59) {

@@ -55,11 +55,8 @@ sub process($$$) {
 				  \$diff_text);
 
     # Retrieve the comment details for this topic.
-    my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
-	%comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comment_linenumber,
-				      \@comment_data, \@comment_author,
-				      \@comment_date, \%comment_exists);
+    my (@comments, %comment_exists);
+    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
 
     # Load the appropriate CVS file into memory.
     my ($cvs_filedata_max_line_length, @cvs_filedata);
@@ -108,10 +105,9 @@ sub process($$$) {
     my $render =
 	Codestriker::Http::Render->new($query, $url_builder, $parallel,
 				       $max_digit_width, $topic, $mode,
-				       \%comment_exists, \@comment_linenumber,
-				       \@comment_data, $tabwidth,
-				       \@toc_filenames, \@toc_revisions,
-				       \@toc_binaries);
+				       \%comment_exists, \@comments,
+				       $tabwidth, \@toc_filenames,
+				       \@toc_revisions, \@toc_binaries);
     # Print the heading information.
     if ($new == $UrlBuilder::BOTH_FILES) {
 	$render->print_coloured_table();

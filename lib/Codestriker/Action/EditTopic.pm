@@ -51,11 +51,8 @@ sub process($$$) {
     }
 
     # Retrieve the comment details for this topic.
-    my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
-	%comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comment_linenumber,
-				      \@comment_data, \@comment_author,
-				      \@comment_date, \%comment_exists);
+    my (@comments, %comment_exists);
+    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $description;
@@ -83,8 +80,10 @@ sub process($$$) {
 	$vars->{'cc'} = "";
     }
 
-    my $view_url = $url_builder->view_url($topic, $line, $mode);
-    $vars->{'view_url'} = $view_url;
+    my $view_topic_url = $url_builder->view_url($topic, $line, $mode);
+    my $view_comments_url = $url_builder->view_comments_url($topic);
+    $vars->{'view_topic_url'} = $view_topic_url;
+    $vars->{'view_comments_url'} = $view_comments_url;
 
     # Retrieve the context in question.  Allow the user to increase it
     # or decrease it appropriately.
@@ -104,25 +103,28 @@ sub process($$$) {
 							   $query->p . "\n";
 
     # Display the comments which have been made for this line number
-    # thus far in reverse order.
-    my @comments = ();
-    for (my $i = $#comment_linenumber; $i >= 0; $i--) {
-	if ($comment_linenumber[$i] == $line) {
-	    my $comment = {};
-	    my $author = $comment_author[$i];
+    # in chronological order.
+    my @display_comments = ();
+    for (my $i = 0; $i <= $#comments; $i++) {
+	if ($comments[$i]{line} == $line) {
+	    my $display_comment = {};
+	    my $author = $comments[$i]{author};
 	    if ($Codestriker::antispam_email) {
-		$author = Codestriker->make_antispam_email($author);
+		$display_comment->{author} =
+		    Codestriker->make_antispam_email($author);
+	    } else {
+		$display_comment->{author} = $author;
 	    }
-	    $comment->{'author'} = $author;
-	    $comment->{'date'} = $comment_date[$i];
-	    $comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
-	    $comment->{'line'} = "";
-	    $comment->{'lineurl'} = "";
-	    $comment->{'linename'} = "";
-	    push @comments, $comment;
+	    $display_comment->{date} = $comments[$i]{date};
+	    $display_comment->{data} =
+		$http_response->escapeHTML($comments[$i]{data});
+	    $display_comment->{line} = "";
+	    $display_comment->{lineurl} = "";
+	    $display_comment->{linename} = "";
+	    push @display_comments, $display_comment;
 	}
     }
-    $vars->{'comments'} = \@comments;
+    $vars->{'comments'} = \@display_comments;
 
     # Populate the form values.
     $vars->{'line'} = $line;

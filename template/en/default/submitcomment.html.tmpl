@@ -2,9 +2,12 @@
 
 [% PROCESS header.html.tmpl %]
 
-<H2>Comment submitted</H2>
 <P>
-Topic URL: <A HREF="[% topic_url %]">[% topic_url %]</A>
+<A HREF="[% view_topic_url %]">View topic</A> |
+<A HREF="[% view_comments_url %]">View all comments</A>
+<HR>
+
+<H2>Comment submitted</H2>
 <P>
 <PRE>[% comment %]
 </PRE><P>

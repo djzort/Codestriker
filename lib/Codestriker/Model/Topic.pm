@@ -256,7 +256,7 @@ sub change_state($$$$$) {
 	$rc = $Codestriker::STALE_VERSION;
     }
 
-    # If the state hasn't changed, don't do anything, otheriwse update the
+    # If the state hasn't changed, don't do anything, otherwise update the
     # topic.
     if ($new_stateid != $current_stateid) {
 	$success &&= $update_topic->execute($version+1, $new_stateid,

@@ -1,0 +1,82 @@
+[%# Display a list of comments #%]
+
+[% PROCESS header.html.tmpl %]
+
+[%# Show the top-level link for "Refresh" and "View topic" #%]
+<P>
+<A HREF="[% view_comments_url %]">View all updated comments</A> |
+<A HREF="[% view_topic_url %]">View topic</A>
+<HR>
+<P>
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
+    <p>
+[% END %]
+
+<H2>Comments:</H2>
+
+<FORM METHOD="POST" ENCTYPE="multipart/form-data">
+<INPUT TYPE="hidden" NAME="action" VALUE="change_comments">
+<INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
+<INPUT TYPE="hidden" NAME="email" VALUE="[% email %]">
+
+<TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
+
+[% last_line = -1 %]
+[% FOREACH comment = comments %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+
+    [% IF comment.line != last_line %]
+    <TR CLASS="comments">
+        <TD>
+            <INPUT TYPE="checkbox" NAME="selected_comments" 
+	           VALUE="[% comment.line %],[% comment.version %]">
+        </TD>
+	<TD><A NAME="[% comment.line %]">[% comment.state %]</A></TD>
+	<TD>
+	    [% IF comment.filename != '' %]
+	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
+	       <A HREF="[% comment.view_parallel %]">Parallel</A> |
+	       <A HREF="[% comment.edit_url %]">Add comment</A>
+	    [% ELSE %]
+	       Line: [% comment.line %] |
+	        <A HREF="[% comment.edit_url %]">Add comment</A>
+	    [% END %]
+	</TD>
+    </TR>
+    [% last_line = comment.line %]
+    [% END %]
+
+    <TR CLASS="commenth">
+        <TD CLASS="commentb">&nbsp;</TD>
+        <TD COLSPAN="2">[% comment.author %]&nbsp;[% comment.date %]</TD>
+    </TR>
+    <TR CLASS="commentb">
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data %]</PRE></TD>
+    </TR>
+
+[% END %]
+
+    <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
+
+</TABLE>
+
+<P>
+
+Change state: &nbsp;
+  <SELECT name="comment_state">
+     [% FOREACH state = states %]
+     <OPTION value="[% state %]">[% state %]
+     [% END %]
+  </SELECT>
+  <INPUT TYPE="submit" NAME="button" VALUE="Update">
+
+</FORM>
+
+[% PROCESS trailer.html.tmpl %]
+
+</body>
+</html>
+

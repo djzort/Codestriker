@@ -64,11 +64,8 @@ sub process($$$) {
     my @document = split /\n/, $topic_data;
 
     # Retrieve the comment details for this topic.
-    my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
-	%comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comment_linenumber,
-				      \@comment_data, \@comment_author,
-				      \@comment_date, \%comment_exists);
+    my (@comments, %comment_exists);
+    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
 
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, $repository_url,
@@ -98,12 +95,14 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Obtains the "Create a new topic", "Search" and "Open topics" URLs.
+    my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     my @topic_states = (0);
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", \@topic_states);
+    $vars->{'view_comments_url'} = $view_comments_url;
 
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');
@@ -172,9 +171,9 @@ sub process($$$) {
     $vars->{'description'} = $data;
 
     # Obtains how many comments there are, and the internal link to them.
-    $vars->{'number_comments'} = $#comment_linenumber + 1;
+    $vars->{'number_comments'} = $#comments + 1;
     $vars->{'comment_url'} =
-	$url_builder->view_url($topic, -1, $mode) . "#comments";
+	$url_builder->view_comments_url($topic);
 
     # Obtain the link to download the actual document text.
     $vars->{'download_url'} = $url_builder->download_url($topic);
@@ -235,8 +234,7 @@ sub process($$$) {
     my $render = Codestriker::Http::Render->new($query, $url_builder, 0,
 						$max_digit_width, $topic,
 						$mode, \%comment_exists,
-						\@comment_linenumber,
-						\@comment_data, $tabwidth,
+						\@comments, $tabwidth,
 						$repository, \@filenames,
 						\@revisions, \@binary);
 
@@ -342,39 +340,9 @@ sub process($$$) {
     }
 
     $render->finish();
-    print $query->p;
+    print $query->p, $query->a({href=>$view_comments_url},
+			       "View all comments");
     
-    # Now display all comments in reverse order.  Put an anchor in for the
-    # first comment.
-    print $query->a({name=>"comments"}, $query->hr);
-    print $query->p;
-
-    $vars = {};
-    my @comments = ();
-    for (my $i = $#comment_linenumber; $i >= 0; $i--) {
-	my $comment = {};
-	my $edit_url =
-	    $url_builder->edit_url($comment_linenumber[$i], $topic, "", "C$i",
-				   "");
-	my $author;
-	if ($Codestriker::antispam_email) {
-	    $author = Codestriker->make_antispam_email($comment_author[$i]);
-	} else {
-	    $author = $comment_author[$i];
-	}
-
-	$comment->{'lineurl'} = "javascript:myOpen('$edit_url', 'e')";
-	$comment->{'linename'} = "C$i";
-	$comment->{'line'} = "line $comment_linenumber[$i]";
-	$comment->{'author'} = $author;
-	$comment->{'date'} = $comment_date[$i];
-	$comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
-	push @comments, $comment;
-    }
-    $vars->{'comments'} = \@comments;
-    my $listcomments = Codestriker::Http::Template->new("listcomments");
-    $listcomments->process($vars) || die $listcomments->error();
-
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");
     $trailer->process() || die $trailer->error();
