@@ -59,8 +59,38 @@ as a coloured-diff, and can\'t be linked to a CVS repository.\n
 Ordinary source files can also be uploaded.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
+ <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
+
+[% IF allow_repositories != 0 %]
+[%# The diff fetcher #%]
+<TR>
+ <TD>
+Start tag: 
+<FONT SIZE="-2"><A HREF="javascript:alert('
+Rather than uploading the topic text, if the repository\n
+supports it, the text can be fetched by querying the\n
+repository given start and end tags, and a module name.
+')">(What's this?)</A></FONT>
+</TD>
+<TD>
+<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag %]" SIZE=20 MAXLENGTH=150> 
+</TD>
+<TD>End tag: </TD>
+<TD>
+<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag %]" SIZE=20 MAXLENGTH=150>
+</TD>
+</TR>
+<TR>
+<TD>&nbsp;</TD><TD>&nbsp;</TD>
+<TD>
+Module: 
+</TD>
+<TD>
+<INPUT TYPE="text" NAME="module" VALUE="[% module %]" SIZE=20 MAXLENGTH=150>
+</TD>
+</TR>
+[% END %]
 
 [%# The repository the review is made against #%]
 
@@ -68,23 +98,15 @@ Ordinary source files can also be uploaded.
 <TR>
  <TD>Repository:
 <FONT SIZE="-2"><A HREF="javascript:alert('
-If the topic text is a CVS diff, this field should be\n
-set to the corresponding CVS repository.\n
-\n
-Remote repositories are specified as the URL to the\n
-cvsweb.cgi or viewcvs.cgi script that represents the repository,\n
-plus the cvsroot path.  As an example, for codestriker changes,\n
-the respository is set to:\n
-\n
-http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi   /cvsroot\n
-\n
-If the repository is deployed on the same machine as codestriker,\n
-only the cvsroot path needs to be specified.  For example:\n
-\n
-/usr/local/cvsroot
+The SCM system (eg CVS, Subversion, ClearCase)\n
+which the topic text was prepared against.  If\n
+this is correctly set, this provides the\n
+ability to view the entire contents of a file\n
+with and/or without a proposed change, which\n
+an aid in the reviewing process.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><SELECT NAME="repository">
+ <TD COLSPAN="3"><SELECT NAME="repository">
        [% FOREACH entry = repositories %]
           [% IF entry == default_repository %]
 	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]
@@ -105,7 +127,7 @@ Topics are associated with a specific project, which can be\n
 used as filtering criteria in the search screen.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><SELECT NAME="projectid">
+ <TD COLSPAN="3"><SELECT NAME="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == default_projectid %]
 	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
@@ -140,7 +162,7 @@ it can be easily determined what code fixes have been applied\n
 to it.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
 
 [%# The email input field #%]
@@ -152,7 +174,7 @@ will be sent to this address.  The new topic notification email\n
 will also be sent to this address.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=80></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=80></TD>
 </TR>
 
 [%# The reviewers input field #%]
@@ -164,7 +186,7 @@ people who need to review this code.  When the topic is created,\n
 the new topic notification  email will be sent to these addresses.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 
 [%# The Cc input field #%]
@@ -176,7 +198,7 @@ not indented to be reviewers, but typically a mailing list\n
 to notify a number of people about the creation of a new topic.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="cc" VALUE="[% cc %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 </TABLE>
 

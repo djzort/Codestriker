@@ -18,12 +18,31 @@ Version 1.7.1
   accessed.  This can be convenient for those deployments which have
   set their project data, and don't want it modified.
 
+* Pserver repository type has been added, so that code reviews against
+  remote CVS repositories can be linked using :pserver.  See the
+  codestriker.conf file for more information.
+
+* When creating a review, instead of uploading a diff file, a start
+  tag, end tag and module name can be given as input.  Codestriker
+  will fetch the review text and initialise the topic appropriately.
+  This better suited some development processes out there, where
+  separate branches were used for development, which needed to be
+  reviewed before collapsing to a trunk.  These options are only
+  displayed if repositories are enabled ($allow_repositories == 1) in
+  codestriker.conf.
+
+* Support for parsing output from "cvs rdiff -uN -r TAG1 -r TAG2
+  module".  This was required to support the "TAG input" method above.
+
 * Fixed a bug where searches over comment data wasn't returning
   correct results.
 
 * Minor changes to checksetup - make sure the template directory is
   cleaned out to ensure the templates are regenerated when performing
   an upgrade.
+
+* Changed codestriker.conf to use single quotes rather than double, so
+  that there are no Perl escaping issues.
 
 Version 1.7.0.2
 

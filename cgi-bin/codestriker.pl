@@ -45,9 +45,6 @@ use Codestriker::Action::SubmitEditProject;
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
 
-# Don't allow posts larger than 500K.
-$CGI::POST_MAX=1024 * 500;
-
 # Prototypes of subroutines used in this module.
 sub main();
 
@@ -56,6 +53,9 @@ main;
 sub main() {
     # Initialise Codestriker, load up the configuration file.
     Codestriker->initialise();
+
+    # Limit the size of the posts that can be done.
+    $CGI::POST_MAX=$Codestriker::DIFF_SIZE_LIMIT;
 
     # Load the CGI object, and prepare the HTTP response.
     my $query = new CGI;

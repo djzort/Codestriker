@@ -11,6 +11,7 @@ package Codestriker::Action::SubmitTopic;
 
 use strict;
 
+use FileHandle;
 use Codestriker::Model::Topic;
 use Codestriker::Smtp::SendEmail;
 use Codestriker::Http::Render;
@@ -36,9 +37,24 @@ sub process($$$) {
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
+    my $start_tag = $http_input->get('start_tag');
+    my $end_tag = $http_input->get('end_tag');
+    my $module = $http_input->get('module');
 
     my $feedback = "";
     my $topic_text = "";
+
+    # Indicate whether the topic text needs to be retrieved by the repository
+    # object.
+    my $retrieve_text = 0;
+    if ($start_tag ne "" && $end_tag ne "" && $module ne "") {
+	$retrieve_text = 1;
+	
+	# Check if this action is permitted.
+	if ($Codestriker::allow_repositories == 0) {
+	    $http_response->error("This function has been disabled.");
+	}
+    }
 
     if ($topic_title eq "") {
 	$feedback .= "No topic title was entered.\n";
@@ -49,8 +65,8 @@ sub process($$$) {
     if ($email eq "") {
 	$feedback .= "No email address was entered.\n";
     }	
-    if (!defined $fh) {
-	$feedback .= "No filename was entered.\n";
+    if (!defined $fh && $retrieve_text == 0) {
+	$feedback .= "No filename or module/tags were entered.\n";
     }
     if ($reviewers eq "") {
 	$feedback .= "No reviewers were entered.\n";
@@ -77,6 +93,9 @@ sub process($$$) {
 	$vars->{'bug_ids'} = $bug_ids;
 	$vars->{'default_repository'} = $repository_url;
 	$vars->{'repositories'} = \@Codestriker::valid_repositories;
+	$vars->{'start_tag'} = $start_tag;
+	$vars->{'end_tag'} = $end_tag;
+	$vars->{'module'} = $module;
 
 	my @projects = Codestriker::Model::Project->list();
 	$vars->{'projects'} = \@projects;
@@ -95,6 +114,41 @@ sub process($$$) {
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
 
+    # For "hysterical" reasons, the topic id is randomly generated.  Seed the
+    # generator based on the time and the pid.  Keep searching until we find
+    # a free topicid.  In 99% of the time, we will get a new one first time.
+    srand(time() ^ ($$ + ($$ << 15)));
+    my $topicid;
+    do {
+	$topicid = int rand(10000000);
+    } while (Codestriker::Model::Topic->exists($topicid));
+
+    # If the topic text needs to be retrieved from the repository object,
+    # create a temporary file to store the topic text.
+    my $temp_topic_filename = "";
+    if ($retrieve_text && defined $repository) {
+
+	# Store the topic text into this temporary file.
+	$temp_topic_filename = "topictext.$topicid";
+	$fh = new FileHandle "> $temp_topic_filename";
+	my $rc = $repository->getDiff($start_tag, $end_tag, $module, $fh);
+	$fh->close;
+
+	# Check if the generated diff was too big, and if so, throw an error
+	# message on the screen.
+	if ($rc == $Codestriker::DIFF_TOO_BIG) {
+	    unlink $temp_topic_filename;
+	    $http_response->error("Generated diff file is too big.");
+	} elsif ($rc == $Codestriker::UNSUPPORTED_OPERATION) {
+	    unlink $temp_topic_filename;
+	    $http_response->error("Repository \"" . $repository->toString() . 
+				  "\" doesn't support tag retrieval.");
+	}
+
+	# Open the file again for reading, so that it can be parsed.
+	$fh = new FileHandle $temp_topic_filename, "r";
+    }
+
     # Try to parse the topic text into its diff chunks.
     my @deltas =
 	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository);
@@ -109,17 +163,13 @@ sub process($$$) {
 	}
     }
 
+    # Remove the temporary file if required.
+    if ($temp_topic_filename ne "") {
+	unlink $temp_topic_filename;
+    }
+
     # Remove \r from the topic text.
     $topic_text =~ s/\r//g;
-
-    # For "hysterical" reasons, the topic id is randomly generated.  Seed the
-    # generator based on the time and the pid.  Keep searching until we find
-    # a free topicid.  In 99% of the time, we will get a new one first time.
-    srand(time() ^ ($$ + ($$ << 15)));
-    my $topicid;
-    do {
-	$topicid = int rand(10000000);
-    } while (Codestriker::Model::Topic->exists($topicid));
 
     # Create the topic in the model.
     my $timestamp = Codestriker->get_timestamp(time);

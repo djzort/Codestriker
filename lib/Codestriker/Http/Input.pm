@@ -24,6 +24,7 @@ sub _untaint_revision( $$ );
 sub _untaint_email( $$ );
 sub _untaint_emails( $$ );
 sub _untaint_bug_ids( $$ );
+sub _untaint_alphanumeric( $$ );
 
 # Default valiue to set the context if it is not set.
 my $DEFAULT_CONTEXT = 2;
@@ -91,6 +92,9 @@ sub process($) {
     $self->{projectid} = $query->param('projectid');
     $self->{project_name} = $query->param('project_name');
     $self->{project_description} = $query->param('project_description');
+    $self->{start_tag} = $query->param('start_tag');
+    $self->{end_tag} = $query->param('end_tag');
+    $self->{module} = $query->param('module');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
@@ -135,6 +139,7 @@ sub process($) {
     $self->_set_property_from_cookie('repository',
 				     $Codestriker::default_repository);
     $self->_set_property_from_cookie('projectid', 0);
+    $self->_set_property_from_cookie('module', "");
 
     # Untaint the required input.
     $self->_untaint_name('action');
@@ -148,6 +153,9 @@ sub process($) {
     $self->_untaint_bug_ids('bug_ids');
     $self->_untaint_digits('new');
     $self->_untaint_digits('tabwidth');
+    $self->_untaint_alphanumeric('start_tag');
+    $self->_untaint_alphanumeric('end_tag');
+    $self->_untaint_alphanumeric('module');
 
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
@@ -213,7 +221,10 @@ sub _untaint($$$) {
 
     my $value = $self->{$name};
     if (defined $value && $value ne "") {
-	if ($value !~ /^${regexp}$/) {
+	if ($value =~ /^(${regexp})$/) {
+	    # Untaint the value.
+	    $self->{$name} = $1;
+	} else {
 	    my $error_message = "Input parameter $name has invalid value: " .
 		"\"$value\"";
 	    $self->{http_response}->error($error_message);
@@ -229,6 +240,12 @@ sub _untaint_name($$) {
     my ($self, $name) = @_;
 
     $self->_untaint($name, '[A-Za-z_]+');
+}
+
+sub _untaint_alphanumeric($$) {
+    my ($self, $name) = @_;
+
+    $self->_untaint($name, '[A-Za-z0-9_]+');
 }
     
 # Untaint a parameter which should be a bunch of digits.

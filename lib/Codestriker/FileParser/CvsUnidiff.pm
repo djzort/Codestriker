@@ -6,7 +6,14 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Parser object for reading CVS diffs.
+# Parser object for reading CVS diffs.  This parser object accepts output
+# from either:
+#
+# cvs diff -uN     or
+# cvs rdiff -uN -r TAG1 -r TAG2 MODULENAME
+#
+# The second command actually produces a patch, but it doesn't contain
+# important CVS filename and revision information.
 
 package Codestriker::FileParser::CvsUnidiff;
 
@@ -50,12 +57,15 @@ sub parse ($$$) {
 	return () unless defined $line && $line =~ /^Index:/o;
 	$line = <$fh>;
 
-	# The separator line appears next.
-	return () unless defined $line && $line =~ /^===================================================================$/;
-	$line = <$fh>;
+	# The separator line appears next, for diffs, but not rdiffs.
+	return () unless defined $line;
+	if ($line =~ /^===================================================================$/) {
+	    $line = <$fh>;
+	}
 
 	# Now we expect the RCS line, whose filename should include the CVS
-	# repository, and if not, it is probably a new file.
+	# repository, and if not, it is probably a new file, or it is a
+	# cvs rdiff.
 	return () unless defined $line;
 	if (defined $repository_root &&
 	    $line =~ /^RCS file: $repository_root\/(.*),v$/) {
@@ -70,7 +80,7 @@ sub parse ($$$) {
 	}
 
 	# Now we expect the retrieving revision line, unless it is a new or
-	# removed file.
+	# removed file, or a cvs rdiff.
 	if ($line =~ /^retrieving revision (.*)$/o) {
 	    $revision = $1;
 	    $line = <$fh>;
@@ -116,6 +126,13 @@ sub parse ($$$) {
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
+	} elsif ($line =~ /^\-\-\- (.*):(\d+\.[\d\.]+)\t/) {
+	    # This matchs a cvs rdiff file, extract the filename and revision.
+	    # It is assumed to match the repository specified, although there
+	    # is no real way of checking.
+	    $filename = $1;
+	    $revision = $2;
+	    $repmatch = 1;
 	} elsif (! $line =~ /^\-\-\-/o) {
 	    return ();
 	}

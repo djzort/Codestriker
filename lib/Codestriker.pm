@@ -25,14 +25,19 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.1-pre1";
+$Codestriker::VERSION = "1.7.1-pre2";
 
-# Error codes from the model routines.
+# The maximum size of a diff file to accept.
+$Codestriker::DIFF_SIZE_LIMIT = 500 * 1024;
+
+# Error codes.
 $Codestriker::OK = 1;
 $Codestriker::STALE_VERSION = 2;
 $Codestriker::INVALID_TOPIC = 3;
 $Codestriker::INVALID_PROJECT = 4;
 $Codestriker::DUPLICATE_PROJECT_NAME = 5;
+$Codestriker::UNSUPPORTED_OPERATION = 6;
+$Codestriker::DIFF_TOO_BIG = 7;
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

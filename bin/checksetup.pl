@@ -651,11 +651,13 @@ if ($project_count == 0) {
     $update->finish();
 }
 
+# Clean out the contents of the data and template directory, but don't
+# remove them.
 chdir('../cgi-bin') ||
     die "Couldn't change to cgi-dir directory: $!";
-if (-d 'data' || -d 'template') {
+if (-d 'template/en') {
     print "Cleaning old template directory...\n";
-    rmtree(['data', 'template'], 0, 1);
+    rmtree(['template/en'], 0, 1);
 }
 
 print "Done\n";

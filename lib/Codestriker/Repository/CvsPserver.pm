@@ -5,18 +5,23 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# CVS repository class with access to a local repository.
+# CVS repository class with access to a pserver repository.
 
-package Codestriker::Repository::CvsLocal;
+package Codestriker::Repository::CvsPserver;
 
 use strict;
 
-# Constructor, which takes as a parameter the CVSROOT.
-sub new ($$) {
-    my ($type, $cvsroot) = @_;
+# Constructor, which takes as a parameter the username, password, hostname
+# and repository path.
+sub new ($$$$$) {
+    my ($type, $username, $password, $hostname, $cvsroot) = @_;
 
     my $self = {};
+    $self->{username} = $username;
+    $self->{password} = $password;
+    $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
+    $self->{url} = ":pserver:${username}:${password}\@${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
@@ -26,9 +31,9 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
-    open(CVS, "$Codestriker::cvs -d " . $self->{cvsroot} .
+    open(CVS, "$Codestriker::cvs -d " . $self->{url} .
 	 " co -p -r $revision $filename 2>/dev/null |")
-	|| die "Can't open connection to local CVS repository: $!";
+	|| die "Can't open connection to pserver CVS repository: $!";
 
     # Read the data.
     for (my $i = 1; <CVS>; $i++) {
@@ -56,7 +61,7 @@ sub getViewUrl ($$$) {
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return $self->getRoot();
+    return $self->{url};
 }
 
 # Given a start tag, end tag and a module name, store the text into
@@ -76,7 +81,6 @@ sub getDiff ($$$$$) {
 	    return $Codestriker::DIFF_TO_BIG;
 	}
     }
-
     return $Codestriker::OK;
 }
 

@@ -62,4 +62,11 @@ sub toString ($) {
     return $self->{viewcvs_url} . " " . $self->{cvsroot};
 }
 
+# The getDiff operation is not supported.
+sub getDiff ($$$$$) {
+    my ($self, $start_tag, $end_tag, $module_name, $fh) = @_;
+
+    return $Codestriker::UNSUPPORTED_OPERATION;
+}
+
 1;
