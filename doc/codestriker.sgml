@@ -1170,12 +1170,13 @@ C:\Perl\bin\perl.exe -T "%s" %s
         then how to review these topics.  Assuming Codestriker has
         been configured and is running, you can get started by going
         to the following URL:
-        http://yourhost.yourdomain/codestriker/codestriker.pl.  This
+        <filename>http://yourhost.yourdomain/codestriker/codestriker.pl</filename>.
+        This
         should take you to the topic list screen, which is talked
         about in the following section.  From a fresh install, there
         will obviously be no code review topics in the list.  However
-        there are some links at the top of the page, to "List
-        projects", which will allow you to create some new projects to
+        there is a link on this page to "Administer Projects",
+        which will allow you to create some new projects to
         match your development process.  Once you have defined all of
         your initial projects, you can create a new code review topic
         by clicking on "Create new topic".  These screens are covered
@@ -1498,9 +1499,9 @@ C:\Perl\bin\perl.exe -T "%s" %s
       <sect2 id="view-topic">
 	<title>Viewing a Topic</title>
 	<para>
-	  The "View Topic" screen consists of a header, followed by
-	  the actual code itself.  An example header snapshot can be
-	  seen in <xref linkend="figure-viewtopic">.
+	  The "View Topic" screen is one of four tabs available for
+          viewing aspects of a topic.  An example "Topic Text" tab
+          display can be seen in <xref linkend="figure-viewtopic">.
 	  <figure id="figure-viewtopic" float="1">
 	   <title>View Topic Screenshot</title>
 	   <mediaobject>
@@ -1518,16 +1519,6 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	  Codestriker pages:
 	  <variablelist>
 	    <varlistentry>
-	      <term>Create new topic</term>
-	      <listitem>
-	        <para>
-		  Following this link will take you to the "Create
-		  Topic" page (see <xref linkend="create-topic">).
-	        </para>
-	      </listitem>
-	    </varlistentry>
-
-	    <varlistentry>
 	      <term>List open topics</term>
 	      <listitem>
 	        <para>
@@ -1539,14 +1530,11 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	    </varlistentry>
 
 	    <varlistentry>
-	      <term>List open topics in project</term>
+	      <term>Create new topic</term>
 	      <listitem>
 	        <para>
-		  Following this link will take you to the "Topic
-		  List" page (see <xref linkend="topic-list">), and
-		  will display all open topics in the system that
-		  belong to the same project as the topic shown on the
-		  screen.
+		  Following this link will take you to the "Create
+		  Topic" page (see <xref linkend="create-topic">).
 	        </para>
 	      </listitem>
 	    </varlistentry>
@@ -1557,28 +1545,6 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	        <para>
 		  Following this link will take you to the "Topic
 		  Search" page (see <xref linkend="topic-search">).
-	        </para>
-	      </listitem>
-	    </varlistentry>
-
-	    <varlistentry>
-	      <term>List projects</term>
-	      <listitem>
-	        <para>
-		  Following this link will take you to the "Project
-		  List" page (see <xref linkend="projects">).
-	        </para>
-	      </listitem>
-	    </varlistentry>
-
-	    <varlistentry>
-	      <term>View all comments</term>
-	      <listitem>
-	        <para>
-		  Following this link will take you to the "View
-		  Comments" page (see <xref linkend="view-comments">),
-		  which will show all comments which have been made
-		  against this code review topic.
 	        </para>
 	      </listitem>
 	    </varlistentry>
@@ -1595,26 +1561,28 @@ C:\Perl\bin\perl.exe -T "%s" %s
           </variablelist>	
 	</para>
 	<para>
-	  The next part of the screen shows the topic's attributes,
-	  such as the title, author, creation date, reviewer, the size
-	  of the topic text, the repository the code in the review has
-	  been made against the project the review is associated with,
-	  and the topic description.  If the topic fixes any bugs, the
-	  links to the associated bug descriptions will be shown here.
-	  The topic's state is also shown here, and can be modified if
-	  appropriate, by selected the state from the drop-down list
-	  and pressing "Update".  If deletion has been enabled, the
-	  "Delete Topic..." state will be present in this dropdown,
-	  allowing the topic to be deleted.
-	</para>
+	  The next part of the screen shows the four available tabs
+	  for viewing different aspects of a topic.  The "Topic
+	  Comments" tab is for viewing the comments that have been
+	  submitted against the topic.  Clicking on this tab will take
+	  you to the "Topic Comments" page (see <xref
+	  linkend="view-comments">).  The "Topic Properties" tab takes
+	  you to a page where you can view and edit the topic's
+	  attributes, such as the title, author,
+	  reviewer, the repository the code in the review has been
+	  made against, the project the review is associated with, and
+	  the topic description.  Clicking on this tab will take you
+	  to the "Topic Properties" page (see <xref
+	  linkend="topic-properties">).  Finally the "Topic
+	  Information" tab contains topic metric data, both
+	  user-defined and entered, and those that can be
+	  automatically derived by Codestriker.  Clicking on this tab
+	  will take you to the "Topic Information" page (see <xref
+	  linkend="topic-information">).
+        </para>
 	<para>
-	  The number of comments that have been made to this topic is
-	  shown next.  Clicking on this link will take you to the
-	  "View Comments" page (see <xref linkend="view-comments">).
-	</para>
-	<para>
-	  A link called "Download" topic text is shown.  Following
-	  this link will return in the browser the raw topic text
+	  Following the "Download topic text" link
+	  will return in the browser the raw topic text
 	  which was entered when the review was created.  This can be
 	  useful if the raw diff needs to be retrieved, so it can be
 	  used as a patch file.  There are some links which affect the
@@ -1626,9 +1594,10 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	<para>
 	  This is followed by the table of contents of the review,
 	  which consists of the list of files which comprise the
-	  topic, whether they are added, removed or modified files,
-	  and if they are modified, what revision of the file has been
-	  modified.  If filename is clicked, the browser will move to
+	  topic, whether they are added, removed or modified
+	  files, appropriately colour-coded.
+	  If a file has been modified, the revision of the file that has been
+	  modified is displayed.  If filename is clicked, the browser will move to
 	  the anchor which corresponds to changes made to that file.
 	</para>
 	<para>
@@ -1716,16 +1685,9 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
-	  As can be seen in the figure, a summary of the topic is
-	  displayed, followed by the code in question.  The "increase"
-	  link can increase the amount of context code to display,
-	  while "decrease" will decrease the amount of context code.
-	  The code line in question will be highlighted in red.
-	</para>
-	<para>
-	  Any previous comments made on this line will then be
-	  displayed.  You can enter your comment into the textarea
-	  provided.  Any formatting will be preserved, so that you can
+	  As can be seen in the figure, a summary of the topic
+          title is displayed, followed by a text box where the
+	comment can be entered.  Any formatting will be preserved, so that you can
 	  enter new code fragments, if required.  As before, your
 	  email address is remembered in the browser's cookie, to
 	  prevent you from having to enter it each time you make a
@@ -1737,7 +1699,19 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	  to any other email addresses that have made a comment on
 	  this line, so that it is possible to get a form of
 	  discussion happening.
-	</para>  
+          </para>
+          <para>
+          Any comments already made (if any) against
+	this specific line will then be displayed.  The screenshot
+	shows one comment has already been made against this code
+	line.
+        The code line
+	the comment is being made against is then displayed.  
+	  The "increase"
+	  link can increase the amount of context code to display,
+	  while "decrease" will decrease the amount of context code.
+	  The code line in question will be highlighted in red.
+	</para>
 	<para>
 	  Once the comment has been submitted, the main "View Topic"
 	  window will be displayed so that the review can quickly
@@ -1789,7 +1763,7 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	</para>
 	<para>
 	  Seeing the entire contents of a file, either pre or post
-	  change is often essentially to complete a review properly.
+	  change is often essential to complete a review properly.
 	  Sometimes, it is necessary to see both versions of the file
 	  side-by-side.  An example can be seen in <xref
 	  linkend="figure-parallelfileview">.
@@ -1814,19 +1788,20 @@ C:\Perl\bin\perl.exe -T "%s" %s
       <title>Viewing Comments</title>
       <para>
         From the "View Topic" page (see <xref linkend="view-topic">),
-        there is a link at the top to view the comments associated
+        the "Topic Comments" tab can be clicked to 
+        view the comments associated
         with a topic.  This can be clicked at any stage to see what
         comments have been submitted against a review.  It is often
-        useful for the author once a review has been completed, to
+        necessary for the author once a review has been completed, to
         work their way through the comments from the browser, although
         they can do this with their email client as well (assuming
         <varname>$allow_comment_email</varname> is true in
         <filename>codestriker.conf</filename>), since each comment
         will generate an email message.  An example screenshot of the
-        "View Comments" page can be seen in <xref
-        linkend="view-comments">.
+        "Topic Comments" page can be seen in <xref
+        linkend="figure-viewcomments">.
         <figure id="figure-viewcomments" float="1">
-	   <title>View Comments Screenshot</title>
+	   <title>Topic Comments Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
 	       <imagedata fileref="viewcomments.eps" format="eps" scale="50">
@@ -1899,6 +1874,63 @@ C:\Perl\bin\perl.exe -T "%s" %s
         <xref linkend="add-comment">).  These controls provide the
         capability for generating code review reports, which can then
         be used at code inspection meetings.
+      </para>
+    </sect1>
+    <sect1 id="topic-properties">
+      <title>Topic Properties</title>
+      <para>
+        From the "View Topic" page (see <xref linkend="view-topic">),
+        the "Topic Properties" tab can be clicked to view and edit
+        topic properties.  An example screenshot of rhis page can
+         be seen in <xref linkend="figure-topic-properties">.
+        <figure id="figure-topic-properties" float="1">
+	   <title>Topic Properties Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="topicproperties.eps" format="eps" scale="50">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="topicproperties.png" format="png">
+	     </imageobject>
+	   </mediaobject>
+	</figure>
+      </para>
+      <para>
+        This page provides the opportunity to modify topic properties,
+	such as the title, author, reviewers, cc, repository, project,
+	description and the state of the topic.  If Bugzilla
+        integration is enabled, the list of associated bugids will
+	be displayed here as well.  Any changes in the author,
+        reviewers and/or cc fields can generate new topic
+	notification emails to alert the new parties involved in
+	the review.
+      </para>
+    </sect1>
+    <sect1 id="topic-information">
+      <title>Topic Information</title>
+      <para>
+        From the "View Topic" page (see <xref linkend="view-topic">),
+        the "Topic Information" tab can be clicked to view and edit
+        topic information.  An example screenshot of this page
+	    can be seen in <xref linkend="figure-topic-information">.
+        <figure id="figure-topic-information" float="1">
+	   <title>Topic Properties Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="topicinformation.eps" format="eps" scale="50">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="topicinformation.png" format="png">
+	     </imageobject>
+	   </mediaobject>
+	</figure>
+      </para>
+      <para>
+        This page provides the opportunity for users to modify any
+	    user-defined metrics associated with the topic.  The page
+	    will also display all Codestriker-derived metrics, as can
+	    be seen in the screenshot, as well as the topic history at
+	    the bottom of the page.
       </para>
     </sect1>
     <sect1 id="topic-search">
@@ -1998,6 +2030,35 @@ C:\Perl\bin\perl.exe -T "%s" %s
         in the "Topic List" page (see <xref linkend="topic-list">).
       </para>
     </sect1>
+    <sect1 id="metrics-report">
+      <title>Metrics Report</title>
+      <para>
+        From the "Topic list" screen  (see <xref
+        linkend="topic-list">), clicking on "Metrics Report" will take
+	      you to this page.  An example screenshot can be seen in
+	      <xref linkend="figure-metrics-report">.
+        <figure id="figure-metrics-report" float="1">
+	   <title>Metrics Report Screenshot</title>
+	   <mediaobject>
+	     <imageobject>
+	       <imagedata fileref="metricsreport.eps" format="eps" scale="50">
+	     </imageobject>
+	     <imageobject>
+	       <imagedata fileref="metricsreport.png" format="png">
+	     </imageobject>
+	   </mediaobject>
+	</figure>
+      </para>
+      <para>
+        As it can be seen, this page presents aggregated views for
+	user metrics over the past 16 weeks, and topic metrics over 
+        last year, aggregated by month.  For a real software team,
+        this page will provide a wealth of detail as to how effective
+        code reviews are.   There is a link at the
+        bottom of the page for retrieving this information as a
+        CSV file, which can then be imported into other tools.
+      </para>
+    </sect1>
 
   </chapter>
 
@@ -2041,7 +2102,10 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	    <listitem>
 	      <para>
 	        A thin wrapper over the DBI interface, to
-		create/remove database connections.
+		create/remove database connections.  Each database
+	    also has an associated module, to cater for subtle
+	    differences between database systems.  Currently, there is
+	    support for MySQL, PostgreSQL, ODBC (SQL Server) and Oracle.
 	      </para>
 	    </listitem>
 	  </varlistentry>
@@ -2112,10 +2176,14 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	  </varlistentry>
 
 	  <varlistentry>
-	    <term>Smtp</term>
+	    <term>TopicListener</term>
 	    <listitem>
 	      <para>
-	        A simple API for sending email messages.
+	        This package contains a number of objects which are
+	    notified whenever a topic is changed, via a listener
+	    interface.  Functionality such as email notification,
+	    Bugzilla integration, topic history recording are
+	    implemented here as topic listeners.
 	      </para>
 	    </listitem>
 	  </varlistentry>
@@ -2238,7 +2306,7 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	    </listitem>
 	  </varlistentry>
 	  <varlistentry>
-	    <term>comment</term>
+	    <term>commentdata</term>
 	    <listitem>
 	      <para>
 	         A comment is made against a specific review, and
@@ -2271,7 +2339,7 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	    </listitem>
 	  </varlistentry>
 	  <varlistentry>
-	    <term>file</term>
+	    <term>topicfile</term>
 	    <listitem>
 	      <para>
 	        A topic consists on many file objects, which contain a
@@ -2289,6 +2357,49 @@ C:\Perl\bin\perl.exe -T "%s" %s
 	        represents a single diff chunk or change.  It
 	        represents for file X, at line number Y, the following
 	        change is a part of the review.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topichistory</term>
+	    <listitem>
+	      <para>
+                Records a trail as to who modified what topic
+	        properties and when that occurred.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>commentstatehistory</term>
+	    <listitem>
+	      <para>
+                Records a trail for the modification of
+                comment blocks.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topicviewhistory</term>
+	    <listitem>
+	      <para>
+                Records who has viewed a topic and when.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topicmetric</term>
+	    <listitem>
+	      <para>
+                Records the value of a metric against a specific topic.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>topicusermetric</term>
+	    <listitem>
+	      <para>
+                Records the value of a metric against a specific topic
+                for a specific user.
 	      </para>
 	    </listitem>
 	  </varlistentry>
