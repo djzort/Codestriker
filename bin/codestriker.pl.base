@@ -61,6 +61,7 @@ use Codestriker::Action::ViewTopicComments;
 
 use Codestriker::Template::Plugin::AutomagicLinks;
 use Codestriker::Template::Plugin::JavascriptEscape;
+use Codestriker::Template::Plugin::StringObfuscator;
 
 # Set the temp file location, if one has been specified.
 if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
@@ -100,6 +101,19 @@ sub main() {
     if (defined $Codestriker::allow_delete && $Codestriker::allow_delete &&
 	(! grep /^Deleted$/, @Codestriker::topic_states)) {
 	push @Codestriker::topic_states, 'Deleted';
+    }
+
+    # Check if the old $allow_comment_email configuration option has been
+    # specified in the config file, rather than the new $email_send_options
+    # setting.
+    if (defined $Codestriker::allow_comment_email &&
+	! defined $Codestriker::email_send_options) {
+	$Codestriker::email_send_options = 
+	{
+	  comments_sent_to_topic_author => $Codestriker::allow_comment_email,
+	  comments_sent_to_commenter => $Codestriker::allow_comment_email,
+	  topic_state_change_sent_to_reviewers => 0
+	};
     }
 
     # Limit the size of the posts that can be done.
