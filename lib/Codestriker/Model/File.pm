@@ -232,7 +232,7 @@ sub _read_diff_header($$$$$$) {
 	    # File has been added.
 	    $$revision = $Codestriker::ADDED_REVISION;
 	} elsif ($cvs_diff == 0 &&
-		 $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o) {
+		 $line =~ /^\-\-\- (.+?)\t.*$/o) {
 	    $$filename = $1;
 	    $$revision = $Codestriker::PATCH_REVISION;
 	} elsif (! $line =~ /^\-\-\-/o) {

@@ -258,7 +258,7 @@ sub process($$$) {
 	    $block_description = "";
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^\-\-\- (.*[^\s])\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o &&
+	} elsif ($document[$i] =~ /^\-\-\- (.+?)\t.*$/o &&
 		 $current_file eq "") {
 	    # This is likely to be an ordinary patch file - not a CVS one, in
 	    # which case this is the start of the diff block.
