@@ -1,0 +1,9 @@
+Change 4 by sits@sits2 on 2004/03/15 20:17:49
+
+	Example with filename with funny name.
+
+Affected files ...
+
+... //depot/dir with - space/file with - hyphen.txt#1 add
+
+Differences ...

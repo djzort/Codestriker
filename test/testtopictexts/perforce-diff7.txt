@@ -1,0 +1,19 @@
+Change 5 by sits@sits2 on 2004/03/15 20:23:29
+
+	A file with lots of weird spaces in it.
+
+Affected files ...
+
+... //depot/dir with - space/file with - hyphen.txt#2 edit
+
+Differences ...
+
+==== //depot/dir with - space/file with - hyphen.txt#2 (text) ====
+
+@@ -1,3 +1,5 @@
+ Here is aosme text
+ 
+-And some more
++Here is some new lines
++
++And some moaare

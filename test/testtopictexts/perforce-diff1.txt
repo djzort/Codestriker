@@ -1,0 +1,24 @@
+==== //depot/codestriker.conf#1 - /home/sits/perforce/example/codestriker.conf ====
+@@ -8,9 +8,7 @@
+ #$db = 'DBI:Pg:dbname=codestrikerdb';
+ $db = 'DBI:mysql:dbname=codestrikerdb';
+ 
+-# Database user.
+-#$dbuser = 'system';
+-$dbuser = 'codestriker';
++# Here are some new lines.
+ 
+ # Database password.
+ #$dbpasswd = 'manager';
+@@ -31,7 +29,7 @@
+ $gzip = '/bin/gzip';
+ 
+ # Location of the cvs binary.
+-#$cvs = 'c:/Program Files/GNU/WinCvs 1.3/CVSNT/cvs.exe';
++#$cvs = 'c:/Program What the Files/GNU/WinCvs 1.3/CVSNT/cvs.exe';
+ $cvs = '/usr/bin/cvs';
+ 
+ # Location of the vss binary.  This can be ignored for deployments which don't
+==== //depot/lib/Codestriker.pm#1 - /home/sits/perforce/example/lib/Codestriker.pm ====
+==== //depot/lib/Codestriker/Action/SubmitEditTopicProperties.pm#1 - /home/sits/perforce/example/lib/Codestriker/Action/SubmitEditTopicProperties.pm ====
+==== //depot/lib/Codestriker/Action/ViewTopic.pm#1 - /home/sits/perforce/example/lib/Codestriker/Action/ViewTopic.pm ====

@@ -1,0 +1,43 @@
+Change 6 by sits@sits2 on 2004/03/15 20:57:13
+
+	Change with a binary file modified.
+
+Affected files ...
+
+... //depot/codestriker.conf#3 edit
+... //depot/nws_whitewaratah.jpg#2 edit
+
+Differences ...
+
+==== //depot/codestriker.conf#3 (text) ====
+
+@@ -9,7 +9,7 @@
+ $db = 'DBI:mysql:dbname=codestrikerdb';
+ 
+ # Here are some new lines.
+-
++More changes.
+ # Database password.
+ #$dbpasswd = 'manager';
+ $dbpasswd = 'cspasswd';
+@@ -41,8 +41,6 @@
+ # For Win32 deployments, these temp directories may not be accessible to
+ # the user running IIS or Apache, so explicitly specify an apprioriate
+ # directory here that exists on the system.  For *NIX platforms, there is
+-# usually no need to do anything here.
+-#$tmpdir = '/tmp/codestriker';
+ #$tmpdir = 'c:/codestriker temp';
+ 
+ # If codestriker is installed differently to that described in the README file
+@@ -67,7 +65,7 @@
+ #
+ # The next example is a pserver repository.  The full username, password,
+ # hostname and repository form must be used here.  Typically, this would
+-# be set to an anonymous user.  The next example shows the setting for
++# be setdsfds to an anonymous user.  The next example shows the setting for
+ # an anonymous pserver setting with no password.
+ #
+ # The last examples are a VSS repository, and some CVS repositories on
+
+==== //depot/nws_whitewaratah.jpg#2 (ubinary) ====
+
