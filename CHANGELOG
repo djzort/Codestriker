@@ -8,6 +8,10 @@ Version 1.4.3:
   mode).  While this mode is more bandwidth intensive, this can also
   aid considerably in the reviewing process.
 
+* Tab width can now be changed dynamically between 4 and 8 to handle
+  varying review inputs.  Tab expanision is also handled more
+  consistently.
+
 * Support for "diff -uNp", "diff -uN --show-function-line=regexp",
   "cvs diff -uNp" and "cvs diff -uN  --show-function-line=regexp".
 

@@ -25,7 +25,7 @@
 use vars qw (
 	     $datadir $sendmail $bugtracker $cvsviewer $cvsrep $cvscmd
 	     $cvsaccess $codestriker_css $default_topic_create_mode
-	     $background_col $diff_background_col
+	     $background_col $diff_background_col $default_tabwidth
 	     );
 
 # BEGIN CONFIGURATION OPTIONS --------------------
@@ -183,6 +183,9 @@ $OLD_FILE = 0;
 $NEW_FILE = 1;
 $BOTH_FILES = 2;
 
+# The current tabwidth being used.
+$tabwidth = $default_tabwidth;
+
 # Subroutine prototypes.
 sub edit_topic($$$$$);
 sub view_topic($$$);
@@ -203,10 +206,12 @@ sub unlock($);
 sub get_email();
 sub get_reviewers();
 sub get_cc();
+sub tabadjust($$);
 sub build_edit_url($$$$);
 sub build_download_url($);
 sub build_view_url($$$$);
-sub build_view_file_url($$$$$);
+sub build_view_url_with_tabwidth($$$$$);
+sub build_view_file_url($$$$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$$);
 sub header_generated();
@@ -261,6 +266,7 @@ sub main() {
     my $mode = $query->param('mode');
     my $bug_ids = $query->param('bug_ids');
     my $new = $query->param('new');
+    $tabwidth = $query->param('tabwidth');
 
     # Load up the configuration file.
     if (-f $config) {
@@ -279,6 +285,11 @@ sub main() {
     $revision = untaint_revision($revision);
     $bug_ids = untaint_bug_ids($bug_ids);
     $new = untaint_digits($new, 'new');
+
+    # Retrieve from the cookie if it is not specified in the URL.
+    if (! defined($tabwidth) || ($tabwidth != 4 && $tabwidth != 8)) {
+	$tabwidth = get_tabwidth();
+    }
 
     # By default, don't show coloured view.
     $mode = $NORMAL_MODE if (! defined $mode);
@@ -424,8 +435,8 @@ sub generate_header($$$$$$) {
     return if (header_generated());
     $header_generated_record = 1;
 
-    # Set the cookie in the HTTP header for the $email, $cc, and $reviewers
-    # parameters.
+    # Set the cookie in the HTTP header for the $email, $cc, $reviewers and
+    # $tabwidth parameters.
     my %cookie_value; 
     if (defined $query->cookie("$cookie_name")) {
 	%cookie_value = $query->cookie("$cookie_name");
@@ -435,6 +446,7 @@ sub generate_header($$$$$$) {
     $cookie_value{'reviewers'} = $reviewers
 	if (defined $reviewers && $reviewers ne "");
     $cookie_value{'cc'} = $cc if (defined $cc && $cc ne "");
+    $cookie_value{'tabwidth'} = $tabwidth;
 
     my $cookie_path = $query->url(-absolute=>1);
     my $cookie = $query->cookie(-name=>"$cookie_name",
@@ -572,7 +584,7 @@ sub read_document_file($$) {
 		my $data = <DOCUMENT>;
 		chop $data;
 		# Change tabs with spaces to preserve alignment during display.
-		$data =~ s/\t/        /g if ($replace_tabs);
+		$data = tabadjust($data, 0) if ($replace_tabs);
 		push @document_description, $data;
 	    }
 	} elsif ($data =~ /^Text$/) {
@@ -588,7 +600,7 @@ sub read_document_file($$) {
 	my $data = $_;
 
 	# Replace tabs with spaces to preserve alignment during display.
-	$data =~ s/\t/        /g if ($replace_tabs);
+	$data = tabadjust($data, 0) if ($replace_tabs);
 	push @document, $data;
     }
     close DOCUMENT;
@@ -661,8 +673,7 @@ sub read_cvs_file ($$) {
     $cvs_filedata_max_line_length = 0;
     for (my $i = 1; <CVSFILE>; $i++) {
 	chop;
-	$cvs_filedata[$i] = $_;
-	$cvs_filedata[$i] =~ s/\t/        /g;
+	$cvs_filedata[$i] = tabadjust($_, 0);
 	$line_length = length($cvs_filedata[$i]);
 	if ($line_length > $cvs_filedata_max_line_length) {
 	    $cvs_filedata_max_line_length = $line_length;
@@ -686,6 +697,18 @@ sub get_reviewers() {
 sub get_cc() {
     my %cookie = $query->cookie("$cookie_name");
     return (exists $cookie{'cc'}) ? $cookie{'cc'} : "";
+}
+
+# Return the tabwidth stored in the cookie.
+sub get_tabwidth() {
+    my %cookie = $query->cookie("$cookie_name");
+    if (exists $cookie{'tabwidth'}) {
+	my $value = $cookie{'tabwidth'};
+	return ($value != 4 && $value != 8) ? $default_tabwidth : $value;
+    }
+    else {
+	return $default_tabwidth;
+    }
 }
 
 # Retrieve the data that forms the "context" when submitting a comment.	
@@ -715,13 +738,34 @@ sub get_context ($$$$) {
     return $context_string;
 }
 
+# Replace the passed in string with the correct number of spaces, for
+# alignment purposes.
+sub tabadjust ($$) {
+    my ($input, $htmlmode) = @_;
+
+    $_ = $input;
+    if ($htmlmode) {
+	1 while s/\t+/'&nbsp' x (length($&) * $tabwidth - length($`) % $tabwidth)/e;
+    }
+    else {
+	1 while s/\t+/' ' x (length($&) * $tabwidth - length($`) % $tabwidth)/e;
+    }
+    return $_;
+}	
+
+# Create the URL for viewing a topic with a specified tabwidth.
+sub build_view_url_with_tabwidth ($$$$$) {
+    my ($topic, $line, $email, $mode, $tabwidth) = @_;
+    return "?topic=$topic&action=view&mode=$mode" .
+	((defined $email && $email ne "") ? "&email=$email" : "") .
+	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
+	($line != -1 ? "#${line}" : "");
+}
+
 # Create the URL for viewing a topic.
 sub build_view_url ($$$$) {
     my ($topic, $line, $email, $mode) = @_;
-    return "?topic=$topic&action=view&mode=$mode" .
-	((defined $email && $email ne "") ? "&email=$email" : "") .
-	($line != -1 ? "#${line}" : "");
-	    
+    return build_view_url_with_tabwidth($topic, $line, $email, $mode, "");
 }
 
 # Create the URL for downloading the topic text.
@@ -742,10 +786,10 @@ sub build_edit_url ($$$$) {
 }
 
 # Create the URL for viewing a new file.
-sub build_view_file_url ($$$$$) {
-    my ($topic, $filename, $new, $line, $prefix) = @_;
-    return "?action=view_file&filename=$filename&topic=$topic&new=$new#" .
-	"$prefix$line";
+sub build_view_file_url ($$$$$$) {
+    my ($topic, $filename, $new, $line, $prefix, $tabwidth) = @_;
+    return "?action=view_file&filename=$filename&topic=$topic&new=$new" .
+	"&tabwidth=$tabwidth#" . "$prefix$line";
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -763,7 +807,9 @@ sub get_comment_digest($) {
 		$data =~ s/\n/ /mg; # Remove newline characters
 
 		if ($CGI::VERSION < 2.59) {
-		    # Gggrrrr...
+		    # Gggrrrr... the way escaping has been done between these
+		    # versions has changed. This needs to be looked into more
+		    # but this does the job for now as a workaround.
 		    $data = CGI::escapeHTML($data);
 		}
 		$digest .= "$data ------- ";
@@ -920,7 +966,7 @@ sub view_topic ($$$) {
     for (my $i = 0; $i <= $#document_description; $i++) {
 	$data .= $document_description[$i] . "\n";
     }
-
+    
     $data = myescapeHTML($data);
 
     # Replace occurances of bug strings with the appropriate links.
@@ -949,15 +995,34 @@ sub view_topic ($$$) {
 
     # Give the user the option of swapping between diff view modes.
     if ($mode == $COLOURED_MODE) {
-	my $url = $query->url() . build_view_url($topic, -1, $email,
-						 $NORMAL_MODE);
-	print "View as ", $query->a({href=>"$url"}, "plain"), " diff.\n";
+	my $url =  $query->url() . build_view_url($topic, -1, $email,
+						  $NORMAL_MODE);
+	print "View as ", $query->a({href=>"$url"}, "plain"), " diff. ";
     } else {
 	my $url = $query->url() . build_view_url($topic, -1, $email,
 						 $COLOURED_MODE);
 	print "View as ", $query->a({href=>"$url"}, "coloured"), " diff.\n";
-	print $query->p;
     }
+    print $query->br;
+
+    # Display the option to change the tab width.
+    my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
+    my $change_tabwidth_url;
+    if ($mode == $NORMAL_MODE) {
+	$change_tabwidth_url = $query->url() .
+	    build_view_url_with_tabwidth($topic, -1, $email, $NORMAL_MODE,
+					 $newtabwidth);
+    } else {
+	$change_tabwidth_url = $query->url() .
+	    build_view_url_with_tabwidth($topic, -1, $email, $COLOURED_MODE,
+					 $newtabwidth);
+    }
+
+    print "Tab width set to $tabwidth (";
+    print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
+    print ")\n";
+
+    print $query->p if ($mode == $NORMAL_MODE);
 
     # Number of characters the line number should take.
     my $max_digit_width = length($#document+1);
@@ -1031,6 +1096,8 @@ sub view_topic ($$$) {
 	}
 
 	my $url = $query->url() . build_edit_url($i, $topic, $context, $mode);
+
+	print "Data now: \"$document[$i]\"\n", $query->br if $document[$i] =~ /\t/;
 
 	# Display the data.
 	if ($mode == $COLOURED_MODE) {
@@ -1283,23 +1350,27 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	    # to the CVS file.
 	    my $url_old_full = $query->url() .
 		build_view_file_url($topic, $current_file, $OLD_FILE,
-				    $current_old_file_linenumber, "");
+				    $current_old_file_linenumber, "",
+				    $tabwidth);
 	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
 
 	    my $url_old_both_full = $query->url() .
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_old_file_linenumber, "L");
+				    $current_old_file_linenumber, "L",
+				    $tabwidth);
 	    my $url_old_both =
 		"javascript: myOpen('$url_old_both_full','CVS')";
 
 	    my $url_new_full = $query->url() .
 		build_view_file_url($topic, $current_file, $NEW_FILE,
-				    $current_new_file_linenumber, "");
+				    $current_new_file_linenumber, "",
+				    $tabwidth);
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 
 	    my $url_new_both_full = $query->url() .
 		build_view_file_url($topic, $current_file, $BOTH_FILES,
-				    $current_new_file_linenumber, "R");
+				    $current_new_file_linenumber, "R",
+				    $tabwidth);
 	    my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
 
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
@@ -1335,6 +1406,9 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	} elsif ($data =~ /^\\/) {
 	    # A diff comment such as "No newline at end of file" - ignore it.
 	} else {
+	    # Strip the first space off the diff for proper alignment.
+	    $data =~ s/^\s//;
+
 	    # Render the previous diff changes visually.
 	    render_changes($topic, $mode, $parallel);
 
@@ -1368,8 +1442,8 @@ sub render_coloured_cell($)
     }
 
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
+    $data = tabadjust($data, 1);
     $data =~ s/\s/&nbsp;/g;
-    $data =~ s/\t/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/g;
 
     # Unconditionally add a &nbsp; at the start for better alignment.
     return "&nbsp;$data";
@@ -2091,7 +2165,7 @@ sub render_monospaced_line ($$$$$$$) {
 	$line_cell = "$prefix$linenumber";
     }
 
-    $data =~ s/\t/        /g;
+    $data = tabadjust($data, 0);
     my $newdata = CGI::escapeHTML($data);
 
     if ($class ne "") {
@@ -2282,16 +2356,17 @@ sub view_file ($$$) {
 	# output.
 	while (<PATCH>) {
 	    $offset++;
-	    s/\t/        /g;	# Replace tabs with spaces.
+	    my $data = tabadjust($_, 0);
 
 	    # Handle the processing of the side-by-side view separately.
-	    if ($new == $BOTH_FILES && (/^\s/ || /^\-/ || /^\+/)) {
+	    if ($new == $BOTH_FILES &&
+		($data =~ /^\s/ || $data =~ /^\-/ || $data =~ /^\+/)) {
 		display_coloured_data($old_linenumber, $new_linenumber,
 				      $offset, 1, $max_digit_width, $_, "",
 				      "", "", 0, 0, 0, 0, $topic,
 				      $COLOURED_MODE, 1, "");
-		$old_linenumber++ if /^\s/ || /^\-/;
-		$new_linenumber++ if /^\s/ || /^\+/;
+		$old_linenumber++ if $data =~ /^\s/ || $data =~ /^\-/;
+		$new_linenumber++ if $data =~ /^\s/ || $data =~ /^\+/;
 		next;
 	    }
 
