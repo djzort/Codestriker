@@ -154,7 +154,7 @@ sub getDiff ($$$$$) {
 	if ($start_tag ne '' && $end_tag ne '') {
 	    system("\"$Codestriker::vss\" diff \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
-		   " -I- -DU3000 -VL${start_tag}~L${end_tag}" .
+		   " -I- -DU3000X5 -VL${start_tag}~L${end_tag}" .
 		   " -O\"$command_output\"");
 	    if (open(VSS, $command_output)) {
 		while (<VSS>) {

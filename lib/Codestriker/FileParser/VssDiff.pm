@@ -69,9 +69,10 @@ sub parse ($$$) {
 		my $leading_context_line_count = 0;
 		my $trailing_context = '';
 		my $trailing_context_line_count = 0;
-		if ($line =~ /^\*\*\*\*\*\*\*\*/) {
+		if ($line =~ /^\*\*\*\*\*\*\*\*/o ||
+		    $line =~ /^ /o) {
 		    # Need to record some leading context.
-		    $line = <$fh>;
+		    $line = <$fh> if $line =~ /^\*\*\*\*\*\*\*\*/o;
 		    while ($line =~ /^ (.*)$/o) {
 			$leading_context .= "$1\n";
 			$leading_context_line_count++;
