@@ -3,7 +3,6 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.5
 #
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
@@ -13,13 +12,18 @@
 
 require 5.000;
 
+# Set this to the location of the Codestriker libraries on your system.
+# Ideally, this should be done in the apache configs, but trying to do this
+# in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
+# checking turned out to be a amjor headache.  For mod_perl, setting this
+# ensures the first time Codestiker is loaded, it can be compiled properly,
+# even if @INC is blatted later.
+use lib "/var/www/codestriker/lib";
+
 use strict;
 
 use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
-
-use lib "../lib";
-use lib ".";
 
 use Codestriker;
 use Codestriker::Http::Input;
@@ -54,7 +58,8 @@ main;
 
 sub main() {
     # Initialise Codestriker, load up the configuration file.
-    Codestriker->initialise();
+    $0 =~ /^(.*)cgi-bin/;
+    Codestriker->initialise($1);
 
     # Limit the size of the posts that can be done.
     $CGI::POST_MAX=$Codestriker::DIFF_SIZE_LIMIT;

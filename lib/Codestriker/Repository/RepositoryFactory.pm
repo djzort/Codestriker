@@ -28,6 +28,9 @@ sub get ($$) {
     if ($repository =~ /^\s*(\/.*?)\/*\s*$/) {
 	# CVS repository on the local machine.
 	return Codestriker::Repository::CvsLocal->new($1);
+    } elsif ($repository =~ /^\s*([A-z]:\\.*?)\\*\s*$/) {
+      # Windoze CVS repository.
+	return Codestriker::Repository::CvsLocal->new($1);
     } elsif ($repository =~ /^\s*:pserver:(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Pserver repository.
 	return Codestriker::Repository::CvsPserver->new($1, $2, $3, $4);

@@ -19,8 +19,10 @@
 
 use strict;
 
-use lib '../lib';
+use Cwd;
 use File::Path;
+
+use lib '../lib';
 use Codestriker::DB::DBI;
 use Codestriker::Action::SubmitComment;
 use Codestriker::Repository::RepositoryFactory;
@@ -28,7 +30,7 @@ use Codestriker::FileParser::Parser;
 use Codestriker::FileParser::UnknownFormat;
 
 # Initialise Codestriker, load up the configuration file.
-Codestriker->initialise();
+Codestriker->initialise(cwd() . '/..');
 
 # Indicate which modules are required for codestriker (this code is
 # completely stolen more-or-less verbatim from Bugzilla)
@@ -52,6 +54,10 @@ my $modules = [
     { 
         name => 'DBI', 
         version => '1.13' 
+    }, 
+    { 
+        name => 'IPC::Run', 
+        version => '0' 
     }, 
     { 
         name => 'Template', 

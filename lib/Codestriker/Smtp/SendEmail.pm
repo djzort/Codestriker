@@ -13,6 +13,9 @@ use Net::SMTP;
 use Sys::Hostname;
 use strict;
 
+# If true, just ignore all email requests.
+my $DEVNULL_EMAIL = 0;
+
 use vars qw ( $EMAIL_HR );
 
 # Separator to use in email.
@@ -22,8 +25,12 @@ $EMAIL_HR = "--------------------------------------------------------------";
 # successfully delivered, true otherwise.
 sub doit($$$$$$$$$) {
     my ($type, $new, $topicid, $from, $to, $cc, $bcc, $subject, $body) = @_;
+
+    return 1 if ($DEVNULL_EMAIL);
     
     my $smtp = Net::SMTP->new($Codestriker::mailhost);
+    defined $smtp || die "Unable to connect to mail server: $!";
+
     $smtp->mail($from);
     $smtp->ok() || die "Couldn't set sender to \"$from\" $!";
 

@@ -26,8 +26,13 @@ use Codestriker::FileParser::UnidiffUtils;
 sub parse ($$$) {
     my ($type, $fh, $repository) = @_;
 
+    # Retrieve the repository root, and escape back-slashes in the case of
+    # a Windows CVS repository, as it is used in regular expressions.
     my $repository_root =
 	(defined $repository) ? $repository->getRoot() : undef;
+    if (defined $repository_root) {
+        $repository_root =~ s/\\/\\\\/g;
+    }
 
     # Array of results found.
     my @result = ();

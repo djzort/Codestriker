@@ -21,14 +21,20 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
 	      $allow_delete $allow_searchlist $allow_repositories
-              $allow_projects $antispam_email $VERSION
+              $allow_projects $antispam_email $VERSION $BASEDIR
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.1.2";
+$Codestriker::VERSION = "1.7.2-pre1";
 
-# The maximum size of a diff file to accept.
-$Codestriker::DIFF_SIZE_LIMIT = 500 * 1024;
+# The maximum size of a diff file to accept.  At the moment, this is 10Mb.
+$Codestriker::DIFF_SIZE_LIMIT = 10000 * 1024;
+
+# Indicate what base directory Codestriker is running in.  This may be set
+# in cgi-bin/codestriker.pl, depending on the environment the script is
+# running in.  By default, assume the script is running in the cgi-bin
+# directory (this is not the case for Apache2 + mod_perl).
+$Codestriker::BASEDIR = "..";
 
 # Error codes.
 $Codestriker::OK = 1;
@@ -77,11 +83,13 @@ $Codestriker::COMMENT_COMPLETED = 2;
 
 # Initialise codestriker, by loading up the configuration file and exporting
 # those values to the rest of the system.
-sub initialise($) {
-    my ($type) = @_;
+sub initialise($$) {
+    my ($type, $basedir) = @_;
+
+    $BASEDIR = $basedir;
 
     # Load up the configuration file.
-    my $config = "../codestriker.conf";
+    my $config = "$BASEDIR/codestriker.conf";
     if (-f $config) {
 	do $config;
     } else {

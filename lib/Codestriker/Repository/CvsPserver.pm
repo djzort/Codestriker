@@ -10,6 +10,7 @@
 package Codestriker::Repository::CvsPserver;
 
 use strict;
+use IPC::Run;
 
 # Constructor, which takes as a parameter the username, password, hostname
 # and repository path.
@@ -31,8 +32,8 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
-    open(CVS, "$Codestriker::cvs -d " . $self->{url} .
-	 " co -p -r $revision $filename 2>/dev/null |")
+    open(CVS, "$Codestriker::cvs -q -d " . $self->{url} .
+	 " co -p -r $revision $filename |")
 	|| die "Can't open connection to pserver CVS repository: $!";
 
     # Read the data.
@@ -70,17 +71,12 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $fh, $error_file) = @_;
 
-    open(CVS, "$Codestriker::cvs -d " . $self->{url} .
-	 " rdiff -u -r $start_tag -r $end_tag $module_name 2> $error_file |")
-	|| die "Can't open connection to local CVS repository: $!";
-    my $length = 0;
-    while (<CVS>) {
-	print $fh $_;
-	$length += length $_;
-	if ($length > $Codestriker::DIFF_SIZE_LIMIT) {
-	    return $Codestriker::DIFF_TO_BIG;
-	}
-    }
+    my @command = ( $Codestriker::cvs, '-q', '-d', $self->{url},
+		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
+		    $module_name );
+
+    my $h = IPC::Run::run(\@command, '>', $fh, '2>', ">$error_file");
+
     return $Codestriker::OK;
 }
 

@@ -21,7 +21,9 @@ sub new($$) {
     $self->{template} =
 	Template->new({
 	    # Location of templates.
-	    INCLUDE_PATH => "../template/en/custom:../template/en/default" ,
+	    INCLUDE_PATH => 
+		$Codestriker::BASEDIR . "/template/en/custom:" .
+		$Codestriker::BASEDIR . "/template/en/default" ,
 
 	    # Remove white-space before template directives
 	    # (PRE_CHOMP) and at the beginning and end of templates
@@ -33,7 +35,7 @@ sub new($$) {
 	    TRIM => 1, 
 	    
 	    # Where to compile the templates.
-	    COMPILE_DIR => 'data/'
+	    COMPILE_DIR => $Codestriker::BASEDIR . 'cgi-bin/data/'
 	    })
 	|| die Template->error();
 

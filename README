@@ -175,6 +175,18 @@ Restart apache (for upgrades) with something like
 Using Apache2
 -------------
 
+ /usr/lib/perl5/site_perl/5.6.0/i386-linux/Apache2/ModPerl/Registry.pm
+
+"PerlTaintCheck On" -> "PerlSwitches -T"
+LoadModule perl_module modules/mod_perl.so
+PerlModule Apache2
+SetHandler perl-script
+PerlResponseHandler ModPerl::Registry
+Options +ExecCGI
+
+if (Apache::exists_config_define("MODPERL2"))
+
+
 I have only used Codestriker with Apache 1.x with mod_perl, but have
 used it as an ordinary CGI script with Apache2.  A user has reported a
 successful deployment of Codestriker under mod_perl Apache2:
