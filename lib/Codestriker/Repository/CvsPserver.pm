@@ -54,7 +54,7 @@ sub getViewUrl ($$$) {
     my ($self, $filename, $revision) = @_;
 
     # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->{cvsroot}};
+    my $viewer = $Codestriker::file_viewer->{$self->{url}};
     return (defined $viewer) ? $viewer . "/" . $filename : "";
 }
 
@@ -70,7 +70,7 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $fh, $error_file) = @_;
 
-    open(CVS, "$Codestriker::cvs -d " . $self->{cvsroot} .
+    open(CVS, "$Codestriker::cvs -d " . $self->{url} .
 	 " rdiff -u -r $start_tag -r $end_tag $module_name 2> $error_file |")
 	|| die "Can't open connection to local CVS repository: $!";
     my $length = 0;
