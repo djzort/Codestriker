@@ -114,8 +114,8 @@ sub process($$$) {
     # of the above operation, and what screens are enabled.
     $feedback =~ s/\n/<BR>/g;
     $http_input->{feedback} = $feedback;
-    if ($feedback eq "" &&
-	($rc == $Codestriker::INVALID_TOPIC || $topic_state eq "Delete")) {
+    if ($rc == $Codestriker::INVALID_TOPIC ||
+	($rc == $Codestriker::OK && $topic_state eq "Delete")) {
 	if ($Codestriker::allow_searchlist) {
 	    # Go to the topic list screen for just open topics.
 	    $http_input->{sstate} = "0";
