@@ -22,9 +22,9 @@ our $connection;
 sub get_connection($) {
     my ($type) = @_;
 
-    # makeing a connection is expensive, cache it,
+    # Making a connection is expensive, cache it.
     if ( !defined($connection) ) {
-    my $database = Codestriker::DB::Database->get_database();
+	my $database = Codestriker::DB::Database->get_database();
 
         $connection = $database->get_connection();
     }
