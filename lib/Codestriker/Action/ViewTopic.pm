@@ -171,20 +171,20 @@ sub process($$$) {
 			       $Codestriker::LINE_BREAK_ASSIST_MODE);
 	
     if ($mode == $Codestriker::COLOURED_MODE) {
-	print "View as " .
+	print " View as " .
 	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff") .
 	    " | ";
     } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
-	print "View as " .
+	print " View as " .
 	    $query->a({href=>$coloured_url}, "coloured variable-width diff") .
 	    " | ";
     }
 
     if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
-	print "View with " .
+	print " View with " .
 	    $query->a({href=>$br_assist_url}, "minimal screen width") . ".";
     } elsif ($brmode == $Codestriker::LINE_BREAK_ASSIST_MODE) {
-	print "View with " .
+	print " View with " .
 	    $query->a({href=>$br_normal_url}, "minimal line breaks") . ".";
     }
     print " | ";
@@ -196,7 +196,7 @@ sub process($$$) {
 	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
 					"", "", 0, $brmode);
 
-    print "Tab width set to $tabwidth (";
+    print " Tab width set to $tabwidth (";
     print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
     print ")\n";
 
