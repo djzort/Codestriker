@@ -3,6 +3,13 @@
 
 Version 1.8.0
 
+* Initial support for Perforce integration.  Can handle topic text
+  from a Perforce describe command, such as:
+  p4 describe -du <<changenumber>>.  Still need to handle added
+  and removed binary files.
+
+  Will add in support for "p4 diff" output next.
+
 * Codestriker now works under IIS as well as Apache.  Use IPC::Open3
   rather than IPC::Run (which doesn't work under IIS) within the
   CvsLocal and CvsPserver modules when fetching remote diff data from
