@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.2
+# Version 1.3
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -44,7 +44,7 @@ $sendmail = "/usr/lib/sendmail";
 $cvsaccess = "";
 
 # The path of the cvs repository";
-#$cvsrep = "/cvsroot/codestriker";
+#$cvsrep = "/usr/local/cvsroot";
 #$cvsrep = "/home/sits/cvs";
 $cvsrep = "/set/this/if/you/want/to/link/to/cvs";
 
@@ -175,6 +175,11 @@ $diff_current_filename = "";
 
 # The corresponding lines they refer to.
 @diff_old_lines_numbers = ();
+
+# Revision number constants used in the filetable with special meanings.
+$ADDED_REVISION = "1.0";
+$REMOVED_REVISION = "0.0";
+$PATCH_REVISION = "0.1";
 
 # Subroutine prototypes.
 sub edit_topic($$$$$);
@@ -823,14 +828,20 @@ sub view_topic ($$$) {
 	} elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
 	    # The part identifying the revision.
 	    $current_file_revision = $1;
-	} elsif ($document[$i] =~ /^\-\-\- (.*)\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/ &&
+	} elsif ($document[$i] =~ /^diff/ && $reading_diff_block == 0) {
+	    # The start for an ordinary patch file.
+	    $current_file = "";
+	    $current_file_revision = "";
+	    $current_old_file_linenumber = "";
+	    $current_new_file_linenumber = "";
+	    $reading_diff_block = 1;
+	    $cvsmatch = 0;
+	} elsif ($document[$i] =~ /^\-\-\- (.*[^\s])\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/ &&
 		 $current_file eq "") {
 	    # This is likely to be an ordinary patch file - not a CVS one, in
 	    # which case this is the start of the diff block.
 	    $current_file = $1;
 	    $index_filename = "";
-	    $cvsmatch = 0;
-	    $reading_diff_block = 1;
 	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@$/) {
 	    # The part identifying the line number.
 	    $current_old_file_linenumber = $1;
@@ -906,21 +917,24 @@ sub coloured_mode_start ($) {
 			       -border=>'0'}), "\n";
     print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"));
     print $query->Tr($query->td({-colspan=>'2'}, "Legend:"));
-    print $query->Tr($query->td({-class=>'r'},
-				"Removed from file"),
+    print $query->Tr($query->td({-class=>'rf'},
+				"Removed"),
 		     $query->td({-class=>'rb'}, "&nbsp;"));
-    print $query->Tr($query->td({-class=>'c',
+    print $query->Tr($query->td({-class=>'cf',
 				 -align=>"center", -colspan=>'2'},
-				"changed lines"));
+				"Changed"));
     print $query->Tr($query->td({-class=>'ab'}, "&nbsp;"),
-		     $query->td({-class=>'a'},
-				"Added to file"));
+		     $query->td({-class=>'af'},
+				"Added"));
     print $query->end_table(), "\n";
 
-    # Print out the "table of contents".
+    # Print out the "table of contents".  If the file table doesn't exist,
+    # this could because we are reading an old code review.
     if (! open (FILETABLE, "$datadir/$topic/$filetable_file")) {
-	error_return("Could not open filetable in $topic: $!");
+	print_coloured_table();
+	return;
     }
+
     print $query->p;
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
@@ -931,26 +945,28 @@ sub coloured_mode_start ($) {
 	my $filename = $1;
 	my $revision = $2;
 	my $href_filename = "#" . "$filename";
-	if ($revision eq "1.0") {
-	    # Added file.
-	    print $query->Tr($query->td({-class=>'a', -colspan=>'2'},
-					$query->a({href=>"$href_filename"},
-						  "$filename"))), "\n";
-	} elsif ($revision eq "0.0") {
-	    # Removed file.
-	    print $query->Tr($query->td({-class=>'r', -colspan=>'2'},
+	my $class = "";
+	$class = "af" if ($revision eq $ADDED_REVISION);
+	$class = "rf" if ($revision eq $REMOVED_REVISION);
+	$class = "cf" if ($revision eq $PATCH_REVISION);
+	if ($revision eq $ADDED_REVISION ||
+	    $revision eq $REMOVED_REVISION ||
+	    $revision eq $PATCH_REVISION) {
+	    # Added, removed or patch file.
+	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
 					$query->a({href=>"$href_filename"},
 						  "$filename"))), "\n";
 	} else {
 	    # Modified file.
-	    print $query->Tr($query->td({-class=>'c'},
+	    print $query->Tr($query->td({-class=>'cf'},
 					$query->a({href=>"$href_filename"},
 						  "$filename")),
-			     $query->td({-class=>'c'}, "&nbsp; $revision"),
+			     $query->td({-class=>'cf'}, "&nbsp; $revision"),
 			     "\n");
 	}
     }
     print $query->end_table(), "\n";
+    print_coloured_table();
 }
 
 # Render the initial start of the coloured table, with an empty row setting
@@ -1631,13 +1647,14 @@ sub process_document($) {
 	last if (/^Text$/);
     }
 
-    my $offset = 0;
+    my $offset = 1;
+    my $line = <DOCUMENT>;
     my @filenames = ();
     my @revisions = ();
     my $filename = "";
     my $revision = "";
     for (my $diff_number = 0;
-	 read_diff_header(\*DOCUMENT, \$offset, \$filename, \$revision);
+	 read_diff_header(\*DOCUMENT, \$offset, \$filename, \$revision, $line);
 	 $diff_number++) {
 	# The filehandle is now positioned in the interesting part of the
 	# file.
@@ -1649,7 +1666,7 @@ sub process_document($) {
 	}
 
 	while (<DOCUMENT>) {
-	    last if (/^Index/);	# The start of the next diff header.
+	    last if (/^Index/ || /^diff/); # The start of the next diff header.
 	    print DIFF $_;
 	}
 	close DIFF;
@@ -1668,61 +1685,82 @@ sub process_document($) {
 
 # Read from $fh, and return true if we have read a diff header, with all of
 # the appropriate values set to the reference variables passed in.
-sub read_diff_header($$$$) {
-    my ($fh, $offset, $filename, $revision) = @_;
+sub read_diff_header($$$$$) {
+    my ($fh, $offset, $filename, $revision, $line) = @_;
 
     # read any ? lines, denoting unknown files to CVS.
-    my $line = "";
-    while ($line = <$fh>) {
-	$$offset++;
-	last unless $line =~ /^\?/;
-    }
-    return 0 unless defined $line;
-
-    # Depending on how this is called, the Index line may or may not be
-    # present.
-    if ($line =~ /^Index:/) {
+    while ($line =~ /^\?/) {
 	$line = <$fh>;
 	$$offset++;
     }
+    return 0 unless defined $line;
+
+    # For CVS diffs, the Index line is next.
+    if ($line =~ /^Index:/) {
+	$line = <$fh>;
+	return 0 unless defined $line;
+	$$offset++;
+    }
     
-    # Then we expect the separator line.
-    return 0 unless $line =~ /^===================================================================$/;
+    # Then we expect the separator line, for CVS diffs.
+    if ($line =~ /^===================================================================$/) {
+	$line = <$fh>;
+	return 0 unless defined $line;
+	$$offset++;
+    }
 
     # Now we expect the RCS line, whose filename should include the CVS
-    # repository, and if not, it is probably a new file.
-    $line = <$fh>;  $$offset++;
+    # repository, and if not, it is probably a new file.  if there is no such
+    # line, we could still be dealing with an ordinary patch file.
+    my $cvs_diff = 0;
     if ($line =~ /^RCS file: $cvsrep\/(.*),v$/) {
 	$$filename = $1;
+	$line = <$fh>;
+	return 0 unless defined $line;
+	$$offset++;
+	$cvs_diff = 1;
     } elsif ($line =~ /^RCS file: (.*)$/) {
 	$$filename = $1;
-    } else {
-	return 0;		# Not a diff header.
+	$line = <$fh>;
+	return 0 unless defined $line;
+	$$offset++;
+	$cvs_diff = 1;
     }
 
     # Now we expect the retrieving revision line, unless it is a new or
     # removed file.
-    $line = <$fh>;  $$offset++;
     if ($line =~ /^retrieving revision (.*)$/) {
 	$$revision = $1;
-	$line = <$fh>;  $$offset++;
+	$line = <$fh>;
+	return 0 unless defined $line;
+	$$offset++;
     }
     
-    # Now read in the diff line, followed by the legend lines.
+    # Now read in the diff line, followed by the legend lines.  If this is
+    # not present, then we know we aren't dealing with a diff file of any
+    # kind.
     return 0 unless $line =~ /^diff/;
-    $line = <$fh>;  $$offset++;
+    $line = <$fh>;
+    return 0 unless defined $line;
+    $$offset++;
 
     if ($line =~ /^\-\-\- \/dev\/null/) {
 	# File has been added.
-	$$revision = "1.0";
+	$$revision = $ADDED_REVISION;
+    } elsif ($cvs_diff == 0 &&
+	     $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/) {
+	$$filename = $1;
+	$$revision = $PATCH_REVISION;
     } elsif (! $line =~ /^\-\-\-/) {
 	return 0;
     }
 
-    $line = <$fh>;  $$offset++;
+    $line = <$fh>;
+    return 0 unless defined $line;
+    $$offset++;
     if ($line =~ /^\+\+\+ \/dev\/null/) {
 	# File has been removed.
-	$$revision = "0.0";
+	$$revision = $REMOVED_REVISION;
     } elsif (! $line =~ /^\+\+\+/) {
 	return 0;
     }

@@ -12,17 +12,26 @@ TD.n {font-family: Helvetica, Arial; font-size: smaller}
 /* Added text */
 TD.a {background-color: #aaffaa; font-family: Helvetica, Arial; font-size: smaller}
 
+/* Added file */
+TD.af {background-color: #aaffaa}
+
 /* Added blank text */
 TD.ab {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Removed text */
 TD.r {background-color: #ff9999; font-family: Helvetica, Arial; font-size: smaller}
 
+/* Removed file */
+TD.rf {background-color: #ff9999}
+
 /* Removed blank text */
 TD.rb {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Changed text */
 TD.c {background-color: #ffff77; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Changed file */
+TD.cf {background-color: #ffff77}
 
 /* Changed blank text */
 TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
