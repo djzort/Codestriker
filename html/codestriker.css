@@ -10,13 +10,13 @@ TD.line {background-color: #99cccc; font-family: Helvetica, Arial; font-size: me
 TD.n {font-family: Helvetica, Arial; font-size: smaller}
 
 /* Normal text monospaced */
-TD.msn {font-family: Courier; font-size: smaller}
+TD.msn {font-family: monospace; font-size: smaller}
 
 /* Added text */
 TD.a {background-color: #aaffaa; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Added text monospaced */
-TD.msa {background-color: #aaffaa; font-family: Courier; font-size: smaller}
+TD.msa {background-color: #aaffaa; font-family: monospace; font-size: smaller}
 
 /* Added file */
 TD.af {background-color: #aaffaa}
@@ -25,13 +25,13 @@ TD.af {background-color: #aaffaa}
 TD.ab {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Added blank text monospaced */
-TD.msab {background-color: #cccccc; font-family: Courier; font-size: smaller}
+TD.msab {background-color: #cccccc; font-family: monospace; font-size: smaller}
 
 /* Removed text */
 TD.r {background-color: #ff9999; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Removed text monospaced */
-TD.msr {background-color: #ff9999; font-family: Courier; font-size: smaller}
+TD.msr {background-color: #ff9999; font-family: monospace; font-size: smaller}
 
 /* Removed file */
 TD.rf {background-color: #ff9999}
@@ -43,7 +43,7 @@ TD.rb {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smal
 TD.c {background-color: #ffff77; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Changed text monospaced */
-TD.msc {background-color: #ffff77; font-family: Courier; font-size: smaller}
+TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
 
 /* Changed file */
 TD.cf {background-color: #ffff77}
@@ -52,7 +52,7 @@ TD.cf {background-color: #ffff77}
 TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
 
 /* Changed blank text monospaced */
-TD.mscb {background-color: #eeee77; font-family: Courier; font-size: smaller}
+TD.mscb {background-color: #eeee77; font-family: monospace; font-size: smaller}
 
 /* Line number with comment */
 SPAN.com {color: #ff0000; font-family: Helvetica, Arial; font-size: smaller}
@@ -61,30 +61,30 @@ SPAN.com {color: #ff0000; font-family: Helvetica, Arial; font-size: smaller}
 SPAN.nocom {font-family: Helvetica, Arial; font-size: smaller}
 
 /* Monospaced line with added text */
-SPAN.msa {background-color: #aaffaa; font-family: Courier, monospaced; font-size: medium}
+SPAN.msa {background-color: #aaffaa; font-family: monospace; font-size: medium}
 
 /* Monospaced line with removed text */
-SPAN.msr {background-color: #ff9999; font-family: Courier, monospaced; font-size: medium}
+SPAN.msr {background-color: #ff9999; font-family: monospace; font-size: medium}
 
 /* Monospaced line with changed text */
-SPAN.msc {background-color: #ffff77; font-family: Courier, monospaced; font-size: medium}
+SPAN.msc {background-color: #ffff77; font-family: monospace; font-size: medium}
 
 /* Monospaced line with normal text */
-SPAN.ms {font-family: Courier, monospaced; font-size: medium}
+SPAN.ms {font-family: monospace; font-size: medium}
 
 /* Monospaced line number with comment */
-SPAN.mscom {color: #ff0000; font-family: Courier, monospaced; font-size: medium}
+SPAN.mscom {color: #ff0000; font-family: monospace; font-size: medium}
 /* Monospaced line number with no comment */
-SPAN.msnocom {font-family: Courier, monospaced; font-size: medium}
+SPAN.msnocom {font-family: monospace; font-size: medium}
 
 /* Smaller monospaced line number with comment */
-SPAN.smscom {color: #ff0000; font-family: Courier, monospaced; font-size: smaller}
+SPAN.smscom {color: #ff0000; font-family: monospace; font-size: smaller}
 
 /* Smaller monospaced line number with no comment */
-SPAN.smsnocom {font-family: Courier, monospaced; font-size: smaller}
+SPAN.smsnocom {font-family: monospace; font-size: smaller}
 
 /* Style used for rendering data within popup window */
-PRE.ms {font-family: Courier, monospaced; font-size: medium}
+PRE.ms {font-family: monospace; font-size: medium}
 
 /* Styles to use for topic list display */
 

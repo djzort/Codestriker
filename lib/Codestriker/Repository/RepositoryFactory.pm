@@ -37,9 +37,9 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*([A-z]:[\\\/].*?)\\*\s*$/) {
       # Windoze CVS repository.
 	return Codestriker::Repository::CvsLocal->new($1, '');
-    } elsif ($repository =~ /^\s*:pserver:(.*):(.*)@(.*):(.*)\s*$/i) {
+    } elsif ($repository =~ /^\s*:pserver(.*):(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Pserver repository.
-	return Codestriker::Repository::CvsPserver->new($1, $2, $3, $4);
+	return Codestriker::Repository::CvsPserver->new($1, $2, $3, $4, $5);
     } elsif ($repository =~ /^\s*(https?:\/\/.*viewcvs\.cgi)\/*\s+(.*?)\/*\s*$/i) {
 	# View CVS repository.
 	return Codestriker::Repository::ViewCvs->new($1, $2);

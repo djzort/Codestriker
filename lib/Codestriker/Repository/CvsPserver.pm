@@ -15,15 +15,16 @@ use IPC::Open3;
 
 # Constructor, which takes as a parameter the username, password, hostname
 # and repository path.
-sub new ($$$$$) {
-    my ($type, $username, $password, $hostname, $cvsroot) = @_;
+sub new ($$$$$$) {
+    my ($type, $optional_args, $username, $password, $hostname, $cvsroot) = @_;
 
     my $self = {};
+    $self->{optional_args} = defined $optional_args ? $optional_args : "";
     $self->{username} = $username;
     $self->{password} = $password;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
-    $self->{url} = ":pserver:${username}:${password}\@${hostname}:${cvsroot}";
+    $self->{url} = ":pserver${optional_args}:${username}:${password}\@${hostname}:${cvsroot}";
     bless $self, $type;
 }
 

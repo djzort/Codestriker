@@ -42,14 +42,13 @@
         Special support is provided for integration with
 	<ulink url="http://cvshome.org">CVS</ulink> and
 	<ulink url="http://subversion.tigris.org">Subversion</ulink>
-	 source control management systems, for the display
-	of coloured diffs and for the ability to view original and new
-	files in their entirety to assist in the review process.
-	Codestriker can be optionally linked with a bug tracking
-	system, such as Bugzilla.  Other SCM systems, such as
-	ClearCase will be added in future releases, given help
-	from the developer community.  Codestriker can also be linked
-	with
+	 source control management systems, for the display of
+	 coloured diffs and for the ability to view original and new
+	 files in their entirety to assist in the review process.
+	 Codestriker can be optionally linked with a bug tracking
+	 system, such as Bugzilla.  Other SCM systems will be added in
+	 future releases, given demand and help from the developer
+	 community.  Codestriker can also be linked with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
 	for fast lookup of code entities, to assist in the review
 	process.
@@ -417,9 +416,8 @@ $use_compression = 0;
 	  (there may not be any, if it is just a simple patch or text
 	  file).  For many Codestriker deployments, there may only be
 	  a single SCM system.  There is currently support for CVS,
-	  Subversion, Perforce, and Visual Source Safe.  An example 
-          setting could be the
-	  following:
+	  Subversion, Perforce, Visual Source Safe, and ClearCase.
+	  An example setting could be the following:
 	  <programlisting>
 @valid_repositories =
     (
@@ -428,7 +426,8 @@ $use_compression = 0;
      'svn:http://svn.collab.net/repos/svn/trunk',
      ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
      'c:/cvsrep',
-     'perforce:sits:client@localhost:1666'
+     'perforce:sits:client@localhost:1666',
+     'clearcase:h:\\my_stuff\\view_name\\vob_name'
     );
 	  </programlisting>
 	  This is Perl syntax for a list of string values.  The first
@@ -447,17 +446,21 @@ $use_compression = 0;
 	</para>
 	<para>
 	  Codestriker can also work with other source control systems.
-	  There is currently support for CVS, Subversion 
-          (<ulink url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
-          Perforce (<ulink url="http://www.perforce.com/">http://www.perforce.com/</ulink>),
-	  and Visual Source Safe (<ulink url="msdn.microsoft.com/ssafe/">msdn.microsoft.com/ssafe/</ulink>).
-          In the future ClearCase and any other SCM system
-	  depending on demand and contributions.  The third string
+	  There is currently support for CVS, Subversion (<ulink
+	  url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
+	  Perforce (<ulink
+	  url="http://www.perforce.com/">http://www.perforce.com/</ulink>),
+	  Visual Source Safe (<ulink
+	  url="msdn.microsoft.com/ssafe/">msdn.microsoft.com/ssafe/</ulink>)
+	  and ClearCase.  In the future other SCM systems will become
+	  available depending on demand and contributions.  The third
+	  string
 	  <filename>svn:http://svn.collab.net/repos/svn/trunk</filename>
-	  is a Subversion repository URL prefixed by "svn:". Codestriker works 
-          with both http style repositories, and the stand alone 
-          Subversion server. The Subversion repository can be on
-	  another computer than the one running Codestriker.
+	  is a Subversion repository URL prefixed by
+	  "svn:". Codestriker works with both http style repositories,
+	  and the stand alone Subversion server. The Subversion
+	  repository can be located on another computer than the one
+	  running Codestriker.
 	</para>
 	<para>
 	  The next value which is likely to be common for many
@@ -476,10 +479,24 @@ $use_compression = 0;
 	  a directory separator.
 	</para>
 	<para>
-	  The final value is a Perforce repository specification,
+	  The next value is a Perforce repository specification,
 	  where after the "perforce:" keyword, there is the Perforce
 	  user and client, followed by the hostname and port of the
 	  Perforce server.
+	</para>
+	<para>
+	  The final value is a ClearCase repository specification,
+	  where after the "clearcase:" keyword, is the pathname to a
+	  shared snapshot view, where a file of any version can be
+	  retrieved from the vob using the "cleartool get" command.
+	  It is important that this snapshot view is accessible with
+	  the same path specification for all developers.  This is
+	  because a diff file created by a developer will refer to the
+	  snapshot view, and will allow Codestriker to retrieve
+	  specific files and versions mentioned in the review text,
+	  when necessary.  It is also important that the user account
+	  running the webserver process has permission to access to
+	  the snapshot view.
 	</para>
 	<para>
 	  During a review, it is sometimes beneficial to see the
@@ -1538,9 +1555,9 @@ C:\Perl\bin\perl.exe "%s" %s
           logical unit of work that should be reviewed. Rather than
           generating the review text via the <command>svn
           diff</command> command, as specified in the previous
-          section, the review text can be created by entering in the
-          "Start tag", "End tag" and "Module" values into their
-          respective fields.  Codestriker will then fetch the review
+          section, the review text can be created by setting the
+          appropriate values into the "Start tag", "End tag" and
+          "Module" fields.  Codestriker will then fetch the review
           text from the nominated repository automatically, by
           executing the following command:
 	  <programlisting>
@@ -1549,15 +1566,16 @@ C:\Perl\bin\perl.exe "%s" %s
           In Subversion the tags can be a repository revision number
           or HEAD, The HEAD shortcut indicates the latest revision
           number in the repository.  If you would like to review a
-          single check in, you should enter the revision number of the
-          check in as -1, and the revision number of the check in. The
-          module name should be entered as period(.). If you would
-          like to review a branch before merging then enter the start
-          tag as the version number of the branch creation. The end
-          tag should be HEAD, and the module path should be the path
-          into the branch directory relative to the repository
-          location. All topics created by Codestriker have a builtin
-          workaround for the Subversion diff problem.
+          specific single check in, for example, check in 544, then
+          you would use 543 for START_TAG and 544 for END_TAG.
+	</para>
+	<para>
+	  If you would like to review a branch before merging then
+          enter the start tag as the version number of the branch
+          creation. The end tag should be HEAD, and the module path
+          should be the path into the branch directory relative to the
+          repository location. All topics created by Codestriker have
+          a builtin workaround for the Subversion diff problem.
 	</para>
       </sect2>
       <sect2>
@@ -1583,6 +1601,62 @@ C:\Perl\bin\perl.exe "%s" %s
 	  </programlisting>
 	  Here 132 is the change-number.  This should be substituted
 	  with the change-number that you want to review.
+	</para>
+      </sect2>
+      <sect2>
+       <title>Creating ClearCase Diff Topics</title>
+       <para>
+          In its very basic form, a ClearCase diff file can be created
+          for a single file using the following command:
+	  <programlisting>
+% cleartool diff -serial_format -predecessor filename > /tmp/review.txt
+	  </programlisting>
+	  This file can then be uploaded into Codestriker for
+	  reviewing.  Of course, it is far more useful to be able to
+	  review a group of files at once.  In ClearCase, to determine
+	  which files are a part of a view, you can use the following
+	  command from the top level of your checkout:
+	  <programlisting>
+% cleartool lsco -cview -short -recurse
+	  </programlisting>
+       </para>
+       <para>
+          Combine the two commands together to generate a single
+          file with all modified files can be achieved doing something
+          like:
+	  <programlisting>
+% cleartool lsco -cview -short -recurse | \
+  xargs -n1 cleartool diff -serial_format -predecessor > /tmp/review.txt
+	  </programlisting>
+	  Note if you are on a Win32 platform, and you have cygwin
+	  installed, you may need to add an intermediate sed command
+	  so that cleartool doesn't complain:
+	  <programlisting>
+% cleartool lsco -cview -short -recurse | sed 's/\\/\//g' | \
+  xargs -n1 cleartool diff -serial_format -predecessor > /tmp/review.txt
+	  </programlisting>
+       </para>
+       <para>
+         In all of the above commands, if a ClearCase repository has
+         been specified in the Codestriker configuration, it is
+         important that the above commands are run from the
+         <emphasis>top-level directory</emphasis> of the view, so that
+         the full vob pathname information is available within the
+         diff files.  This allows Codestriker to retrieve the full
+         contents of files from the vob, so that a reviewer can see
+         the changes applied to an entire file, rather than a small
+         segment.
+       </para>
+       <para>
+	 Note the above commands can be modified if there is
+         only interest in a specific sub-directory in your view, for
+         example, the
+         <command>cleartool lsco</command> can be amended with the
+         sub-directory of interest as follows:
+	  <programlisting>
+% cleartool lsco -cview -short -recurse pathname/to/interested/dir | \
+  xargs -n1 cleartool diff -serial_format -predecessor > /tmp/review.txt
+	  </programlisting>
 	</para>
       </sect2>
     </sect1>

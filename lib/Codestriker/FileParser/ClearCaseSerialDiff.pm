@@ -38,8 +38,10 @@ sub parse ($$$) {
     my $line = <$fh>;
     while (defined($line)) {
 	# Skip any heading or trailing whitespace contained in the review
-	# text.
-	while (defined($line) && $line =~ /^\s*$/o) {
+	# text, in addition to the "Files are identical" lines, which happen
+	# due to the way review texts are generated.
+	while (defined($line) &&
+	       ($line =~ /^\s*$/o || $line =~ /^Files are identical$/)) {
 	    $line = <$fh>;
 	}
 	return @result unless defined $line;
@@ -48,37 +50,98 @@ sub parse ($$$) {
 	if (defined $line &&
 	    $line =~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o) {
 
-	    # Now read the file that has been modified.
-	    $line = <$fh>;
-	    return () unless
-		defined $line && $line =~ /^\<\<\< file 1\: (.*)\@\@(.*)$/o;
-	    $filename = $1;
-	    $revision = $2;
-
-	    # Check if the filename matches the clear case repository.
-	    # This is very simple for now, but will need to be more
-	    # sophisticated later.
-	    if (defined $repository_root &&
-		$filename =~ /^$repository_root[\/\\](.*)$/) {
-		$filename = $1;
-		$repmatch = 1;
-	    } else {
-		$repmatch = 0;
-	    }
-
-	    # Read the next line which is the local file.
-	    $line = <$fh>;
-	    return () unless
-		defined $line && $line =~ /^\>\>\> file 2\: .*$/o;
-	    
-	    # Now expect the end of the file header.
-	    $line = <$fh>;
-	    return () unless
-		defined $line && $line =~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o;
-
-	    # Read the next line.
+	    # Now read the file/directory that has been modified.
 	    $line = <$fh>;
 	    return () unless defined $line;
+	    
+	    if ($line =~ /^\<\<\< file 1\: (.*)\@\@(.*)$/o) {
+		$filename = $1;
+		$revision = $2;
+
+		# Check if the filename matches the clear case repository.
+		# This is very simple for now, but will need to be more
+		# sophisticated later.
+		if (defined $repository_root &&
+		    $filename =~ /^$repository_root[\/\\](.*)$/) {
+		    $filename = $1;
+		    $repmatch = 1;
+		} else {
+		    $repmatch = 0;
+		}
+
+		# Read the next line which is the local file.
+		$line = <$fh>;
+		return () unless
+		    defined $line && $line =~ /^\>\>\> file 2\: .*$/o;
+	    
+		# Now expect the end of the file header.
+		$line = <$fh>;
+		return () unless
+		    defined $line && $line =~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o;
+
+		# Read the next line.
+		$line = <$fh>;
+		return () unless defined $line;
+	    }
+	    elsif ($line =~ /^\<\<\< directory 1\: (.*)\@\@(.*)$/o) {
+		# Currently we don't really support directory operations.
+		# ClearCase captures added/deleted directories and deleted files as
+		# a directory change, but unfortunately added files go straight into
+		# the VOB - great.  Try to fidge this so that we treat the directory
+		# as a file, where the contents are the diff file itself - better than
+		# nothing.
+		$filename = $1;
+		$revision = $2;
+
+		# Check if the filename matches the clear case repository.
+		# This is very simple for now, but will need to be more
+		# sophisticated later.
+		if (defined $repository_root &&
+		    $filename =~ /^$repository_root[\/\\](.*)$/) {
+		    $filename = $1;
+		}
+
+		# Read the next line which is the local directory.
+		$line = <$fh>;
+		return () unless
+		    defined $line && $line =~ /^\>\>\> directory 2\: .*$/o;
+	    
+		# Now expect the end of the file header.
+		$line = <$fh>;
+		return () unless
+		    defined $line && $line =~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o;
+
+		# Keep reading text until there is nothing left for this segment.
+		my $text = "";
+		$line = <$fh>;
+		while (defined $line &&
+		       $line !~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o) {
+		    if ($line !~ /^Files are identical$/o) {
+			$text .= "+$line";
+		    }
+		    $line = <$fh>;
+		}
+		
+		# Create the chunk, indicating there is not a repository match, since
+		# this is for a directory.
+		my $chunk = {};
+		$chunk->{filename} = $filename;
+		$chunk->{revision} = $revision;
+		$chunk->{old_linenumber} = 0;
+		$chunk->{new_linenumber} = 0;
+		$chunk->{binary} = 0;
+		$chunk->{text} = $text;
+		$chunk->{description} = "";
+		$chunk->{repmatch} = 0;
+		push @result, $chunk;
+
+		# Process the next block.
+		next;
+	    }
+	    else {
+		# Some unknown format.
+		return ();
+	    }
 	}
 
 	# Read the next diff chunk.

@@ -158,12 +158,12 @@ sub process($$$) {
 			       $Codestriker::LINE_BREAK_ASSIST_MODE);
 	
     if ($mode == $Codestriker::COLOURED_MODE) {
-	print " View as " .
-	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff") .
+	print " View in " .
+	    $query->a({href=>$coloured_mono_url}, "monospace font") .
 	    " | ";
     } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
-	print " View as " .
-	    $query->a({href=>$coloured_url}, "coloured variable-width diff") .
+	print " View in " .
+	    $query->a({href=>$coloured_url}, "variable-width font") .
 	    " | ";
     }
 

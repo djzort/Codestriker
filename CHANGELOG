@@ -14,10 +14,13 @@ Version 1.8.2
   now possible to integrate with a native Subversion server as well,
   from Jason Remilliard.
 
-* Codestriker can now accept basic diff files (non unidiff and context
-  diff), and also ClearCase serial diffs.  A very basic ClearCase
-  repository object has been written by Kannan Goundan which needs
-  testing.
+* Codestriker can now parse basic diff files (non unidiff and context
+  diff), and also ClearCase serial diffs.
+
+* A ClearCase repository object has been written by Kannan Goundan
+  which works off a snapshot view.  With the ClearCase serial diff
+  parser mentioned in the previous item, this provides a
+  fully-functional ClearCase code-reviewing solution.
 
 * Topic property change emails didn't have the "References" and
   "In-Reply-To" mail headers set correctly, so that those emails
@@ -31,6 +34,15 @@ Version 1.8.2
   Remilliard.
 
 * Improved the input checking code on the topic properties page.
+
+* The CVS pserver repository specification has been expanded so that
+  it can accept extra optional arguments, such as:
+
+  :pserver;proxy=abc.com;proxyport=8080:user:pwd@cvs.dev.net
+
+* Modified Codestriker CSS so that monospace fonts use "monospace"
+  rather than Courier so the user's settings in the browser are
+  honoured, from Kannan Goundan.
 
 Version 1.8.1
 
