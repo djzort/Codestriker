@@ -121,6 +121,9 @@ sub process($$$) {
     }
     if (! defined $fview) {
 	    $fview = $Codestriker::default_file_to_view;
+	    if (! defined $fview) {
+		$fview = -1;
+	    }
     }
     $vars->{'mode'} = $mode;
     $vars->{'brmode'} = $brmode;
