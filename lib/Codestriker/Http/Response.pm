@@ -241,31 +241,6 @@ sub error($$) {
     exit;
 }
 
-# Routine to convert text into an HTML version, but with hyperlinks rendered.
-sub escapeHTML($$) {
-    my ($self, $text) = @_;
-
-    my $query = $self->{query};
-
-    print STDERR "Got to here...\n";
-
-    # Split the text into words, and for any URL, convert it appropriately.
-    my @words = split /([\s\n\t])/, $text;
-    my $result = "";
-    for (my $i = 0; $i <= $#words; $i++) {
-	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {
-	    # A URL, create a link to it.
-	    print STDERR "GOT URL: $1\n";
-	    $result .= $query->a({href=>$1}, $1) . HTML::Entities::encode($2);
-	} else {
-	    print STDERR "ENCODING: " . $words[$i] . "\n";
-	    # Regular text, just escape it apprporiately and append it.
-	    $result .= HTML::Entities::encode($words[$i]);
-	}
-    }
-    return $result;
-}
-
 # Implement a gzipped file handle via the Compress:Zlib compression
 # library.  This code was stolen from CVSweb.
 
