@@ -74,6 +74,17 @@ sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name,
 	$stdout_fh, $stderr_fh) = @_;
 
+    # If $end_tag is empty, but the $start_tag has a value, or
+    # $start_tag is empty, but $end_tag has a value, simply 
+    # retrieve the diff that corresponds to the files full
+    # contents corresponding to that tag value.
+    if ($start_tag eq "" && $end_tag ne "") {
+	$start_tag = "1.0";
+    } elsif ($start_tag ne "" && $end_tag eq "") {
+	$end_tag = $start_tag;
+	$start_tag = "1.0";
+    }
+
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;

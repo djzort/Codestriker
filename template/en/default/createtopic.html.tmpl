@@ -81,17 +81,26 @@ Start tag:
 <FONT SIZE="-2"><A HREF="javascript:alert('
 Rather than uploading the topic text, if the repository\n
 supports it, the text can be fetched by querying the\n
-repository given start and end tags, and a module name.\n
-The start tag, end tag, and module is ignored if text\n
-is uploaded.
+repository, given start and/or end tags, and a module name.\n
+The start tag, end tag, and module fields are ignored if text\n
+is uploaded.\n\n
+If only one tag value is specified, the full contents of all\n
+files in the specified module corresponding to the entered tag\n
+will be downloaded.
 ')">(?)</A></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
 <TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
-This is the version number or tag that identifies the new\n
-version of the file that you want reviewed.
+Rather than uploading the topic text, if the repository\n
+supports it, the text can be fetched by querying the\n
+repository, given start and/or end tags, and a module name.\n
+The start tag, end tag, and module fields are ignored if text\n
+is uploaded.\n\n
+If only one tag value is specified, the full contents of all\n
+files in the specified module corresponding to the entered tag\n
+will be downloaded.
 ')">(?)</A></FONT></TD>
 <TD>
 <INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>

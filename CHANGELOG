@@ -1,6 +1,14 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.4
+
+* It is now possible in the create topic screen to only specify a
+  single tag and a module name in order to create a new topic, rather
+  than both the start and end tags, with the module name.  The effect
+  of a single tag is to create a topic with the full contents of all
+  tagged files in the specified module.
+
 Version 1.8.3
 
 * In the add comment window, clicking on the "increase context" or
