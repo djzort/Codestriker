@@ -1,3 +1,7 @@
+Version 1.5.2:
+
+* Fixed minor rendering bug in view single file mode.
+
 Version 1.5.1:
 
 * Fixed bug where viewing a file in a popup didn't work for those diffs

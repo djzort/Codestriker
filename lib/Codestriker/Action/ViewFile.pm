@@ -179,7 +179,6 @@ sub process($$$) {
 		# leading space for alignment reasons.
 		my $linedata = $_;
 		$linedata =~ s/^\s//;
-		chop $linedata;
 		$render->flush_monospaced_lines(\$linenumber,
 						$max_line_length, $new);
 		print $render->render_monospaced_line($linenumber, $linedata, $offset,
