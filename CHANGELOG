@@ -1,6 +1,12 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.3
+
+* In the add comment window, clicking on the "increase context" or
+  "decrease context" would erase any text which had been written.
+  This has now been fixed by Kannan Goundan.
+
 Version 1.8.2
 
 * Codestriker now has the ability to view a specific file at a time in

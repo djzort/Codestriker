@@ -1,3 +1,53 @@
+<SCRIPT LANGUAGE="JavaScript">
+
+// FOR getCookie() and setCookie()
+// Original JavaScript code by Duncan Crombie: dcrombie at chirp.com.au
+function getCookie(name) {
+   var re = new RegExp(name + "=([^;]+)");
+   var value = re.exec(document.cookie);
+   return (value != null) ? unescape(value[1]) : null;
+}
+function setCookie(name, value, expirySeconds) {
+   if (!expirySeconds) expirySeconds = 60 * 60; // default to one hour
+   var now = new Date();
+   var expiry = new Date(now.getTime() + (expirySeconds * 1000))
+   document.cookie=name + "=" + escape(value) + "; expires=" + expiry.toGMTString();
+}
+
+// Store the form data in a browser cookie.
+function save_form_data() {
+   var form = document.add_comment;
+   var contents = '';
+   contents +=       escape(form.comments.value);
+   contents += '&' + escape(form.email.value);
+   contents += '&' + escape(form.comment_cc.value);
+   setCookie('codestriker_add_comment_form_data', contents, 30);
+}
+
+// Load the form data from a browser cookie.
+function load_form_data() {
+   var cookie = getCookie('codestriker_add_comment_form_data');
+   if (cookie == null || cookie == '') return null;
+
+   // delete the cookie (so that it doesn't persist between different
+   // comment pages).
+   setCookie('codestriker_add_comment_form_data', '', 1);
+
+   return cookie.split('&');
+}
+
+var field_comments   = '';
+var field_email      = '[% email %]';
+var field_comment_cc = '';
+
+var fields = load_form_data();
+if (fields != null) {
+   field_comments   = unescape(fields[0]);
+   field_email      = unescape(fields[1]);
+   field_comment_cc = unescape(fields[2]);
+}
+</SCRIPT>
+
 [%# Screen for the add comment form. #%]
 
 [% USE AutomagicLinks %]
@@ -14,7 +64,7 @@
 <P>
 Enter new comment:
 
-<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+<FORM NAME="add_comment" METHOD="POST" ENCTYPE="application/x-www-form-urlencoded">
  <INPUT TYPE="hidden" NAME="action" VALUE="submit_comment">
  <INPUT TYPE="hidden" NAME="line" VALUE="[% line %]">
  <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
@@ -22,18 +72,31 @@ Enter new comment:
  <INPUT TYPE="hidden" NAME="a" VALUE="[% anchor %]">
  <INPUT TYPE="hidden" NAME="fn" VALUE="[% fn %]">
  <INPUT TYPE="hidden" NAME="new" VALUE="[% new %]">
- <TEXTAREA NAME="comments" ROWS=13 COLS=75 WRAP="hard"></TEXTAREA>
+ <SCRIPT language="JavaScript">
+    document.write('<TEXTAREA NAME="comments" ROWS=13 COLS=75 WRAP="hard">\n');
+    document.write(field_comments);
+    document.write('</TEXTAREA>\n');
+ </SCRIPT>
  <P>
 
  <TABLE>
  <TR>
   <TD>Your email address: </TD>
-  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=100></TD>
+  </SCRIPT>
+  <TD>
+  <SCRIPT language="JavaScript">
+     document.write('<INPUT TYPE="text" NAME="email" SIZE=50 MAXLENGTH=100 VALUE="' + field_email + '">\n');
+  </SCRIPT>
+  </TD>
   <TD></TD>
  </TR>
  <TR>
   <TD>Cc: </TD>
-  <TD><INPUT TYPE="text" NAME="comment_cc"  SIZE=50 MAXLENGTH=150></TD>
+  <TD>
+  <SCRIPT language="JavaScript">
+     document.write('<INPUT TYPE="text" NAME="comment_cc" SIZE=50 MAXLENGTH=150 VALUE="' + field_comment_cc + '">\n');
+  </SCRIPT>
+  </TD>
   <TD><INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()"></TD>
  </TR>
  </TABLE>
@@ -70,7 +133,7 @@ Enter new comment:
 </TABLE>
 
 <hr>
-<P>Context: (<A HREF="[% inc_context_url %]">increase</A> | <A HREF="[% dec_context_url %]">decrease)</A>
+<P>Context: (<A onClick="save_form_data()" HREF="[% inc_context_url %]">increase</A> | <A onClick="save_form_data()" HREF="[% dec_context_url %]">decrease)</A>
 <PRE>[% context %]
 </PRE>
 
