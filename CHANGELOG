@@ -5,7 +5,9 @@ Version 1.7.7
 
 * The table of contents links on the view topic page didn't include
   the brmode parameter, so clicking on a filename link reloaded the
-  whole topic page, which is inconvenient.  This has been fixed.
+  whole topic page, which is inconvenient.  This reloading behaviour
+  has also been fixed when coming from the topic list or create topic
+  page.
 
 Version 1.7.6
 
@@ -29,7 +31,7 @@ The following changes below were from Aaron Kardell
   --show-function-line and --show-c-function can be parsed and
   displayed in the view topic screen.
 
-* Incoporated SubmitCodeReview.pl script, which can be used for
+* Incorporated SubmitCodeReview.pl script, which can be used for
   automating the submission of a code review topic from the command
   line.  It also has support for incremental code reviews.  See the
   script and its help text for more details.

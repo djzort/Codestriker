@@ -41,6 +41,7 @@ sub process($$$) {
     my $start_tag = $http_input->get('start_tag');
     my $end_tag = $http_input->get('end_tag');
     my $module = $http_input->get('module');
+    my $mode = $http_input->get('mode');
 
     my $feedback = "";
     my $topic_text = "";
@@ -239,8 +240,8 @@ sub process($$$) {
 
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
-						    $query->url(), 0,
+    my $topic_url = $url_builder->view_url_extended($topicid, -1, $mode, "",
+						    "", $query->url(), 0,
 						    $Codestriker::default_topic_br_mode);
 
     # Send an email to the document author and all contributors with the

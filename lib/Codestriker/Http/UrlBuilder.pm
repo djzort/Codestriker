@@ -50,6 +50,8 @@ sub new($$) {
 sub view_url_extended ($$$$$$$$) {
     my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
 	$updated, $brmode) = @_;
+    if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
+    if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
 	"?topic=$topic&action=view" .
 	($updated ? "&updated=$updated" : "") .
@@ -63,6 +65,7 @@ sub view_url_extended ($$$$$$$$) {
 # Create the URL for viewing a topic.
 sub view_url ($$$$) {
     my ($self, $topic, $line, $mode, $brmode) = @_;
+    if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
     if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
     return $self->view_url_extended($topic, $line, $mode, "", "", "",
 				    undef, $brmode);
@@ -93,6 +96,7 @@ sub edit_url ($$$$$$$) {
 # Create the URL for viewing a new file.
 sub view_file_url ($$$$$$$) {
     my ($self, $topic, $filenumber, $new, $line, $mode, $parallel) = @_;
+    if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
     return $self->{url_prefix} . "?action=view_file&fn=$filenumber&" .
 	"topic=$topic&new=$new&mode=$mode&parallel=$parallel#$filenumber|$line|$new";
 }
