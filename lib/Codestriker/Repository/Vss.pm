@@ -93,9 +93,8 @@ sub retrieve ($$$\$) {
     }
 
     # Remove the temporary directory and batch file.
-    print STDERR "Dir is $tempdir\n";
-    #unlink $tmp_batch_file;
-    #rmdir $tempdir;
+    unlink $tmp_batch_file;
+    rmdir $tempdir;
 }
 
 # Retrieve the "root" of this repository.
