@@ -169,6 +169,9 @@ sub parse ($$$$$) {
 	if ($curr->{filename} =~ /\.(\w+)(,v)?$/o) {
 	    push @trimmed_diffs, $curr
 		unless grep(/^$1$/, @Codestriker::exclude_file_types);
+	} else {
+	    # No extension on this file, add the diff in.
+	    push @trimmed_diffs, $curr;
 	}
     }
 	
