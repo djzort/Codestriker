@@ -81,10 +81,14 @@
 Change state: &nbsp;
   <select name="topic_state">
      [% FOREACH state = states %]
-     [% IF state == default_state %]
-     <option selected value="[% state %]">[% state %]</option>
-     [% ELSE %]
-     <option value="[% state %]">[% state %]</option>
+
+     [%# Obsoleted and Deleted states aren't available for selection. #%]
+     [% IF state != 'Obsoleted' && state != 'Deleted' %]
+         [% IF state == default_state %]
+         <option selected value="[% state %]">[% state %]</option>
+         [% ELSE %]
+         <option value="[% state %]">[% state %]</option>
+         [% END %]
      [% END %]
 
      [% IF state == 'Obsoleted' %]
