@@ -2558,15 +2558,12 @@ C:\Perl\bin\perl.exe "%s" %s
   <chapter>
     <title>Future Plans</title>
     <para>
-      Immediate work includes support for other source control
-      management systems, such as ClearCase, SCCS, Perforce and VSS.
-      For this work to proceed, I need support from the developer
-      community, as I don't have access to these systems.
-    </para>
-    <para>
-      The Codestriker 1.8 release should contain a major new piece of
-      functionality, which is user-customisable metrics, at a
-      per-topic level.
+      <itemizedlist>
+        <listitem><para>Web-based configuration</para></listitem>
+        <listitem><para>Per-user preferences for email</para></listitem>
+        <listitem><para>Ability to review formatted design documents</para></listitem>
+	<listitem><para>User authentication</para></listitem>
+      </itemizedlist>             
     </para>
   </chapter>
 
