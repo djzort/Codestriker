@@ -4,7 +4,8 @@
     script, as it is complex HTML that doesn't need to be
     customised. #%]
 
-[% PROCESS header.html.tmpl displaymenu = 1 version = version %]
+[% PROCESS header.html.tmpl displaymenu = 1 version = version 
+                            closehead = closehead %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]

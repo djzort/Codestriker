@@ -89,15 +89,25 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     $self->{topic_state} = $topic_obj->{topic_state};
 
     # Build a hash from filenumber|fileline|new -> comment array, so that
-    # when rendering, lines can be coloured appropriately.
+    # when rendering, lines can be coloured appropriately.  Also build a list
+    # of what points in the review have a comment.  Also record a mapping
+    # from filenumber|fileline|new -> the comment number.
     my %comment_hash = ();
+    my @comment_locations = ();
+    my %comment_location_map = ();
     for (my $i = 0; $i <= $#$comments; $i++) {
 	my $comment = $$comments[$i];
 	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
 	    $comment->{filenew};
+	if (! exists $comment_hash{$key}) {
+	    push @comment_locations, $key;
+	    $comment_location_map{$key} = $#comment_locations;
+	}
         push @{ $comment_hash{$key} }, $comment;
     }
     $self->{comment_hash} = \%comment_hash;
+    $self->{comment_locations} = \@comment_locations;
+    $self->{comment_location_map} = \%comment_location_map;
 
     # Also have a number of additional private variables which need to
     # be initialised.
@@ -140,6 +150,98 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	# Topic has no repository, so no LXR mapping.
 	$self->{idhashref} = undef;
     }
+
+    # Precompute the overlib HTML for each comment location.
+    print "\n<script language=\"JavaScript\" type=\"text/javascript\">\n";
+
+    # Set the topicid.
+    print "    topicid = " . $self->{topic} . ";\n";
+    
+    # Now record all the comments made so far in the topic.
+    print "    var comment_text = new Array();\n";
+    print "    var comment_hash = new Array();\n";
+    my $index;
+    for ($index = 0; $index <= $#comment_locations; $index++) {
+
+	# Contains the overlib HTML text.
+	my $overlib_html = "";
+
+	# Determine what the previous and next comment locations are.
+	my $previous = undef;
+	my $next = undef;
+	if ($index > 0) {
+	    $previous = $comment_locations[$index-1];
+	}
+	if ($index < $#comment_locations) {
+	    $next = $comment_locations[$index+1];
+	}
+
+	# Compute the previous link if required.
+	my $current_url = $self->{query}->self_url();
+	if (defined $previous && $previous =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
+	    my $previous_fview = $1;
+	    my $previous_index = $index - 1;
+	    my $previous_url = $current_url;
+	    $previous_url =~ s/fview=\d+/fview=$previous_fview/o if $self->{fview} != -1;
+	    $previous_url .= '#' . $previous;
+	    $overlib_html .= "<a href=\"javascript:window.location=\\'$previous_url\\'; ";
+	    if ($self->{fview} == -1 || $self->{fview} == $previous_fview) {
+		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
+}
+	    $overlib_html .= "void(0);\">Previous</a>";
+	}
+
+	# Compute the next link if required.
+	if (defined $next && $next =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
+	    my $next_fview = $1;
+	    $overlib_html .= " | " if defined $previous;
+	    my $next_index = $index + 1;
+	    my $next_url = $current_url;
+	    $next_url =~ s/fview=\d+/fview=$next_fview/o if $self->{fview} != -1;
+	    $next_url .= '#' . $next;
+	    $overlib_html .= "<a href=\"javascript:window.location=\\'$next_url\\'; ";
+	    if ($self->{fview} == -1 || $self->{fview} == $next_fview) {
+		$overlib_html .= "overlib(comment_text[$next_index], STICKY, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
+	    }
+	    $overlib_html .= "void(0);\">Next</a>";
+	}
+	if (defined $previous || defined $next) {
+	    $overlib_html .= " | ";
+	}
+
+	# Add a close link.
+	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close</a><p>";
+
+	# Create the actual comment text.
+	my $key = $comment_locations[$index];
+	my @comments = @{ $comment_hash{$key} };
+
+	for (my $i = 0; $i <= $#comments; $i++) {
+	    my $comment = $comments[$i];
+
+	    # Need to format the data appropriately for HTML display.
+	    my $data = HTML::Entities::encode($comment->{data});
+	    $data =~ s/\'/\\\'/mg;
+	    $data =~ s/\n/<br>/mg;
+	    $data =~ s/ /&nbsp;/mg;
+	    $data = tabadjust($self, $self->{tabwidth}, $data, 1);
+
+	    # Show each comment with the author and date in bold.
+	    $overlib_html .= "<b>Comment from $comment->{author} ";
+	    $overlib_html .= "on $comment->{date}</b><br>";
+	    $overlib_html .= "$data";
+
+	    # Add a newline at the end if required.
+	    if ($i < $#comments &&
+		substr($overlib_html, length($overlib_html)-4, 4) ne '<br>') {
+		$overlib_html .= '<br>';
+	    }
+	}
+
+	print "    comment_text[$index] = '$overlib_html';\n";
+        print "    comment_hash['" . $comment_locations[$index] . "'] = $index;\n";
+    }
+    print "</script>\n";
 
     bless $self, $type;
 }
@@ -763,11 +865,6 @@ sub render_comment_link {
     my ($self, $filenumber, $line, $new, $text,
 	$comment_class, $no_comment_class) = @_;
 
-    # Retrieve any comments associated with this line, and javascript
-    # escape it appropriately.
-    my $title = $self->get_comment_digest($line, $filenumber, $new);
-    $title =~ s/\'/\\\'/mg;
-
     # Determine the anchor and edit URL for this line number.
     my $anchor = "$filenumber|$line|$new";
     my $edit_url = "javascript:eo('$filenumber','$line','$new')";
@@ -784,11 +881,26 @@ sub render_comment_link {
     # If a comment exists on this line, set span and the overlib hooks onto
     # it.
     my $query = $self->{query};
-    if ($title ne "") {
+    my %comment_hash = %{ $self->{comment_hash} };
+    my %comment_location_map = %{ $self->{comment_location_map} };
+    my $comment_number = undef;
+    if (exists $comment_hash{$anchor}) {
+	# Determine what comment number this anchor refers to.
+	$comment_number = $comment_location_map{$anchor};
+
 	if (defined $comment_class) {
-	    $text = $query->span({-class=>$comment_class}, $text);
+	    $text = $query->span({-id=>"c$comment_number"}, "") .
+		$query->span({-class=>$comment_class}, $text);
 	}
-	$params->{onmouseover} = "return overlib('$title');";
+
+	# Determine what the next comment in line is.
+	my $index = -1;
+	my @comment_locations = @{ $self->{comment_locations} };
+	for ($index = 0; $index <= $#comment_locations; $index++) {
+	    last if $anchor eq $comment_locations[$index];
+	}
+
+	$params->{onmouseover} = "return overlib(comment_text[$index],STICKY);";
 	$params->{onmouseout} = "return nd();";
     } else {
 	if (defined $no_comment_class) {
@@ -796,7 +908,6 @@ sub render_comment_link {
 	}
     }
 
-    # Return the rendered link.
     return $query->a($params, $text);
 }
 
@@ -840,6 +951,8 @@ sub get_comment_digest($$$$) {
 # Start hook called when about to start rendering to a page.
 sub start($) {
     my ($self) = @_;
+
+    # Now create the start of the rendering tables.
     if ($self->{mode} == $Codestriker::NORMAL_MODE) {
 	$self->_normal_mode_start();
     } else {

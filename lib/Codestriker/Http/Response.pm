@@ -202,6 +202,7 @@ sub generate_header {
     if (defined $topic_title && $topic_title ne "") {
 	$title .= ": \"$topic_title\"";
     }
+    $title = HTML::Entities::encode($title);
 
     # Generate the URL to the codestriker CSS file.
     my $codestriker_css;
@@ -214,75 +215,22 @@ sub generate_header {
 
     my $overlib_js = $codestriker_css;
     $overlib_js =~ s/codestriker.css/overlib.js/;
+    my $xbdhtml_js = $codestriker_css;
+    $xbdhtml_js =~ s/codestriker.css/xbdhtml.js/;
+    my $codestriker_js = $codestriker_css;
+    $codestriker_js =~ s/codestriker.css/codestriker.js/;
 
-    # Write the simple open window javascript method for displaying popups.
-    # Note gotoAnchor can't simply be:
-    #
-    # opener.location.hash = "#" + anchor;
-    #
-    # As the old netscapes don't handle it properly.
-    my $base_url = $query->url();
-    my $jscript=<<END;
-    <script language="JavaScript" type="text/javascript">
-    <!-- Hide script
-    //<![CDATA[
-
-    // Global settings for overLIB.
-    ol_fgcolor = '#FFFFCC';
-    ol_textsize = '2';
-
-    var windowHandle = '';
-
-    function myOpen(url,name) {
-	windowHandle = window.open(url,name,
-				   'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
-	// Indicate who initiated this operation.
-        windowHandle.opener = window;
-
-	windowHandle.focus();
-    }
-
-    // Edit open function.  Name is kept short to reduce output size.
-    function eo(fn,line,newfile) {
-	myOpen('$base_url' + '?fn=' + fn + '&line=' + line +
-	       '&new=' + newfile + '&topic=$topic&action=edit&a=' +
-               fn + '|' + line + '|' + newfile, 'e');
-    }
-
-    function gotoAnchor(anchor, reload) {
-	if (anchor == "" || opener == null) return;
-
-	var index = opener.location.href.lastIndexOf("#");
-	if (index != -1) {
-	    opener.location.href =
-		opener.location.href.substr(0, index) + "#" + anchor;
-	}
-	else {
-	    opener.location.href += "#" + anchor;
-	}
-		
-	if (reload) opener.location.reload(reload);
-	opener.focus();
-    }
-
-    //]]> End script hiding -->
-    </script>
-END
-
-# "http://www.w3.org/TR/html4/strict.dtd"
-
-    print $query->start_html(-dtd=>'-//W3C//DTD HTML 4.01 Transitional//EN',
-			     -charset=>'ISO-8859-1',
-			     -title=>"$title",
-			     -bgcolor=>"#eeeeee",
-			     -style=>{src=>"$codestriker_css"},
-			     -script=>{type=>"text/javascript", src=>"$overlib_js"},
-			     -base=>$query->url(),
-			     -link=>'blue',
-			     -vlink=>'purple',
-			     -onLoad=>"gotoAnchor('$load_anchor', $reload)");
-
-    print $jscript;
+    # Print the basic HTML header header, with the inclusion of the scripts.
+    print '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">';
+    print "\n";
+    print '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">';
+    print "\n";
+    print "<head><title>$title</title>\n";
+    print "<base href=\"$query->url()\"/>\n";
+    print "<link rel=\"stylesheet\" type=\"text/css\" href=\"$codestriker_css\" />\n";
+    print "<script src=\"$overlib_js\" type=\"text/javascript\"></script>\n";
+    print "<script src=\"$xbdhtml_js\" type=\"text/javascript\"></script>\n";
+    print "<script src=\"$codestriker_js\" type=\"text/javascript\"></script>\n";
 
     # Write a comment indicating if this was compressed or not.
     $self->{output_compressed} = $output_compressed;

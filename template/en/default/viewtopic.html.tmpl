@@ -1,3 +1,17 @@
+[%# Output the style elements for the comments which exist #%]
+
+<style type="text/css">
+[% SET index = 0 %]
+[% WHILE index < number_comments %]
+#c[% index %] { position: absolute; }
+[% index = index + 1 %]
+[% END %]
+</style>
+
+</head>
+<body charset="ISO-8859-1" vlink="purple" onload="view_topic_on_load_handler();"
+      bgcolor="#eeeeee" link="blue">
+
 [%# Screen for displaying the heading information of a topic.  The
     actual view topic data is still generated directly from the perl
     script, as it is complex HTML that doesn't need to be
@@ -5,7 +19,7 @@
 
 [% PROCESS viewtopicheader.html.tmpl version = version 
    help = "x483.html#VIEW-TOPIC" topicview = 1 topicproperties = 0
-   topiccomments = 0 topicinfo = 0 %]
+   topiccomments = 0 topicinfo = 0 closehead = 0 %]
 
 <p>
 

@@ -3,7 +3,7 @@
 [% USE AutomagicLinks %]
 
 [% PROCESS viewtopicheader.html.tmpl version = version topicview = 0
-   topicproperties = 0 topiccomments = 0 topicinfo = 1
+   topicproperties = 0 topiccomments = 0 topicinfo = 1 closehead = 1
    help = "x617.html" %]
  
 [%# Create a form to allow the topic's metrics to be changed #%]
@@ -63,7 +63,9 @@
 	    onmouseout="(window.status=''); return true">[% metric.name %]
             [% IF metric.description != '' %]
             <FONT SIZE="-2">
-                <A TABINDEX="1" HREF="javascript:alert('[% metric.description %]')">(?)</A>
+                <a tabindex="1" href="javascript:void(0)"
+                   onmouseover="return overlib('[% metric.description %]');"
+                   onmouseout="return nd();">(?)</a>
             </FONT>
             [% END %]
         </td>
@@ -96,7 +98,9 @@
 	onmouseout="(window.status=''); return true">[% metric.name %]
     [% IF metric.description != '' %]
     <FONT SIZE="-2">
-    <A TABINDEX="1" HREF="javascript:alert('[% metric.description %]')">(?)</A>
+    <a tabindex="1" href="javascript:void(0)"
+       onmouseover="return overlib('[% metric.description %]');"
+       onmouseout="return nd();">(?)</a>
     </FONT>
     [% END %]
     </td>

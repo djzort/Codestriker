@@ -289,6 +289,7 @@ sub read_all_comments_for_topic($$) {
 			     'ORDER BY ' .
 			     'commentstate.filenumber, ' .
 			     'commentstate.fileline, ' .
+			     'commentstate.filenew, ' .
 			     'commentdata.creation_ts');
     my $success = defined $select_comment;
     my $rc = $Codestriker::OK;

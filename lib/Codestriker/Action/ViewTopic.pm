@@ -40,6 +40,20 @@ sub process($$$) {
     # Retrieve the appropriate topic details.           
     my $topic = Codestriker::Model::Topic->new($topicid);     
 
+    # Retrieve the comment details for this topic, firstly determine how
+    # many distinct comment lines are there.
+    my @comments = $topic->read_comments();
+    my %comment_map = ();
+    my $number_comments = 0;
+    foreach my $comment (@comments) {
+	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+	    $comment->{filenew};
+	if (! exists $comment_map{$key}) {
+	    $comment_map{$key} = 1;
+	    $number_comments++;
+	}
+    }
+
     # Retrieve the changed files which are a part of this review.
     my (@filenames, @revisions, @offsets, @binary, @numchanges);
     $topic->get_filestable(
@@ -51,9 +65,6 @@ sub process($$$) {
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $topic->{description};
-
-    # Retrieve the comment details for this topic.
-    my @comments = $topic->read_comments();
 
     $http_response->generate_header(topic=>$topic->{topicid},
 				    topic_title=>"Topic Text: $topic->{title}",
@@ -137,9 +148,11 @@ sub process($$$) {
     }
     $vars->{'description'} = $data;
 
-
     # Obtain the link to download the actual document text.
     $vars->{'download_url'} = $url_builder->download_url($topicid);
+
+    # Indicate how many comments there are.
+    $vars->{'number_comments'} = $number_comments;
 
     # Fire the template on the topic heading information.
     my $template = Codestriker::Http::Template->new("viewtopic");
