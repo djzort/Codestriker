@@ -154,10 +154,10 @@ sub process($$$) {
     # Send the email notification out, if it is allowed in the config file.
     if ( $Codestriker::allow_comment_email || $cc_recipients ne "")
     {
-    if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
-					    $cc_recipients, $bcc,
-					    $subject, $body)) {
-	$http_response->error("Failed to send topic creation email");
+	if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
+						$cc_recipients, $bcc,
+						$subject, $body)) {
+	    $http_response->error("Failed to send topic creation email");
         }
     }
 
