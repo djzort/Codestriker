@@ -60,10 +60,10 @@ sub get_template($) {
 sub process($$) {
     my ($self, $vars) = @_;
 
-    my $data;
+    my $data = "";
     my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
 					$vars, \$data);
-    die $self->{template}->error() if ($rc == 0);
+    die $self->{template}->error() if (!defined $rc || $rc == 0);
     print $data;
     return $rc;
 }

@@ -74,7 +74,7 @@ sub view_url ($$$$) {
 # Create the URL for downloading the topic text.
 sub download_url ($$) {
     my ($self, $topic) = @_;
-    return $self->{url_prefix} . "?action=download&topic=$topic";
+    return $self->{query}->url() . "?action=download&topic=$topic";
 }
 
 # Create the URL for creating a topic.
@@ -104,7 +104,7 @@ sub view_file_url ($$$$$$$) {
 # Create the URL for the search page.
 sub search_url ($) {
     my ($self) = @_;
-    return $self->{url_prefix} . "?action=search";
+    return $self->{query}->url() . "?action=search";
 }
 
 # Create the URL for the documentation page.
