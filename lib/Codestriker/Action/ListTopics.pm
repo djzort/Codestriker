@@ -10,6 +10,7 @@
 package Codestriker::Action::ListTopics;
 
 use strict;
+use XML::RSS;
 use Codestriker::Http::Template;
 use Codestriker::Model::Topic;
 
@@ -43,6 +44,7 @@ sub process($$$) {
     my $sfilename = $http_input->get('sfilename') || 0;
     my $feedback = $http_input->get('feedback');
     my $projectid = $http_input->get('projectid');
+    my $content = $http_input->get('content');
 
     # If $sproject has been set to -1, then retrieve the value of the projectid
     # from the cookie as the project search value.  This is done to facilate
@@ -62,14 +64,15 @@ sub process($$$) {
 
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
-    my (@id, @title, @author, @ts, @state, @bugid, @email, @type, @version);
+    my (@id, @title, @description, @author, @ts, @state, @bugid, @email,
+	@type, @version);
 
     Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
 				     $scomments, $sbody, $sfilename,
                                      \@sort_order,
-				     \@id, \@title,
+				     \@id, \@title, \@description,
 				     \@author, \@ts, \@state, \@bugid,
 				     \@email, \@type, \@version);
 
@@ -81,10 +84,13 @@ sub process($$$) {
 	@project_ids = split ',', $sproject;
     }
     my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
-    $http_response->generate_header(topic_title=>"Topic List", 
-				    projectid=>$projectid_cookie, 
-                                    topicsort=>join(',',@sort_order),
-                                    reload=>0, cache=>0);
+
+    if ($content eq "html") {
+	$http_response->generate_header(topic_title=>"Topic List", 
+					projectid=>$projectid_cookie, 
+					topicsort=>join(',',@sort_order),
+					reload=>0, cache=>0);
+    }
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -113,6 +119,13 @@ sub process($$$) {
 				      $sdescription, $scomments,
 				      $sbody, $sfilename,
 				      [ split ',', $sstate] , \@project_ids);
+    $vars->{'list_sort_url_rss'} = 
+	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
+				      $stext, $stitle,
+				      $sdescription, $scomments,
+				      $sbody, $sfilename,
+				      [ split ',', $sstate] , \@project_ids,
+				      "rss");
 
     # The list of topics.
     my @topics;
@@ -126,6 +139,7 @@ sub process($$$) {
 	my $accum_id = $id[$index];
 	my $accum_version = $version[$index];
 	my $accum_title = $title[$index];
+	my $accum_description = $description[$index];
 	my $accum_author = $author[$index];
 	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
 	my $accum_state = $Codestriker::topic_states[$state[$index]];
@@ -173,6 +187,7 @@ sub process($$$) {
 				   $Codestriker::default_topic_br_mode);
 	$topic->{'id'} = $accum_id;
 	$topic->{'title'} = $accum_title;
+	$topic->{'description'} = $accum_description;
 	$topic->{'author'} = $accum_author;
 	$topic->{'reviewer'} = $reviewer_text;
 	$topic->{'cc'} = $cc_text;
@@ -186,15 +201,52 @@ sub process($$$) {
     $vars->{'states'} = \@Codestriker::topic_states;
 
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
-
     $vars->{'view_metrics_url'} = $url_builder->metric_report_url();
 
-    # Record the search parameters.
 
-    my $template = Codestriker::Http::Template->new("listtopics");
-    $template->process($vars);
+    if ($content eq "html") {
+	my $template = Codestriker::Http::Template->new("listtopics");
+	$template->process($vars);
 
-    $http_response->generate_footer();
+	$http_response->generate_footer();
+    } else {
+	# Generate an RSS representation, first start with the header
+	# information.
+	my $rss = new XML::RSS (version => '1.0');
+	$rss->channel(title => "Codestriker",
+		      link => $query->url(),
+		      description => "Collaborative Code Reviewer",
+		      syn => {
+			  updatePeriod => "hourly",
+			  updateFrequency => "1",
+			  updateBase => "1901-01-01T00:00+00:00"
+			  });
+
+	# Now add in an item for each topic in the list.
+	foreach my $topic (@topics) {
+	    my $description =
+		"Author: " . $topic->{'author'} . "\n" .
+		"Reviewers: " . $topic->{'reviewer'} . "\n" .
+		"Cc: " . $topic->{'cc'} . "\n" .
+		"Created: " . $topic->{'created'} . "\n" .
+		"State: " . $topic->{'state'} . "\n" .
+		((defined $topic->{'bugids'} && $topic->{'bugids'} ne '') ?
+		 "Bugids: " . $topic->{'bugids'} . "\n" : '') .
+		 "Description:\n\n" . $topic->{'description'};
+
+	    $rss->add_item(title => $topic->{'title'},
+			   link => $topic->{'view_topic_url'},
+			   description => $description,
+			   dc => {
+			       creator => $topic->{'author'}
+			   });
+			   
+	}
+
+	# Now output the RSS data.
+	print $query->header(-content_type=>'text/xml');
+	print $rss->as_string;
+    }
 }
 
 # Process the topic_sort_change input request (if any), and the current sort 

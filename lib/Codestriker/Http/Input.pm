@@ -102,6 +102,7 @@ sub process($) {
     $self->{end_tag} = $query->param('end_tag');
     $self->{module} = $query->param('module');
     $self->{topic_sort_change} = $query->param('topic_sort_change');
+    $self->{content} = $query->param('content');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
@@ -121,6 +122,7 @@ sub process($) {
     $self->{project_description} = "" if ! defined $self->{project_description};
     $self->{project_state} = "" if ! defined $self->{project_state};
     $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
+    $self->{content} = "html" if ! defined $self->{content};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;

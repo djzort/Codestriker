@@ -73,6 +73,10 @@ my $modules = [
     { 
         name => 'File::Temp', 
         version => '0' 
+    },
+    { 
+        name => 'XML::RSS', 
+        version => '0' 
     } 
 ];
 

@@ -620,10 +620,10 @@ sub update($$$$$$$$$$) {
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
+sub query($$$$$$$$$$$$$$\\@@\@\@\@\@\@\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
 	$stitle, $sdescription, $scomments, $sbody, $sfilename, $sort_order,
-	$id_array_ref, $title_array_ref,
+	$id_array_ref, $title_array_ref, $description_array_ref,
 	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
 	$bugid_array_ref, $email_array_ref, $type_array_ref,
 	$version_array_ref) = @_;
@@ -687,7 +687,8 @@ sub query($$$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Build up the base query.
     my $query =
-	"SELECT topic.id, topic.title, topic.author, topic.creation_ts, " .
+	"SELECT topic.id, topic.title, topic.description, " .
+	"topic.author, topic.creation_ts, " .
 	"topic.state, topicbug.bugid, participant.email, participant.type, " .
 	"topic.version ";
 
@@ -828,12 +829,14 @@ sub query($$$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my $success = defined $select_topic;
     $success &&= $select_topic->execute();
     if ($success) {
-	my ($id, $title, $author, $creation_ts, $state, $bugid, $email, $type,
-	    $version);
-	while (($id, $title, $author, $creation_ts, $state, $bugid,
+	my ($id, $title, $description, $author, $creation_ts,
+	    $state, $bugid, $email, $type, $version);
+	while (($id, $title, $description, $author,
+		$creation_ts, $state, $bugid,
 		$email, $type, $version) = $select_topic->fetchrow_array()) {
 	    push @$id_array_ref, $id;
 	    push @$title_array_ref, $title;
+	    push @$description_array_ref, $description;
 	    push @$author_array_ref, $author;
 	    push @$creation_ts_array_ref, $creation_ts;
 	    push @$state_array_ref, $state;

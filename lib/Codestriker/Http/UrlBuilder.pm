@@ -118,10 +118,10 @@ sub doc_url ($) {
 }
 
 # Create the URL for listing the topics.
-sub list_topics_url ($$$$$$$$$$$\@\@) {
+sub list_topics_url ($$$$$$$$$$$\@\@$) {
     my ($self, $sauthor, $sreviewer, $scc, $sbugid, $stext,
 	$stitle, $sdescription, $scomments, $sbody, $sfilename,
-	$state_array_ref, $project_array_ref) = @_;
+	$state_array_ref, $project_array_ref, $content) = @_;
 
     my $sstate = defined $state_array_ref ? (join ',', @$state_array_ref) : "";
     my $sproject = defined $project_array_ref ?
@@ -138,7 +138,8 @@ sub list_topics_url ($$$$$$$$$$$\@\@) {
 	($sbody ne "" ? "&sbody=$sbody" : "") .
 	($sfilename ne "" ? "&sfilename=$sfilename" : "") .
 	($sstate ne "" ? "&sstate=$sstate" : "") .
-	($sproject ne "" ? "&sproject=$sproject" : "");
+	($sproject ne "" ? "&sproject=$sproject" : "") .
+	(defined $content && $content ne "" ? "&content=$content" : "");
 }
 
 # Construct a URL for editing a specific project.
