@@ -1,4 +1,4 @@
-Codestriker v1.1
+Codestriker v1.2
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 --------------------------
@@ -46,6 +46,9 @@ needs to be owned by the user which runs httpd, since the script
 creates files and directories under the "/var/www/codestriker"
 directory.  The username is typically either nobody or apache.  Use
 the "ps auxww | grep httpd" command to find out.
+
+Read through the configuration options within codestriker.pl to ensure
+all the settings are correct for your site.
 
 For deployments outside an intranet, I would suggest using apache's
 ".htaccess" mechanism to limit access as to who can execute the
