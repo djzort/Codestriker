@@ -55,6 +55,27 @@ translated (ie localised) into different languages.
 
 The source templates live in template/en/default.
 
+Codestriker currently depends on the following Perl modules:
+
+LWP::UserAgent
+CGI
+CGI::Carp
+Net::SMTP
+DBI
+IPC::Run
+Template
+HTML::Entities
+
+[ Plus either DBD::Pg or DBD::Mysql depending on your installed database ]
+
+The checksetup.pl script (see below) will check for the existance of
+these modules on your system (or report a compilation error) if any
+module is missing.  Many distributions will have these modules already
+installed by default, and if not, either retrieve them using your
+distribution's package management system, from http://search.cpan.org,
+or using the ppm command (the Perl package manager - recommended for
+Windows users, see below).
+
 UNIX INSTALLATION
 -----------------
 
