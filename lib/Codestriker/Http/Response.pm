@@ -12,6 +12,7 @@ package Codestriker::Http::Response;
 
 use strict;
 use Codestriker::Http::Cookie;
+use HTML::Entities ();
 
 # Constructor for this class.  Indicate that the response header hasn't been
 # generated yet.
@@ -252,10 +253,10 @@ sub escapeHTML($$) {
     for (my $i = 0; $i <= $#words; $i++) {
 	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {
 	    # A URL, create a link to it.
-	    $result .= $query->a({href=>$1}, $1) . CGI::escapeHTML($2);
+	    $result .= $query->a({href=>$1}, $1) . HTML::Entities::encode($2);
 	} else {
 	    # Regular text, just escape it apprporiately and append it.
-	    $result .= CGI::escapeHTML($words[$i]);
+	    $result .= HTML::Entities::encode($words[$i]);
 	}
     }
     return $result;

@@ -12,6 +12,7 @@ package Codestriker::Http::Render;
 use strict;
 use DBI;
 use CGI::Carp 'fatalsToBrowser';
+use HTML::Entities ();
 
 # Colour to use when displaying the line number that a comment is being made
 # against.
@@ -87,23 +88,36 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
     # be initialised.
     $self->{diff_current_filename} = "";
 
-    # If required, open the LXR database and read all the identifiers into
-    # a massive hashtable (gasp!).
-    my %idhash = ();
-    if ($Codestriker::lxr_db ne "") {
-	my $dbh = DBI->connect($Codestriker::lxr_db, $Codestriker::lxr_user,
-			       $Codestriker::lxr_passwd,
-			       {AutoCommit=>0, RaiseError=>1})
-	    || die "Couldn't connect to database: " . DBI->errstr;
-	my $select_ids = $dbh->prepare_cached('SELECT symname FROM symbols');
-	$select_ids->execute();
-	while (my ($identifier) = $select_ids->fetchrow_array()) {
-	    $idhash{$identifier} = 1;
+    # Check if the repository has an associated LXR mapping, and if so, read
+    # all the identifiers into a massive hashtable (gasp!).
+    if (defined $repository) {
+	my $value = $Codestriker::lxr_map->{$repository->toString()};
+	if (defined $value) {
+	    my %lxr = %{ $value };
+	    my %idhash = ();
+	    
+	    my $dbh = DBI->connect($lxr{db}, $lxr{user}, $lxr{passwd},
+				   {AutoCommit=>0, RaiseError=>1})
+		|| die "Couldn't connect to database: " . DBI->errstr;
+	    my $select_ids =
+		$dbh->prepare_cached('SELECT symname FROM symbols');
+	    $select_ids->execute();
+	    while (my ($identifier) = $select_ids->fetchrow_array()) {
+		$idhash{$identifier} = 1;
+	    }
+	    $dbh->disconnect;
+	    $self->{idhashref} = \%idhash;
 	}
-	$dbh->disconnect;
+	else {
+	    # No LXR mapping defined for this repository.
+	    $self->{idhashref} = undef;
+	}
     }
-    $self->{idhashref} = \%idhash;
-
+    else {
+	# Topic has no repository, so no LXR mapping.
+	$self->{idhashref} = undef;
+    }
+	
     bless $self, $type;
 }
 
@@ -129,8 +143,8 @@ sub lxr_ident($$) {
 sub lxr_data($$) {
     my ($self, $data) = @_;
 
-    # Don't do anything if LXR is not enabled.
-    return $data if $Codestriker::lxr_db eq "";
+    # Don't do anything if LXR is not enabled for this topic.
+    return $data if ! defined $self->{idhashref};
 
     # If the line is just a comment, don't do any processing.  Note this code
     # isn't bullet-proof, but its good enough most of the time.
@@ -290,7 +304,7 @@ sub delta_heading ($$$$$$$) {
     # Output a diff block description if one is available, in a separate
     # row.
     if ($description ne "") {
-	my $description_escaped = CGI::escapeHTML($description);
+	my $description_escaped = HTML::Entities::encode($description);
 	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 				    $description_escaped),
 			 $query->td({-class=>'line', -colspan=>'2'},
@@ -391,7 +405,7 @@ sub display_coloured_data ($$$$) {
     my $query = $self->{query};
 
     # Escape the data.
-    $data = CGI::escapeHTML($data);
+    HTML::Entities::encode($data);
 
     my $leftline = $self->{old_linenumber};
     my $rightline = $self->{new_linenumber};
@@ -655,13 +669,7 @@ sub get_comment_digest($$$$) {
 	    # Need to remove the newlines for the data.
 	    my $data = $comment->{data};
 	    $data =~ s/\n/ /mg; # Remove newline characters
-
-	    if ($CGI::VERSION < 2.59) {
-		# Gggrrrr... the way escaping has been done between these
-		# versions has changed. This needs to be looked into more
-		# but this does the job for now as a workaround.
-		$data = CGI::escapeHTML($data);
-	    }
+	    HTML::Entities::encode($data);
 	    $digest .= "$data ------- ";
 	}
 	# Chop off the last 9 characters.
@@ -895,7 +903,7 @@ sub render_monospaced_line ($$$$$$$$) {
     $data = tabadjust($self, $self->{tabwidth}, $data, 0);
 
     # Add LXR links to the output.
-    my $newdata = $self->lxr_data(CGI::escapeHTML($data));
+    my $newdata = $self->lxr_data(HTML::Entities::encode($data));
 
     if ($class ne "") {
 	# Add the appropriate number of spaces to justify the data to a length
@@ -1029,9 +1037,9 @@ sub get_context ($$$$$$$$$) {
 	    if ($i == $offset) {
 		$context_string .=
 		    "<font color=\"$CONTEXT_COLOUR\">" .
-		      CGI::escapeHTML($linedata) . "</font>\n";
+		      HTML::Entities::encode($linedata) . "</font>\n";
 	    } else {
-		$context_string .= CGI::escapeHTML("$linedata") ."\n";
+		$context_string .= HTML::Entities::encode("$linedata") ."\n";
 	    }
 	} else {
 	    $context_string .= ($i == $offset) ? "* " : "  ";

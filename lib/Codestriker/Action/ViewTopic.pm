@@ -15,6 +15,7 @@ use Codestriker::Model::Topic;
 use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
+use HTML::Entities ();
 
 # If the input is valid, display the topic.
 sub process($$$) {
@@ -121,7 +122,7 @@ sub process($$$) {
 
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
-    $vars->{'escaped_title'} = CGI::escapeHTML($document_title);
+    $vars->{'escaped_title'} = HTML::Entities::encode($document_title);
 
     if ($Codestriker::antispam_email) {
 	$document_author = Codestriker->make_antispam_email($document_author);
@@ -170,7 +171,7 @@ sub process($$$) {
 	$data .= $document_description[$i] . "\n";
     }
     
-    $data = $http_response->escapeHTML($data);
+    HTML::Entities::encode($data);
 
     # Replace occurances of bug strings with the appropriate links.
     if ($Codestriker::bugtracker ne "") {

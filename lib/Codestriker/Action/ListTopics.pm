@@ -11,6 +11,7 @@ package Codestriker::Action::ListTopics;
 
 use strict;
 use Codestriker::Http::Template;
+use HTML::Entities ();
 
 # If the input is valid, list the appropriate topics.
 sub process($$$) {
@@ -102,7 +103,7 @@ sub process($$$) {
 	my @accum_cc = ();
 	my $accum_id = $id[$index];
 	my $accum_version = $version[$index];
-	my $accum_title = CGI::escapeHTML($title[$index]);
+	my $accum_title = HTML::Entities::encode($title[$index]);
 	my $accum_author = $author[$index];
 	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
 	my $accum_state = $Codestriker::topic_states[$state[$index]];

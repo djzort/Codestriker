@@ -68,7 +68,11 @@ sub getDiff ($$$$$$) {
 		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
 		    $module_name );
 
-    my $h = IPC::Run::run(\@command, '>', $fh, '2>', ">$error_file");
+    # Note, under Windows 98, ">$error_file" doesn't work as the final
+    # parameters to IPC::Run::run, so open the file explicitly.
+    open ERROR, ">$error_file" || die "Can't create error file: $!";
+    my $h = IPC::Run::run(\@command, '>', $fh, '2>', \*ERROR);
+    close ERROR;
 
     return $Codestriker::OK;
 }

@@ -1,13 +1,14 @@
-Codestriker v1.7.1.1
+Codestriker v1.7.2
 Copyright (c) 2001, 2002, 2003 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 
 *** Please read the CHANGELOG file for details on changes ***
 -------------------------------------------------------------
 
-Codestriker is a perl CGI script which is used for performing code
+Codestriker is a Perl CGI script which is used for performing code
 reviews in a collaborative fashion as opposed to sending patches and
-comments using unstructured emails.
+comments using unstructured emails.  It runs on UNIXes (Linux, *BSD,
+etc...) and Windows.
 
 Authors create code review topics, where the nominated reviewers will
 be automatically notified by email.  Reviewers then submit comments
@@ -25,8 +26,9 @@ Special support is provided for integration with CVS and Subversion
 repositories, for the display of coloured diffs and for the ability to
 view original and new files in their entirety to assist in the review
 process.  Codestriker can be optionally linked with a bug tracking
-system, such as bugzilla.  Other SCM systems, such as ClearCase will
-be added in future releases, given help from the developer community.
+system, such as Bugzilla.  Other SCM systems, such as ClearCase and
+VSS will be added in future releases, given help from the developer
+community.
 
 The Template Toolkit is used for generating HTML output, so the
 appearance of Codestriker can be modified without changing any Perl
@@ -41,21 +43,20 @@ Installation
 *** Please read the CHANGELOG file for functionality changes between
     releases. ***
 
-Codestriker now uses a database for storing topic information.  It has
+Codestriker uses a database for storing topic information.  It has
 been tested with PostgreSQL and MySQL, and should work fine for other
 databases, as it uses the Perl DBI.  Make sure you update
 codestriker.conf appropriately for your setup.
 
-Codestriker now uses the "Template Toolkit" for its HTML pages, so
-that the output can be easily customised for different sites, without
-modifying any perl code.  This also allows for the pages to be
-translated (ie localised) into different languages.  Make sure the
-"Template" perl module is installed on your system (checksetup.pl will
-do this automatically).
+Codestriker uses the "Template Toolkit" for its HTML pages, so that
+the output can be easily customised for different sites, without
+modifying any Perl code.  This also allows for the pages to be
+translated (ie localised) into different languages.
 
-The templates live in template/en/default.
+The source templates live in template/en/default.
 
-----------------------------------------------------------------------
+UNIX INSTALLATION
+-----------------
 
 For MySQL installations, it is necessary to download the mysql,
 mysql-devel and mysql-server packages (or equivalent for non-RedHat
@@ -95,13 +96,15 @@ should include (for RedHat distributions) the postgresql,
 postgresql-server and postgresql-devel packages.  Make sure your
 version is at least 7.1, as prior versions had restrictions on the
 size of "text" fields, making it impractical for use with Codestriker.
-Start your database with something like: /etc/rc.d/init.d/postgresql
-start
+Start your database with something like: 
+
+/etc/rc.d/init.d/postgresql start
 
 Download and install the DBD::Pg package from http://www.cpan.org,
 which is the Postgresql Perl DBI interface.
 
-To create the codestriker database and user, issue the following:
+To create the codestriker database and user, issue the following
+commands:
 
 createuser --username=postgres -d -A codestriker
 createdb --username=codestriker codestrikerdb
@@ -121,127 +124,193 @@ Note you can remove the database by entering:
 
 dropdb --username=codestriker codestrikerdb
 
+WINDOWS INSTALLATION
+--------------------
+
+Codestriker has been tested with a number of Window variants,
+including Windows XP and Windows 98.  It has only been tested with
+MySQL, but in principle, if PostgreSQL is available for Windows, it
+should work equally as well (or any other DBI-compliant database).
+Window MySQL binaries can be obtained from http://www.mysql.com.
+
+Binaries for the Apache webserver can be obtained from
+http://httpd.apache.org.  I have personally tested with an Apache 1.X
+server, but in principle, Codestriker under Windows should work
+equally as well under Apache 2.X.  In principle, since Codestriker can
+run as a CGI script, it should be possible to deploy under any
+web-server on windows that supports CGI.
+
+Perl for windows can be downloaded from ActiveState, at
+http://www.activestate.com.  Once Perl is installed on your system,
+you can run the "ppm" command, to install perl modules easily off the
+web.  The first time you run "ppm", issue the following commands:
+
+set repository oi http://openinteract.sourceforge.net/ppmpackages/
+set save
+
+This tells PPM to also include
+http://openinteract.sourceforge.net/ppmpackages/ as a location when
+searching for Perl packages.  At this stage, you can use the install
+commands to install missing modules on your system, for example:
+
+install mod_perl
+
+will install the mod_perl package on your system.
+
 ----------------------------------------------------------------------
 
-I use Codestriker with Apache and mod_perl, although there is nothing
-specific to Apache, so it should work fine for other web servers too
-just as a plain CGI script.  This is how Codestriker is installed with
-Apache under Redhat 7.1 (it will be something similar to this for
-other distributions):
+Deploying Codestriker
+---------------------
+
+Decide where you will deploy Codestriker on your system.  The desired
+location will vary from distribution to distribution.  Under RedHat
+7.1, I would do something like the following as root.
 
       mkdir /var/www/codestriker
       cd /var/www/codestriker
-      tar zxvf /from/installed/location/codestriker.X.Y.Z.tar.gz
-      chown -R apache.apache /var/www/codestriker
+      tar zxvf /from/installed/location/codestriker-X.Y.Z.tar.gz
+      chown -R apache.apache /var/www/codestriker/codestriker-X.Y.Z
 
-To create all of the necessary database tables, do the following:
+Here "apache" is the user that runs the Apache server.  It could be
+"nobody" under different systems.  Check with the "ps auxww" command,
+or check your apache config files.
 
-      cd /var/www/codestriker/codestriker.X.Y.Z/bin
-      ./checksetup.pl
+Under Windows, the Codestriker distribution could be unzipped into
+c:\codestriker.
 
-Note checksetup.pl can be executed again and again.  It _must_ be run
-whenever codestriker is updated, as it will automatically adjust the
-database accordingly, check that the necessary tables exist, and that
-the prerequisite modules are installed on the system.
+The codestriker.conf file should be modified to reflect your site's
+configuration.  Some of the more advanced settings, such as Bugzilla
+and LXR integration are described at the end of this document.
 
-Put the following lines in your httpd.conf file (probably located in
-/etc/httpd/conf), so that the
-http://yoursite.yourdomain/codestriker/codestriker.pl is the URL to
-codestriker.
+It is then necessary to check that your system contains all of the
+necessary Perl modules.  Change into the Codestriker bin subdirectory
+and run the checksetup.pl command:
 
-----
+./checksetup.pl  (For windows, this would be "perl checksetup.pl")
 
-Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
-Alias /codestrikerhtml/  /var/www/codestriker/codestriker.X.Y.Z/html/
+This command reports any missing modules.  The ppm command can be used
+to retrieve these modules, or they can be retrieved and installed
+manually by going to http://search.cpan.org.
 
-<Directory "/var/www/codestriker/codestriker.X.Y.Z/cgi-bin/">
+Note this command can be executed as many times as you like, and
+__MUST__ be executed whenever you upgrade Codestriker.
+
+Once all missing modules are installed, checksetup.pl will create the
+necessary database tables (or perform any data migration for
+upgrades), and the codestriker.pl CGI file.  Once it completes
+successfully, the system is ready to run.  The remaining task is to
+configure Apache to use Codestriker.
+
+CGI configuration
+-----------------
+
+Codestriker can be run as an ordinary CGI script.  From a performance
+perspective, it is far better to run Codestriker with mod_perl (see
+the following sections), as this avoids the overhead of loading a
+fresh Perl interpretor for every HTTP request.
+
+If for some reason, you can't get mod_perl installed on your site, you
+can configure Apache 1.X or 2.X with Codestriker as CGI with
+configuration commands something like the following:
+
+ScriptAlias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
+
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/">
+   AllowOverride None
+   Options ExecCGI
+   Order allow,deny
+   Allow from all
+</Directory>
+
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/html/">
+   AllowOverride None
+   Allow from all
+</Directory>
+
+Note for Windows, the commands are the same, but filename paths should
+still use '/' characters rather than '\'.
+
+ScriptAlias /codestriker/ "C:/codestriker/codestriker-X.Y.Z/cgi-bin/"
+Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
+
+<Directory "C:/codestriker/codestriker-X.Y.Z/cgi-bin/">
+   AllowOverride None
+   Options ExecCGI
+   Order allow,deny
+   Allow from all
+</Directory>
+
+<Directory "C:/codestriker/codestriker-X.Y.Z/html/">
+   AllowOverride None
+   Allow from all
+</Directory>
+
+Apache 1.X mod_perl configuration
+---------------------------------
+
+Mod_perl is available for download from http://perl.apache.org.  For
+most Linux distributions, it is available by default with Apache.  For
+installing mod_perl under Windows, http://fill.me.in contains all the
+instructions you need.  As can be seen in the previous section, the
+Windows configuration is the same as the UNIX one, except for the
+syntax in defining filenames.
+
+Use the following configuration for Codestriker under Apache 1.X and
+mod_perl.
+
+Alias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
+
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/">
    SetHandler perl-script
    PerlHandler Apache::Registry
    Options +ExecCGI
 </Directory>
 
-<Directory "/var/www/codestriker/codestriker.X.Y.Z/html/">
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/html/">
    AllowOverride None
    Allow from all
 </Directory>
 
+For extra security, Codestriker supports Perl taint-mode, so it is
+advisable to also have the following option in your Apache config:
+
 PerlTaintCheck On
 
-----
+Apache 2.X mod_perl configuration
+---------------------------------
 
-Restart apache (for upgrades) with something like
-"/etc/rc.d/init.d/httpd restart" and you should be away.
+If it isn't enabled already, you need to ensure the mod_perl module is
+loaded when Apache is started.  Near the top of your config file, you
+should have something like the following:
 
-Using Apache2
--------------
-
- /usr/lib/perl5/site_perl/5.6.0/i386-linux/Apache2/ModPerl/Registry.pm
-
-"PerlTaintCheck On" -> "PerlSwitches -T"
 LoadModule perl_module modules/mod_perl.so
-PerlModule Apache2
-SetHandler perl-script
-PerlResponseHandler ModPerl::Registry
-Options +ExecCGI
+PerlModule Apache2   (or the appropriate Apache modules loaded in your
+                      Perl startup file)
 
-if (Apache::exists_config_define("MODPERL2"))
+The Codestriker configuration for Apache 2.X is very similar, the only
+change is the name of the PerlHandler.
 
+Alias /codestriker/  /var/www/codestriker/codestriker-X.Y.Z/cgi-bin/
+Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
 
-I have only used Codestriker with Apache 1.x with mod_perl, but have
-used it as an ordinary CGI script with Apache2.  A user has reported a
-successful deployment of Codestriker under mod_perl Apache2:
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/cgi-bin/">
+   SetHandler perl-script
+   PerlHandler ModPerl::Registry
+   Options +ExecCGI
+</Directory>
 
-                  I had to change the apache configuration by hand.  I
-                  used ModPerl::Registry for the perl handler. And
-                  place mod_perl into compatibility mode in a perl
-                  startup script.
+<Directory "/var/www/codestriker/codestriker-X.Y.Z/html/">
+   AllowOverride None
+   Allow from all
+</Directory>
 
-                  Then I modified the cgi-bin/codestriker.pl to change 
-                  its directory 
+To enable Perl taint mode checking, using the following option:
 
-                  chdir "/var/www/codestriker/codestriker-1.6.4/lib 
+PerlSwitches -T
 
-                  so it finds the configuration file, and the template
-                  module will use this for its scratch data directory
-                  then.
-
-                  Seems to be working fine now :) 
-
-Using Windows
--------------
-
-I've had report of a Windows user being able to successfully install
-Codestriker under Windows XP, with the following software components.
-Unfortunately, there is no simple installation process, so you need to
-be experienced with installing Perl web applications with Apache,
-before embarking on this task.
-
-    I've just gotten it up and running on my system and plan to get
-    our team using it very soon. If you're interested or are keeping
-    track, here are my details:
-
-                  - CodeStriker v1.6.4 
-                  - Windows XP Pro 
-                  - indigo Perl 5.6.1.626 
-                  - Apache web server 
-                  - mysql v3.23.53 
-
-Migrating old data
-------------------
-
-If you are upgrading Codestriker from a version <= 1.4.X, you need to
-migrate the data from the filesystem to the database if you want to
-preserve exisitng data.  This is a very straightforward process,
-simply do the following (assuming your database is up and running).
-
-      cd /var/www/codestriker/codestriker.X.Y.Z/bin
-      ./import.pl /var/www/codestriker
-
-The argument to import.pl is the location of your previous Codestriker
-installation.  By default, all imported topics are set to state
-"Closed".  You may need to modify some to state open via your browser
-for those topics which are still pending using the "search" and "topic
-list" screens.
+----------------------------------------------------------------------
 
 Compression support
 -------------------
@@ -262,13 +331,6 @@ to turn that option on in the configuration file.  For an intranet
 setup where the server is one hop away, compression will probably slow
 things down if the review sizes are relatively small.  Its best to
 experiment to see what works best for you.
-
-Data storage
-------------
-
-Codestriker now stores all of its topic data and comments into a
-database.  Both PostgreSQL and MySQL have been tested.  Other
-databases should work, since Perl's DBI interface is used.
 
 Codestriker settings
 --------------------
@@ -295,8 +357,9 @@ to be performed:
 
 * Create a new bugzilla user, called "codestriker" via the Bugzilla
   UI.
-* Determine the userid, connect to the bugzilla database using
-  something like:
+
+* Determine the userid of this new user, by connecting to the bugzilla
+  database using something like:
   
   mysql -u bugs bugs -p
 
@@ -309,8 +372,8 @@ to be performed:
 
   Substitute the appropriate email address for the codestriker user
   just created.  Set this value in codestriker.conf, for
-  $bug_db_user_id.  Also set $dub_db_host, $bug_db_name and
-  $bug_db_password so codestriker knows how to connect to the Bugzilla
+  $bug_db_user_id.  Also set $bug_db_host, $bug_db_name and
+  $bug_db_password so Codestriker knows how to connect to the Bugzilla
   database.
 
 When enabled, a newly topic with associated bugs will add a comment to
@@ -353,4 +416,4 @@ sits@users.sourceforge.net.  Contributions are most welcome!
 Immediate work includes support for other source control management
 systems, such as clearcase, and even possibly VSS if its possible.
 
-Codestriker project page: http://sourceforge.net/projects/codestriker.
+Codestriker project page: http://codestriker.sourceforge.net

@@ -73,7 +73,9 @@ sub process($$$) {
     if ($reviewers eq "") {
 	$feedback .= "No reviewers were entered.\n";
     }
-
+    if ($feedback ne "" && defined $fh) {
+	$feedback .= "For security reasons, please re-enter the file name to upload.\n";
+    }
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
 				    $cc, "", "", $repository_url, $projectid,
 				    "", 0, 0);

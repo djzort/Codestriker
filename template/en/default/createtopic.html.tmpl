@@ -45,18 +45,17 @@ notification email to all reviewers.
 <TR>
  <TD>Topic text upload: 
 <FONT SIZE="-2"><A HREF="javascript:alert('
-The topic text contains the actual text of the review.\n
-It can either be pasted into the \'Topic text\' text area\n
-or uploaded from a file in the \'Topic text upload\' box.\n
+The uploaded file contains the actual text of the review.\n
 \n
 Typically, the text is the output of a command such as:\n
 cvs diff -uN &gt; output.txt\n
 or\n
+svn diff -uN &gt; output.txt\n
+or\n
 diff -urN ../old-version/ . &gt; output.txt\n
 \n
-Non unidiff files can be reviewed, but can\'t be displayed\n
-as a coloured-diff, and can\'t be linked to a CVS repository.\n
-Ordinary source files can also be uploaded.
+Non-unidiff files, or ordinary text files can be uploaded,\n
+but will be treated simply as \'new files\'.
 ')">(What's this?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>

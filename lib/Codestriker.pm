@@ -19,7 +19,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
-	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
+	      $lxr_map
 	      $allow_delete $allow_searchlist $allow_repositories
               $allow_projects $antispam_email $VERSION $BASEDIR
 	      );

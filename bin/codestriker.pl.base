@@ -1,4 +1,5 @@
 #!/usr/bin/perl -wT
+# -*-perl-*-
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -18,7 +19,7 @@ require 5.000;
 # checking turned out to be a amjor headache.  For mod_perl, setting this
 # ensures the first time Codestiker is loaded, it can be compiled properly,
 # even if @INC is blatted later.
-use lib "/var/www/codestriker/lib";
+@CODESTRIKER_LIB_DECLARATION@
 
 use strict;
 
