@@ -68,7 +68,7 @@ $CVSROOT       = $ENV{'CVSROOT'};
 $CVSBIN        = '/usr/bin';
 $PATH          = "$PATH:/bin:/usr/bin";
 $MAIL_CMD      = "| /usr/lib/sendmail -i -t";
-$MAIL_TO       = 'sits@localhost.localdomain';
+$MAIL_TO       = 'engineering@localhost.localdomain';
 $MAIL_FROM     = "$ENV{'USER'}\@localhost.localdomain";
 $SUBJECT_PRE   = 'CVS update:';
 
@@ -77,10 +77,10 @@ use lib '/var/www/codestriker-1.8.4/lib';
 use Codestriker::Http::CreateTopic;
 
 # Codestriker specific parameters for topic creation.
-$CODESTRIKER_URL = 'http://localhost.localdomain/codestriker/codestriker.pl';
-$CODESTRIKER_PROJECT = 'Project2';
-$CODESTRIKER_REPOSITORY = '/home/sits/cvs';
-$CODESTRIKER_REVIEWERS = 'sits@localhost.localdomain';
+$CODESTRIKER_URL = 'http://localhost/codestriker/codestriker.pl';
+$CODESTRIKER_PROJECT = 'Project CVS';
+$CODESTRIKER_REPOSITORY = '/var/lib/cvs';
+$CODESTRIKER_REVIEWERS = 'engineering@localhost.localdomain';
 $CODESTRIKER_CC = '';
 
 ############################################################
@@ -315,6 +315,8 @@ sub mail_notification
 # Create a Codestriker topic.  The topic title will be the
 # first line of the log message prefixed with "CVS commit: ".
 # The topic description is the entire log message.
+# Return the URL of the created topic if successful, otherwise
+# undef.
 sub codestriker_create_topic
 {
     local($user, $log_ref, $diff_ref) = @_;
@@ -332,7 +334,7 @@ sub codestriker_create_topic
 	push @bugs, $1;
     }
 
-    my $rc = Codestriker::Http::CreateTopic->doit({
+    return Codestriker::Http::CreateTopic->doit({
 	url => $CODESTRIKER_URL,
 	topic_title => $topic_title,
 	topic_description => $topic_description,
@@ -344,7 +346,6 @@ sub codestriker_create_topic
 	cc => $CODESTRIKER_CC,
 	topic_text => join("\n", @diff)
 	});
-    warn "Unable to create codestriker topic" if $rc == 0;
 }
 
 ## process the command line arguments sent to this script
@@ -574,15 +575,23 @@ if ($rcsidinfo == 1) {
         push(@text, "");        # consistancy...
     }
 }
-#
-# Mail out the notification.
-#
-&mail_notification(@text) if defined($MAIL_TO);
 
 #
 # Now create the Codestriker topic.
 #
-&codestriker_create_topic($cvs_user, \@log_lines, \@diff_text);
+my $topic_url = &codestriker_create_topic($cvs_user, \@log_lines, \@diff_text);
+
+#
+# Mail out the notification.  Prepend the topic url if it is defined.
+#
+if (defined($MAIL_TO)) {
+    if (defined($topic_url)) {
+	unshift @text, "";
+	unshift @text, "  $topic_url";
+	unshift @text, "  Created Codestriker topic at:";
+    }
+    &mail_notification(@text) if defined($MAIL_TO);
+}
 
 &cleanup_tmpfiles;
 exit 0;
