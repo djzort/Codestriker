@@ -337,7 +337,7 @@ sub comment_create($$$) {
     if ( $Codestriker::allow_comment_email || $comment->{cc} ne "")
     {
 	if (!$self->doit(0, $comment->{topicid}, $from, $to,
-			join(',',@cc_recipients), $bcc,
+			join(', ',@cc_recipients), $bcc,
 			$subject, $body)) {
 	    return "Failed to send topic creation email";
         }
