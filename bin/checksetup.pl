@@ -492,7 +492,6 @@ sub create_commentstate ($$$$)
 # even exist.  
 $database->move_table("file", "topicfile");
 
-
 # Migrate the "comment" table to "commentdata", to avoid keyword issues with
 # ODBC and Oracle.  Make sure the error values of the database connection are
 # correctly set, to handle the most likely case where the "file" table doesn't
@@ -532,16 +531,16 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
     }
 }
 
-# Determine if the comment and/or commentstate tables are old.
-my $old_comment_table = $database->column_exists("comment", "line");
+# Determine if the commentdata and/or commentstate tables are old.
+my $old_comment_table = $database->column_exists("commentdata", "line");
 my $old_commentstate_table = $database->column_exists("commentstate", "line");
 
 if ($old_comment_table) {
     my %topicoffset_map;
-    print "Detected old version of comment table, migrating...\n";
+    print "Detected old version of commentdata table, migrating...\n";
 
     # Need to migrate the data to the new style of the table data.
-    move_old_table("comment", undef);
+    move_old_table("commentdata", undef);
     move_old_table("commentstate", "topicid, line") if $old_commentstate_table;
 
     my $stmt;
@@ -563,10 +562,10 @@ if ($old_comment_table) {
 	# Version of codestriker which didn't have a commentstate table.
 	# Need to create new commentstate rows for each distinct comment
 	# first, then update each individual comment row appropriately.
-	move_old_table("comment", undef);
+	move_old_table("commentdata", undef);
 	
 	$stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line ' .
-				     'FROM comment_old');
+				     'FROM commentdata_old');
 	$stmt->execute();
 	while (my ($topicid, $line) = $stmt->fetchrow_array()) {
 	    print " Migrating comment for topic $topicid offset $line...\n";
@@ -583,7 +582,7 @@ if ($old_comment_table) {
     # Now update each comment row to refer to the appropriate commentstate
     # row.
     $stmt = $dbh->prepare_cached('SELECT topicid, commentfield, author, ' .
-				 'line, creation_ts FROM comment_old');
+				 'line, creation_ts FROM commentdata_old');
     $stmt->execute();
     while (my ($topicid, $commentfield, $author, $line, $creation_ts) =
 	   $stmt->fetchrow_array()) {
@@ -601,7 +600,7 @@ if ($old_comment_table) {
     $stmt->finish();
 
     # Drop the old comment table.
-    $dbh->do('DROP TABLE comment_old');
+    $dbh->do('DROP TABLE commentdata_old');
 
     # Commit these changes.
     $database->commit();
