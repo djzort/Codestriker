@@ -7,13 +7,12 @@
 
 # Action object for handling the submission of a new comment.
 
-package Codestriker::Action::SubmitComment;
+package Codestriker::Action::SubmitNewComment;
 
 use strict;
 
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
-use Codestriker::Smtp::SendEmail;
 use Codestriker::Model::Topic;
 use Codestriker::Http::Render;
 
@@ -26,7 +25,7 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Check that the appropriate fields have been filled in.
-    my $topic = $http_input->get('topic');
+    my $topicid = $http_input->get('topic');
     my $line = $http_input->get('line');
     my $fn = $http_input->get('fn');
     my $new = $http_input->get('new');
@@ -44,135 +43,37 @@ sub process($$$) {
 	$http_response->error("No email address was entered");
     }
 
-    # Create the comment in the database.
-    my $timestamp = Codestriker->get_timestamp(time);
-    Codestriker::Model::Comment->create($topic, $line, $fn, $new,
-					$email, $comments, $timestamp,
-					$Codestriker::COMMENT_SUBMITTED);
-
-    # Send an email to the document author and all contributors with the
-    # relevant information.  The person who wrote the comment is indicated
-    # in the "From" field, and is BCCed the email so they retain a copy.
-    my $edit_url = $url_builder->edit_url($fn, $line, $new,
-					  $topic, "", "", $query->url());
-    my $view_topic_url =
-	$url_builder->view_url($topic, $line, $mode,
-			       $Codestriker::default_topic_br_mode);
-    my $view_comments_url = $url_builder->view_comments_url($topic);
-
     # Retrieve the appropriate topic details.
-    my ($document_author, $document_title, $document_bug_ids,
-	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version, $repository);
-    my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
-					     \$document_title,
-					     \$document_bug_ids,
-					     \$document_reviewers,
-					     \$document_cc,
-					     \$description, \$topic_data,
-					     \$document_creation_time,
-					     \$document_modified_time,
-					     \$topic_state,
-					     \$version, \$repository);
+    my $topic = Codestriker::Model::Topic->new($topicid); 
 
-    if ($rc == $Codestriker::INVALID_TOPIC) {
-	# Topic no longer exists, most likely its been deleted.
-	$http_response->error("Topic no longer exists.");
-    }
-
-    # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
-
-    # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read_same_line($topic, $fn, $line, $new);
-                                                                                                          
-    my %contributors = ();
-    $contributors{$email} = 1;
-    my $cc_recipients = "";
-    for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{author} ne $document_author &&
-	    ! exists $contributors{$comments[$i]{author}}) {
-	    $contributors{$comments[$i]{author}} = 1;
-	    $cc_recipients .= "$comments[$i]{author}, ";
-	}
-    }
+    # Create the comment in the database.
+    my $comment = Codestriker::Model::Comment->new();
+    $comment->create($topicid, $line, $fn, $new,
+		     $email, $comments,
+	             $Codestriker::COMMENT_SUBMITTED);
+                        
+    $comment->{cc} = $cc;
     
-    # Remove the last space and comma character.
-    if ($cc_recipients ne "") {
-	substr($cc_recipients, -2) = "";
+    # Tell the listener classes that a comment has just been created.
+    my $listener_response = 
+    	Codestriker::TopicListeners::Manager::comment_create($topic, $comment);
+    if ( $listener_response ne '') {
+	$http_response->error($listener_response);
     }
-
-    # Add the $cc recipients if any were specified.
-    if ($cc ne "")
-    {
-	if ($cc_recipients ne "")
-	{
-	    $cc_recipients .= ", " .
-		Codestriker::Http::Input->make_canonical_email_list($cc);
-	}
-	else
-	{
-	    $cc_recipients =
-		Codestriker::Http::Input->make_canonical_email_list($cc);
-	}
-    }
-
-    my $from = $email;
-    my $to = $document_author;
-    my $bcc = $email;
-    my $subject = "[REVIEW] Topic \"$document_title\" comment added by $email";
-    my $body =
-	"$email added a comment to Topic \"$document_title\".\n\n" .
-	"URL: $edit_url\n\n";
-
-    $body .= "File: " . $delta->{filename} . " line $line.\n\n";
-
-    $body .= "Context:\n";
-    $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";
-    my $email_context = $Codestriker::EMAIL_CONTEXT;
-    $body .= Codestriker::Http::Render->get_context($line, 
-						    $email_context, 0,
-						    $delta->{old_linenumber},
-						    $delta->{new_linenumber},
-						    $delta->{text}, $new)
-	. "\n";
-    $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";    
-    
-    # Now display the comments that have already been submitted.
-    for (my $i = $#comments; $i >= 0; $i--) {
-	if ($comments[$i]{fileline} == $line &&
-	    $comments[$i]{filenumber} == $fn &&
-	    $comments[$i]{filenew} == $new) {
-	    my $data = $comments[$i]{data};
-
-	    $body .= "$comments[$i]{author} $comments[$i]{date}\n\n$data\n\n";
-	    $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";    
-	}
-    }
-
-    # Send the email notification out, if it is allowed in the config file,
-    # or if something has been entered in the cc field.
-    if ( $Codestriker::allow_comment_email || $cc ne "")
-    {
-	if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
-						$cc_recipients, $bcc,
-						$subject, $body)) {
-	    $http_response->error("Failed to send topic creation email");
-        }
-    }
-
+                        
     # Display a simple screen indicating that the comment has been registered.
     # Clicking the Close button simply dismisses the edit popup.  Leaving it
     # up will ensure the next editing topic will be handled quickly, as the
     # overhead of bringing up a new window is removed.
     my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
-    $http_response->generate_header($topic, "Comment submitted", $email, "",
-				    "", "", "", $repository, "", $anchor,
+    $http_response->generate_header($topicid, "Comment submitted", $email, "",
+				    "", "", "", $topic->{repository}, "", $anchor,
 				    $reload, 0);
-
+                                    
+    my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
+    my $view_comments_url = $url_builder->view_comments_url($topicid);
+                                    
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
@@ -181,7 +82,7 @@ sub process($$$) {
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 
-    my $template = Codestriker::Http::Template->new("submitcomment");
+    my $template = Codestriker::Http::Template->new("submitnewcomment");
     $template->process($vars);
 
     $http_response->generate_footer();

@@ -1,16 +1,6 @@
 [%# Screen for show a list of topics. #%]
 
-[% PROCESS header.html.tmpl version = version %]
-
-[%# Show the top-level links for "Create new topic" and "Search" #%]
-<p>
-    <a href="[% create_topic_url %]">Create new topic</a>
-[% IF projects_enabled != 0 %]
-    | <a href="[% list_projects_url %]">List projects</a>
-[% END %]
-    | <a href="[% search_url %]">Search</a>
-    | <a href="[% doc_url %]/x291.html">Help</a>
-</p>
+[% PROCESS header.html.tmpl version = version help = "x291.html" %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -19,9 +9,8 @@
 [% END %]
 
 [%# Display the heading and create the table #%]
-<h1>Topic list</h1>
 <FORM METHOD="POST" ENCTYPE="multipart/form-data">
-<INPUT TYPE="hidden" NAME="action" VALUE="change_topics">
+<INPUT TYPE="hidden" NAME="action" VALUE="change_topics_state">
 
 [%# Store the search parameters as hidden variables #%]
 <INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor | html_entity %]">
@@ -57,7 +46,7 @@
 
     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
         <td><INPUT TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]"></td>
-        <td><a href="[% topic.view_topic_url %]">[% topic.title | html_entity %]</a></td>
+        <td><a href="[% topic.view_topic_url | uri | html_entity %]">[% topic.title | html_entity %]</a></td>
         <td>[% topic.author | html_entity %]</td>
         <td>[% topic.reviewer | html_entity %]</td>
         <td>[% IF topic.cc == "" %]&nbsp;[% ELSE %][% topic.cc | html_entity %][% END %]</td>
@@ -89,10 +78,20 @@ Change state: &nbsp;
 
    <table width="100%">
     <tr class="tlh"><td>&nbsp</td></tr>
-    </tr>
    </table>
 
 </FORM>
+
+<p>
+[% IF projects_enabled != 0 %]
+    <a href="[% list_projects_url | uri | html %]">Administer Projects</a>
+[% END %]
+
+    | <a href="[% view_metrics_url | uri | html %]">Metrics Report</a>
+
+
+</p>
+
 
 [% PROCESS trailer.html.tmpl %]
 

@@ -33,7 +33,6 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'error_message'} = "";
     $vars->{'project_name'} = $http_input->get('project_name');
     $vars->{'project_description'} = $http_input->get('project_description');

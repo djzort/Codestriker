@@ -14,42 +14,20 @@ use strict;
 use Codestriker::Http::Render;
 use Codestriker::Model::Topic;
 
-# Prototypes.
-sub _read_cvs_file( $$$$$ );
-
 # If the input is valid, display the topic.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     # Retrieve the parameters for this action.
     my $query = $http_response->get_query();
-    my $topic = $http_input->get('topic');
+    my $topicid = $http_input->get('topic');
 
-    # Retrieve the appropriate topic details.
-    my ($document_author, $document_title, $document_bug_ids,
-	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version, $repository);
-    my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
-					     \$document_title,
-					     \$document_bug_ids,
-					     \$document_reviewers,
-					     \$document_cc,
-					     \$description, \$topic_data,
-					     \$document_creation_time,
-					     \$document_modified_time,
-					     \$topic_state,
-					     \$version, \$repository);
-
-    if ($rc == $Codestriker::INVALID_TOPIC) {
-	# Topic no longer exists, most likely its been deleted.
-	$http_response->error("Topic no longer exists.");
-    }
+    my $topic = Codestriker::Model::Topic->new($topicid);
 
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain',
-			 -attachment=>"topic${topic}.txt");
-    print $topic_data;
+			 -attachment=>"topic${topicid}.txt");
+    print $topic->{document};
 }
 
 1;

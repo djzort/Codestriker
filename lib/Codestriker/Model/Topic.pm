@@ -13,13 +13,63 @@ use strict;
 
 use Codestriker::DB::DBI;
 use Codestriker::Model::File;
+use Codestriker::Model::Metrics;
+
+sub new {
+    my ($class, $topicid) = @_;
+    my $self = {};
+        
+    $self->{topicid} = 0;
+    $self->{author} = "";
+    $self->{title} = "";
+    $self->{bug_ids} = "";
+    $self->{reviewers} = "";
+    $self->{cc} = "";
+    $self->{description} = "";
+    $self->{document} = "";
+    $self->{creation_ts} = "";
+    $self->{modified_ts} = "";
+    $self->{topic_state} = "";
+    $self->{version} = 0;
+    $self->{repository} = "";
+    $self->{project_id} = "";
+    $self->{project_name} = "";
+    $self->{comments} = [];
+    $self->{metrics} = Codestriker::Model::Metrics->new();
+
+    bless $self, $class;
+
+    if ( defined( $topicid)) {
+	$self->read($topicid);
+    }
+   
+    return $self;
+}
 
 # Create a new topic with all of the specified properties.
 sub create($$$$$$$$$$$$) {
-    my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document, $timestamp, $repository, $projectid,
+    my ($self, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
+	$description, $document, $repository, $projectid,
 	$deltas_ref) = @_;
 
+    my $timestamp = Codestriker->get_timestamp(time);        
+        
+    $self->{topicid} = $topicid;
+    $self->{author} = $author;
+    $self->{title} = $title;
+    $self->{bug_ids} = $bug_ids;
+    $self->{reviewers} = $reviewers;
+    $self->{cc} = $cc;
+    $self->{description} = $description;
+    $self->{document} = $document;
+    $self->{creation_ts} = $timestamp;
+    $self->{modified_ts} = $timestamp;
+    $self->{topic_state} = 0;
+    $self->{project_id} = $projectid;
+    $self->{version} = 0;
+    $self->{repository} = $repository;
+    $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
+                            
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
     my @cc = split /, /, $cc;
@@ -81,11 +131,10 @@ sub create($$$$$$$$$$$$) {
 
 # Read the contents of a specific topic, and return the results in the
 # provided reference variables.
-sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
-    my ($type, $topicid, $author_ref, $title_ref, $bug_ids_ref, $reviewers_ref,
-	$cc_ref, $description_ref, $document_ref, $creation_time_ref,
-	$modified_time_ref, $topic_state_ref, $version_ref,
-	$repository_ref, $project_id_ref, $project_name_ref) = @_;
+sub read($$) {
+    my ($self, $topicid) = @_;
+    
+    $self->{topicid} = $topicid;    
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -111,7 +160,6 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
 
     my $success = defined $select_topic && defined $select_bugs &&
 	defined $select_participants;
-    my $rc = $Codestriker::OK;
 
     # Retrieve the topic information.
     $success &&= $select_topic->execute($topicid);
@@ -119,6 +167,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
     my ($id, $author, $title, $description, $document, $state,
 	$creationtime, $modifiedtime, $version, $repository,
 	$projectid, $projectname);
+
     if ($success) {
 	($id, $author, $title, $description, $document, $state,
 	 $creationtime, $modifiedtime, $version, $repository,
@@ -128,7 +177,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
 
 	if (!defined $id) {
 	    $success = 0;
-	    $rc = $Codestriker::INVALID_TOPIC;
+	    die("Topic id \"$topicid\" no longer exists.");
 	}
     }
 
@@ -164,34 +213,49 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
     # Store the data into the referenced variables if the operation was
     # successful.
     if ($success) {
-	$$author_ref = $author;
-	$$title_ref = $title;
-	$$bug_ids_ref = join ', ', @bugs;
-	$$reviewers_ref = join ', ', @reviewers;
-	$$cc_ref = join ', ', @cc;
-	$$description_ref = $description;
-	$$document_ref = $document;
-	$$creation_time_ref = Codestriker->format_timestamp($creationtime);
-	$$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
-	$$topic_state_ref = $Codestriker::topic_states[$state];
-	$$project_id_ref = $projectid;
-	$$project_name_ref = $projectname;
-	$$version_ref = $version;
+	$self->{author} = $author;
+	$self->{title} = $title;
+	$self->{bug_ids} = join ', ', @bugs;
+	$self->{reviewers} = join ', ', @reviewers;
+	$self->{cc} = join ', ', @cc;
+	$self->{description} = $description;
+	$self->{document} = $document;
+	$self->{creation_ts} = $creationtime;
+	$self->{modified_ts} = $modifiedtime;
+	$self->{topic_state} = $Codestriker::topic_states[$state];
+	$self->{project_id} = $projectid;
+	$self->{project_name} = $projectname;
+	$self->{version} = $version;
+        $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
 	
 	# Set the repository to the default system value if it is not defined.
 	if (!defined $repository || $repository eq "") {
-	    $$repository_ref = $Codestriker::default_repository;
+	    $self->{repository} = $Codestriker::default_repository;
 	} else {
-	    $$repository_ref = $repository;
+	    $self->{repository} = $repository;
+	}
 	}
     }
 
-    return $rc;
+# Reads from the db if needed, and returns the list of comments for
+# this topic. If the list of comments have already been returned, the
+# function will skip the db call, and just return the list from
+# memory.
+sub read_comments {
+    my ($self) = shift;
+
+    if ( scalar(@{$self->{comments}}) == 0) {
+	my @comments = Codestriker::Model::Comment->read_all_comments_for_topic($self->{topicid});
+    
+	$self->{comments} = \@comments;
+    }
+
+    return @{$self->{comments}};
 }
 
 # Determine if the specified topic id exists in the table or not.
-sub exists($$) {
-    my ($type, $topicid) = @_;
+sub exists($) {
+    my ($topicid) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -214,10 +278,47 @@ sub exists($$) {
     return $count;
 }
 
-# Update the state of the specified topic.  The version parameter indicates
-# what version of the topic the user was operating on.
-sub change_state($$$$$) {
-    my ($type, $topicid, $new_state, $modified_ts, $version) = @_;
+# This function returns the metrics objects that are part of the topic.
+sub get_metrics {
+    my ($self) = @_;
+
+    return $self->{metrics};
+}
+
+
+# This function is used to create a new topic id. The function insures 
+# that the new topic id is difficult to guess, and is not taken in the 
+# database already.
+sub create_new_topicid {
+    # For "hysterical" reasons, the topic id is randomly generated.  Seed the
+    # generator based on the time and the pid.  Keep searching until we find
+    # a free topicid.  In 99% of the time, we will get a new one first time.
+    srand(time() ^ ($$ + ($$ << 15)));
+    my $topicid;
+    do {
+	$topicid = int rand(10000000);
+    } while (Codestriker::Model::Topic::exists($topicid));
+    
+    return $topicid;
+}
+
+# Everytime a topic is stored the version number is incremented. When
+# a page is created it includes the version number of the topic used
+# to create the page. The user posts information back to server to
+# change, the version information needs to be checked to make sure
+# somebody else has not modified the server.
+sub check_for_stale($$) {
+    my ($self, $version) = @_;
+
+    return $self->{version} ne $version;
+}
+
+
+# Update the state of the specified topic. 
+sub change_state($$) {
+    my ($self, $new_state) = @_;
+
+    my $modified_ts = Codestriker->get_timestamp(time);
 
     # Map the new state to its number.
     my $new_stateid;
@@ -237,7 +338,7 @@ sub change_state($$$$$) {
     # the same value when updating the record, otherwise it gets set to the
     # current time!
     my $select_topic =
-	$dbh->prepare_cached('SELECT version, state, creation_ts ' .
+	$dbh->prepare_cached('SELECT version, creation_ts ' .
 			     'FROM topic WHERE id = ?');
     my $update_topic =
 	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
@@ -246,13 +347,13 @@ sub change_state($$$$$) {
     my $rc = $Codestriker::OK;
 
     # Retrieve the current topic data.
-    $success &&= $select_topic->execute($topicid);
+    $success &&= $select_topic->execute($self->{topicid});
 
     # Make sure that the topic still exists, and is therefore valid.
-    my ($current_version, $current_stateid, $creation_ts);
+    my ($current_version, $creation_ts);
     if ($success && 
-	! (($current_version, $current_stateid, $creation_ts)
-	   = $select_topic->fetchrow_array())) {
+	! (($current_version, $creation_ts) =
+	   $select_topic->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
 	$rc = $Codestriker::INVALID_TOPIC;
@@ -260,18 +361,23 @@ sub change_state($$$$$) {
     $success &&= $select_topic->finish();
 
     # Check the version number.
-    if ($success && $version != $current_version) {
+    if ($self->{version} != $current_version) {
 	$success = 0;
 	$rc = $Codestriker::STALE_VERSION;
     }
 
     # If the state hasn't changed, don't do anything, otherwise update the
     # topic.
-    if ($new_stateid != $current_stateid) {
-	$success &&= $update_topic->execute($version+1, $new_stateid,
+    if ($new_state ne $self->{topic_state}) {
+    	$self->{version} = $self->{version} + 1;
+	$success &&= $update_topic->execute($self->{version}, $new_stateid,
 					    $creation_ts, $modified_ts,
-					    $topicid);
+					    $self->{topicid});
     }
+    
+    $self->{modified_ts} = $modified_ts;
+    $self->{topic_state} = $new_state;
+    
     Codestriker::DB::DBI->release_connection($dbh, $success);
     return $rc;
 }
@@ -444,8 +550,8 @@ sub _add_condition($$$\@\$) {
 }
 
 # Delete the specified topic.
-sub delete($$) {
-    my ($type, $topicid) = @_;
+sub delete($) {
+    my ($self) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -470,26 +576,35 @@ sub delete($$) {
     my $delete_delta =
 	$dbh->prepare_cached('DELETE FROM delta WHERE topicid = ?');
 
+    my $topic_metrics =
+	$dbh->prepare_cached('DELETE FROM topic_metric WHERE topicid = ?');
+
+    my $user_metrics =
+	$dbh->prepare_cached('DELETE FROM topic_user_metric WHERE topicid = ?');
+
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&
 	defined $delete_file && defined $delete_participant &&
-	defined $delete_topicbug && $delete_delta;
+	defined $delete_topicbug && defined $delete_delta && 
+	defined $topic_metrics && defined $user_metrics;
 
     # Now do the deed.
-    $success &&= $select->execute($topicid);
+    $success &&= $select->execute($self->{topicid});
     if ($success) {
 	while (my ($commentstateid) = $select->fetchrow_array()) {
 	    $success &&= $delete_comments->execute($commentstateid);
 	}
 	$success &&= $select->finish();
     }
-    $success &&= $delete_commentstate->execute($topicid);
-    $success &&= $delete_topic->execute($topicid);
-    $success &&= $delete_comments->execute($topicid);
-    $success &&= $delete_file->execute($topicid);
-    $success &&= $delete_participant->execute($topicid);
-    $success &&= $delete_topicbug->execute($topicid);
-    $success &&= $delete_delta->execute($topicid);
+    $success &&= $delete_commentstate->execute($self->{topicid});
+    $success &&= $delete_topic->execute($self->{topicid});
+    $success &&= $delete_comments->execute($self->{topicid});
+    $success &&= $delete_file->execute($self->{topicid});
+    $success &&= $delete_participant->execute($self->{topicid});
+    $success &&= $delete_topicbug->execute($self->{topicid});
+    $success &&= $delete_delta->execute($self->{topicid});
+    $success &&= $topic_metrics->execute($self->{topicid});
+    $success &&= $user_metrics->execute($self->{topicid});
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

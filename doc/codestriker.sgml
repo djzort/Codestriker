@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.7.8</subtitle>
+    <subtitle>Version 1.8.0</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -2144,6 +2144,46 @@ PerlSwitches -T
 	    </listitem>
 	  </varlistentry>
 	</variablelist>
+      </para>
+    </sect1>
+    <sect1>
+      <title>Code Style Guide</title>
+      <para>
+        <itemizedlist>
+          <listitem>
+	    <para>
+	      All comments must be complete sentances. Start with
+	      a capital letter, and end with a fullstop.
+            </para>
+          </listitem>
+          <listitem>
+	    <para>
+	      Function calls should have no extra spaces around the
+	      <function>()</function>, so <function>function( x
+	      )</function>, should be written
+	      <function>function(x)</function>.
+	    </para>
+	  </listitem>
+          <listitem>
+	    <para>
+	      Functions calls with more than one parameter should have
+	      spaces after the argument, so
+	      <function>function(x,y,z)</function>, should be
+	      <function>function(x, y, z)</function>.
+	    </para>
+	  </listitem>
+          <listitem>
+	    <para>
+	      Limit line length where possible to 80 characters.
+	    </para>
+	  </listitem>
+          <listitem>
+	    <para>
+	      All SQL statements should use uppercase for SQL
+	      keywords, and lowercase for everything else.
+	    </para>
+	  </listitem>
+        </itemizedlist>             
       </para>
     </sect1>
   </chapter>

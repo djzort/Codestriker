@@ -1,15 +1,10 @@
 [%# Screen for the submit comment confirmation screen. #%]
 
-[% PROCESS header.html.tmpl version = version %]
-
-<P>
-<A HREF="[% view_topic_url %]">View topic</A> |
-<A HREF="[% view_comments_url %]">View all comments</A>
-<HR>
+[% PROCESS header.html.tmpl version = version help="x332.html" %]
 
 <H2>Comment submitted</H2>
 <P>
-<PRE>[% comment | html_entity %]
+<PRE>[% comment %]
 </PRE><P>
 
 [%# Display a simple form for closing the comment popup window #%]

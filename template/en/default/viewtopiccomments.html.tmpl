@@ -1,8 +1,6 @@
 [%# Display a list of comments #%]
 
-[% USE AutomagicLinks %]
-
-[% PROCESS header.html.tmpl version = version %]
+[% PROCESS viewtopicheader.html.tmpl version = version help="x476.html" topicview=0 topiccomments=1 topicinfo=0 %]
 
 <SCRIPT language="JavaScript">
 <!-- This function handles the three filter select boxes at the top of the table.
@@ -40,62 +38,8 @@ function SelectFilter(post)
         window.form.post();
     }
 }
-
-// This function checks all comment checkboxes.
-function CheckAll()
-{
-    if (document.form.selected_comments == null)
-    {
-        return;  // No comments.
-    }
-
-    if (document.form.selected_comments.length == null)
-    {
-        // Only one comment, older browsers don't represent checkboxes
-        // in array notation when there is only one element.
-        document.form.selected_comments.checked = true;
-        return;
-    }
-
-    // Check all the arrays.    
-    for (var i = 0; i < document.form.selected_comments.length; i++)
-    {
-        document.form.selected_comments[i].checked = true;
-    }    
-}
-
-// This function clear all comment checkboxes.
-function ClearAll()
-{
-    if (document.form.selected_comments == null)
-    {
-        return;  // No comments.
-    }
-
-    if (document.form.selected_comments.length == null)
-    {
-        // Only one comment, older browsers don't represent checkboxes
-        // in array notation when there is only one element.
-        document.form.selected_comments.checked = false;
-        return;
-    }
-
-    for (var i = 0; i < document.form.selected_comments.length; i++)
-    {
-        document.form.selected_comments[i].checked = false;
-    }    
-}
-
 // -->
 </SCRIPT>
-
-[%# Show the top-level link for "Refresh" and "View topic" #%]
-<P>
-<A HREF="[% view_comments_url %]">View all updated comments</A> |
-<A HREF="[% view_topic_url %]">View topic</A> |
-<A HREF="[% doc_url %]/x503.html">Help</A>
-<HR>
-<P>
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -104,7 +48,7 @@ function ClearAll()
 [% END %]
 
 <FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="SelectFilter(1)">
-<INPUT TYPE="hidden" NAME="action" VALUE="change_comments">
+<INPUT TYPE="hidden" NAME="action" VALUE="change_comments_state">
 <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
 
 <INPUT TYPE="hidden" NAME="scontext" VALUE="[% scontext %]">
@@ -118,34 +62,29 @@ Show comments authored by: &nbsp;
   <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
      <OPTION value="1"> Everybody     
      [% FOREACH user = users %]
-     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [%END%] >[% user %]
+     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]
      [% END %]
   </SELECT>
      
 with: 
   <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
-     <OPTION value="Any" [%IF select_sstate == 0 %] SELECTED [%END%]> Any
+     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any
      [% FOREACH state = states %]
-     <OPTION value="[% state %]" [%IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
+     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
      [% END %]
   </SELECT>
   
 state and
 
   <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
-     <OPTION value="0" [%IF scontext == 0 %] SELECTED [% END %]>no context
-     <OPTION value="3" [%IF scontext == 3 %] SELECTED [% END %]>with context 3 lines
-     <OPTION value="6" [%IF scontext == 6 %] SELECTED [% END %]>with context 6 lines
+     <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context
+     <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines
+     <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines
   </SELECT>
 .
 
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
-    <TR>
-        <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
-        </TD>
-    </TR>
 [% last_fileline = -1 %]
 [% last_filenumber = -1 %]
 [% FOREACH comment = comments %]
@@ -154,15 +93,15 @@ state and
     [% IF comment.fileline != last_fileline ||
           comment.filenumber != last_filenumber %]
     <TR CLASS="comments">
-        <TD WIDTH="1%">
+        <TD>
             <INPUT TYPE="checkbox" NAME="selected_comments" 
 	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
         </TD>
-	<TD WIDTH="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
-        <TD>
+	<TD><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+	<TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
-	       <A HREF="[% comment.view_parallel %]">Parallel</A> |
+	       [% IF allow_repositories != 0 %] <A HREF="[% comment.view_parallel %]">Parallel</A> | [% END %]
 	       <A HREF="[% comment.edit_url %]">Add comment</A>
 	    [% ELSE %]
 	       Line: [% comment.line %] |
@@ -172,7 +111,7 @@ state and
     </TR>
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
+        <TD></TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
@@ -182,21 +121,15 @@ state and
 
     <TR CLASS="commenth">
         <TD CLASS="commentb">&nbsp;</TD>
-        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
+        <TD COLSPAN="2">[% comment.author %]&nbsp;[% comment.date %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data %]</PRE></TD>
     </TR>
 
 [% END %]
 
     <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
-
-    <TR>
-        <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
-        </TD>
-    </TR>
 
 </TABLE>
 

@@ -38,7 +38,6 @@ sub process($$$) {
 
     # Construct the template object.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
     $vars->{'project'} = $project;
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();

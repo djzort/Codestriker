@@ -1,0 +1,88 @@
+[%# Screen for the add comment form. #%]
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr class="heading">
+  <td valign="bottom"></td>   
+  <td class="heading"><center><a href="[% list_url | uri | html_entity %]" STYLE="text-decoration: none"><font color="black">[% main_title %]</font></a></center></td>
+  <td valign="bottom"><a href="[% doc_url | uri | html_entity %]/x380.html#ADD-COMMENT">Help</a></td>
+</tr>
+</table>
+<HR>
+
+
+<table border=0 rules=groups cellpadding=5% cellspacing=0 width="100%">
+<colgroup span=3>
+<tr class="tlh">
+    <td colspan=4>Topic Title: <b>[% topic_title %]</b>. </td>
+    <td align=right>[% document_creation_time %]</td>
+</tr>
+</table>
+
+<P>
+Enter new comment:
+
+<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+ <INPUT TYPE="hidden" NAME="action" VALUE="submit_comment">
+ <INPUT TYPE="hidden" NAME="line" VALUE="[% line %]">
+ <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
+ <INPUT TYPE="hidden" NAME="mode" VALUE="[% mode %]">
+ <INPUT TYPE="hidden" NAME="a" VALUE="[% anchor %]">
+ <INPUT TYPE="hidden" NAME="fn" VALUE="[% fn %]">
+ <INPUT TYPE="hidden" NAME="new" VALUE="[% new %]">
+ <TEXTAREA NAME="comments" ROWS=13 COLS=75 WRAP="hard"></TEXTAREA>
+ <P>
+
+ <TABLE>
+ <TR>
+  <TD>Your email address: </TD>
+  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=100></TD>
+  <TD></TD>
+ </TR>
+ <TR>
+  <TD>Cc: </TD>
+  <TD><INPUT TYPE="text" NAME="comment_cc"  SIZE=50 MAXLENGTH=150></TD>
+  <TD><INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()"></TD>
+ </TR>
+ </TABLE>
+
+ 
+</FORM>
+
+[%# Display a list of comments #%]
+
+<TABLE CELLPADDING="1" CELLSPACING="1" BORDER="0" width="100%">
+[% FOREACH comment = comments %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+
+[% IF loop.count() == 1 %]
+<TR CLASS="comments"><TD><B>Comments:</B></TD></TR>
+<TR CLASS="commentb"><TD>&nbsp;</TD></TR>
+[% END %]
+
+<TR CLASS="commenth">
+<TD>
+[% IF comment.line != '' %]
+<A HREF="[% comment.lineurl %]" NAME="[% comment.linename %]">
+[% comment.line %]</A>
+[% END %]
+
+[% comment.author %]&nbsp;[% comment.date %]
+</TD>
+</TR>
+<TR CLASS="commentb">
+<TD>
+<PRE>[% comment.data %]</PRE></TD>
+</TR>
+[% END %]
+</TABLE>
+
+<hr>
+<P>Context: (<A HREF="[% inc_context_url %]">increase</A> | <A HREF="[% dec_context_url %]">decrease)</A>
+<PRE>[% context %]
+</PRE>
+
+[% PROCESS trailer.html.tmpl %]
+
+</BODY>
+</HTML>
+

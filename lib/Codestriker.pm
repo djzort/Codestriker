@@ -21,11 +21,15 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist $allow_repositories
-              $allow_projects $antispam_email $VERSION $BASEDIR
+              $allow_projects $antispam_email $VERSION $title $BASEDIR
+	      @metrics_schema
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.8";
+$Codestriker::VERSION = "1.8.0pre1";
+
+# Default title to display on each Codestriker screen.
+$Codestriker::title = "Codestriker $Codestriker::VERSION";
 
 # The maximum size of a diff file to accept.  At the moment, this is 20Mb.
 $Codestriker::DIFF_SIZE_LIMIT = 20000 * 1024;
@@ -57,13 +61,8 @@ $Codestriker::PARTICIPANT_CC = 1;
 # Default email context to use.
 $Codestriker::EMAIL_CONTEXT = 8;
 
-# Valid comment states.
+# Valid comment states, the only one that is special is the submitted state.
 $Codestriker::COMMENT_SUBMITTED = 0;
-$Codestriker::COMMENT_INVALID = 1;
-$Codestriker::COMMENT_COMPLETED = 2;
-
-# Textual representations of the above states.
-@Codestriker::comment_states = ("Submitted", "Invalid", "Completed");
 
 # Day strings
 @Codestriker::days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
@@ -80,6 +79,170 @@ $Codestriker::COMMENT_COMPLETED = 2;
 # Short month strings
 @Codestriker::short_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+
+
+
+# name => The short name of the metric. This name will be used in the SQL table, in the data download, and in the input tables.
+#
+# description => The long description of the item. Displayed as online help.
+#
+# enabled=> If 1, the metrics are enabled by default on new installs of codestriker. After 
+#             the system has been configured, it is up to the local admin. 
+#
+# Scope => This will be "topic", "reviewer","author".
+#	    A "topic" metric that has a 1 to 1 relationship with the topic itself.
+#           If it is not a topic metric, it is a kind  of user metric. User metrics 
+#           have a 1-1 relationship with each user in the topic. If the type is 
+#           reviewer, it is only needed by a user that is a reviewer (but not author), 
+#           of the topic. If the type is author, it is only needed by the author of the 
+#           metric, and if it is participants, it is needed by all users regardless 
+#           of the role.
+#
+# filter => The type of data being stored. "hours" or "count". Data will not be stored to 
+#           the database if it does not pass the format expected for the filter type.
+
+@metrics_schema = 
+( 
+  # planning time
+  {
+  name=>"entry time",
+  description=>"Work hours spent by the inspection leader to check that entry conditions are met, and to work towards meeting them",
+  enabled=>0,
+  scope=>"author",
+  filter=>"hours"
+  },
+  {
+  name=>"kickoff time",
+  description=>"Total work hours used per individual for the kickoff meeting and for planning of the kickoff meeting.",
+  scope=>"participant",
+  enabled=>1,
+  filter=>"hours"
+  },
+  {
+  name=>"planning time",
+  description=>"Total work hours used to create the inspection master plan.",
+  scope=>"author",
+  enabled=>0,
+  filter=>"hours"
+  },
+
+  # checking time
+  {
+  name=>"checking time",
+  description=>"The total time spent checking the topic.",
+  scope=>"participant",
+  enabled=>1, 
+  filter=>"hours"
+  },
+  {
+  name=>"lines studied",
+  description=>"The number of lines which have been closly scrutinized at or near optimum checking rate",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"count"
+  },
+  {
+  name=>"lines scanned",
+  description=>"The number of lines which have been looked at higher then the optimum checking rate",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"count"
+  },
+  {
+  name=>"studied time",
+  description=>"The time in hours spent closly scrutinized at or near optimum checking rate",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"hours"
+  },
+  {
+  name=>"scanned time",
+  description=>"The time in hours spent looking at the topic at higher then the optimum checking rate",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"hours"
+  },
+
+  # logging meeting time.
+  {
+  name=>"logging meeting duration",
+  description=>"The wall clock time of the logging meeting.",
+  scope=>"topic",
+  enabled=>1, 
+  filter=>"hours"
+  },
+  {
+  name=>"logging meeting logging duration",
+  description=>"The wall clock time spent reporting issues and searching for new issues.",
+  scope=>"topic",
+  enabled=>0,
+  filter=>"hours"
+  },
+  {
+  name=>"logging meeting discussion duration",
+  description=>"The wall clock time spent not reporting issues and searching for new issues.",
+  scope=>"topic",
+  enabled=>0,
+  filter=>"hours"
+  },
+  {
+  name=>"logging meeting logging time",
+  description=>"The total time spent reporting issues and searching for new issues.",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"hours"
+  },
+  {
+  name=>"logging meeting discussion time",
+  description=>"The total time spent not reporting issues and searching for new issues.",
+  scope=>"participant",
+  enabled=>0,
+  filter=>"hours"
+  },
+  ,
+  {
+  name=>"logging meeting new issues logged",
+  description=>"The total number of issues that were not noted before the meeting and found during the meeting.",
+  scope=>"topic",
+  enabled=>0,
+  filter=>"count"
+  },
+
+  # editing
+
+  {
+  name=>"edit time",
+  description=>"The total time spent editing all items",
+  scope=>"author",
+  enabled=>0,
+  filter=>"hours"
+  },
+  {
+  name=>"follow up time",
+  description=>"The total time spent by the leader to check exit criteria and do exit activities.",
+  scope=>"author",
+  enabled=>0,
+  filter=>"hours"
+  },
+
+  {
+  name=>"exit time",
+  description=>"The total time spent by the leader to check exit criteria and do exit activities.",
+  scope=>"author",
+  enabled=>0,
+  filter=>"hours"
+  },
+
+  {
+  name=>"correct fix rate",
+  description=>"The percentage of edit corrections attempts with correct fix a defect and not introduce new defects.",
+  scope=>"author",
+  enabled=>0,
+  filter=>"percent"
+  },
+
+);
+
 
 # Initialise codestriker, by loading up the configuration file and exporting
 # those values to the rest of the system.
@@ -119,8 +282,8 @@ sub format_timestamp($$) {
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	    localtime($time_value);
 	$year += 1900;
-	return sprintf("%02d:%02d:%02d $Codestriker::days[$wday], $mday " .
-		       "$Codestriker::months[$mon], $year",
+	return sprintf("$Codestriker::days[$wday] " .
+		       "$Codestriker::months[$mon] $mday , $year %02d:%02d:%02d ",
 		       $hour, $min, $sec);
     } else {
 	return $timestamp;
@@ -146,6 +309,25 @@ sub format_short_timestamp($$) {
     }
 }
 
+# Given a database formatted timestamp, output it in a short,
+# human-readable date only form.
+sub format_date_timestamp($$) {
+    my ($type, $timestamp) = @_;
+
+    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
+	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+	    localtime($time_value);
+	$year += 1900;
+	return "$Codestriker::short_days[$wday] $Codestriker::short_months[$mon] $mday, $year";
+		      
+    } else {
+	return $timestamp;
+    }
+}
+
+
 # Given an email string, replace it in a non-SPAM friendly form.
 # sits@users.sf.net -> sits@us...
 sub make_antispam_email($$) {
@@ -153,6 +335,16 @@ sub make_antispam_email($$) {
 
     $email =~ s/([0-9A-Za-z\._]+@[0-9A-Za-z\._]{3})[0-9A-Za-z\._]+/$1\.\.\./g;
     return "$email";
+}
+
+sub filter_email {
+    my ($type, $email) = @_;
+    
+    if ($Codestriker::antispam_email) {
+	$email = $type->make_antispam_email($email);
+    }
+    
+    return $email;
 }
 
     

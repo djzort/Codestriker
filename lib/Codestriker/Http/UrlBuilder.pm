@@ -165,4 +165,24 @@ sub view_comments_url ($$) {
     return $self->{query}->url() . "?action=list_comments&topic=$topic";
 }
 
+sub view_topicinfo_url ($$) {
+    my ($self, $topic) = @_;
+
+    return $self->{query}->url() . "?action=viewinfo&topic=$topic";
+}
+
+sub metric_report_url {
+    my ($self) = @_;
+
+    return $self->{query}->url() . "?action=metrics_report";
+}
+
+sub metric_report_download_raw_data {
+    my ($self) = @_;
+
+    return $self->{query}->url() . "?action=metrics_download";
+}
+
+
+
 1;

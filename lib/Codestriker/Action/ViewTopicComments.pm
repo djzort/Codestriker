@@ -7,13 +7,14 @@
 
 # Action object for displaying a list of comments.
 
-package Codestriker::Action::ListComments;
+package Codestriker::Action::ViewTopicComments;
 
 use strict;
 use Codestriker::Http::Template;
 use Codestriker::Http::Render;
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
+use HTML::Entities;
 
 # If the input is valid, list the appropriate comments for a topic.
 sub process($$$) {
@@ -22,7 +23,7 @@ sub process($$$) {
     my $query = $http_response->get_query();
 
     # Check that the appropriate fields have been filled in.
-    my $topic = $http_input->get('topic');
+    my $topicid = $http_input->get('topic');
     my $email = $http_input->get('email');
     my $mode = $http_input->get('mode');
     my $feedback = $http_input->get('feedback');
@@ -33,51 +34,42 @@ sub process($$$) {
     # Perform some error checking here on the parameters.
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read_filtered($topic,
+    my @comments = Codestriker::Model::Comment->read_filtered($topicid,
     	$show_comments_by_state,
 	$show_comments_from_user);
 
     # Display the data, with each topic title linked to the view topic screen.
-    $http_response->generate_header($topic, "Comment list", $email, "", "", "",
+    $http_response->generate_header($topicid, "Comment list", $email, "", "", "",
 				    "", "", "", "", 0, 0);
+
+    # Retrieve the appropriate topic details.           
+    my $topic = Codestriker::Model::Topic->new($topicid);     
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Construct the view topic URL.
-    my $view_url = $url_builder->view_url($topic, -1, $mode,
-					  $Codestriker::default_topic_br_mode);
-    $vars->{'view_topic_url'} = $view_url;
 
-    # Construct the view comments URL.
-    my $view_comments_url = $url_builder->view_comments_url($topic);
-    $vars->{'view_comments_url'} = $view_comments_url;
-
-    # Indicate where the documentation directory is.
-    $vars->{'doc_url'} = $url_builder->doc_url();
+    Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic, $url_builder);
 
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
-				      
-    my @usersThatHaveComments = Codestriker::Model::Comment->read_authors( $topic );
+
+    # Get the list of users that have put comments in against the comment, and filter if needed.
+    my @usersThatHaveComments = Codestriker::Model::Comment->read_authors($topicid);
+    @usersThatHaveComments = map 
+            { Codestriker->filter_email($_) } 
+            @usersThatHaveComments;        
     
     # Filter the email address out, in the object.
-    if ( $Codestriker::antispam_email ) {
-    	foreach my $comment (@comments) {
-    	    $comment->{author} = Codestriker->make_antispam_email( $comment->{author} );
-        }
-        
-        @usersThatHaveComments = map 
-        	{ Codestriker->make_antispam_email($_) } 
-                @usersThatHaveComments;        
-    }     
-                                         
+    foreach my $comment (@comments) {
+    	$comment->{author} = Codestriker->filter_email($comment->{author});
+    }
+                                             
     # Go through all the comments and make them into an appropriate form for
     # displaying.
     my $last_filenumber = -1;
@@ -89,14 +81,14 @@ sub process($$$) {
 	if ($comment->{fileline} != $last_fileline ||
 	    $comment->{filenumber} != $last_filenumber) {
 	    my $new_file =
-		$url_builder->view_file_url($topic, $comment->{filenumber},
+		$url_builder->view_file_url($topicid, $comment->{filenumber},
 					    $comment->{filenew},
 					    $comment->{fileline}, $mode, 0);
 					    
 	    $comment->{view_file} =
 		"javascript: myOpen('$new_file','CVS')";
 	    my $parallel = 
-		$url_builder->view_file_url($topic, $comment->{filenumber},
+		$url_builder->view_file_url($topicid, $comment->{filenumber},
 					    $comment->{filenew},
 					    $comment->{fileline}, $mode, 1);
 	    $comment->{view_parallel} =
@@ -113,8 +105,11 @@ sub process($$$) {
 	my $state = $comment->{state};
 	$comment->{state} = $Codestriker::comment_states[$state];
 
+	# Make sure the comment data is HTML escaped.
+	$comment->{data} = HTML::Entities::encode($comment->{data});
+        
         if ($show_context ne "" && $show_context > 0) {
-                my $delta = Codestriker::Model::File->get_delta($topic, 
+                my $delta = Codestriker::Model::File->get_delta($topicid, 
                                 $comment->{filenumber}, 
                                 $comment->{fileline} , 
                                 $comment->{filenew});
@@ -139,7 +134,6 @@ sub process($$$) {
     }
 
     # Store the parameters to the template.
-    $vars->{'topic'} = $topic;
     $vars->{'email'} = $email;
     $vars->{'comments'} = \@comments;
     $vars->{'states'} = \@states;
@@ -158,9 +152,9 @@ sub process($$$) {
  
     $vars->{'sstate'} = $show_comments_by_state;     
     $vars->{'sauthor'} = $http_input->get('sauthor');
-    
+
     # Send the data to the template for rendering.
-    my $template = Codestriker::Http::Template->new("displaycomments");
+    my $template = Codestriker::Http::Template->new("viewtopiccomments");
     $template->process($vars);
 
     $http_response->generate_footer();

@@ -22,68 +22,55 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-    my $topic = $http_input->get('topic');
+    
+    my $topicid = $http_input->get('topic');
     my $mode = $http_input->get('mode');
     my $brmode = $http_input->get('brmode');
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
     my $feedback = $http_input->get('feedback');
 
-    # Retrieve the appropriate topic details.
-    my ($document_author, $document_title, $document_bug_ids,
-	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version, $repository_url, $projectid, $project_name);
-    my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
-					     \$document_title,
-					     \$document_bug_ids,
-					     \$document_reviewers,
-					     \$document_cc,
-					     \$description, \$topic_data,
-					     \$document_creation_time,
-					     \$document_modified_time,
-					     \$topic_state,
-					     \$version, \$repository_url,
-					     \$projectid,
-					     \$project_name);
-
-    if ($rc == $Codestriker::INVALID_TOPIC) {
+    if (Codestriker::Model::Topic::exists($topicid) == 0) {
 	# Topic no longer exists, most likely its been deleted.
 	$http_response->error("Topic no longer exists.");
     }
 
+    # Retrieve the appropriate topic details.           
+    my $topic = Codestriker::Model::Topic->new($topicid);     
+
     # Retrieve the changed files which are a part of this review.
     my (@filenames, @revisions, @offsets, @binary);
-    Codestriker::Model::File->get_filetable($topic, \@filenames,
-					    \@revisions, \@offsets, \@binary);
+    Codestriker::Model::File->get_filetable($topicid,
+    		\@filenames,
+                \@revisions,
+                \@offsets,
+                \@binary);
 
     # Retrieve line-by-line versions of the data and description.
-    my @document_description = split /\n/, $description;
-    my @document = split /\n/, $topic_data;
+    my @document_description = split /\n/, $topic->{description};
+    my @document = split /\n/, $topic->{document};
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic, "", "",
-						     "", "", "");
+    my @comments = $topic->read_comments();
 
-    $http_response->generate_header($topic, $document_title, $email,
-				    "", "", $mode, $tabwidth, $repository_url,
+    $http_response->generate_header($topic->{topicid}, $topic->{document_title}, 
+    			            $topic->{author},
+				    "", "", $mode, $tabwidth, $topic->{repository},
 				    "", "", 0, 1);
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;
     if ($Codestriker::allow_repositories) {
 	$repository =
-	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
     } else {
 	# Indicate not to activate any repository-related links.
-	$repository_url = "";
+	$topic->{repository} = "";
     }
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
-    $vars->{'topicid'} = $topic;
 
     # Create the necessary template variables for generating the heading part
     # of the view topic display.
@@ -91,24 +78,16 @@ sub process($$$) {
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Obtains the "Create a new topic", "Search", "Open topics" and
-    # "Open topics in project".
-    my $view_comments_url = $url_builder->view_comments_url($topic);
-    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
-    $vars->{'search_url'} = $url_builder->search_url();
-    $vars->{'doc_url'} = $url_builder->doc_url();
+    ProcessTopicHeader($vars, $topic, $url_builder);
 
-    my @topic_states = (0);
-    my @projectids = ($projectid);
+    my @projectids = ($topic->{project_id});
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", \@topic_states, undef);
+				      "", "", "", [0], undef);
     $vars->{'list_url_in_project'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", \@topic_states,
+				      "", "", "", [0],
 				      \@projectids);
-    $vars->{'view_comments_url'} = $view_comments_url;
-    $vars->{'list_projects_url'} = $url_builder->list_projects_url();
 
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');
@@ -116,28 +95,8 @@ sub process($$$) {
     $vars->{'rc_stale_version'} = $Codestriker::STALE_VERSION;
     $vars->{'rc_invalid_topic'} = $Codestriker::INVALID_TOPIC;
 
-    # Indicate if the "delete" button should be visible or not.
-    $vars->{'delete_enabled'} = $Codestriker::allow_delete;
-
-    # Indicate if the "list/search" functionality is available or not.
-    $vars->{'searchlist_enabled'} = $Codestriker::allow_searchlist;
-
-    # Indicate if the "project" functionality is available or not.
-    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
-
-    # Obtain the view topic summary information, the title, bugs it relates
-    # to, and who the participants are.
-    $vars->{'document_title'} = $document_title;
-
-    if ($Codestriker::antispam_email) {
-	$document_author = Codestriker->make_antispam_email($document_author);
-    }
-    $vars->{'document_author'} = $document_author;
-    
-    $vars->{'document_creation_time'} = $document_creation_time;
-    
-    if ($document_bug_ids ne "") {
-	my @bugs = split ', ', $document_bug_ids;
+    if ($topic->{bug_ids} ne "") {
+	my @bugs = split ', ', $topic->{bug_ids};
 	my $bug_string = "";
 	for (my $i = 0; $i <= $#bugs; $i++) {
 	    $bug_string .=
@@ -150,13 +109,10 @@ sub process($$$) {
 	$vars->{'bug_string'} = "";
     }
 
-    if ($Codestriker::antispam_email) {
-	$document_reviewers =
-	    Codestriker->make_antispam_email($document_reviewers);
-    }
-    $vars->{'document_reviewers'} = $document_reviewers;
-    $vars->{'repository'} = $repository_url;
-    $vars->{'project_name'} = $project_name;
+    $vars->{'document_reviewers'} = 
+    	Codestriker->filter_email($topic->{reviewers});
+    $vars->{'repository'} = $topic->{repository};
+    $vars->{'project_name'} = $topic->{project_name};
     $vars->{'number_of_lines'} = $#document + 1;
 
     $vars->{'suggested_topic_size_lines'} =
@@ -176,9 +132,8 @@ sub process($$$) {
     }
     $vars->{'mode'} = $mode;
     $vars->{'brmode'} = $brmode;
-    $vars->{'topic_version'} = $version;
     $vars->{'states'} = \@Codestriker::topic_states;
-    $vars->{'default_state'} = $topic_state;
+    $vars->{'default_state'} = $topic->{state};
 
     # Set the description of the topic.
     my $data = "";
@@ -187,13 +142,9 @@ sub process($$$) {
     }
     $vars->{'description'} = $data;
 
-    # Obtains how many comments there are, and the internal link to them.
-    $vars->{'number_comments'} = $#comments + 1;
-    $vars->{'comment_url'} =
-	$url_builder->view_comments_url($topic);
 
     # Obtain the link to download the actual document text.
-    $vars->{'download_url'} = $url_builder->download_url($topic);
+    $vars->{'download_url'} = $url_builder->download_url($topicid);
 
     # Fire the template on the topic heading information.
     my $template = Codestriker::Http::Template->new("viewtopic");
@@ -206,29 +157,28 @@ sub process($$$) {
     # If there are no files associated with the review, remove this
     # option.
     my $coloured_url =
-	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE,
+	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE,
 			       $brmode);
     my $coloured_mono_url =
-	$url_builder->view_url($topic, -1,
+	$url_builder->view_url($topicid, -1,
 			       $Codestriker::COLOURED_MONO_MODE, $brmode);
     my $br_normal_url =
-	$url_builder->view_url($topic, -1, $mode,
+	$url_builder->view_url($topicid, -1, $mode,
 			       $Codestriker::LINE_BREAK_NORMAL_MODE);
     my $br_assist_url =
-	$url_builder->view_url($topic, -1, $mode,
+	$url_builder->view_url($topicid, -1, $mode,
 			       $Codestriker::LINE_BREAK_ASSIST_MODE);
 	
     if ($mode == $Codestriker::COLOURED_MODE) {
 	print "View as " .
 	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff") .
-	    ".";
+	    " | ";
     } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
 	print "View as " .
 	    $query->a({href=>$coloured_url}, "coloured variable-width diff") .
-	    ".";
+	    " | ";
     }
 
-    print $query->br;
     if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
 	print "View with " .
 	    $query->a({href=>$br_assist_url}, "minimal screen width") . ".";
@@ -236,13 +186,13 @@ sub process($$$) {
 	print "View with " .
 	    $query->a({href=>$br_normal_url}, "minimal line breaks") . ".";
     }
-    print $query->br;
+    print " | ";
 
     # Display the option to change the tab width.
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
     my $change_tabwidth_url;
     $change_tabwidth_url =
-	$url_builder->view_url_extended($topic, -1, $mode, $newtabwidth,
+	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
 					"", "", 0, $brmode);
 
     print "Tab width set to $tabwidth (";
@@ -256,7 +206,7 @@ sub process($$$) {
 
     # Build the render which will be used to build this page.
     my $render = Codestriker::Http::Render->new($query, $url_builder, 1,
-						$max_digit_width, $topic,
+						$max_digit_width, $topicid,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
 						\@revisions, \@binary, -1, $brmode);
@@ -265,7 +215,7 @@ sub process($$$) {
     $render->start();
 
     # Retrieve the delta set comprising this review.
-    my @deltas = Codestriker::Model::File->get_delta_set($topic);
+    my @deltas = Codestriker::Model::File->get_delta_set($topicid);
 
     # Render the deltas.
     my $old_filename = "";
@@ -276,8 +226,6 @@ sub process($$$) {
     }
 
     $render->finish();
-    print $query->p, $query->a({href=>$view_comments_url},
-			       "View all comments");
 
     # Render the HTML trailer.
     my $trailer = Codestriker::Http::Template->new("trailer");
@@ -286,6 +234,39 @@ sub process($$$) {
     print $query->end_html();
 
     $http_response->generate_footer();
+}
+
+# This function is used by all of the three topic pages to fill out the common template
+# items that are required by all three.
+sub ProcessTopicHeader($$$) {
+    my ($vars, $topic, $url_builder) = @_;
+
+    # Handle the links in the three topic tabs.
+    $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url($topic->{topicid});
+    $vars->{'view_topic_url'} =
+	$url_builder->view_url($topic->{topicid}, -1, 0); ## XX mode, last param
+
+    $vars->{'view_comments_url'} = $url_builder->view_comments_url($topic->{topicid});
+
+    # Retrieve the comment details for this topic.
+    my @comments = $topic->read_comments();
+
+    # Obtains how many comments there are, and the internal link to them.
+    $vars->{'number_comments'} = $#comments + 1;
+
+    # Obtain the view topic summary information, the title, bugs it relates
+    # to, and who the participants are.
+    $vars->{'title'} = $topic->{title};
+
+    $vars->{'author'} = Codestriker->filter_email($topic->{author});
+    
+    $vars->{'document_creation_time'} = 
+    	Codestriker->format_timestamp($topic->{creation_ts});
+
+    $vars->{'topic'} = $topic->{topicid};
+
+    $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
+    $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
 }
 
 1;

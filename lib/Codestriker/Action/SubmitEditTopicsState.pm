@@ -7,11 +7,10 @@
 
 # Action object for handling the submission of changing multiple topic states.
 
-package Codestriker::Action::ChangeTopics;
+package Codestriker::Action::SubmitEditTopicsState;
 
 use strict;
 
-use Codestriker::Action::ChangeTopicState;
 use Codestriker::Action::ListTopics;
 
 # Attempt to change the topic's state, or to delete it.
@@ -45,15 +44,13 @@ sub process($$$) {
     for (my $i = 0; $i <= $#topics; $i++) {
 	# Extract the topic id and the version.
 	$topics[$i] =~ /^(.*)\,(.*)$/;
-	my $topic = $1;
+	my $topicid = $1;
 	my $version = $2;
 
+	my $topic = Codestriker::Model::Topic->new($topicid);    
+
 	# Change the topic state.
-	my $rc =
-	    Codestriker::Action::ChangeTopicState->change_state($query, $topic,
-								$topic_state,
-								$version,
-								$email);
+	my $rc = $topic->change_state($topic_state, $version);
 
 	# Record if there was a problem in changing the state.
 	$invalid = 1 if $rc == $Codestriker::INVALID_TOPIC;

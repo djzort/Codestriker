@@ -13,11 +13,30 @@ use strict;
 
 use Codestriker::DB::DBI;
 
+sub new {
+    my $class = shift;
+    my $self = {};
+    
+    $self->{topicid} = 0;
+    $self->{fileline} = 0;
+    $self->{filenumber} = 0;
+    $self->{filenew} = 0;
+    $self->{author} = '';
+    $self->{data} = '';
+    $self->{date} = Codestriker->get_timestamp(time);
+    $self->{state} = 0;
+    $self->{version} = 0;
+    
+    bless $self, $class;
+    return $self;
+}
+
 # Create a new comment with all of the specified properties.  Ensure that the
 # associated commentstate record is created/updated.
 sub create($$$$$$$$$) {
-    my ($type, $topicid, $fileline, $filenumber, $filenew, $email, $data,
-	$timestamp, $state) = @_;
+    my ($self, $topicid, $fileline, $filenumber, $filenew, $author, $data, $state) = @_;
+            
+    my $timestamp = Codestriker->get_timestamp(time);
     
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -87,10 +106,31 @@ sub create($$$$$$$$$) {
 
 	# Create the comment row.
 	$success &&= $insert_comment->execute($commentstateid, $data,
-					      $email, $timestamp);
+					      $author, $timestamp);
 	$success &&= $insert_comment->finish();
-
     }
+
+    $self->{topicid} =  $topicid;
+    $self->{fileline} = $fileline;
+    $self->{filenumber} = $filenumber;
+    $self->{filenew} = $filenew;
+    $self->{author} = $author;
+    $self->{data} = $data;
+    $self->{date} = $timestamp;
+    $self->{state} = $state;
+    $self->{version} = 0;
+        
+    # get the filename, for the new comment.
+    my $get_filename = $dbh->prepare_cached('SELECT filename ' .
+	   	                'FROM file ' .
+			        'WHERE topicid = ? AND sequence = ?');
+    $success &&= defined $get_filename;
+    $success &&= $get_filename->execute($topicid, $filenumber);
+                
+    ( $self->{filename} ) = $get_filename->fetchrow_array();
+    
+    $select_commentstate = undef;
+    $get_filename = undef;
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr if !$success;
@@ -134,8 +174,9 @@ sub read_authors
     return @results;   
 }
 
-# Return all of the comments made for a specified topic.
-sub read($$) {
+# Return all of the comments made for a specified topic. This should only be called be called by the 
+# Topic object.
+sub read_all_comments_for_topic($$) {
     my ($type, $topicid) = @_;
 
     # Obtain a database connection.
@@ -172,7 +213,8 @@ sub read($$) {
     if ($success) {
 	my @data;
 	while (@data = $select_comment->fetchrow_array()) {
-	    my $comment = {};
+	    my $comment = Codestriker::Model::Comment->new();
+	    $comment->{topicid} =  $topicid;            
 	    $comment->{data} = $data[0];
 	    $comment->{author} = $data[1];
 	    $comment->{fileline} = $data[2];
@@ -193,46 +235,13 @@ sub read($$) {
     return @results;
 }
 
-# Returns a list of comments that are against the same line of the same
-# file.
-sub read_same_line
-{
-    my ($type,$topicid, $fn, $line, $new) = @_;
-    
-    # Read all of the comments from the database. 
-    my @comments = $type->read($topicid);
-
-    # Now filter out comments that don't match file, line, and new or old file attribute.
-    @comments = grep { 
-        my $comment = $_;
-        my $keep_comment = 0;
-        
-        if ( $fn   == $comment->{filenumber} && 
-             $line == $comment->{fileline} && 
-             $new  == $comment->{filenew})
-        {
-    	    $keep_comment = 1;
-        }
-        else
-        {
-            $keep_comment = 0;
-        }
-        
-        $keep_comment;      
-    } @comments;
-    
-    return @comments;
-    
-}
-
 # Return all of the comments made for a specified topic filtered by state 
 # and author. The filtered parameter is not used if it is empty.
-sub read_filtered
-{
+sub read_filtered($$$$) {
     my ($type, $topicid, $filtered_by_state_index, $filtered_by_author) = @_;
     
     # Read all of the comments from the database. 
-    my @comments = $type->read( $topicid );
+    my @comments = $type->read_all_comments_for_topic($topicid);
 
     # Now filter out comments that don't match the comment state and author filter.
     @comments = grep { 
@@ -240,22 +249,18 @@ sub read_filtered
         my $keep_comment = 1;
                                 
         # check for filter via the state of the comment.
-        $keep_comment = 0 if ( $filtered_by_state_index ne ""  && 
-                               $filtered_by_state_index ne $comment->{state} );
+        $keep_comment = 0 if ($filtered_by_state_index ne ""  && 
+			      $filtered_by_state_index ne $comment->{state} );
         
-        # check for filters via the comment author name.
-        if ($Codestriker::antispam_email) {
-            my $shortAuthor = 
-            		Codestriker->make_antispam_email( $comment->{author} );
-            my $shortFilterAuthor = 
-            		Codestriker->make_antispam_email( $filtered_by_author );
-            $keep_comment = 0 if ( $filtered_by_author ne "" && 
-                                   $shortAuthor ne $shortFilterAuthor);                                   
-        }
-        else {
-            $keep_comment = 0 if ( $filtered_by_author ne "" && 
-                                  $comment->{author} ne $filtered_by_author);
-        }                                                                     
+        # check for filters via the comment author name, handle email SPAM filtering.
+        my $filteredAuthor = 
+            	    Codestriker->filter_email($comment->{author});
+        my $filteredByAuthor = 
+            	    Codestriker->filter_email($filtered_by_author);
+
+        $keep_comment = 0 if ($filteredByAuthor ne "" && 
+			      $filteredAuthor ne $filteredByAuthor);                                   
+
  	$keep_comment;
     } @comments;
     
@@ -264,12 +269,13 @@ sub read_filtered
 
 # Update the state of the specified commentstate.  The version parameter
 # indicates what version of the commentstate the user was operating on.
-sub change_state($$$$$$$) {
-    my ($type, $topicid, $fileline, $filenumber, $filenew,
-	$stateid, $version) = @_;
+sub change_state($$) {
+    my ($self, $new_stateid, $version) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $timestamp = Codestriker->get_timestamp(time);   
 
     # Check that the version reflects the current version in the DB.
     my $select_comments =
@@ -285,8 +291,10 @@ sub change_state($$$$$$$) {
     my $rc = $Codestriker::OK;
 
     # Retrieve the current comment data.
-    $success &&= $select_comments->execute($topicid, $fileline, $filenumber,
-					   $filenew);
+    $success &&= $select_comments->execute($self->{topicid}, 
+     				           $self->{fileline},
+                                           $self->{filenumber},
+					   $self->{filenew});
 
     # Make sure that the topic still exists, and is therefore valid.
     my ($current_version, $current_stateid);
@@ -300,20 +308,44 @@ sub change_state($$$$$$$) {
     $success &&= $select_comments->finish();
 
     # Check the version number.
-    if ($success && $version != $current_version) {
+    if ($success && $version != $self->{version}) {
 	$success = 0;
 	$rc = $Codestriker::STALE_VERSION;
     }
 
     # If the state hasn't changed, don't do anything, otherwise update the
     # comments.
-    if ($stateid != $current_stateid) {
-	$success &&= $update_comments->execute($version+1, $stateid,
-					       $topicid, $fileline,
-					       $filenumber, $filenew);
+    if ($new_stateid != $self->{state}) {
+    	$self->{version} = $self->{version} + 1;
+        $self->{state} = $new_stateid;
+	$success &&= $update_comments->execute($self->{version} ,
+ 					       $self->{state},
+					       $self->{topicid}, 
+                                               $self->{fileline},
+					       $self->{filenumber}, 
+                                               $self->{filenew});
     }
+    
     Codestriker::DB::DBI->release_connection($dbh, $success);
+    
     return $rc;
 }
+
+# Class method to convert state name to state id, returns -1 if the
+# state name is invalid.
+sub convert_state_to_stateid {
+    my ($comment_state) = @_;
+    
+    # Map the state name to its number.
+    my $stateid = -1;
+    my $id;
+    for ($id = 0; $id <= $#Codestriker::comment_states; $id++) {
+	last if ($Codestriker::comment_states[$id] eq $comment_state);
+    }
+    if ($id <= $#Codestriker::comment_states) {
+	$stateid = $id;
+    }
+}    
+
 
 1;

@@ -60,6 +60,47 @@ sub get_template($) {
 sub process($$) {
     my ($self, $vars) = @_;
 
+    # Add into the vars the standard .conf file options. 	
+
+    # Indicate if the "delete" button should be visible or not.
+    $vars->{'delete_enabled'} = $Codestriker::allow_delete;
+
+    # Indicate if the "list/search" functionality is available or not.
+    $vars->{'searchlist_enabled'} = $Codestriker::allow_searchlist;
+
+    # Indicate if the "project" functionality is available or not.
+    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
+
+    # Indicate if bug db integration is enabled.
+    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
+
+    # CodeStriker Version, used in the title.
+    $vars->{'version'} = $Codestriker::VERSION;
+
+    $vars->{'main_title'} = $Codestriker::title;
+
+    # Indicate if the repository field should be displayed.
+    $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+
+    # Display the topic size limit if any.
+    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::maximum_topic_size_lines;
+                                          
+    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::suggested_topic_size_lines;
+
+
+    my $query = new CGI;
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+
+    # Handle the links and parameters in the main title bar.
+    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
+    $vars->{'search_url'} = $url_builder->search_url();
+    $vars->{'doc_url'} = $url_builder->doc_url();
+    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
+
     my $data = "";
     my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
 					$vars, \$data);

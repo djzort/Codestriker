@@ -7,7 +7,7 @@
 
 # Action object for handling the viewing of a file.
 
-package Codestriker::Action::ViewFile;
+package Codestriker::Action::ViewTopicFile;
 
 use strict;
 
@@ -22,7 +22,7 @@ sub process($$$) {
 
     # Retrieve the parameters for this action.
     my $query = $http_response->get_query();
-    my $topic = $http_input->get('topic');
+    my $topicid = $http_input->get('topic');
     my $mode = $http_input->get('mode');
     my $tabwidth = $http_input->get('tabwidth');
     my $fn = $http_input->get('fn');
@@ -35,33 +35,19 @@ sub process($$$) {
     }
 
     # Retrieve the appropriate topic details.
-    my ($document_author, $document_title, $document_bug_ids,
-	$document_reviewers, $document_cc, $description,
-	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version, $repository_url);
-    my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
-					     \$document_title,
-					     \$document_bug_ids,
-					     \$document_reviewers,
-					     \$document_cc,
-					     \$description, \$topic_data,
-					     \$document_creation_time,
-					     \$document_modified_time,
-					     \$topic_state,
-					     \$version, \$repository_url);
+    my $topic = Codestriker::Model::Topic->new($topicid);
 
     # Retrieve the corresponding repository object.
     my $repository =
-	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
 
     # Retrieve the deltas corresponding to this file.
-    my @deltas = Codestriker::Model::File->get_deltas($topic, $fn);
+    my @deltas = Codestriker::Model::File->get_deltas($topicid, $fn);
     my $filename = $deltas[0]->{filename};
     my $revision = $deltas[0]->{revision};
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic, "", "",
-						     "", "", "");
+    my @comments = $topic->read_comments();
 
     # Load the appropriate original form of this file into memory.
     my ($filedata_max_line_length, @filedata);
@@ -99,12 +85,12 @@ sub process($$$) {
 	$title = $new ? "New $filename" : "$filename v$revision";
     }
 
-    $http_response->generate_header($topic, $title, "", "", "", $mode,
-				    $tabwidth, $repository_url, "", "", 0, 1);
+    $http_response->generate_header($topicid, $title, "", "", "", $mode,
+				    $tabwidth, $topic->{repository}, "", "", 0, 1);
 
     # Render the HTML header.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
+
     my $header = Codestriker::Http::Template->new("header");
     $header->process($vars);
 
@@ -117,7 +103,7 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $render =
 	Codestriker::Http::Render->new($query, $url_builder, $parallel,
-				       $max_digit_width, $topic, $mode,
+				       $max_digit_width, $topicid, $mode,
 				       \@comments, $tabwidth,
 				       $repository, \@toc_filenames,
 				       \@toc_revisions, \@toc_binaries,

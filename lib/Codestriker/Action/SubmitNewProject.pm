@@ -7,7 +7,7 @@
 
 # Action object for handling the submission of a new project.
 
-package Codestriker::Action::SubmitProject;
+package Codestriker::Action::SubmitNewProject;
 
 use strict;
 

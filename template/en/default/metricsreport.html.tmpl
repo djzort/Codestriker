@@ -1,0 +1,101 @@
+[%# Screen for the metrics report. #%]
+
+[% PROCESS header.html.tmpl version = version help ="x287.html"  %]
+
+<!-- "" -->
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
+    <p>
+[% END %]
+
+<h3>User Metrics</h3>
+
+
+<table cellpadding="5%" >
+    <tr class="tlh"><td>
+	<td>last topic authored (days)
+	<td>last topic reviewed (days)
+	<td colspan=5>number of topics participated in the past 16 weeks
+    </tr>
+
+    [% FOREACH user_metrics %]
+
+    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+	<td>[% name | html %]
+	<td>[% date_last_authored %]
+	<td>[% date_last_participated %]
+	<td>[% total_topics %]
+    </tr>
+
+    [% END %]
+
+</table>
+
+<hr>
+<h3>Topic Metrics</h3>
+
+<table cellpadding="5%">
+
+    <tr class="tl2">
+        <td></td>
+
+	[% FOREACH month = comment_metrics_month_names %]
+	    <td>[% month %]</td>
+	[% END %]
+    </tr>
+
+    <tr class="tlh"><td colspan="13" align="center"> Comment Metrics</td></tr>
+
+
+    [% FOREACH comment_metrics %]
+
+    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+	<td>[% name | html %]</td>
+
+	[% FOREACH scount = counts %]
+	    <td>[% scount %]</td>
+	[% END %]
+    </tr>
+
+    [% END %]
+
+    <tr><td></td></tr>
+    <tr class="tlh"><td colspan="13" align="center"> Topic Metrics</td></tr>
+
+    [% FOREACH topic_metrics %]
+
+    <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+	<td>[% name | html %]</td>
+
+	[% FOREACH scount = counts %]
+	    <td>[% scount %]</td>
+	[% END %]
+    </tr>
+    [% END %]
+
+    <tr><td></td></tr>
+
+    <tr class="tl2">
+        <td></td>
+
+	[% FOREACH month = comment_metrics_month_names %]
+	    <td>[% month %]</td>
+	[% END %]
+    </tr>
+
+</table>
+
+
+
+<hr>
+<p><a href="[% download_url %]">Download Raw Data</a>
+
+
+[% PROCESS trailer.html.tmpl %]
+
+</body>
+</html>
+
+

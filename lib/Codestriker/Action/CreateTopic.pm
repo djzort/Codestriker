@@ -26,7 +26,6 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'error_message'} = "";
     $vars->{'topic_text'} = "";
     $vars->{'topic_file'} = "";
@@ -35,12 +34,6 @@ sub process($$$) {
     $vars->{'bug_ids'} = "";
     $vars->{'feedback'} = $http_input->get('feedback');
     
-    # Indicate if project operations are enabled in the system.
-    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
-
-    # Indicate if bug db integration is enabled.
-    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
-
     # Indicate where the documentation directory and generate the search
     # url.
     $vars->{'doc_url'} = $url_builder->doc_url();
@@ -63,9 +56,6 @@ sub process($$$) {
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 
-    # Indicate if the repository field should be displayed.
-    $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
-
     # Set the default repository to select.
     if (! (defined $vars->{'default_repository'}) ||
 	$vars->{'default_repository'} eq "") {
@@ -83,15 +73,6 @@ sub process($$$) {
     # when a topic is created.
     my @projects = Codestriker::Model::Project->list();
     $vars->{'projects'} = \@projects;
-
-    # Display the topic size limit if any.
-    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::maximum_topic_size_lines;
-                                          
-    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::suggested_topic_size_lines;
                                           
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars);

@@ -762,6 +762,8 @@ sub finish($) {
     } else {
 	$self->_coloured_mode_finish();
     }
+
+    $self->_print_legend();
 }
 
 # Start topic view display hook for normal mode.
@@ -776,16 +778,13 @@ sub _normal_mode_finish($) {
     print "</PRE>\n";
 }
 
-# Start topic view display hook for coloured mode.  This displays a simple
-# legend, displays the files involved in the review, and opens up the initial
-# table.
-sub _coloured_mode_start($) {
+# Private functon to print the diff legend out at the bottom of the topic text page.
+sub _print_legend($) {
     my ($self) = @_;
 
     my $query = $self->{query};
     my $topic = $self->{topic};
     my $mode = $self->{mode};
-    my $brmode = $self->{brmode};
 
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
@@ -801,6 +800,19 @@ sub _coloured_mode_start($) {
 		     $query->td({-class=>'af'},
 				"Added"));
     print $query->end_table(), "\n";
+}
+
+
+# Start topic view display hook for coloured mode.  This displays a simple
+# legend, displays the files involved in the review, and opens up the initial
+# table.
+sub _coloured_mode_start($) {
+    my ($self) = @_;
+
+    my $query = $self->{query};
+    my $topic = $self->{topic};
+    my $mode = $self->{mode};
+    my $brmode = $self->{brmode};
 
     # Print out the "table of contents".
     my $filenames = $self->{filenames_ref};
@@ -810,15 +822,14 @@ sub _coloured_mode_start($) {
     print $query->p;
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
-    print $query->Tr($query->td($query->a({name=>"contents"}, "Contents:")),
+    print $query->Tr($query->td($query->a({name=>"contents"}, "Files In Topic:")),
 		     $query->td("&nbsp;")), "\n";
     
     my $url_builder = $self->{url_builder};
     for (my $i = 0; $i <= $#$filenames; $i++) {
 	my $filename = $$filenames[$i];
 	my $revision = $$revisions[$i];
-	my $href_filename =
-	    $url_builder->view_url($topic, -1, $mode, $brmode) .
+	my $href_filename = $url_builder->view_url($topic, -1, $mode, $brmode) .
 	    "#" . "$filename";
 	my $tddata = $$binaries[$i] ? $filename :
 	    $query->a({href=>"$href_filename"}, "$filename");

@@ -1,13 +1,6 @@
 [%# Screen for the create project form. #%]
 
-[% PROCESS header.html.tmpl version = version %]
-
-[%# Show the top-level links for "List projects" and "Search" #%]
-<p>
-    <a href="[% list_projects_url %]">Project list</a> | 
-    <a href="[% search_url %]">Search</a> |
-    <a href="[% doc_url %]/x318.html">Help</a>
-</p>
+[% PROCESS header.html.tmpl version = version help = "x318.html" %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -40,6 +33,9 @@ project_description | html_entity %]</TEXTAREA>
 <INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
 
 </FORM>
+
+<a href="[% list_projects_url %]">Project list</a> 
+
 
 [% PROCESS trailer.html.tmpl %]
 

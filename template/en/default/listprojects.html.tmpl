@@ -1,13 +1,6 @@
 [%# Display a list of projects #%]
 
-[% PROCESS header.html.tmpl version = version %]
-
-[%# Show the top-level links for "Create new topic" and "Search" #%]
-<p>
-    <a href="[% create_topic_url %]">Create new topic</a> | 
-    <a href="[% search_url %]">Search</a> |
-    <a href="[% doc_url %]/x318.html">Help</a>
-</p>
+[% PROCESS header.html.tmpl version = version help = "x318.html" %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]

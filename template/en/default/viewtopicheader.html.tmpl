@@ -1,0 +1,34 @@
+
+[%# Screen for displaying the heading information of a topic.  The
+    actual view topic data is still generated directly from the perl
+    script, as it is complex HTML that doesn't need to be
+    customised. #%]
+
+[% PROCESS header.html.tmpl version = version %]
+
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
+    <p>
+[% END %]
+
+<table cellpadding="5%" cellspacing="0%" width="100%">
+<tr class="tlh">
+   <td width="1%" nowrap [% IF topicview == 0 %] bgcolor="#cccccc" [% END %]>
+	<a STYLE="text-decoration: none" href="[% view_topic_url %]">View Topic Text</a></td>
+   <td width="1" bgcolor="#eeeeee"></td>
+   <td width="1%" nowrap [% IF topiccomments == 0 %] bgcolor="#cccccc" [% END %]>
+	<a STYLE="text-decoration: none" href="[% view_comments_url %]"> View all comments ([% number_comments %])</a></td>
+   <td width="1" bgcolor="#eeeeee"></td>
+   <td width="1%" nowrap [% IF topicinfo == 0 %] bgcolor="#cccccc" [% END %]>
+	<a STYLE="text-decoration: none" href="[% view_topicinfo_url %]"> View Topic Information</a> </td>
+   <td colspan=2 bgcolor="#eeeeee" align=right><b>[% author %]</b></td>
+</tr>
+</table>
+<table cellpadding="5%" cellspacing="0%" width="100%">
+<tr class="tlh">
+    <td colspan=4>Topic Title: <b>[% title %]</b>. </td>
+    <td align=right>[% document_creation_time %]</td>
+</tr>
+</table>

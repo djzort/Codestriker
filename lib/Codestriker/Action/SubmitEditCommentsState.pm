@@ -7,42 +7,47 @@
 
 # Action object for the submission of changing multiple comment states.
 
-package Codestriker::Action::ChangeComments;
+package Codestriker::Action::SubmitEditCommentsState;
 
 use strict;
+use warnings;
 
-use Codestriker::Action::ListComments;
+use Codestriker::Action::ViewTopicComments;
+use Codestriker::TopicListeners::Manager;
 
 # Attempt to change the comment states.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-
+    
     # Extract the values from the action.
     my $comments_ref = $http_input->get('selected_comments');
     my @comments = @$comments_ref;
     my $comment_state = $http_input->get('comment_state');
-    my $topic = $http_input->get('topic');
-
-    # Any feedback messages to the user.
-    my $feedback = "";
-
-    # Indicate if changes were made to stale comments.
-    my $stale = 0;
-
-    # Map the state name to its number.
-    my $stateid = -1;
-    my $id;
-    for ($id = 0; $id <= $#Codestriker::comment_states; $id++) {
-	last if ($Codestriker::comment_states[$id] eq $comment_state);
-    }
-    if ($id <= $#Codestriker::comment_states) {
-	$stateid = $id;
+    my $topicid = $http_input->get('topic');
+    
+    if ( Codestriker::Model::Topic::exists($topicid) == 0) {    
+	# Topic no longer exists, most likely its been deleted.
+	$http_response->error("Topic no longer exists.");
+        return;
     }
     
+    my $topic = Codestriker::Model::Topic->new($topicid);
+    
+    # Any feedback messages to the user.
+    my $feedback = "";
+    
+    # Indicate if changes were made to stale comments.
+    my $stale = 0;
+    
+    # Get the state number (index) for the new state name.
+    my $state_id = Codestriker::Model::Comment::convert_state_to_stateid($comment_state);
+
+    my @topic_comments = $topic->read_comments();
+    
     # Apply the change to each topic.
-    if ($stateid != -1) {
+    if ($state_id != -1) {
 	for (my $i = 0; $i <= $#comments; $i++) {
 	    # Extract the line number and version of the comment that is being
 	    # changed.
@@ -51,19 +56,26 @@ sub process($$$) {
 	    my $fileline = $2;
 	    my $filenew = $3;
 	    my $version = $4;
-	    
-	    # Change the comment state.
-	    my $timestamp = Codestriker->get_timestamp(time);
-	    my $rc =
-		Codestriker::Model::Comment->change_state($topic,
-							  $fileline,
-							  $filenumber,
-							  $filenew,
-							  $stateid,
-							  $version);
-
-	    # Record if there was a problem in changing the state.
-	    $stale = 1 if $rc == $Codestriker::STALE_VERSION;
+            
+            # Look for the comment comming from the CGI params, and update the
+            # objects.
+            foreach my $topic_comment (@topic_comments) {
+            	if ( $topic_comment->{filenumber} == $filenumber && 
+                     $topic_comment->{fileline} == $fileline && 
+                     $topic_comment->{filenew} == $filenew) {
+                    
+                    Codestriker::TopicListeners::Manager::comment_state_change( 
+                    	$topic,
+                        $topic_comment,
+                        $comment_state);
+                        
+		    # Change the comment state.
+                    my $rc = $topic_comment->change_state($state_id, $version);
+                        	    
+                    # Record if there was a problem in changing the state.
+                    $stale = 1 if $rc == $Codestriker::STALE_VERSION;
+      		}
+            }
 	}
     }
 
@@ -71,7 +83,7 @@ sub process($$$) {
     if ($stale) {
 	$feedback = "Some comments could not be updated as they have been " .
 	    "modified by another user.";
-    } elsif ($stateid == -1) {
+    } elsif ($state_id == -1) {
 	$feedback = "Invalid comment state: \"$comment_state\".";
     } else {
 	if ($#comments == 0) {
@@ -84,7 +96,7 @@ sub process($$$) {
     # Direct control to the list comment action class, with the appropriate
     # feedback message.
     $http_input->{feedback} = $feedback;
-    Codestriker::Action::ListComments->process($http_input, $http_response);
+    Codestriker::Action::ViewTopicComments->process($http_input, $http_response);
 }
 
 1;

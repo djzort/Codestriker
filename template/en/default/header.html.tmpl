@@ -1,7 +1,13 @@
 [%# Header HTML code to appear on each screen, after <BODY> tag. #%]
 
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-  <td class="heading"><center><a href="[% list_url %]"><font color="white">Codestriker [% version %]</font></a></center></td>
+<tr class="heading">
+  <td valign="bottom"><a href="[% list_url | uri | html_entity %]">Home</a></td>   
+  <td valign="bottom"><a href="[% create_topic_url | uri | html_entity %]">New Topic</a></td>
+  <td class="heading"><center><a href="[% list_url | uri | html_entity %]" STYLE="text-decoration: none"><font color="black">[% main_title %]</font></a></center></td>
+  <td valign="bottom">
+    [% IF searchlist_enabled != 0 %]<a href="[% search_url | uri | html_entity %]">Search</a></td>[% END %]
+  <td valign="bottom"><a href="[% doc_url | uri | html_entity %]/[% help | uri | html_entity %]">Help</a></td>
 </tr>
 </table>
+<HR>

@@ -1,0 +1,15 @@
+[%# Screen for the submit topic confirmation screen. #%]
+
+[% PROCESS header.html.tmpl version = version help="x332.html" %]
+
+<H2>Topic created</H2>
+Topic title: [% topic_title %]<BR>
+Author: [% email %]<BR>
+Topic URL: <A HREF="[% topic_url %]">[% topic_url %]</A>
+<P>
+Email has been sent to: [% email %], [% reviewers %][% IF cc != '' %], [% cc %][% END %]
+
+[% PROCESS trailer.html.tmpl %]
+
+</BODY>
+</HTML>

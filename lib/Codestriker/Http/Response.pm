@@ -160,6 +160,9 @@ sub generate_header($$$$$$$$$$$$) {
     # As the old netscapes don't handle it properly.
     my $base_url = $query->url();
     my $jscript=<<END;
+    <script language="JavaScript" type="text/javascript">
+    <!-- Hide script
+    //<![CDATA[
     var windowHandle = '';
 
     function myOpen(url,name) {
@@ -193,9 +196,14 @@ sub generate_header($$$$$$$$$$$$) {
 	if (reload) opener.location.reload(reload);
 	opener.focus();
     }
+
+    //]]> End script hiding -->
+    </script>
 END
 
-    print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
+# "http://www.w3.org/TR/html4/strict.dtd"
+
+    print $query->start_html(-dtd=>'-//W3C//DTD HTML 4.01 Transitional//EN',
 			     -charset=>'ISO-8859-1',
 			     -title=>"$title",
 			     -bgcolor=>"#eeeeee",
@@ -203,8 +211,9 @@ END
 			     -base=>$query->url(),
 			     -link=>'blue',
 			     -vlink=>'purple',
-			     -script=>$jscript,
 			     -onLoad=>"gotoAnchor('$load_anchor', $reload)");
+
+    print $jscript;
 
     # Write a comment indicating if this was compressed or not.
     $self->{output_compressed} = $output_compressed;

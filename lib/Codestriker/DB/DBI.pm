@@ -26,7 +26,7 @@ sub get_connection($) {
     return DBI->connect($Codestriker::db, $Codestriker::dbuser,
 			$Codestriker::dbpasswd,
 			{AutoCommit=>$autocommit, RaiseError=>1})
-	|| die "Couldn't connect to database: " . DBI->errstr;
+	|| die "Couldn't connect to database: " . DBI::errstr;
 }
 
 # Release a connection, and if $success is true and this is a transaction

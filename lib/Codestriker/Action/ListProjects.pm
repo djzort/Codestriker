@@ -34,7 +34,6 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
     # Obtain a new URL builder object.
@@ -46,11 +45,7 @@ sub process($$$) {
     }
     $vars->{'projects'} = \@projects;
 
-    # Store all of the URL objects.
     $vars->{'create_project_url'} = $url_builder->create_project_url();
-    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
-    $vars->{'search_url'} = $url_builder->search_url();
-    $vars->{'doc_url'} = $url_builder->doc_url();
 
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",

@@ -83,18 +83,11 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
-    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
-
-    # Indicate if bug db integration is enabled.
-    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
-
-    # Indicate if project operations are enabled in the system.
-    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
 
     # Store the search parameters, which become hidden fields.
     $vars->{'sauthor'} = $sauthor;
@@ -108,12 +101,6 @@ sub process($$$) {
     $vars->{'scomments'} = $scomments;
     $vars->{'sbody'} = $sbody;
     $vars->{'sfilename'} = $sfilename;
-
-    # Display the "Create a new topic", "List Projects" and "Search" links.
-    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
-    $vars->{'list_projects_url'} = $url_builder->list_projects_url();
-    $vars->{'search_url'} = $url_builder->search_url();
-    $vars->{'doc_url'} = $url_builder->doc_url();
 
     # The list of topics.
     my @topics;
@@ -185,6 +172,10 @@ sub process($$$) {
     }
     $vars->{'topics'} = \@topics;
     $vars->{'states'} = \@Codestriker::topic_states;
+
+    $vars->{'list_projects_url'} = $url_builder->list_projects_url();
+
+    $vars->{'view_metrics_url'} = $url_builder->metric_report_url();
 
     # Record the search parameters.
 

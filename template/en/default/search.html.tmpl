@@ -1,12 +1,6 @@
 [%# Screen for search topics. #%]
 
-[% PROCESS header.html.tmpl version = version %]
-
-[%# Show the top-level links for "Create new topic" and "Help" #%]
-<p>
-    <a href="[% create_topic_url %]">Create new topic</a> |
-    <a href="[% doc_url %]/x537.html">Help</a>
-</p>
+[% PROCESS header.html.tmpl version = version help = "x537.html" %]
 
 <H1>Topic search</H1>
 
