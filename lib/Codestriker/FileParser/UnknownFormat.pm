@@ -29,10 +29,7 @@ sub parse ($$) {
 
     my $chunk = {};
 
-    # Note $uploaded_filename is in quotes to force it to be a string, rather
-    # than be interpreted later on as a file object (CGI.pm wierdness).
-    # This is a problem with older versions of CGI.pm (2.56).
-    $chunk->{filename} = "$uploaded_filename";
+    $chunk->{filename} = $uploaded_filename;
     $chunk->{revision} = $Codestriker::ADDED_REVISION;
     $chunk->{old_linenumber} = 1;
     $chunk->{new_linenumber} = 1;

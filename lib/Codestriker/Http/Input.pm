@@ -129,7 +129,9 @@ sub process($) {
     # Record the file handler for a topic text upload, if any.  Also record the
     # mime type of the file if it has been set, default to text/plain
     # otherwise.
-    $self->{fh_filename} = $query->param('topic_file');
+    # Note topic_file is forced to be a string to get the filename (and
+    # not have any confusion with the file object).  CGI.pm weirdness.
+    $self->{fh_filename} = "" . $query->param('topic_file');
     $self->{fh} = $query->upload('topic_file');
     $self->{fh_mime_type} = 'text/plain';
     if (defined $self->{fh_filename} &&
