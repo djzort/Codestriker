@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.7.5</subtitle>
+    <subtitle>Version 1.7.6</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003</para>
     </legalnotice>
@@ -70,7 +70,10 @@
       <para>
         An example Codestriker topic can be seen at
 	<ulink
-	url="http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view">http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view</ulink>
+	url="http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view">http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view</ulink>.
+	To view the current list of open topics, go to <ulink
+	url="http://codestriker.sourceforge.net/cgi-bin/codestriker.pl">http://codestriker.sourceforge.net/cgi-bin/codestriker.pl</url>.
+	From here, there are links to create new topics.
       </para>
       <para>
         This document is available as a PDF:
