@@ -197,6 +197,18 @@ sub process($$$) {
 	$fh = $temp_topic_fh;
     }
 
+    my @deltas = ();
+    if ($feedback eq "") {
+	# Try to parse the topic text into its diff chunks.
+	@deltas =
+	    Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
+						   $topicid, $topic_file);
+	if ($#deltas == -1) {
+	    # Nothing in the file, report an error.
+	    $feedback .= "Reviewable text in topic is empty.\n";
+	}
+    }
+
     if ($feedback ne "") {
 	# If there was a problem generating the diff file, remove the
 	# temporary files, and direct control to the create screen again.
@@ -206,11 +218,6 @@ sub process($$$) {
 	$http_response->generate_footer();
 	return;
     }
-
-    # Try to parse the topic text into its diff chunks.
-    my @deltas =
-	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
-					       $topicid, $topic_file);
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
