@@ -7,6 +7,7 @@
    help = "x599.html" %]
  
 [%# Create a form to allow the topic's metrics to be changed #%]
+[% SET metric_input_exists = 0 %]
 <form method="post" enctype="application/x-www-form-urlencoded" name="form">
 
 <input type="hidden" name="action" value="edit_topic_metrics">
@@ -57,12 +58,12 @@
     <tr class="tth">
 	<td>Lines</td>
 
-	[% FOREACH topic_metrics %]
-        <td onmouseover="(window.status='[% description %]'); return true"
-	    onmouseout="(window.status=''); return true">[% name %]
-            [% IF description != '' %]
+	[% FOREACH metric = topic_metrics %]
+        <td onmouseover="(window.status='[% metric.description %]'); return true"
+	    onmouseout="(window.status=''); return true">[% metric.name %]
+            [% IF metric.description != '' %]
             <FONT SIZE="-2">
-                <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
+                <A TABINDEX="1" HREF="javascript:alert('[% metric.description %]')">(?)</A>
             </FONT>
             [% END %]
         </td>
@@ -71,11 +72,12 @@
     <tr>
         <td>[% number_of_lines %]</td>
 
-	[% FOREACH topic_metrics %]
-	[% IF enabled %]
-	<td><input name="topic_metric" type="text" size="6" value="[% value %]"></td>
+	[% FOREACH metric = topic_metrics %]
+	[% IF metric.enabled %]
+        [% metric_input_exists = 1 %]
+	<td><input name="topic_metric" type="text" size="6" value="[% metric.value %]"></td>
         [% ELSE %]
-	<td>[% value %]</td>
+	<td>[% metric.value %]</td>
 	[% END %]
 	[% END %]
     </tr>
@@ -88,13 +90,13 @@
 <tr class="tth">
     <td>User</td>
 
-    [% FOREACH author_metrics %]
+    [% FOREACH metric = author_metrics %]
 
-    <td onmouseover="(window.status='[% description %]'); return true" 
-	onmouseout="(window.status=''); return true">[% name %]
-    [% IF description != '' %]
+    <td onmouseover="(window.status='[% metric.description %]'); return true" 
+	onmouseout="(window.status=''); return true">[% metric.name %]
+    [% IF metric.description != '' %]
     <FONT SIZE="-2">
-    <A TABINDEX="1" HREF="javascript:alert('[% description %]')">(?)</A>
+    <A TABINDEX="1" HREF="javascript:alert('[% metric.description %]')">(?)</A>
     </FONT>
     [% END %]
     </td>
@@ -106,13 +108,14 @@
 <tr class="tt[% type mod 2 %]">
     [% type = type + 1 %]
     <td>[% author %]</td>
-    [% FOREACH author_metrics %]
+    [% FOREACH metric = author_metrics %]
     
-    [% IF scope == 'author' || scope == 'participant' %]
-	[% IF enabled %]
-        <td><input name="author_metric" type="text" value="[% value %]" size="6"></td>
+    [% IF metric.scope == 'author' || metric.scope == 'participant' %]
+	[% IF metric.enabled %]
+        [% metric_input_exists = 1 %]
+        <td><input name="author_metric" type="text" value="[% metric.value %]" size="6"></td>
 	[% ELSE %]
-    	<td>[% value %]</td>
+    	<td>[% metric.value %]</td>
 	[% END %]
     [% ELSE %]
     <td><input name="author_metric" type="hidden"></td>
@@ -121,15 +124,16 @@
     [% END %]
 </tr>
 
-[% FOREACH reviewer_metrics %]
+[% FOREACH rmetric = reviewer_metrics %]
 <tr class="tt[% type mod 2 %]">
     [% type = type + 1 %]
     [% SET reviewerindex = loop.index() %]
-    <td>[% reviewer %]</td>
-    [% FOREACH metric=user_metrics %]
+    <td>[% rmetric.reviewer %]</td>
+    [% FOREACH metric = rmetric.user_metrics %]
     
     [% IF metric.scope != 'author' %]
 	[% IF metric.enabled != 0 %]
+        [% metric_input_exists = 1 %]
 	<td><input name="reviewer_metric,[% reviewerindex %]" type="text" value="[% metric.value %]" size="6"></td>
 	[% ELSE %]
 	<td>[% metric.value %]</td>
@@ -146,15 +150,15 @@
     [% type = type + 1 %]
     <td>&nbsp;</td>
 
-    [% FOREACH total_metrics %]
-        <td>[% value %]</td>
+    [% FOREACH metric = total_metrics %]
+        <td>[% metric.value %]</td>
     [% END %]
 </tr>
 </table>
 
 <p>
 
-[% IF enabled %]
+[% IF metric_input_exists == 1 %]
 [%# Render the submit button #%]
 <input type="submit" name="button" value="Update Metrics" 
        onClick="return DeleteTopicConfirm();"> 
@@ -167,10 +171,10 @@
     <tr class="tth"><td>Who</td><td>When</td><td>When</td></tr>
 
     [% type = 0 %]
-    [% FOREACH activity=activity_list %]
+    [% FOREACH activity = activity_list %]
     <tr class="tt[% type mod 2 %]">
-        <td>[% activity.email | html_entity%]</td>
-	<td>[% activity.date | html_entity%]</td>
+        <td>[% activity.email | html_entity %]</td>
+	<td>[% activity.date | html_entity %]</td>
 	<td>[% activity.description | html_entity | $AutomagicLinks %]</td>
     </tr>
     [% type = type + 1 %]
