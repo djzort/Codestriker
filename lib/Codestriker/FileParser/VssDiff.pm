@@ -61,7 +61,7 @@ sub parse ($$$) {
 	# The next part of the diff will be the old style diff format, or
 	# possibly "No differences." if there are no differences.
 	$line = <$fh>;
-	if ($line !~ /^No differences\./) {
+	if ($line !~ /^No differences\./o) {
 	    my $chunk;
 	    do
 	    {

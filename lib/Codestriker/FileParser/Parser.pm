@@ -142,6 +142,9 @@ sub parse ($$$$$) {
 	# Last stop-gap - the file format is unknown, treat it as a
 	# single file with filename "unknown".
 	if ($#diffs == -1) {
+	    if (! defined $uploaded_filename || $uploaded_filename eq '') {
+		$uploaded_filename = 'unknown.txt';
+	    }
 	    seek($tmpfh, 0, 0) ||
 		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs = Codestriker::FileParser::UnknownFormat->
