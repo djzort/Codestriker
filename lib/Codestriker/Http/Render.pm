@@ -766,12 +766,6 @@ sub render_linenumber($$$$$) {
 	}
     }
 
-    # Check to see if the topic is read only.
-    if ($self->{topic_state} ne $Codestriker::topic_states[0])
-    {
-	return $linedata;
-    }
-
     # Check if the linenumber is outside the review.
     if ($link == 0) {
 	return $linedata;
@@ -781,7 +775,18 @@ sub render_linenumber($$$$$) {
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
     my $anchor = $key;
-    my $edit_url = "javascript:eo('$filenumber','$line','$new')";
+    my $edit_url = "javascript:eo('$filenumber','$line','$new');";
+
+    # If the topic is read only, and there is a comment on this line
+    # don't provide a clickable action, but still show the comment tooltip.
+    if ($self->{topic_state} ne $Codestriker::topic_states[0]) {
+	if ($link_title ne "") {
+	    $edit_url = "javascript:void(0);";
+	} else {
+	    # No comment on this line, just return the line number as is.
+	    return $linedata;
+	}
+    }
 
     my $query = $self->{query};
     if ($link_title ne "") {
