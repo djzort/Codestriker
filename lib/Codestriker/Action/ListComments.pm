@@ -34,7 +34,9 @@ sub process($$$) {
     # Perform some error checking here on the parameters.
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic);
+    my @comments = Codestriker::Model::Comment->read_filtered($topic,
+    	$show_comments_by_state,
+	$show_comments_from_user);
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header($topic, "Comment list", $email, "", "", "",
@@ -63,46 +65,17 @@ sub process($$$) {
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 				      
-    # Filter out comments that the user has said they don't want to see.
-    my %usersThatHaveComments;
-    
-    @comments = grep { 
-        my $comment = $_;
-        my $keep_comment = 1;
-                        
-        # check for filter via the state of the comment.
-        $keep_comment = 0 if ( $show_comments_by_state ne ""  && 
-                               $show_comments_by_state ne $comment->{state} );
-        
-        # check for filters via the comment author name.
-        if ($Codestriker::antispam_email) {
-            my $shortAuthor = 
-            		Codestriker->make_antispam_email( $comment->{author} );
-            my $shortFilterAuthor = 
-            		Codestriker->make_antispam_email( $show_comments_from_user );
-            $keep_comment = 0 if ( $show_comments_from_user ne "" && 
-                                   $shortAuthor ne $shortFilterAuthor);
-                                   
-            # Make a list of users while we are at it.
-            $usersThatHaveComments{$shortAuthor } = 1;                                   
-        }
-        else {
-            $keep_comment = 0 if ( $show_comments_from_user ne "" && 
-                                  $comment->{author} ne $show_comments_from_user);
-                                  
-            # Make a list of users while we are at it.
-            $usersThatHaveComments{$comment->{author}} = 1;                                  
-        }
-                                               
-                      
- 	$keep_comment;
-    } @comments;
+    my @usersThatHaveComments = Codestriker::Model::Comment->read_authors( $topic );
     
     # Filter the email address out, in the object.
     if ( $Codestriker::antispam_email ) {
     	foreach my $comment (@comments) {
     	    $comment->{author} = Codestriker->make_antispam_email( $comment->{author} );
         }
+        
+        @usersThatHaveComments = map 
+        	{ Codestriker->make_antispam_email($_) } 
+                @usersThatHaveComments;        
     }     
                                          
     # Go through all the comments and make them into an appropriate form for
@@ -144,11 +117,10 @@ sub process($$$) {
 	$comment->{data} = HTML::Entities::encode($comment->{data});
         
         if ($show_context ne "" && $show_context > 0) {
-                my $new = 1;        
                 my $delta = Codestriker::Model::File->get_delta($topic, 
                                 $comment->{filenumber}, 
                                 $comment->{fileline} , 
-                                $new);
+                                $comment->{filenew});
 
                 $comment->{context} = Codestriker::Http::Render->get_context(
                                                 $comment->{fileline} , 
@@ -156,7 +128,7 @@ sub process($$$) {
                                                 $delta->{old_linenumber},
                                                 $delta->{new_linenumber},
                                                 $delta->{text}, 
-                                                $new);
+                                                $comment->{filenew});
        }
     }
 
@@ -175,8 +147,7 @@ sub process($$$) {
     $vars->{'comments'} = \@comments;
     $vars->{'states'} = \@states;
     
-    my @usersThatHaveCommentsList = sort keys %usersThatHaveComments;
-    $vars->{'users'} = \@usersThatHaveCommentsList;
+    $vars->{'users'} = \@usersThatHaveComments;
     
     # Push in the current filter combo box selections so the window remembers
     # what the user has currently set.

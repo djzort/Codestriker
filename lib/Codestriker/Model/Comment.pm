@@ -96,6 +96,44 @@ sub create($$$$$$$$$) {
     die $dbh->errstr if !$success;
 }
 
+# This function returns as a list the authors emails address that have entered 
+# comments against a topic.
+sub read_authors
+{
+   my ($type, $topicid ) = @_;
+   
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    # Store the results into an array of objects.
+    my @results;
+
+    # Retrieve all of the comment information for the specified topicid.
+    my $select_comment =
+	$dbh->prepare_cached('SELECT distinct( comment.author) ' .
+			     'FROM comment, commentstate ' .
+			     'WHERE commentstate.topicid = ? ' .
+			     'AND commentstate.id = comment.commentstateid ');
+                             
+    my $success = defined $select_comment;
+    my $rc = $Codestriker::OK;
+    $success &&= $select_comment->execute($topicid);
+
+    # Store the results into the referenced arrays.
+    if ($success) {
+	my @data;
+	while (@data = $select_comment->fetchrow_array()) {
+	    push @results, $data[0];
+	}
+	$select_comment->finish();
+    }
+    
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+
+    return @results;   
+}
+
 # Return all of the comments made for a specified topic.
 sub read($$) {
     my ($type, $topicid) = @_;
@@ -153,6 +191,43 @@ sub read($$) {
     die $dbh->errstr unless $success;
 
     return @results;
+}
+
+# Return all of the comments made for a specified topic filtered by state 
+# and author. The filtered parameter is not used if it is empty.
+sub read_filtered
+{
+    my ($type, $topicid, $filtered_by_state_index, $filtered_by_author) = @_;
+    
+    # Read all of the comments from the database. 
+    my @comments = $type->read( $topicid );
+
+    # Now filter out comments that don't match the comment state and author filter.
+    @comments = grep { 
+        my $comment = $_;
+        my $keep_comment = 1;
+                                
+        # check for filter via the state of the comment.
+        $keep_comment = 0 if ( $filtered_by_state_index ne ""  && 
+                               $filtered_by_state_index ne $comment->{state} );
+        
+        # check for filters via the comment author name.
+        if ($Codestriker::antispam_email) {
+            my $shortAuthor = 
+            		Codestriker->make_antispam_email( $comment->{author} );
+            my $shortFilterAuthor = 
+            		Codestriker->make_antispam_email( $filtered_by_author );
+            $keep_comment = 0 if ( $filtered_by_author ne "" && 
+                                   $shortAuthor ne $shortFilterAuthor);                                   
+        }
+        else {
+            $keep_comment = 0 if ( $filtered_by_author ne "" && 
+                                  $comment->{author} ne $filtered_by_author);
+        }                                                                     
+ 	$keep_comment;
+    } @comments;
+    
+    return @comments;
 }
 
 # Update the state of the specified commentstate.  The version parameter
