@@ -170,7 +170,7 @@ sub parse ($$$) {
 
 	    # If it is an added file, and the filename hasn't been extracted
 	    # (remote diffs), do so now.
-	    if ($revision == $Codestriker::ADDED_REVISION &&
+	    if ($revision eq $Codestriker::ADDED_REVISION &&
 		$filename eq "" &&
 		$line =~ /^\+\+\+ (.*)\t/) {
 		$filename = $1;
