@@ -237,7 +237,10 @@ sub delta_file_header ($$$$) {
 	# the repository viewer if it is defined.
 	my $cell = "";
 	my $revision_text = "revision $revision";
-	my $file_url = $self->{repository}->getViewUrl($filename);
+	my $file_url = "";
+	if (defined $self->{repository}) {
+	    $file_url = $self->getViewUrl($filename);
+	}
 
 	if ($file_url eq "") {
 	    # Output the header without hyperlinking the filename.
