@@ -1078,6 +1078,14 @@ PerlSwitches -T
         checkboxes are selected, then "Next", then "Finished".
       </para>
       <para>
+        Ensure the security for the two virtual directories
+        <filename>codestriker</filename> and
+        <filename>codestrikerhtml</filename> are appropriate for your
+        site.  Right-click on each directory, and select "Properties",
+        then the "Directory Security" tab.  Click the "Edit..." button
+        and make the appropriate changes for your deployment.
+      </para>
+      <para>
         Right-click "Default Web site" and select "Start" if the
         website is not currently running, and test it.
       </para>
