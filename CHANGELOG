@@ -3,6 +3,28 @@
 
 Version 1.8.4
 
+* The topic properties page now displays the start tag, end tag and
+  module parameters if they were used when the topic was created.
+  Contribution by Robert Hudson <RHudson@Staffware.com>.
+
+* The repository property has been changed to be a read-only property
+  in the topic properties page, from Robert Hudson.
+
+* The repository selection drop-down is only selected if there is more
+  than one repository configured in the system, from Robert Hudson.
+
+* If a topic is not in open state, then the "topic information" and
+  "topic comments" pages are modified to readonly, and adding new
+  comments is disabled.  From Robert Hudson.
+
+* In the table of contents, display the total number of lines added
+  and removed for each file.  This gives the reviewer a quick idea
+  where the major changes in the review are.  From Robert Hudson.
+
+* There is a new configuration option $allow_project_state_change
+  which if enabled, allows a project's state to be modified, and in
+  fact deleted.  By default, this option is disabled.
+
 * When sending emails involving more than one CC recipient, the email
   sending may fail because a space wasn't put after each comma.
 

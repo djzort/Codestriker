@@ -147,6 +147,10 @@ sub process($$$) {
     }
     $vars->{'metrics'} = \@metrics;
 
+    # Store the topic status     
+    $vars->{'topic_status'} = $topic->{topic_state};     
+    $vars->{'topic_states'} = \@Codestriker::topic_states; 
+
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("viewtopiccomments");
     $template->process($vars);

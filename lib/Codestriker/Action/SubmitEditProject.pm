@@ -26,6 +26,13 @@ sub process($$$) {
 
     my $query = $http_response->get_query();
 
+    my $project_state = $http_input->get('project_state');
+
+    # Check if this action is allowed.
+    if ($Codestriker::allow_delete == 0 && $project_state eq "Delete") {
+	$http_response->error("This function has been disabled");
+    }
+
     # Check that the appropriate fields have been filled in.
     my $id = $http_input->get('projectid');
     my $name = $http_input->get('project_name');
@@ -43,9 +50,19 @@ sub process($$$) {
 
     # Try to update the project in the model.
     if ($feedback eq "") {
-	my $rc =
-	    Codestriker::Model::Project->update($id, $name,
-						$description, $version);
+	my $rc;
+
+	if ($project_state eq "Delete")
+	{
+	    $rc =
+		Codestriker::Model::Project->delete($id, $version);
+	}
+	else
+	{
+	    $rc =
+		Codestriker::Model::Project->update($id, $name,
+				$description, $version, $project_state);
+	}
 
 	if ($rc == $Codestriker::INVALID_PROJECT) {
 	    $feedback .=
@@ -60,10 +77,17 @@ sub process($$$) {
     # screen, otherwise go to the project list screen.
     if ($feedback ne "") {
 	$http_input->{feedback} = $feedback;
-	Codestriker::Action::EditProject->process($http_input,
-						  $http_response);
     } else {
 	$http_input->{feedback} = "Project updated.\n";
+    }
+
+    if ($project_state ne "Delete")
+    {
+	Codestriker::Action::EditProject->process($http_input,
+						  $http_response);
+    }
+    else
+    {
 	Codestriker::Action::ListProjects->process($http_input,
 						   $http_response);
     }

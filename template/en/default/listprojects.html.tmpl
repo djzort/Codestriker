@@ -17,6 +17,7 @@
 <tr class="tlh">
   <th>Name</th>
   <th>Description</th>
+  <th>State</th>
 </tr>
 
 [% FOREACH project = projects %]
@@ -27,11 +28,12 @@
 <A HREF="[% project.edit_url %]">[% project.name | html_entity %]</A>
 </TD>
 <TD>[% project.description | html_entity %]</TD>
+<TD>[% project.state | html_entity %]</TD>
 </TR>
 [% END %]
 
 <tr class="tlh">
-  <td colspan="2">&nbsp</td>
+  <td colspan="3">&nbsp</td>
 </tr>
 </TABLE>
 

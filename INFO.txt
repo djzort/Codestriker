@@ -13,6 +13,35 @@ drop table topicmetric;
 drop table topicusermetric;
 drop table topicviewhistory;
 
+In commitinfo:
+
+# Run this to prepare for log_accum.pl in loginfo
+DEFAULT $CVSROOT/CVSROOT/commit_prep.pl -r
+
+Then in loginfo:
+
+DEFAULT $CVSROOT/CVSROOT/log_accum.pl -u $USER %s
+
+Note these versions don't seem to display the diff file...
+
+Only seem to need to change:
+
+	foreach $dofile (@changed_files) {
+	    if ($dofile =~ /\/$/) {
+		next;		# ignore the silly "dir" entries
+	    }
+	    if ($debug) {
+		print STDERR "main(): doing 'cvs -nQq status -v $dofile'\n";
+	    }
+	    open(STATUS, "-|") || exec 'cvs', '-nQq', 'status', '-v', $dofile;
+	    while (<STATUS>) {
+		chop;
+		push(@status_txt, $_);
+	    }
+	}
+
+Do do a diff.  Also ideally need to add in deleted and added files too.
+
 
 Creating the codestriker database.
 

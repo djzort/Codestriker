@@ -52,7 +52,12 @@ function DeleteTopicConfirm()
   <td>Title:</td>
   <td>
     <input type="text" name="topic_title" 
-           value="[% title | html_entity %]" size="70" maxlength="70">
+           value="[% title | html_entity %]" size="70"
+		[%# Check to see if the topic is open or not #%]
+		[% IF states.0 != default_state %]
+			readonly
+		[% END %]
+		    maxlength="70">
   </td>
 </tr>
 
@@ -61,6 +66,10 @@ function DeleteTopicConfirm()
   <td>
     <input type="text" name="author" value="[% author | html_entity %]" 
            size="50" maxlength="80"
+		[%# Check to see if the topic is open or not #%]
+		[% IF states.0 != default_state %]
+			readonly
+		[% END %]
 	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
@@ -90,6 +99,10 @@ function DeleteTopicConfirm()
   <td>
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
            size="50" maxlength="150"
+		[%# Check to see if the topic is open or not #%]
+		[% IF states.0 != default_state %]
+			readonly
+		[% END %]
 	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
@@ -99,40 +112,74 @@ function DeleteTopicConfirm()
   <td>
     <input type="text" name="cc" value="[% cc | html_entity %]" 
            size="50" maxlength="150"
+		[%# Check to see if the topic is open or not #%]
+		[% IF states.0 != default_state %]
+			readonly
+		[% END %]
 	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
 
+[% IF start_tag != '' %]
+<tr class="tt1">
+  <td>Start tag:</td>
+  <td>[% start_tag | html_entity %]</td>
+</tr>
+[% END %]
+
+[% IF end_tag != '' %]
+<tr class="tt1">
+  <td>End tag:</td>
+  <td>[% end_tag | html_entity %]</td>
+</tr>
+[% END %]
+
+[% IF module != '' %]
+<tr class="tt1">
+  <td>Module:</td>
+  <td>[% module | html_entity %]</td>
+</tr>
+[% END %]
+
 [% IF topic_repository != '' %]
 <tr class="tt1">
   <td>Repository:</td>
-  <td>
-    <select name="repository">
        [% FOREACH entry = repositories %]
           [% IF entry == topic_repository %]
-	      <option selected value="[% entry %]">[% entry %]</OPTION>
-	  [% ELSE %]
-	      <option value="[% entry %]">[% entry %]</OPTION>
+		<input type="hidden" name="repository" value="[% topic_repository %]" readonly>
+		<td>[% entry | html_entity %]</td>
 	  [% END %]
        [% END %]
-    </select>
-  </td>
 </tr>
+
 [% END %]
 
 [% IF projects_enabled != 0 %]
 <tr class="tt1">
   <td>Project:</td>
   <td>
-    <select name="projectid">
+    [%# Check to see if the topic is open or not #%]
+    [% IF states.0 == default_state %]
+      <select name="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == topic_projectid %]
 	      <option selected value="[% project.id %]">[% project.name | html_entity %]</OPTION>
 	  [% ELSE %]
+	    [%# Only display additional Projects that are open #%]
+	    [% IF project.state == project_states.0 %]
 	      <option value="[% project.id %]">[% project.name | html_entity %]</OPTION>
+	    [% END %]
 	  [% END %]
        [% END %]
-    </select>
+      </select>
+    [% ELSE %]
+	[% FOREACH project = projects %]
+	    [% IF project.id == topic_projectid %]
+		<input type="hidden" name="projectid" value="[% project.id %]">
+		<input type="text" name="projectname" value="[% project.name | html_entity %]" readonly>
+	    [% END %]
+	[% END %]
+    [% END %]
  </td>
 </tr>
 [% END %]
@@ -141,6 +188,10 @@ function DeleteTopicConfirm()
   <td valign="top">Description:</td>
   <td>
     <textarea name="topic_description" rows="12" cols="70" 
+		[%# Check to see if the topic is open or not #%]
+		[% IF states.0 != default_state %]
+			readonly
+		[% END %]
               wrap="hard">[% description | html_entity %]</textarea>
   </td>
 </tr>

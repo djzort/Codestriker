@@ -2,6 +2,33 @@
 
 [% PROCESS header.html.tmpl version = version displaymenu = 1 help = "x362.html" %]
 
+
+<script language="JavaScript">
+<!--
+//
+// This function will hit the user with a "are you sure" message box if they
+//  ask to delete the project. Otherwise, just let them change the state. It
+//  is called when the submit button is pressed. 
+//
+function DeleteProjectConfirm()
+{
+[% IF project.id != 1 %]
+    var stateIndex = document.form.project_state.options.selectedIndex;
+    var stateSelection = document.form.project_state.options[stateIndex].value;
+
+    // Confirm with the user if they are deleting.
+    if (stateSelection == 'Delete')
+    {
+    	return confirm('This project and all of its topics will be ' +
+                       'permanently removed. Are you sure you want ' +
+                       'to delete this project?');
+    }
+[% END %]
+    return 1;
+}
+-->
+</script>
+
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
     <font color="red">[% feedback %]</font>
@@ -12,8 +39,7 @@
 <H1>Edit project</H1>
 
 <P>
-
-<FORM METHOD="POST" ENCTYPE="multipart/form-data">
+<FORM METHOD="POST" ENCTYPE="application/x-www-form-urlencoded" NAME="form">
 
 <INPUT TYPE="hidden" name="projectid" value="[% project.id %]">
 <INPUT TYPE="hidden" name="version" value="[% project.version %]">
@@ -22,17 +48,58 @@
 [%# The project name input field #%]
 Project name:
 <BR>
-<INPUT TYPE="text" NAME="project_name" VALUE="[% project.name | html_entity %]" SIZE=70 MAXLENGTH=70>
+<INPUT TYPE="text" NAME="project_name" VALUE="[% project.name | html_entity %]" SIZE=70 MAXLENGTH=70
+	[% IF project_states.0 != project.state %]
+		readonly
+	[% END %]
+	>
 <P>
 
 [%# The project description input field #%]
 Project description: 
 <BR>
-<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[% project.description | html_entity %]</TEXTAREA>
+<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual"
+	[% IF project_states.0 != project.state %]
+		readonly
+	[% END %]
+	>[% project.description | html_entity %]</TEXTAREA>
 <P>
 
 <P>
-<INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
+[% IF project.id <= 1 || project_state_change_enabled != 1 %]
+	<INPUT TYPE="hidden" NAME="project_state" VALUE="[% project.state %]">
+[% ELSE %]
+<tr class="tt1">
+ <td>State:</td>
+  <td>
+    [%# Now display the option button for changing the project state #%]
+    <select name="project_state">
+    [% FOREACH state = project_states %]
+       [% IF state == project.state %]
+           <option selected value="[% state %]">[% state %]</option>
+       [% ELSE %]           
+           <option value="[% state %]">[% state %] [% selected_state %]</option>
+       [% END %]
+    [% END %]
+    [%# Render a "delete" button, for deleting projects, if enabled #%]
+    [% IF delete_enabled != 0 %]
+   	   <option value="Delete">Delete Project ... </option>
+    [% END %]
+    </select>
+ </td>
+</tr>
+[% END %]
+
+<tr class="tt1"><td colspan="2">&nbsp;</td></tr>
+
+
+[%# Render the submit button #%]
+<tr>
+  <td colspan="2">
+    <input type="submit" name="button" value="Update Project" 
+           onClick="return DeleteProjectConfirm();">
+  </td>
+</tr>
 
 </FORM>
 

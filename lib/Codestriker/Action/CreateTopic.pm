@@ -67,7 +67,7 @@ sub process($$$) {
 
     # Read the list of projects available to make that choice available
     # when a topic is created.
-    my @projects = Codestriker::Model::Project->list();
+    my @projects = Codestriker::Model::Project->list(0);
     $vars->{'projects'} = \@projects;
                                           
     my $template = Codestriker::Http::Template->new("createtopic");

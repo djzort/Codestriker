@@ -240,6 +240,9 @@ my $topic_table =
 		    col(name=>"creation_ts", type=>$DATETIME),
 		    col(name=>"modified_ts", type=>$DATETIME),
 		    col(name=>"version", type=>$INT32),
+		    col(name=>"start_tag", type=>$TEXT, mandatory=>0),
+		    col(name=>"end_tag", type=>$TEXT, mandatory=>0),
+		    col(name=>"module", type=>$TEXT, mandatory=>0),
 		    col(name=>"repository", type=>$TEXT, mandatory=>0),
 		    col(name=>"projectid", type=>$INT32)
 		   ],
@@ -407,7 +410,8 @@ my $project_table =
 		    col(name=>"description", type=>$TEXT),
 		    col(name=>"creation_ts", type=>$DATETIME),
 		    col(name=>"modified_ts", type=>$DATETIME),
-		    col(name=>"version", type=>$INT32)
+		    col(name=>"version", type=>$INT32),
+		    col(name=>"state", type=>$INT16)
 		   ],
 	indexes => [dbindex(name=>"project_name_idx",
 			    column_names=>["name"])]);
@@ -537,10 +541,16 @@ $database->commit();
 # Add new fields to the topic field when upgrading old databases.
 $database->add_field('topic', 'repository', $TEXT);
 $database->add_field('topic', 'projectid', $INT32);
+$database->add_field('topic', 'start_tag', $TEXT);
+$database->add_field('topic', 'end_tag', $TEXT);
+$database->add_field('topic', 'module', $TEXT);
 
 # Add the new metric fields to the commentstatehistory table.
 $database->add_field('commentstatehistory', 'metric_name', $TEXT);
 $database->add_field('commentstatehistory', 'metric_value', $TEXT);
+
+# Add the new state field to the project table
+$database->add_field('project', 'state', $INT16);
 
 # If we are using MySQL, and we are upgrading from a version of the database
 # which used "text" instead of "mediumtext" for certain fields, update the
@@ -752,6 +762,12 @@ if ($project_count == 0) {
     my $update = $dbh->prepare_cached('UPDATE topic SET projectid = ?');
     $update->execute($projectid);
 }
+$database->commit();
+
+# Check if the version to be upgraded has any project rows and if
+# so set the default state to open.
+$stmt = $dbh->prepare_cached('UPDATE project SET state = 0 WHERE state IS NULL');
+$stmt->execute();
 $database->commit();
 
 # Check if the data needs to be upgraded to the new commentstate metric

@@ -262,6 +262,7 @@ sub process($$$) {
     $topic->create($topicid, $email, $topic_title,
 		   $bug_ids, $reviewers, $cc,
 		   $topic_description, $topic_text,
+		   $start_tag, $end_tag, $module,
 		   $repository_url, $projectid,
 		   \@deltas);
                                                                   

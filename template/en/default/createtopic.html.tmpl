@@ -123,7 +123,8 @@ is uploaded.
 [% END %]
 
 [%# The repository the review is made against #%]
-
+[%# Only display the repository select if there is more than one #%]
+[% IF repositories.size > 1 %]
 [% IF allow_repositories != 0 %]
 <TR>
  <TD>Repository:
@@ -147,6 +148,7 @@ an aid in the reviewing process.
       </SELECT>
  </TD>
 </TR>
+[% END %]
 [% END %]
 
 [% IF projects_enabled != 0 %]

@@ -43,6 +43,8 @@ sub process($$$) {
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
+    $vars->{'project_states'} = \@Codestriker::project_states;
+    $vars->{'project_state_change_enabled'} = $Codestriker::allow_project_state_change;
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("editproject");

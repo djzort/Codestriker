@@ -97,6 +97,7 @@ sub process($) {
     $self->{projectid} = $query->param('projectid');
     $self->{project_name} = $query->param('project_name');
     $self->{project_description} = $query->param('project_description');
+    $self->{project_state} = $query->param('project_state');
     $self->{start_tag} = $query->param('start_tag');
     $self->{end_tag} = $query->param('end_tag');
     $self->{module} = $query->param('module');
@@ -118,6 +119,7 @@ sub process($) {
     $self->{repository} = "" if ! defined $self->{repository};
     $self->{project_name} = "" if ! defined $self->{project_name};
     $self->{project_description} = "" if ! defined $self->{project_description};
+    $self->{project_state} = "" if ! defined $self->{project_state};
     $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
 
     my @topic_metrics = $query->param('topic_metric');

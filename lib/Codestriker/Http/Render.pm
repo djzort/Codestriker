@@ -49,10 +49,10 @@ my @view_file_plus_offset = ();
 my $COMMENT_LINE_COLOUR = "red";
 
 # Constructor for rendering complex data.
-sub new ($$$$$$$\%\@$$\@\@\@$$) {
+sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comments, $tabwidth, $repository, $filenames_ref,
-	$revisions_ref, $binaries_ref, $max_line_length, $brmode, $fview) = @_;
+	$revisions_ref, $binaries_ref, $numchanges_ref, $max_line_length, $brmode, $fview) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -77,9 +77,15 @@ sub new ($$$$$$$\%\@$$\@\@\@$$) {
     $self->{filenames_ref} = $filenames_ref;
     $self->{revisions_ref} = $revisions_ref;
     $self->{binaries_ref} = $binaries_ref;
+    $self->{numchanges_ref} = $numchanges_ref;
     $self->{max_line_length} = $max_line_length;
     $self->{old_linenumber} = 1;
     $self->{new_linenumber} = 1;
+
+    # Get the main entry to the database
+    my $topic_obj = Codestriker::Model::Topic->new($self->{topic});
+    # Check for readonly
+    $self->{topic_state} = $topic_obj->{topic_state};
 
     # Build a hash from filenumber|fileline|new -> comment array, so that
     # when rendering, lines can be coloured appropriately.
@@ -752,6 +758,12 @@ sub render_linenumber($$$$$) {
 	}
     }
 
+    # Check to see if the topic is read only.
+    if ($self->{topic_state} ne $Codestriker::topic_states[0])
+    {
+	return $linedata;
+    }
+
     # Check if the linenumber is outside the review.
     if ($link == 0) {
 	return $linedata;
@@ -884,7 +896,8 @@ sub _coloured_mode_start($) {
     my $filenames = $self->{filenames_ref};
     my $revisions = $self->{revisions_ref};
     my $binaries = $self->{binaries_ref};
-    
+    my $numchanges = $self->{numchanges_ref};
+
     print $query->p;
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
@@ -909,6 +922,7 @@ sub _coloured_mode_start($) {
     for (my $i = 0; $i <= $#$filenames; $i++) {
 	my $filename = $$filenames[$i];
 	my $revision = $$revisions[$i];
+	my $numchange = $$numchanges[$i];
 	my $href_filename =
 	    $url_builder->view_url($topic, -1, $mode, $brmode, $i) .
 	    "#" . "$filename";
@@ -923,6 +937,12 @@ sub _coloured_mode_start($) {
 	    $tddata = "[" . $query->a({href=>$anchor_filename}, "Jump to") . "] " . $tddata;
 	}
 
+	my $lineData = "";
+
+	if ($numchange ne "") {
+	    $lineData = "&nbsp; <FONT size=-1>{$numchange}</FONT>";
+	}
+
 	my $class = "";
 	$class = "af" if ($revision eq $Codestriker::ADDED_REVISION);
 	$class = "rf" if ($revision eq $Codestriker::REMOVED_REVISION);
@@ -932,11 +952,13 @@ sub _coloured_mode_start($) {
  	    $revision eq $Codestriker::PATCH_REVISION) {
  	    # Added, removed or patch file.
 	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
-					$tddata)) . "\n";
+					$tddata),
+			     $query->td({-class=>'cf'}, $lineData)) . "\n";
  	} else {
  	    # Modified file.
  	    print $query->Tr($query->td({-class=>'cf'}, $tddata),
- 			     $query->td({-class=>'cf'}, "&nbsp; $revision")) .
+ 			     $query->td({-class=>'cf'}, "&nbsp; $revision"),
+			     $query->td({-class=>'cf'}, $lineData)) .
  			     "\n";
  	}
     }
@@ -1047,6 +1069,15 @@ sub render_monospaced_line ($$$$$$$$) {
     # edit window is focused to the appropriate line.
     my $query = $self->{query};
     my $line_cell = "";
+
+    # Check to see if the topic is read only.
+    if ($self->{topic_state} ne $Codestriker::topic_states[0])
+    {
+	$line_cell = "$prefix$linenumber";
+    }
+    else
+    {
+
     if ($link) {
 	# A line corresponding to the review.
 	my $edit_url = "javascript:eo('$filenumber','$linenumber','$new')";
@@ -1079,6 +1110,7 @@ sub render_monospaced_line ($$$$$$$$) {
 	$line_cell = "$prefix$linenumber";
     }
 
+    }
     my $newdata = tabadjust($self, $self->{tabwidth}, $data, 0);
 
     if ($class ne "") {

@@ -95,9 +95,9 @@ sub get($$$$$$) {
 
 # Retrieve the details of which files, revisions and offsets are present for
 # a specific topic.
-sub get_filetable($$$$$$) {
+sub get_filetable($$$$$$$) {
     my ($type, $topicid, $filename_array_ref, $revision_array_ref,
-	$offset_array_ref, $binary_array_ref) = @_;
+	$offset_array_ref, $binary_array_ref, $numchanges_array_ref) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -105,7 +105,7 @@ sub get_filetable($$$$$$) {
     # Setup the appropriate statement and execute it.
     my $select_file =
 	$dbh->prepare_cached('SELECT filename, revision, topicoffset, ' .
-			     'binaryfile FROM topicfile WHERE topicid = ? ' .
+			     'binaryfile, sequence FROM topicfile WHERE topicid = ? ' .
 			     'ORDER BY sequence');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid);
@@ -118,6 +118,11 @@ sub get_filetable($$$$$$) {
 	    push @$revision_array_ref, $data[1];
 	    push @$offset_array_ref, $data[2];
 	    push @$binary_array_ref, $data[3];
+
+	    # Now get the number of lines affected in this file
+	    my $numchanges = Codestriker::Model::Delta->get_delta_size($topicid, $data[4]);
+
+	    push @$numchanges_array_ref, $numchanges;
 	}
     }
 

@@ -115,12 +115,15 @@ with
         [%# Display the comment thread information #%]
 	<TD>
 	    [% IF comment.filename != '' %]
-	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
-	       [% IF allow_repositories != 0 %] <A HREF="[% comment.view_parallel %]">Parallel</A> | [% END %]
-	       <A NAME="[% comment.anchor %]" HREF="[% comment.edit_url %]">Add comment</A>
+	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A>
+	       [% IF allow_repositories != 0 %] | <A HREF="[% comment.view_parallel %]">Parallel</A> [% END %]
 	    [% ELSE %]
-	       Line: [% comment.line %] |
-	        <A NAME="[% comment.anchor %]" HREF="[% comment.edit_url %]">Add comment</A>
+	       Line: [% comment.line %]
+	    [% END %]
+
+	    [%# Check to see if the topic is open or not #%]
+	    [% IF topic_states.0 == topic_status %]
+	    | <A NAME="[% comment.anchor %]" HREF="[% comment.edit_url %]">Add comment</A>
 	    [% END %]
 	</TD>
     </TR>
@@ -131,7 +134,14 @@ with
         [% IF loop.index() % 4 == 0 %]<TR><TD>[% END %]
         [% SET metric_name = metric.name %]
 	[% metric_name %]:
-   	<SELECT NAME="comment_state_metric|[% metric_name %]|[%comment.filenumber %]|[% comment.fileline %]|[% comment.filenew %]|[% comment.version %]">
+   	<SELECT NAME="comment_state_metric|[% metric_name %]|[%comment.filenumber %]|[% comment.fileline %]|[% comment.filenew %]|[% comment.version %]"
+
+	[%# Check to see if the topic is open or not #%]
+	[% IF topic_states.0 != topic_status %]
+		disabled
+	[% END %]
+	>
+
  	[% SET comment_metric_value = comment.metrics.$metric_name %]
         [% SET found_current_value = 0 %]
 	[% FOREACH value = metric.values %]
@@ -175,9 +185,11 @@ with
 
 </TABLE>
 
+[%# Check to see if the topic is open or not #%]
+[% IF topic_states.0 == topic_status %]
 <P>
-
 <INPUT TYPE="submit" NAME="button" VALUE="Update">
+[% END %]
 
 </FORM>
 

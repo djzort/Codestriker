@@ -101,6 +101,7 @@ sub process($$$) {
     # Indicate what projects are available, and what the topic's project is.
     my @projects = Codestriker::Model::Project->list();
     $vars->{'projects'} = \@projects;
+    $vars->{'project_states'} = \@Codestriker::project_states;
     $vars->{'topic_projectid'} = $topic->{project_id};
 
     $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
@@ -120,7 +121,10 @@ sub process($$$) {
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic->{topic_state};
     $vars->{'description'} = $topic->{description};
-    
+    $vars->{'start_tag'} = $topic->{start_tag};
+    $vars->{'end_tag'} = $topic->{end_tag};
+    $vars->{'module'} = $topic->{module};
+
     my $template = Codestriker::Http::Template->new("viewtopicproperties");
     $template->process($vars);
 

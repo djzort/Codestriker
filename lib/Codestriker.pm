@@ -23,10 +23,11 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
+	      $allow_project_state_change $project_states
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.8.3";
+$Codestriker::VERSION = "1.8.4";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";

@@ -41,12 +41,13 @@ sub process($$$) {
     my $topic = Codestriker::Model::Topic->new($topicid);     
 
     # Retrieve the changed files which are a part of this review.
-    my (@filenames, @revisions, @offsets, @binary);
+    my (@filenames, @revisions, @offsets, @binary, @numchanges);
     $topic->get_filestable(
     		\@filenames,
                 \@revisions,
                 \@offsets,
-                \@binary);
+                \@binary,
+                \@numchanges);
 
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $topic->{description};
@@ -200,12 +201,14 @@ sub process($$$) {
     my @document = split /\n/, $topic->{document};
     my $max_digit_width = length($#document+1);
 
+
     # Build the render which will be used to build this page.
     my $render = Codestriker::Http::Render->new($query, $url_builder, 1,
 						$max_digit_width, $topicid,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
-						\@revisions, \@binary, -1,
+						\@revisions, \@binary,
+						\@numchanges, -1,
 						$brmode, $fview);
 
     # Display the data that is being reviewed.

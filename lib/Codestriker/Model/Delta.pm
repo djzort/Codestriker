@@ -33,6 +33,42 @@ sub new {
     return $self;
 }
 
+# Retrieve the number of lines in the data for a given file.
+# Input -1 for filenumber for a full file list of a specific topic.
+sub get_delta_size($$$) {
+    my ($type, $topicid, $filenumber) = @_;
+
+    my @deltas = ();
+    @deltas = $type->get_deltas($topicid, $filenumber);
+
+    my $addedLines = 0;
+    my $removedLines = 0;
+
+    for (my $i = 0; $i <= $#deltas; $i++) {
+	my $delta = $deltas[$i];
+	my @lines = split '\n', $delta->{text};
+
+	for (my $j = 0; $j <= $#lines; $j++) {
+	    my @aLine = $lines[$j];
+	    if (scalar( grep !/^\+/, @aLine ) == 0) {
+		$addedLines++;
+	    } elsif (scalar( grep !/^\-/, @aLine ) == 0) {
+		$removedLines++;
+	    }
+	}
+    }
+
+    my $numLines = "";
+
+    # Return the changes if one is non zero.
+    if (($removedLines != 0) || ($addedLines != 0)) {
+	$numLines = "+$addedLines,-$removedLines";
+    }
+
+    return $numLines;
+}
+
+
 # Retrieve the ordered list of deltas that comprise this review.
 # Input -1 for filenumber for a full file list of a specific topic.
 sub get_delta_set($$$) {

@@ -32,6 +32,9 @@ sub new {
     $self->{topic_state} = "";
     $self->{topic_state_id} = 0;
     $self->{version} = 0;
+    $self->{start_tag} = "";
+    $self->{end_tag} = "";
+    $self->{module} = "";
     $self->{repository} = "";
     $self->{project_id} = "";
     $self->{project_name} = "";
@@ -112,8 +115,8 @@ sub _insert_bug_ids($$$) {
 # Create a new topic with all of the specified properties.
 sub create($$$$$$$$$$$$) {
     my ($self, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document, $repository, $projectid,
-	$deltas_ref) = @_;
+	$description, $document, $start_tag, $end_tag, $module,
+	$repository, $projectid, $deltas_ref) = @_;
 
     my $timestamp = Codestriker->get_timestamp(time);        
         
@@ -131,9 +134,12 @@ sub create($$$$$$$$$$$$) {
     $self->{topic_state_id} = 0;
     $self->{project_id} = $projectid;
     $self->{version} = 0;
+    $self->{start_tag} = $start_tag;
+    $self->{end_tag} = $end_tag;
+    $self->{module} = $module;
     $self->{repository} = $repository;
     $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
-                            
+
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
@@ -141,8 +147,9 @@ sub create($$$$$$$$$$$$) {
     my $insert_topic =
 	$dbh->prepare_cached('INSERT INTO topic (id, author, title, ' .
 			     'description, document, state, creation_ts, ' .
-			     'modified_ts, version, repository, projectid) ' .
-			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+			     'modified_ts, version, start_tag, end_tag, ' .
+			     'module, repository, projectid) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert_topic;
 
     # Create all of the necessary rows.  It is assumed state 0 is the initial
@@ -150,6 +157,7 @@ sub create($$$$$$$$$$$$) {
     $success &&= $insert_topic->execute($topicid, $author, $title,
 					$description, $document, 0,
 					$timestamp, $timestamp, 0,
+					$start_tag, $end_tag, $module,
 					$repository, $projectid);
 	
     # Insert the associated bug records.
@@ -191,6 +199,9 @@ sub read($$) {
 					    'topic.creation_ts, ' .
 					    'topic.modified_ts, ' .
 					    'topic.version, ' .
+					    'topic.start_tag, ' .
+					    'topic.end_tag, ' .
+					    'topic.module, ' .
 					    'topic.repository, ' .
 					    'project.id, project.name ' .
 					    'FROM topic, project ' .
@@ -210,13 +221,13 @@ sub read($$) {
     $success &&= $select_topic->execute($topicid);
 
     my ($id, $author, $title, $description, $document, $state,
-	$creationtime, $modifiedtime, $version, $repository,
-	$projectid, $projectname);
+	$creationtime, $modifiedtime, $version, $start_tag, $end_tag,
+	$module, $repository, $projectid, $projectname);
 
     if ($success) {
 	($id, $author, $title, $description, $document, $state,
-	 $creationtime, $modifiedtime, $version, $repository,
-	 $projectid, $projectname)
+	 $creationtime, $modifiedtime, $version, $start_tag, $end_tag,
+	 $module, $repository, $projectid, $projectname)
 	    = $select_topic->fetchrow_array();
 	$select_topic->finish();
 
@@ -271,6 +282,9 @@ sub read($$) {
 	$self->{topic_state_id} = $state;
 	$self->{project_id} = $projectid;
 	$self->{project_name} = $projectname;
+	$self->{start_tag} = $start_tag;
+	$self->{end_tag} = $end_tag;
+	$self->{module} = $module;
 	$self->{version} = $version;
         $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
 	
@@ -306,11 +320,11 @@ sub read_comments {
 # from the database once.
 sub get_filestable
 {
-    my ($self,$filenames, $revisions, $offsets, $binary) = @_;
+    my ($self,$filenames, $revisions, $offsets, $binary, $numchanges) = @_;
 
     if (exists ($self->{filetable})) {
 
-    	( $filenames, $revisions, $offsets,$binary ) = @{$self->{filetable}};
+    	( $filenames, $revisions, $offsets,$binary, $numchanges ) = @{$self->{filetable}};
     }
     else {
 
@@ -318,13 +332,15 @@ sub get_filestable
     		    $filenames,
                     $revisions,
                     $offsets,
-                    $binary);
+                    $binary,
+                    $numchanges);
 
         $self->{filetable} = [ 
     		    $filenames,
                     $revisions,
                     $offsets,
-                    $binary ];
+                    $binary,
+                    $numchanges ];
 
     }
 
