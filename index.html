@@ -322,7 +322,12 @@ PerlTaintCheck On
 	For non mod_perl installs, the gzip executable can be used
 	for compression.  When receiving a page from Codestriker, the
 	page source contains near the top within an HTML comment
-	whether the text was sent compressed or not.
+	whether the text was sent compressed or not.  To enable
+	compression, you need to turn that option on in the
+	configuration file.  For an intranet setup where the server is
+	one hop away, compression will probably slow things down if
+	the review sizes are relatively small.  Its best to experiment
+	to see what works best for you.
 	</p>
 
 	<h3>Data storage</h3>

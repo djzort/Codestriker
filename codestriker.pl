@@ -512,11 +512,11 @@ sub generate_header($$$$$$$) {
     $tabwidth = get_tabwidth() if (!defined $tabwidth || $tabwidth eq "");
     $mode = get_mode() if (!defined $mode || $mode eq "");
 
-    $cookie_value{'email'} = $email;
-    $cookie_value{'reviewers'} = $reviewers;
-    $cookie_value{'cc'} = $cc;
-    $cookie_value{'tabwidth'} = $tabwidth;
-    $cookie_value{'mode'} = $mode;
+    $cookie_value{'email'} = $email if $email ne "";
+    $cookie_value{'reviewers'} = $reviewers if $reviewers ne "";
+    $cookie_value{'cc'} = $cc if $cc ne "";
+    $cookie_value{'tabwidth'} = $tabwidth if $tabwidth ne "";
+    $cookie_value{'mode'} = $mode if $mode ne "";
 
     my $cookie_path = $query->url(-absolute=>1);
     my $cookie = $query->cookie(-name=>"$cookie_name",
@@ -1021,6 +1021,7 @@ sub edit_topic ($$$$$) {
     
     # Create a form which will allow the user to enter in some comments.
     print $query->hr, $query->p("Enter comments:"), $query->p;
+
     print $query->start_form();
     $query->param(-name=>'action', -value=>'submit_comment');
     print $query->hidden(-name=>'action', -default=>'submit_comment');
@@ -1911,7 +1912,8 @@ sub submit_comments ($$$$$$) {
     # Redirect the browser to view the topic back at the same line number where
     # they were adding comments to.
     my $redirect_url =
-	build_view_url_extended($topic, $line, $mode, "", $email, "");
+	build_view_url_extended($topic, $line, $mode, "", $email,
+				$query->url());
     print $query->redirect(-URI=>"$redirect_url");
     return;
 }
