@@ -12,6 +12,8 @@ package Codestriker::Http::Template;
 use strict;
 use Template;
 
+use Codestriker;
+
 # Create a new template.
 sub new($$) {
     my ($type, $name) = @_;
@@ -69,7 +71,7 @@ sub process($$) {
     $vars->{'searchlist_enabled'} = $Codestriker::allow_searchlist;
 
     # Indicate if the "project" functionality is available or not.
-    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
+    $vars->{'projects_enabled'} = Codestriker->projects_disabled() ? 0 : 1;
 
     # Indicate if bug db integration is enabled.
     $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;

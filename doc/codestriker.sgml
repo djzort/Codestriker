@@ -685,7 +685,7 @@ $lxr_map =
         <title>Deployment Options</title>
 	<para>
 	  There are a number of other options which affect how
-	  Codestriker runs.  The four most important are shown below.
+	  Codestriker runs.  The most important ones are shown below.
 	  Unless you have specific reasons to, most intranet
 	  deployments of Codestriker can leave these options as is.
 	  <programlisting>
@@ -704,8 +704,29 @@ $allow_searchlist = 1;
 # remote connections.
 $allow_repositories = 1;
 
-# Indicate whether project operations (create, edit, list) can be performed.
-$allow_projects = 1;
+# The following controls project configuration.  Each Codestriker topic is
+# a member of a specific project.  Uncomment the option you want
+# below.  Note the textual state names below cannot be changed.
+
+# Default option, projects are enabled, but they have no state
+# changing operations (ie, projects are always in state 'Open').
+@project_states = ('Open');
+
+# Don't use projects at all.  Effectively, an implicit "default
+# project" is created and associated with all topics behind the scenes.
+# @project_states = ();
+#
+# Allow for projects to be closed.  Closing a project will
+# not allow new topics to be created in that project.
+# @project_states = ('Open', 'Closed');
+#
+# Allow for projects to be deleted.  This is potentially a dangerous
+# option to allow, as deleting a project will delete all of its member
+# topics as well.  Use with caution.
+# @project_states = ('Open', 'Deleted');
+#
+# Allow for projects to be closed and deleted.  Use with caution.
+# @project_states = ('Open', 'Closed', 'Deleted');
 
 # If true, don't display any email addresses in their true form, but
 # truncate them, to beat SPAM harvesters.

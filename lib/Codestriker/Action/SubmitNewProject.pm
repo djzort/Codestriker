@@ -11,6 +11,7 @@ package Codestriker::Action::SubmitNewProject;
 
 use strict;
 
+use Codestriker;
 use Codestriker::Model::Project;
 use Codestriker::Action::ListProjects;
 use Codestriker::Action::CreateProject;
@@ -20,7 +21,7 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     # Check if this operation is allowed.
-    if ($Codestriker::allow_projects == 0) {
+    if (Codestriker->projects_disabled()) {
 	$http_response->error("This function has been disabled");
     }
 

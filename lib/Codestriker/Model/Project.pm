@@ -13,6 +13,26 @@ use strict;
 
 use Codestriker::DB::DBI;
 
+# Simple private method which returns the mapping of project state id to
+# its textual representation.
+sub _state_id_to_string {
+    my ($id) = @_;
+    return 'Open' if $id == 0;
+    return 'Closed' if $id == 1;
+    return 'Deleted' if $id == 2;
+    return "State $id";
+}
+
+# Simple private method which returns the mapping of project state to
+# its id.
+sub _state_string_to_id {
+    my ($state) = @_;
+    return 0 if $state eq 'Open';
+    return 1 if $state eq 'Closed';
+    return 2 if $state eq 'Deleted';
+    return 3;
+}
+
 # Create a new project with all of the specified properties.
 sub create($$$$) {
     my ($type, $name, $description) = @_;
@@ -76,9 +96,8 @@ sub list($$) {
 	    $project->{name} = $data[1];
 	    $project->{description} = $data[2];
 	    $project->{version} = $data[3];
-	    $project->{state} = $Codestriker::project_states[$data[4]];
-	    if (!defined $state ||
-		$project->{state} eq $Codestriker::project_states[$state])
+	    $project->{state} = _state_id_to_string($data[4]);
+	    if (!defined $state || $project->{state} eq $state)
 	    {
 		push @results, $project;
 	    }
@@ -99,13 +118,15 @@ sub read($$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    my $select = $dbh->prepare_cached('SELECT name, description, version, state ' .
-				      'FROM project WHERE id = ?');
+    my $select =
+	$dbh->prepare_cached('SELECT name, description, version, state ' .
+			     'FROM project WHERE id = ?');
     my $success = defined $select;
     $success &&= $select->execute($id);
     my ($name, $description, $version, $state);
     if ($success &&
-	! (($name, $description, $version, $state) = $select->fetchrow_array())) {
+	! (($name, $description, $version, $state) =
+	   $select->fetchrow_array())) {
 	$success = 0;
     }
     $success &&= $select->finish();
@@ -117,7 +138,7 @@ sub read($$) {
 	$project->{name} = $name;
 	$project->{description} = $description;
 	$project->{version} = $version;
-	$project->{state} = $Codestriker::project_states[$state];
+	$project->{state} = _state_id_to_string($state);
     }
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
@@ -130,14 +151,7 @@ sub update($$$$$$) {
     my ($type, $id, $name, $description, $version, $project_state) = @_;
 
     # Map the new state to its number.
-    my $new_stateid;
-    for ($new_stateid = 0; $new_stateid <= $#Codestriker::project_states;
-	 $new_stateid++) {
-	last if ($Codestriker::project_states[$new_stateid] eq $project_state);
-    }
-    if ($new_stateid > $#Codestriker::project_states) {
-	die "Unable to change project to invalid state: \"$project_state\"";
-    }
+    my $new_stateid = _state_string_to_id($project_state);
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -216,37 +230,33 @@ sub delete($$) {
 	$rc = $Codestriker::STALE_VERSION;
     }
 
-    # Delete the project details.
-    $success &&= $delete->execute($id);
-    Codestriker::DB::DBI->release_connection($dbh, $success);
+    if ($success == 0) {
+	Codestriker::DB::DBI->release_connection($dbh, $success);
+	return $rc;
+    } else {
+	# Delete the topics in this project.
+	my @sort_order;
+	my @topic_query_results;
+	Codestriker::Model::Topic->query("", "", "", "",
+					 "", $id, "",
+					 "", "",
+					 "", "", "",
+					 \@sort_order, \@topic_query_results);
+	
+	# Delete each of the topics for this project
+	for (my $index = 0; $index <= $#topic_query_results; $index++) {
+	    my $topic_row = $topic_query_results[$index];
+	    my $topicid = $topic_row->{id};
+	    my $topic_delete = Codestriker::Model::Topic->new($topicid);
+	    $topic_delete->delete();
+	}
 
-    # Now delete all of the topics for this Project
+	# Now delete the project.
+	$delete->execute($id);
+	Codestriker::DB::DBI->release_connection($dbh, $success);
 
-    # Retrieve the current state of the topic.
-    my $topic = Codestriker::Model::Topic->new();
-
-    # Query the model for the specified data.
-    my (@sort_order, @state_group_ref, @text_group_ref);
-    my (@topicids, @title, @author, @ts, @state, @bugid, @email, @type, @version);
-
-    Codestriker::Model::Topic->query("", "", "", "",
-				     "", $id, "",
-				     "", "",
-				     "", "", "",
-                                     \@sort_order,
-				     \@topicids, \@title,
-				     \@author, \@ts, \@state, \@bugid,
-				     \@email, \@type, \@version);
-
-    # Delete each of the topics for this project
-    for (my $index = 0; $index <= $#topicids; $index++) {
-	my $accum_id = $topicids[$index];
-
-	my $topic_delete = Codestriker::Model::Topic->new($accum_id);
-	$topic_delete->delete();
+	return $rc;
     }
-
-    return $rc;
 }
 
 1;

@@ -23,7 +23,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
-	      $allow_project_state_change $project_states
+	      $project_states
 	      );
 
 # Version of Codestriker.
@@ -451,6 +451,17 @@ sub set_differences($$$$)
     }
 }
 
+# Return true if project support has been enabled.
+sub projects_disabled {
+    return ((defined $Codestriker::allow_projects &&
+	     $Codestriker::allow_projects == 0) ||
+	    $#Codestriker::project_states == -1);
+}
+
+# Return true if there is more than one state associated with a project.
+sub project_state_change_enabled {
+    return $#Codestriker::project_states > 0;
+}
     
 1;
 

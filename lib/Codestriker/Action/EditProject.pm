@@ -10,6 +10,7 @@
 package Codestriker::Action::EditProject;
 
 use strict;
+use Codestriker;
 use Codestriker::Model::Project;
 
 # Create an appropriate form for editing a project.
@@ -17,7 +18,7 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     # Check if this operation is allowed.
-    if ($Codestriker::allow_projects == 0) {
+    if (Codestriker->projects_disabled()) {
 	$http_response->error("This function has been disabled");
     }
 
@@ -44,7 +45,8 @@ sub process($$$) {
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
     $vars->{'project_states'} = \@Codestriker::project_states;
-    $vars->{'project_state_change_enabled'} = $Codestriker::allow_project_state_change;
+    $vars->{'project_state_change_enabled'} =
+	Codestriker->project_state_change_enabled() ? 1 : 0;
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("editproject");

@@ -11,6 +11,7 @@ package Codestriker::Action::SubmitEditProject;
 
 use strict;
 
+use Codestriker;
 use Codestriker::Model::Project;
 use Codestriker::Action::ListProjects;
 use Codestriker::Action::EditProject;
@@ -20,7 +21,7 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     # Check if this operation is allowed.
-    if ($Codestriker::allow_projects == 0) {
+    if (Codestriker->projects_disabled()) {
 	$http_response->error("This function has been disabled");
     }
 
@@ -29,7 +30,7 @@ sub process($$$) {
     my $project_state = $http_input->get('project_state');
 
     # Check if this action is allowed.
-    if ($Codestriker::allow_delete == 0 && $project_state eq "Delete") {
+    if ($Codestriker::allow_delete == 0 && $project_state eq "Deleted") {
 	$http_response->error("This function has been disabled");
     }
 
@@ -52,7 +53,7 @@ sub process($$$) {
     if ($feedback eq "") {
 	my $rc;
 
-	if ($project_state eq "Delete")
+	if ($project_state eq "Deleted")
 	{
 	    $rc =
 		Codestriker::Model::Project->delete($id, $version);
@@ -60,8 +61,8 @@ sub process($$$) {
 	else
 	{
 	    $rc =
-		Codestriker::Model::Project->update($id, $name,
-				$description, $version, $project_state);
+		Codestriker::Model::Project->update($id, $name,	$description,
+						    $version, $project_state);
 	}
 
 	if ($rc == $Codestriker::INVALID_PROJECT) {
@@ -81,7 +82,7 @@ sub process($$$) {
 	$http_input->{feedback} = "Project updated.\n";
     }
 
-    if ($project_state ne "Delete")
+    if ($project_state ne "Deleted")
     {
 	Codestriker::Action::EditProject->process($http_input,
 						  $http_response);

@@ -17,7 +17,7 @@ function DeleteProjectConfirm()
     var stateSelection = document.form.project_state.options[stateIndex].value;
 
     // Confirm with the user if they are deleting.
-    if (stateSelection == 'Delete')
+    if (stateSelection == 'Deleted')
     {
     	return confirm('This project and all of its topics will be ' +
                        'permanently removed. Are you sure you want ' +
@@ -77,13 +77,11 @@ Project description:
     [% FOREACH state = project_states %]
        [% IF state == project.state %]
            <option selected value="[% state %]">[% state %]</option>
+       [% ELSIF state == 'Deleted' %]
+   	   <option value="Deleted">Delete Project ...</option>
        [% ELSE %]           
-           <option value="[% state %]">[% state %] [% selected_state %]</option>
+           <option value="[% state %]">[% state %]</option>
        [% END %]
-    [% END %]
-    [%# Render a "delete" button, for deleting projects, if enabled #%]
-    [% IF delete_enabled != 0 %]
-   	   <option value="Delete">Delete Project ... </option>
     [% END %]
     </select>
  </td>
