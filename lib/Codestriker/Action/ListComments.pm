@@ -31,7 +31,7 @@ sub process($$$) {
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header($topic, "Comment list", $email, "", "", "",
-				    "", "", "", 0, 0);
+				    "", "", "", "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};

@@ -17,6 +17,7 @@ use Codestriker::Http::Render;
 use Codestriker::BugDB::BugDBConnectionFactory;
 use Codestriker::Repository::RepositoryFactory;
 use Codestriker::FileParser::Parser;
+use Codestriker::Model::Project;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -34,6 +35,7 @@ sub process($$$) {
     my $topic_file = $http_input->get('fh_filename');
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
+    my $projectid = $http_input->get('projectid');
 
     my $feedback = "";
     my $topic_text = "";
@@ -55,7 +57,8 @@ sub process($$$) {
     }
 
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
-				    $cc, "", "", $repository_url, "", 0, 0);
+				    $cc, "", "", $repository_url, $projectid,
+				    "", 0, 0);
 
     # If there is a problem with the input, redirect to the create screen
     # with the message.
@@ -74,7 +77,10 @@ sub process($$$) {
 	$vars->{'bug_ids'} = $bug_ids;
 	$vars->{'default_repository'} = $repository_url;
 	$vars->{'repositories'} = \@Codestriker::valid_repositories;
-	
+
+	my @projects = Codestriker::Model::Project->list();
+	$vars->{'projects'} = \@projects;
+
 	my $template = Codestriker::Http::Template->new("createtopic");
 	$template->process($vars) || die $template->error();
 	return;
@@ -120,7 +126,8 @@ sub process($$$) {
     Codestriker::Model::Topic->create($topicid, $email, $topic_title,
 				      $bug_ids, $reviewers, $cc,
 				      $topic_description, $topic_text,
-				      $timestamp, $repository, \@deltas);
+				      $timestamp, $repository, $projectid,
+				      \@deltas);
 
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

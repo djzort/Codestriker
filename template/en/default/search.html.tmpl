@@ -51,6 +51,21 @@
  </TD>
 </TR>
 
+[%# The project multi-select #%]
+<TR>
+ <TD>Project: </TD>
+ <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
+       [% FOREACH project = projects %]
+           [% IF project.name == 'Any' %]
+               <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
+           [% ELSE %]           
+               <OPTION VALUE="[% project.id %]">[% project.name %]
+           [% END %]
+       [% END %]
+     </SELECT>
+ </TD>
+</TR>
+
 [%# The contains text input field and checkbox #%]
 <TR>
  <TD>Contains text: </TD>

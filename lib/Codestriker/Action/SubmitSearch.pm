@@ -62,13 +62,25 @@ sub process($$$) {
 	}
     }
 
+    # Process the project multi-popup.
+    my @project_group = $query->param('project_group');
+    my @projectids;
+    for (my $i = 0; $i <= $#project_group; $i++) {
+	if ($project_group[$i] == -1) {
+	    # No need to encode anything in the URL.
+	    @projectids = ();
+	    last;
+	}
+	push @projectids, $project_group[$i];
+    }
+
     # Redirect the user to the list topics page.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $redirect_url =
 	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
 				      $stext, $search_title,
 				      $search_description, $search_comments,
-				      $search_body, \@stateids);
+				      $search_body, \@stateids, \@projectids);
 
     print $query->redirect(-URI=>$redirect_url);
 }

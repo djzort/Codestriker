@@ -87,23 +87,47 @@ sub search_url ($) {
 }
 
 # Create the URL for listing the topics.
-sub list_topics_url ($$$$$$$$$$\@) {
+sub list_topics_url ($$$$$$$$$$\@\@) {
     my ($self, $sauthor, $sreviewer, $scc, $sbugid, $stext,
-	$stitle, $sdescription, $scomments, $sbody, $state_array_ref) = @_;
+	$stitle, $sdescription, $scomments, $sbody, $state_array_ref,
+	$project_array_ref) = @_;
 
     my $sstate = defined $state_array_ref ? (join ',', @$state_array_ref) : "";
+    my $sproject = defined $project_array_ref ?
+	(join ',', @$project_array_ref) : "";
     return $self->{query}->url() . "?action=list_topics" .
 	($sauthor ne "" ? "&sauthor=$sauthor" : "") .
 	($sreviewer ne "" ? "&sreviewer=$sreviewer" : "") .
 	($scc ne "" ? "&scc=$scc" : "") .
 	($sbugid ne "" ? "&sbugid=$sbugid" : "") .
 	($stext ne "" ? "&stext=" . CGI::escape($stext) : "") .
-	($stitle ne "" ? "&stitle=" . CGI::escape($stitle) : "") .
-	($sdescription ne "" ?
-	 "&sdescription=" . CGI::escape($sdescription) : "") .
-	($scomments ne "" ? "&scomments=" . CGI::escape($scomments) : "") .
-	($sbody ne "" ? "&sbody=" . CGI::escape($sbody) : "") .
-	($sstate ne "" ? "&sstate=$sstate" : "");
+	($stitle ne "" ? "&stitle=$stitle" : "") .
+	($sdescription ne "" ? "&sdescription=$sdescription" : "") .
+	($scomments ne "" ? "&scomments=$scomments" : "") .
+	($sbody ne "" ? "&sbody=$sbody" : "") .
+	($sstate ne "" ? "&sstate=$sstate" : "") .
+	($sproject ne "" ? "&sproject=$sproject" : "");
+}
+
+# Construct a URL for editing a specific project.
+sub edit_project_url ($$) {
+    my ($self, $projectid) = @_;
+
+    return $self->{query}->url() . "?action=edit_project&projectid=$projectid";
+}
+
+# Construct a URL for listing all projects.
+sub list_projects_url ($) {
+    my ($self) = @_;
+
+    return $self->{query}->url() . "?action=list_projects";
+}
+
+# Construct a URL for creating a project.
+sub create_project_url ($) {
+    my ($self) = @_;
+
+    return $self->{query}->url() . "?action=create_project";
 }
 
 # Create the URL for viewing comments.

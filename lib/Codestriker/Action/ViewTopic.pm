@@ -31,7 +31,7 @@ sub process($$$) {
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
 	$topic_data, $document_creation_time, $document_modified_time,
-	$topic_state, $version, $repository_url);
+	$topic_state, $version, $repository_url, $projectid, $project_name);
     my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
 					     \$document_title,
 					     \$document_bug_ids,
@@ -41,7 +41,9 @@ sub process($$$) {
 					     \$document_creation_time,
 					     \$document_modified_time,
 					     \$topic_state,
-					     \$version, \$repository_url);
+					     \$version, \$repository_url,
+					     \$projectid,
+					     \$project_name);
 
     if ($rc == $Codestriker::INVALID_TOPIC) {
 	# Topic no longer exists, most likely its been deleted.
@@ -62,7 +64,7 @@ sub process($$$) {
 
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, $repository_url,
-				    "", 0, 1);
+				    "", "", 0, 1);
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;
@@ -86,15 +88,21 @@ sub process($$$) {
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Obtains the "Create a new topic", "Search" and "Open topics" URLs.
+    # Obtains the "Create a new topic", "Search", "Open topics" and
+    # "Open topics in project".
     my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     my @topic_states = (0);
+    my @projectids = ($projectid);
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", \@topic_states);
+				      "", "", \@topic_states, undef);
+    $vars->{'list_url_in_project'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", \@topic_states, \@projectids);
     $vars->{'view_comments_url'} = $view_comments_url;
+    $vars->{'list_projects_url'} = $url_builder->list_projects_url();
 
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');
@@ -107,6 +115,9 @@ sub process($$$) {
 
     # Indicate if the "list/search" functionality is available or not.
     $vars->{'searchlist_enabled'} = $Codestriker::allow_searchlist;
+
+    # Indicate if the "project" functionality is available or not.
+    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
 
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
@@ -139,6 +150,7 @@ sub process($$$) {
     }
     $vars->{'document_reviewers'} = $document_reviewers;
     $vars->{'repository'} = $repository_url;
+    $vars->{'project_name'} = $project_name;
     $vars->{'number_of_lines'} = $#document + 1;
 
     # Prepare the data for displaying the state update option.

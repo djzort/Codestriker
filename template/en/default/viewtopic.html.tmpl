@@ -11,7 +11,11 @@
     <a href="[% create_topic_url %]">Create new topic</a>
 [% IF searchlist_enabled != 0 %]
     | <a href="[% list_url %]">List open topics</a>
+    | <a href="[% list_url_in_project %]">List open topics in project</a>
     | <a href="[% search_url %]">Search</a>
+[% END %]
+[% IF projects_enabled != 0 %]
+    | <a href="[% list_projects_url %]">List projects</a>
 [% END %]
     | <a href="[% view_comments_url %]">View all comments</a>
 <HR>
@@ -74,6 +78,12 @@
  <td>[% repository %]</td>
 </tr>
 [% END %]
+
+<tr class="tt[% type mod 2 %]">
+ [% type = type + 1 %]
+ <td>Project:</td>
+ <td>[% project_name %]</td>
+</tr>
 
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]

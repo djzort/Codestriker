@@ -78,15 +78,19 @@ sub process($) {
     $self->{stext} = $query->param('stext');
     $self->{stitle} = $query->param('stitle');
     $self->{sdescription} = $query->param('sdescription');
-    $self->{scomment} = $query->param('scomment');
+    $self->{scomments} = $query->param('scomments');
     $self->{sbody} = $query->param('sbody');
     $self->{sstate} = $query->param('sstate');
+    $self->{sproject} = $query->param('sproject');
     $self->{version} = $query->param('version');
     $self->{redirect} = $query->param('redirect');
     $self->{a} = $query->param('a');
     $self->{updated} = $query->param('updated');
     $self->{repository} = $query->param('repository');
     $self->{parallel} = $query->param('parallel');
+    $self->{projectid} = $query->param('projectid');
+    $self->{project_name} = $query->param('project_name');
+    $self->{project_description} = $query->param('project_description');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
@@ -97,9 +101,12 @@ sub process($) {
     $self->{reviewers} = "" if ! defined $self->{reviewers};
     $self->{bug_ids} = "" if ! defined $self->{bug_ids};
     $self->{sstate} = "" if ! defined $self->{sstate};
+    $self->{sproject} = "" if ! defined $self->{sproject};
     $self->{a} = "" if ! defined $self->{a};
     $self->{updated} = 0 if ! defined $self->{updated};
     $self->{repository} = "" if ! defined $self->{repository};
+    $self->{project_name} = "" if ! defined $self->{project_name};
+    $self->{project_description} = "" if ! defined $self->{project_description};
 
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
@@ -127,10 +134,12 @@ sub process($) {
     $self->_set_property_from_cookie('email', "");
     $self->_set_property_from_cookie('repository',
 				     $Codestriker::default_repository);
+    $self->_set_property_from_cookie('projectid', 0);
 
     # Untaint the required input.
     $self->_untaint_name('action');
     $self->_untaint_digits('topic');
+    $self->_untaint_digits('projectid');
     $self->_untaint_email('email');
     $self->_untaint_emails('reviewers');
     $self->_untaint_emails('cc');

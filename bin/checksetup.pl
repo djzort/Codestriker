@@ -20,6 +20,7 @@
 use strict;
 
 use lib '../lib';
+use File::Path;
 use Codestriker::DB::DBI;
 use Codestriker::Action::SubmitComment;
 use Codestriker::Repository::RepositoryFactory;
@@ -173,6 +174,7 @@ $table{topic} =
      modified_ts timestamp NOT NULL,
      version int NOT NULL,
      repository text,
+     projectid int NOT NULL,
      PRIMARY KEY (id)";
 
 $index{topic} = "CREATE INDEX author_idx ON topic(author)";
@@ -241,6 +243,17 @@ $table{delta} =
      PRIMARY KEY (topicid, delta_sequence)";
 
 $index{delta} = "CREATE INDEX delta_fid_idx ON delta(topicid)";
+
+$table{project} =
+    "id int NOT NULL $auto_increment,
+     name varchar(255) NOT NULL,
+     description $text_type NOT NULL,
+     creation_ts timestamp NOT NULL,
+     modified_ts timestamp NOT NULL,
+     version int NOT NULL,
+     PRIMARY KEY (id)";
+
+$index{project} = "CREATE UNIQUE INDEX ON project(name)";
 
 $table{version} =
     "id text NOT NULL,
@@ -450,6 +463,7 @@ Codestriker::DB::DBI->release_connection($dbh, 1);
 $dbh = Codestriker::DB::DBI->get_connection();
 
 add_field('topic', 'repository', 'text');
+add_field('topic', 'projectid', 'int');
 
 # Determine if the comment and/or commentstate tables are old.
 my $old_comment_table = column_exists("comment", "line");
@@ -605,28 +619,46 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
 }
 $stmt->finish();
 
-# Insert the version number into the table, if required.
-$stmt = $dbh->prepare_cached('SELECT id, sequence FROM version');
+# Check if the version to be upgraded has any project rows or not, and if
+# not, link all topics to the default project.
+$stmt = $dbh->prepare_cached('SELECT COUNT(*) FROM project');
 $stmt->execute();
-my $found = 0;
-my $max_sequence = 0;
-my @data;
-while (@data = $stmt->fetchrow_array()) {
-    my ($id, $seq) = @data;
-    $max_sequence = $seq if $seq > $max_sequence;
-    if ($id eq $Codestriker::VERSION) {
-	$found = 1;
-	last;
-    }
-}
+my ($project_count) = $stmt->fetchrow_array();
 $stmt->finish();
-$max_sequence++;
+if ($project_count == 0) {
+    # Create a default project entry, which can then be modified by the user
+    # later.
+    print "Creating default project...\n";
+    my $timestamp = Codestriker->get_timestamp(time);
+    my $create = $dbh->prepare_cached('INSERT INTO PROJECT ' .
+				      '(name, description, creation_ts, ' .
+				      'modified_ts, version ) ' .
+				      'VALUES (?, ?, ?, ?, ?) ');
+    $create->execute('Default project', 'Default project description',
+		     $timestamp, $timestamp, 0);
+    $create->finish();
 
-if (!$found) {
-    my $insert = $dbh->prepare_cached('INSERT INTO version (id, sequence) ' .
-				      'VALUES (?, ?)');
-    $insert->execute($Codestriker::VERSION, $max_sequence);
+    # Get the id of this project entry.
+    my $select = $dbh->prepare_cached('SELECT MIN(id) FROM project');
+    $select->execute();
+    my ($projectid) = $select->fetchrow_array();
+    $select->finish();
+
+    # Now link all the topics in the system with this default project.
+    print "Linking all topics to default project...\n";
+    my $update = $dbh->prepare_cached('UPDATE topic SET projectid = ?');
+    $update->execute($projectid);
+    $update->finish();
 }
+
+chdir('../cgi-bin') ||
+    die "Couldn't change to cgi-dir directory: $!";
+if (-d 'data' || -d 'template') {
+    print "Cleaning old template directory...\n";
+    rmtree(['data', 'template'], 0, 1);
+}
+
+print "Done\n";
 
 Codestriker::DB::DBI->release_connection($dbh, 1);
 

@@ -99,7 +99,7 @@ sub process($$$) {
     }
 
     $http_response->generate_header($topic, $title, "", "", "", $mode,
-				    $tabwidth, $repository_url, "", 0, 1);
+				    $tabwidth, $repository_url, "", "", 0, 1);
 
     # Render the HTML header.
     my $vars = {};

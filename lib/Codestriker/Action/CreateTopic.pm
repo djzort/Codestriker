@@ -11,6 +11,7 @@ package Codestriker::Action::CreateTopic;
 
 use strict;
 use Codestriker::Http::Cookie;
+use Codestriker::Model::Project;
 
 # Create an appropriate form for creating a new topic.
 sub process($$$) {
@@ -18,7 +19,7 @@ sub process($$$) {
 
     my $query = $http_response->get_query();
     $http_response->generate_header("", "Create new topic", "", "", "", "",
-				    "", "", "", 0, 1);
+				    "", "", "", "", 0, 1);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -31,7 +32,8 @@ sub process($$$) {
     $vars->{'bug_ids'} = "";
     $vars->{'feedback'} = $http_input->get('feedback');
 
-    # Retrieve the email, reviewers, cc and repository from the cookie.
+    # Retrieve the email, reviewers, cc, repository and projectid from
+    # the cookie.
     $vars->{'email'} =
 	Codestriker::Http::Cookie->get_property($query, 'email');
     $vars->{'reviewers'} =
@@ -40,6 +42,8 @@ sub process($$$) {
 	Codestriker::Http::Cookie->get_property($query, 'cc');
     $vars->{'default_repository'} = 
 	Codestriker::Http::Cookie->get_property($query, 'repository');
+    $vars->{'default_projectid'} = 
+	Codestriker::Http::Cookie->get_property($query, 'projectid');
 
     # Indicate if the repository field should be displayed.
     $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
@@ -56,6 +60,11 @@ sub process($$$) {
 
     # Indicate the list of valid repositories which can be choosen.
     $vars->{'repositories'} = \@Codestriker::valid_repositories;
+
+    # Read the list of projects available to make that choice available
+    # when a topic is created.
+    my @projects = Codestriker::Model::Project->list();
+    $vars->{'projects'} = \@projects;
 
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars) || die $template->error();

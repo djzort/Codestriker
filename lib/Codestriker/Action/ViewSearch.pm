@@ -10,6 +10,7 @@
 package Codestriker::Action::ViewSearch;
 
 use strict;
+use Codestriker::Model::Project;
 
 # Create an appropriate form for topic searching.
 sub process($$$) {
@@ -23,7 +24,7 @@ sub process($$$) {
     }
 
     $http_response->generate_header("", "Search", "", "", "", "", "", "", "",
-				    0, 0);
+				    "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -33,6 +34,19 @@ sub process($$$) {
     my @states = ("Any");
     push @states, @Codestriker::topic_states;
     $vars->{'states'} = \@states;
+
+    # Get the list of valid topics in the system that can be searched over.
+    my @projects_db = Codestriker::Model::Project->list();
+    my @projects = ();
+    my $any_project = {};
+    $any_project->{id} = -1;
+    $any_project->{name} = "Any";
+    push @projects, $any_project;
+
+    foreach my $project (@projects_db) {
+	push @projects, $project;
+    }
+    $vars->{'projects'} = \@projects;
 
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars) || die $template->error();

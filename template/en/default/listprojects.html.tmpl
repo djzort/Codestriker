@@ -1,0 +1,53 @@
+[%# Display a list of projects #%]
+
+[% PROCESS header.html.tmpl version = version %]
+
+[%# Show the top-level links for "Create new topic" and "Search" #%]
+<p>
+    <a href="[% create_topic_url %]">Create new topic</a> | 
+    <a href="[% search_url %]">Search</a>
+</p>
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
+[% END %]
+
+<H1>Project list</H1>
+
+<P>
+
+<TABLE WIDTH="100%" CELLPADDING="2" CELLSPACING="2" BORDER="0">
+
+[%# Display the table header #%]
+<tr class="tlh">
+  <th>Name</th>
+  <th>Description</th>
+</tr>
+
+[% FOREACH project = projects %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+
+<TR CLASS="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+<TD>
+<A HREF="[% project.edit_url %]">[% project.name %]</A>
+</TD>
+<TD>[% project.description %]</TD>
+</TR>
+[% END %]
+
+<tr class="tlh">
+  <td colspan="2">&nbsp</td>
+</tr>
+</TABLE>
+
+<P>
+
+<HR>
+
+<A HREF="[% create_project_url %]">Create new project</A>
+
+[% PROCESS trailer.html.tmpl %]
+
+</BODY>
+</HTML>

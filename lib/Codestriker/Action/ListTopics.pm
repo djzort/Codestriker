@@ -31,6 +31,7 @@ sub process($$$) {
     my $sbugid = $http_input->get('sbugid') || "";
     my $stext = $http_input->get('stext') || "";
     my $sstate = $http_input->get('sstate');
+    my $sproject = $http_input->get('sproject');
     my $stitle = $http_input->get('stitle') || 0;
     my $sdescription = $http_input->get('sdescription') || 0;
     my $scomments = $http_input->get('scomments') || 0;
@@ -44,14 +45,15 @@ sub process($$$) {
     my (@id, @title, @author, @ts, @state, @bugid, @email, @type, @version);
 
     Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
-				     $sstate, $stext, $stitle, $sdescription,
+				     $sstate, $sproject, $stext,
+				     $stitle, $sdescription,
 				     $scomments, $sbody, \@id, \@title,
 				     \@author, \@ts, \@state, \@bugid,
 				     \@email, \@type, \@version);
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
-				    "", 0, 0);
+				    "", "", 0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -60,6 +62,9 @@ sub process($$$) {
 
     # Indicate if deletes are enabled in the system.
     $vars->{'delete_enabled'} = $Codestriker::allow_delete;
+
+    # Indicate if project operations are enabled in the system.
+    $vars->{'projects_enabled'} = $Codestriker::allow_projects;
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -76,8 +81,9 @@ sub process($$$) {
     $vars->{'scomments'} = $scomments;
     $vars->{'sbody'} = $sbody;
 
-    # Display the "Create a new topic" and "Search" links.
+    # Display the "Create a new topic", "List Projects" and "Search" links.
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
+    $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'search_url'} = $url_builder->search_url();
 
     # The list of topics.

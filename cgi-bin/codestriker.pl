@@ -36,6 +36,11 @@ use Codestriker::Action::ChangeTopicState;
 use Codestriker::Action::ChangeTopics;
 use Codestriker::Action::ListComments;
 use Codestriker::Action::ChangeComments;
+use Codestriker::Action::ListProjects;
+use Codestriker::Action::EditProject;
+use Codestriker::Action::CreateProject;
+use Codestriker::Action::SubmitProject;
+use Codestriker::Action::SubmitEditProject;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -97,6 +102,21 @@ sub main() {
     } elsif ($action eq "change_comments") {
 	Codestriker::Action::ChangeComments->process($http_input,
 						     $http_response);
+    } elsif ($action eq "list_projects") {
+	Codestriker::Action::ListProjects->process($http_input,
+						   $http_response);
+    } elsif ($action eq "edit_project") {
+	Codestriker::Action::EditProject->process($http_input,
+						  $http_response);
+    } elsif ($action eq "create_project") {
+	Codestriker::Action::CreateProject->process($http_input,
+						    $http_response);
+    } elsif ($action eq "submit_project") {
+	Codestriker::Action::SubmitProject->process($http_input,
+						    $http_response);
+    } elsif ($action eq "submit_editproject") {
+	Codestriker::Action::SubmitEditProject->process($http_input,
+							$http_response);
     } else {
 	# Default action is to list topics that are in state open if the
 	# list functionality is enabled, otherwise go to the create topic

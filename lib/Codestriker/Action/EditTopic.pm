@@ -65,7 +65,8 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
-				    $mode, $tabwidth, $repository, "", 0, 0);
+				    $mode, $tabwidth, $repository, "", "",
+				    0, 0);
 
     # Create the hash for the template variables.
     my $vars = {};

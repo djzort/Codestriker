@@ -1,6 +1,30 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.1
+
+* The notion of "projects" has been integrated.  Now every topic in
+  the system is associated with a single project.  There are now
+  screens for creating new projects, and modifying their
+  names/descriptions.  It is now possible to perform topic searches
+  and to limit it within specific projects.  This has been added in to
+  support deployments where there is a large number of users working
+  on different projects.  The create topic and view topic screens have
+  been modified accordingly.
+
+  Note there is a new configuration option in codestriker.conf called
+  $allow_projects.  If this is set to non-zero, then the project
+  management screens will be accessible, otherwise they can't be
+  accessed.  This can be convenient for those deployments which have
+  set their project data, and don't want it modified.
+
+* Fixed a bug where searches over comment data wasn't returning
+  correct results.
+
+* Minor changes to checksetup - make sure the template directory is
+  cleaned out to ensure the templates are regenerated when performing
+  an upgrade.
+
 Version 1.7.0.2
 
 * Remove the topic textarea in the create topic screen.  Now the only

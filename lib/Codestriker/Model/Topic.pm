@@ -15,9 +15,10 @@ use Codestriker::DB::DBI;
 use Codestriker::Model::File;
 
 # Create a new topic with all of the specified properties.
-sub create($$$$$$$$$$$) {
+sub create($$$$$$$$$$$$) {
     my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document, $timestamp, $repository, $deltas_ref) = @_;
+	$description, $document, $timestamp, $repository, $projectid,
+	$deltas_ref) = @_;
     
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
@@ -30,8 +31,8 @@ sub create($$$$$$$$$$$) {
     my $insert_topic =
 	$dbh->prepare_cached('INSERT INTO topic (id, author, title, ' .
 			     'description, document, state, creation_ts, ' .
-			     'modified_ts, version, repository) VALUES ' .
-			     '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+			     'modified_ts, version, repository, projectid) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $insert_bugs =
 	$dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
 			     'VALUES (?, ?)');
@@ -50,7 +51,7 @@ sub create($$$$$$$$$$$) {
     $success &&= $insert_topic->execute($topicid, $author, $title,
 					$description, $document, 0,
 					$timestamp, $timestamp, 0,
-					$repository_string);
+					$repository_string, $projectid);
 					
     for (my $i = 0; $i <= $#bug_ids; $i++) {
 	$success &&= $insert_bugs->execute($topicid, $bug_ids[$i]);
@@ -80,21 +81,28 @@ sub create($$$$$$$$$$$) {
 
 # Read the contents of a specific topic, and return the results in the
 # provided reference variables.
-sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
+sub read($$\$\$\$\$\$\$\$\$\$\$\$\$\$) {
     my ($type, $topicid, $author_ref, $title_ref, $bug_ids_ref, $reviewers_ref,
 	$cc_ref, $description_ref, $document_ref, $creation_time_ref,
 	$modified_time_ref, $topic_state_ref, $version_ref,
-	$repository_ref) = @_;
+	$repository_ref, $project_id_ref, $project_name_ref) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     # Setup the prepared statements.
-    my $select_topic = $dbh->prepare_cached('SELECT id, author, title, ' .
-					    'description, document, state, ' .
-					    'creation_ts, modified_ts, ' .
-					    'version, repository ' .
-					    'FROM topic WHERE id = ?');
+    my $select_topic = $dbh->prepare_cached('SELECT topic.id, topic.author, ' .
+					    'topic.title, ' .
+					    'topic.description, ' .
+					    'topic.document, topic.state, ' .
+					    'topic.creation_ts, ' .
+					    'topic.modified_ts, ' .
+					    'topic.version, ' .
+					    'topic.repository, ' .
+					    'project.id, project.name ' .
+					    'FROM topic, project ' .
+					    'WHERE topic.id = ? AND ' .
+					    'topic.projectid = project.id');
     my $select_bugs =
 	$dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
     my $select_participants =
@@ -109,10 +117,12 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
     $success &&= $select_topic->execute($topicid);
 
     my ($id, $author, $title, $description, $document, $state,
-	$creationtime, $modifiedtime, $version, $repository);
+	$creationtime, $modifiedtime, $version, $repository,
+	$projectid, $projectname);
     if ($success) {
 	($id, $author, $title, $description, $document, $state,
-	 $creationtime, $modifiedtime, $version, $repository)
+	 $creationtime, $modifiedtime, $version, $repository,
+	 $projectid, $projectname)
 	    = $select_topic->fetchrow_array();
 	$select_topic->finish();
 
@@ -164,6 +174,8 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 	$$creation_time_ref = Codestriker->format_timestamp($creationtime);
 	$$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
 	$$topic_state_ref = $Codestriker::topic_states[$state];
+	$$project_id_ref = $projectid;
+	$$project_name_ref = $projectname;
 	$$version_ref = $version;
 	
 	# Set the repository to the default system value if it is not defined.
@@ -265,8 +277,8 @@ sub change_state($$$$$) {
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
-    my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $stext,
+sub query($$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
+    my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
 	$stitle, $sdescription, $scomments, $sbody,
 	$id_array_ref, $title_array_ref,
 	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
@@ -285,6 +297,7 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	"participant.email = ? AND type = $Codestriker::PARTICIPANT_CC" : "";
     my $bugid_part = $sbugid ne "" ? "topicbug.bugid = ?" : "";
 
+    # Build up the state condition.
     my @state_values;
     my $state_part = "";
     if ($sstate ne "") {
@@ -292,6 +305,16 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	my $state_set = $sstate;
 	$state_set =~ s/\d+/\?/g;
 	$state_part = "topic.state IN ($state_set)";
+    }
+
+    # Build up the project condition.
+    my @project_values;
+    my $project_part = "";
+    if ($sproject ne "") {
+	@project_values = split ',', $sproject;
+	my $project_set = $sproject;
+	$project_set =~ s/\d+/\?/g;
+	$project_part = "topic.projectid IN ($project_set)";
     }
 
     my $text_title_part = "lower(topic.title) LIKE ?";
@@ -309,7 +332,9 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Join with the comment table if required - GACK!
     if ($stext ne "" && $scomments) {
-	$query .= "LEFT OUTER JOIN comment ON topic.id = comment.topicid ";
+	$query .= 'LEFT OUTER JOIN commentstate ON ' .
+	    'topic.id = commentstate.topicid LEFT OUTER JOIN comment ON ' .
+	    'commentstate.id = comment.commentstateid ';
     }
 
     # Combine the "AND" conditions together.
@@ -329,6 +354,13 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	$query = _add_condition($query, $state_part, undef, \@values,
 				\$first_condition);
 	push @values, @state_values;
+    }
+
+    # Handle the project set.
+    if ($project_part ne "") {
+	$query = _add_condition($query, $project_part, undef, \@values,
+				\$first_condition);
+	push @values, @project_values;
     }
 
     # Handle the text searching part, which can be a series of ORs.

@@ -97,6 +97,26 @@ only the cvsroot path needs to be specified.  For example:\n
 </TR>
 [% END %]
 
+[%# The project the review belongs to #%]
+<TR>
+ <TD>Project:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+Topics are associated with a specific project, which can be\n
+used as filtering criteria in the search screen.
+')">(What's this?)</A></FONT>
+</TD>
+ <TD><SELECT NAME="projectid">
+       [% FOREACH project = projects %]
+          [% IF project.id == default_projectid %]
+	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
+	  [% ELSE %]
+	      <OPTION VALUE="[% project.id %]">[% project.name %]
+	  [% END %]
+       [% END %]
+      </SELECT>
+ </TD>
+</TR>
+
 [%# The bug ids input field #%]
 <TR>
  <TD>Bug IDs: 

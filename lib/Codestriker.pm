@@ -21,16 +21,18 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
 	      $allow_delete $allow_searchlist $allow_repositories
-              $antispam_email $VERSION
+              $allow_projects $antispam_email $VERSION
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.0.2";
+$Codestriker::VERSION = "1.7.1-pre1";
 
 # Error codes from the model routines.
 $Codestriker::OK = 1;
 $Codestriker::STALE_VERSION = 2;
 $Codestriker::INVALID_TOPIC = 3;
+$Codestriker::INVALID_PROJECT = 4;
+$Codestriker::DUPLICATE_PROJECT_NAME = 5;
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";
