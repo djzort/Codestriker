@@ -788,9 +788,8 @@ sub render_linenumber($$$$$) {
 	return $query->a(
 			 {name=>$anchor,
 			  href=>$edit_url,
-			  title=>$link_title,
-			  onmouseover=>"window.status='$js_title'; " .
-			      "return true;"}, $linedata);
+			  onmouseover=>"return overlib('$js_title');",
+			  onmouseout=>"return nd();"}, $linedata);
     } else {
 	return $query->a({name=>$anchor, href=>"$edit_url"}, $linedata);
     }
@@ -811,13 +810,23 @@ sub get_comment_digest($$$$) {
 	for (my $i = 0; $i <= $#comments; $i++) {
 	    my $comment = $comments[$i];
 
-	    # Need to remove the newlines for the data.
-	    my $data = $comment->{data};
-	    $data =~ s/\n/ /mg; # Remove newline characters
-	    $digest .= "$data ------- ";
+	    # Need to format the data appropriately for HTML display.
+	    my $data = HTML::Entities::encode($comment->{data});
+	    $data =~ s/\n/<br>/mg;
+	    $data =~ s/ /&nbsp;/mg;
+	    $data = tabadjust($self, $self->{tabwidth}, $data, 1);
+
+	    # Show each comment with the author and date in bold.
+	    $digest .= "<b>Comment from $comment->{author} ";
+	    $digest .= "on $comment->{date}</b><br>";
+	    $digest .= "$data";
+
+	    # Add a newline at the end if required.
+	    if ($i < $#comments &&
+		substr($digest, length($digest)-4, 4) ne '<br>') {
+		$digest .= '<br>';
+	    }
 	}
-	# Chop off the last 9 characters.
-	substr($digest, -9) = "";
     }
 
     return $digest;
@@ -1106,9 +1115,8 @@ sub render_monospaced_line ($$$$$$$$) {
 	    $line_cell = $prefix .
 		$query->a({name=>$key,
 			   href=>$edit_url,
-			   title=>$js_title,
-			   onmouseover=> "window.status='$js_title'; " .
-			       "return true;" },
+			   onmouseover=>"return overlib('<pre>$js_title</pre>');",
+			   onmouseout=>"return nd();"},
 			  $query->span({-class=>$comment_class}, $linenumber));
 	}
 	else {

@@ -29,23 +29,24 @@
 
 [%# The topic title input field #%]
 Topic title:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-The topic title should be a concise but informative\n
-summary of the code change.  The title used in the\n
-subject of sent emails, and in the topic list screen.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('The topic title should be a concise but \
+informative summary of the code to be reviewed.  The title is used in the \
+subject of sent emails, and in the topic list screen.');"
+onmouseout="return nd();">(?)</a></FONT>
 <BR>
 <INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The topic description input field #%]
 Topic description:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-The topic description should contain enough information\n
-for a reviewer to understand broadly what the code change\n
-achieves. This information is sent with the new topic\n
-notification email to all reviewers.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+The topic description should contain enough information \
+for a reviewer to understand broadly what the code change \
+achieves. This information is sent with the new topic \
+notification email to all reviewers.')"
+onmouseout="return nd();">(?)</a></FONT>
 <BR>
 <TEXTAREA NAME="topic_description" ROWS=12 COLS=70 WRAP="hard">[% topic_description | html_entity %]</TEXTAREA>
 <P>
@@ -64,22 +65,23 @@ notification email to all reviewers.
 [%# The topic text upload button #%]
 <TR>
  <TD>Topic text upload:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-The uploaded file contains the actual text of the review.\n
-\n
-Typically, the text is the output of a command such as:\n
-cvs diff -uN &gt; output.txt\n
-or\n
-svn diff -uN &gt; output.txt\n
-or\n
-diff -urN ../old-version/ . &gt; output.txt\n
-\n
-Non-unidiff files, or ordinary text files can be uploaded,\n
-but will be treated simply as \'new files\'.\n\n
-
-This should be left blank if you are reviewing files\n
-directly from a repository.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+The uploaded file contains the actual text of the review. \
+Typically, the text is the output of a command such as: \
+<p> \
+cvs diff -uN &gt; output.txt \
+<p> or <p> \
+svn diff -uN &gt; output.txt \
+<p> or <p> \
+diff -urN ../old-version/ . &gt; output.txt \
+<p> \
+Non-unidiff files, or ordinary text files can be uploaded, \
+but will be treated simply as \'new files\'. \
+<p> \
+This should be left blank if you are reviewing files \
+directly from a repository.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
@@ -89,30 +91,32 @@ directly from a repository.
 <TR>
  <TD>
 Start tag:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-Rather than uploading the topic text, if the repository\n
-supports it, the text can be fetched by querying the\n
-repository, given start and/or end tags, and a module name.\n
-The start tag, end tag, and module fields are ignored if text\n
-is uploaded.\n\n
-If only one tag value is specified, the full contents of all\n
-files in the specified module corresponding to the entered tag\n
-will be downloaded.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+Rather than uploading the topic text, if the repository \
+supports it, the text can be fetched by querying the \
+repository, given start and/or end tags, and a module name. \
+The start tag, end tag, and module fields are ignored if text \
+is uploaded.<p> \
+If only one tag value is specified, the full contents of all \
+files in the specified module corresponding to the entered tag \
+will be downloaded.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
-<TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
-Rather than uploading the topic text, if the repository\n
-supports it, the text can be fetched by querying the\n
-repository, given start and/or end tags, and a module name.\n
-The start tag, end tag, and module fields are ignored if text\n
-is uploaded.\n\n
-If only one tag value is specified, the full contents of all\n
-files in the specified module corresponding to the entered tag\n
-will be downloaded.
-')">(?)</A></FONT></TD>
+<TD>End tag: <FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+Rather than uploading the topic text, if the repository \
+supports it, the text can be fetched by querying the \
+repository, given start and/or end tags, and a module name. \
+The start tag, end tag, and module fields are ignored if text \
+is uploaded. <p> \
+If only one tag value is specified, the full contents of all \
+files in the specified module corresponding to the entered tag \
+will be downloaded.')"
+onmouseout="return nd();">(?)</A></FONT></TD>
 <TD>
 <INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
@@ -121,11 +125,11 @@ will be downloaded.
 <TD>&nbsp;</TD><TD>&nbsp;</TD>
 <TD>
 Module:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-This is the path to the file or module relative to the repository\n
-root that should be inspected. It is ignored if text\n
-is uploaded.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><A HREF="javascript:void(0);"
+onmouseover="return overlib('\
+This is the path to the file or module relative to the repository \
+root that should be inspected. It is ignored if text is uploaded.')"
+onmouseout="return nd();")>(?)</a></FONT>
 </TD>
 <TD>
 <INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
@@ -136,12 +140,13 @@ is uploaded.
  <TD>&nbsp;</TD><TD>&nbsp;</TD>
 [%# The default_to_head input field #%]
  <TD>Default to HEAD:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-Fall back to HEAD revision if a file does not exist on either tag.\n
-This will allow diffs between a branch and the HEAD revision, without\n 
-showing files not on the branch as deleted.\n
-This option affects only CVS topics currently.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+Fall back to HEAD revision if a file does not exist on either tag. \
+This will allow diffs between a branch and the HEAD revision, without \
+showing files not on the branch as deleted. \
+This option affects only CVS topics currently.')"
+onmouseout="return nd();">(?)</A></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="checkbox" NAME="default_to_head" [% IF default_to_head %]CHECKED[% END %]></TD>
 </TR>
@@ -152,14 +157,15 @@ This option affects only CVS topics currently.
 [% IF repositories.size > 1 %]
 <TR>
  <TD>Repository:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-The SCM system (eg CVS, Subversion, ClearCase)\n
-which the topic text was prepared against.  If\n
-this is correctly set, this provides the\n
-ability to view the entire contents of a file\n
-with and/or without a proposed change, which\n
-an aid in the reviewing process.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><A HREF="javascript:void(0);"
+onmouseover="return overlib('\
+The SCM system (eg CVS, Subversion, ClearCase) \
+which the topic text was prepared against.  If \
+this is correctly set, this provides the \
+ability to view the entire contents of a file \
+with and/or without a proposed change, which \
+an aid in the reviewing process.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><SELECT NAME="repository">
        [% FOREACH entry = repositories %]
@@ -179,10 +185,11 @@ an aid in the reviewing process.
 [%# The project the review belongs to #%]
 <TR>
  <TD>Project:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-Topics are associated with a specific project, which can be\n
-used as filtering criteria in the search screen.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+Topics are associated with a specific project, which can be \
+used as filtering criteria in the search screen.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><SELECT NAME="projectid">
        [% FOREACH project = projects %]
@@ -202,25 +209,26 @@ used as filtering criteria in the search screen.
 [% IF bugdb_enabled != 0 %]
 <TR>
  <TD>Bug IDs:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-Indicates what bug identifiers are addressed by this code change.\n
-These are space or comma separated identifiers, such as:\n
-\n
-1634\n
-\n
-or\n
-\n
-1534, 4625, 1243\n
-\n
-The appropriate links to the bug-tracking system will be made\n
-when the topic is viewed, for the reviewer\'s reference.\n
-\n
-In addition, if integrating with Bugzilla, when the topic state\n
-is changed, a comment will be inserted automatically to the\n
-associated bugs for cross referencing.  When a bug is viewed,\n
-it can be easily determined what code fixes have been applied\n
-to it.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0)"
+onmouseover="return overlib('\
+Indicates what bug identifiers are addressed by this code change. \
+These are space or comma separated identifiers, such as: \
+<p> \
+1634 \
+<p> \
+or \
+<p> \
+1534, 4625, 1243 \
+<p> \
+The appropriate links to the bug-tracking system will be made \
+when the topic is viewed, for the reviewer\'s reference. \
+<p> \
+In addition, if integrating with Bugzilla, when the topic state \
+is changed, a comment will be inserted automatically to the \
+associated bugs for cross referencing.  When a bug is viewed, \
+it can be easily determined what code fixes have been applied \
+to it.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
@@ -229,11 +237,12 @@ to it.
 [%# The email input field #%]
 <TR>
  <TD>Your email address:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-This is your email address.  All comments made against a topic\n
-will be sent to this address.  The new topic notification email\n
-will also be sent to this address.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><A HREF="javascript:void(0);"
+onmouseover="return overlib('\
+This is your email address.  All comments made against a topic \
+will be sent to this address.  The new topic notification email \
+will also be sent to this address.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80></TD>
 </TR>
@@ -241,11 +250,12 @@ will also be sent to this address.
 [%# The reviewers input field #%]
 <TR>
  <TD>Reviewers:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-This is a comma separated list of email addresses, which are the\n
-people who need to review this code.  When the topic is created,\n
-the new topic notification  email will be sent to these addresses.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+This is a comma separated list of email addresses, which are the \
+people who need to review this code.  When the topic is created, \
+the new topic notification  email will be sent to these addresses.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
@@ -253,11 +263,12 @@ the new topic notification  email will be sent to these addresses.
 [%# The Cc input field #%]
 <TR>
  <TD>Cc: 
-<FONT SIZE="-2"><A HREF="javascript:alert('
-This is a comma separated list of email addresses, which are\n
-not intended to be reviewers, but typically a mailing list\n
-to notify a number of people about the creation of a new topic.
-')">(?)</A></FONT>
+<FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return overlib('\
+This is a comma separated list of email addresses, which are \
+not intended to be reviewers, but typically a mailing list \
+to notify a number of people about the creation of a new topic.')"
+onmouseout="return nd();">(?)</a></FONT>
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>

@@ -3,6 +3,16 @@
 
 Version 1.8.6
 
+* Now using overlib javascript library
+  (http://www.bosrup.com/web/overlib) for formatted "tooltips".  When
+  the mouse hovers over a line where a comment has been made, a
+  formatted "tooltip" window appears, which contains the comment text
+  formatted appropriately, with author and date header information
+  bolded.  The tooltip is not removed until the mouse is moved off the
+  line.  Help text on the create topic and search screens have been
+  modified to use this tooltip library as well as opposed to
+  javascript alert windows.
+
 * It is now possible to create a comment associated with a specific
   file, or the topic itself, rather than being associated with a
   specific line.  This allows reviewers to create file-level or

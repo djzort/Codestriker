@@ -212,6 +212,9 @@ sub generate_header {
 	$codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
     }
 
+    my $overlib_js = $codestriker_css;
+    $overlib_js =~ s/codestriker.css/overlib.js/;
+
     # Write the simple open window javascript method for displaying popups.
     # Note gotoAnchor can't simply be:
     #
@@ -223,6 +226,11 @@ sub generate_header {
     <script language="JavaScript" type="text/javascript">
     <!-- Hide script
     //<![CDATA[
+
+    // Global settings for overLIB.
+    ol_fgcolor = '#FFFFCC';
+    ol_textsize = '2';
+
     var windowHandle = '';
 
     function myOpen(url,name) {
@@ -268,6 +276,7 @@ END
 			     -title=>"$title",
 			     -bgcolor=>"#eeeeee",
 			     -style=>{src=>"$codestriker_css"},
+			     -script=>{type=>"text/javascript", src=>"$overlib_js"},
 			     -base=>$query->url(),
 			     -link=>'blue',
 			     -vlink=>'purple',
