@@ -29,6 +29,8 @@ sub process($$$) {
     my $fn = $http_input->get('fn');
     my $new = $http_input->get('new');
     my $parallel = $http_input->get('parallel');
+    my $brmode = $http_input->get('brmode');
+    my $fview = $http_input->get('fview');
 
     # Check if this action is allowed.
     if (scalar(@Codestriker::valid_repositories) == 0) {
@@ -112,7 +114,8 @@ sub process($$$) {
 				       \@comments, $tabwidth,
 				       $repository, \@toc_filenames,
 				       \@toc_revisions, \@toc_binaries,
-				       $max_line_length);
+				       undef, $max_line_length, $brmode,
+				       $fview);
     # Prepare the output.
 
     if ($parallel) {

@@ -52,7 +52,8 @@ my $COMMENT_LINE_COLOUR = "red";
 sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comments, $tabwidth, $repository, $filenames_ref,
-	$revisions_ref, $binaries_ref, $numchanges_ref, $max_line_length, $brmode, $fview) = @_;
+	$revisions_ref, $binaries_ref, $numchanges_ref, $max_line_length,
+	$brmode, $fview) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -953,7 +954,7 @@ sub _coloured_mode_start($) {
  	    # Added, removed or patch file.
 	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
 					$tddata),
-			     $query->td({-class=>'cf'}, $lineData)) . "\n";
+			     $query->td({-class=>"$class"}, $lineData)) . "\n";
  	} else {
  	    # Modified file.
  	    print $query->Tr($query->td({-class=>'cf'}, $tddata),
