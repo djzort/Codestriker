@@ -31,8 +31,8 @@ sub process($$$) {
     $vars->{'topic_text'} = "";
     $vars->{'topic_file'} = "";
     $vars->{'topic_description'} = "";
-    $vars->{'topic_title'} = "";
-    $vars->{'bug_ids'} = "";
+    $vars->{'topic_title'} = $http_input->get('topic_title');
+    $vars->{'bug_ids'} = $http_input->get('bug_ids');
     $vars->{'feedback'} = $http_input->get('feedback');
     $vars->{'default_to_head'} = "";
     
