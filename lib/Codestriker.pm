@@ -14,7 +14,7 @@ use strict;
 use Time::Local;
 
 # Export codestriker.conf configuration variables.
-use vars qw ( $mailhost $use_compression $gzip $cvs $p4 $vss $bugtracker
+use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      @valid_repositories $default_topic_create_mode $default_tabwidth
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states

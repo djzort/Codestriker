@@ -40,12 +40,26 @@ sub build_pserver {
     bless $self, $type;
 }
 
+# Factory method for creating a ext CVS repository object.
+sub build_ext {
+    my ($type, $optional_args, $username, $hostname, $cvsroot) = @_;
+
+    my $self = {};
+    $self->{optional_args} = defined $optional_args ? $optional_args : "";
+    $self->{username} = $username;
+    $self->{hostname} = $hostname;
+    $self->{cvsroot} = $cvsroot;
+    $self->{url} = ":ext${optional_args}:${username}\@${hostname}:${cvsroot}";
+    bless $self, $type;
+}
+
 # Retrieve the data corresponding to $filename and $revision.  Store each line
 # into $content_array_ref.
 sub retrieve {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the CVS repository.
+    $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
     open(CVS, "\"$Codestriker::cvs\" -q -d \"" . $self->{url} .
 	 "\" co -p -r $revision \"$filename\" |")
 	|| die "Can't open connection to pserver CVS repository: $!";
@@ -100,6 +114,7 @@ sub getDiff ($$$$$) {
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
+    $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 		    $Codestriker::cvs, '-q', '-d', $self->{url},
 		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
