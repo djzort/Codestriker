@@ -196,7 +196,7 @@ sub process($$$) {
 	    $feedback .= "Generated diff file is too big.\n";
 	} elsif ($rc == $Codestriker::UNSUPPORTED_OPERATION) {
 	    $feedback .= "Repository \"" . $repository->toString() .
-		"\" doesn't support topic text tag retrieval.\n";
+		"\" does not support tag retrieval, you have to use the text file upload.\n";
 	}
 
 	# Seek to the beginning of the temporary file so it can be parsed.
