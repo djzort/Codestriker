@@ -253,7 +253,7 @@ $table{project} =
      version int NOT NULL,
      PRIMARY KEY (id)";
 
-$index{project} = "CREATE UNIQUE INDEX ON project(name)";
+$index{project} = "CREATE UNIQUE INDEX project_name_idx ON project(name)";
 
 $table{version} =
     "id text NOT NULL,
