@@ -38,7 +38,13 @@ sub parse ($$$$$) {
     # that file handle is passed on to the parser objects, so they aren't
     # the wiser.  Note the temporary file is automatically deleted
     # once this function has finished.
-    my $tmpfh = tempfile();  
+    my $tmpfh;
+    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+	$tmpfh = tempfile(DIR => $Codestriker::tmpdir);
+    }
+    else {
+	$tmpfh = tempfile();
+    }
     
     if (!$tmpfh) {
 	die "Unable to create temporary parse file: $!";

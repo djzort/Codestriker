@@ -3,6 +3,11 @@
 
 Version 1.8.0
 
+* A new configuration variable $tmpdir is in codestriker.conf for
+  unusual setups which can't use the system default temporary
+  directory for the creation of temporary files.  Win32 systems are
+  the usual culprit.
+
 * The CVS rdiff parser didn't correctly handle new files within the
   diff on Win32 platforms.
 

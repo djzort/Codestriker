@@ -22,7 +22,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist 
               $allow_projects $antispam_email $VERSION $title $BASEDIR
-	      $metric_config
+	      $metric_config $tmpdir
 	      );
 
 # Version of Codestriker.

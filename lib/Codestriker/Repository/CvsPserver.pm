@@ -69,18 +69,13 @@ sub toString ($) {
 # the specified file handle.  If the size of the diff goes beyond the
 # limit, then return the appropriate error code.
 sub getDiff ($$$$$) {
-    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_file) = @_;
+    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
 
     my @command = ( $Codestriker::cvs, '-q', '-d', $self->{url},
 		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
 		    $module_name );
 
-    # Note, under Windows 98, ">$error_file" doesn't work as the final
-    # parameters to IPC::Run::run, so open the file explicitly.
-    open ERROR, ">$error_file" || die "Can't create error file: $!";
-    my $h = IPC::Run::run(\@command, '>', $fh, '2>', \*ERROR);
-    close ERROR;
-
+    my $h = IPC::Run::run(\@command, '>', $fh, '2>', $error_fh);
     return $Codestriker::OK;
 }
 

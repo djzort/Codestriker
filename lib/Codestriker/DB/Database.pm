@@ -160,8 +160,12 @@ sub create_table {
 sub get_tables() {
     my $self = shift;
 
-    # Remove any tables that end in a period.
-    my @tables = map { $_ =~ s/.*\.//; $_ } $self->{dbh}->tables;
+    # Remove any tables that end in a period, or have backticks.  Recent
+    # versions of MySQL are now using backticks around the table name.
+    my @tables = $self->{dbh}->tables;
+    @tables = map { $_ =~ s/.*\.//; $_ } @tables;
+    @tables = map { $_ =~ s/\`//g; $_ } @tables;
+    
     return @tables;
 }
 

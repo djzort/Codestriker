@@ -63,7 +63,7 @@ sub toString ($) {
 
 # The getDiff operation is not supported.
 sub getDiff ($$$$$) {
-    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_file) = @_;
+    my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
 
     return $Codestriker::UNSUPPORTED_OPERATION;
 }

@@ -11,6 +11,7 @@ package Codestriker::Action::SubmitNewTopic;
 
 use strict;
 
+use File::Temp qw/ tempfile /;
 use FileHandle;
 use Codestriker::Model::Topic;
 use Codestriker::Http::Render;
@@ -134,17 +135,26 @@ sub process($$$) {
     
     # If the topic text needs to be retrieved from the repository object,
     # create a temporary file to store the topic text.
-    my $temp_topic_filename = "";
-    my $temp_error_filename = "";
+    my $temp_topic_fh;
+    my $temp_error_fh;
 
     if ($retrieve_text_from_rep && defined $repository) {
-	# Store the topic text into this temporary file.
-	$temp_topic_filename = "topictext.$topicid";
-	$temp_error_filename = "errortext.$topicid";
-	$fh = new FileHandle "> $temp_topic_filename";
-	my $rc = $repository->getDiff($start_tag, $end_tag, $module, $fh,
-				      $temp_error_filename);
-	$fh->close;
+	# Store the topic text into temporary files.
+	if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+	    $temp_topic_fh = tempfile(DIR => $Codestriker::tmpdir);
+	    $temp_error_fh = tempfile(DIR => $Codestriker::tmpdir);
+	}
+	else {
+	    $temp_topic_fh = tempfile();
+	    $temp_error_fh = tempfile();
+	}
+	
+	my $rc = $repository->getDiff($start_tag, $end_tag, $module,
+				      $temp_topic_fh, $temp_error_fh);
+
+	# Make sure the data has been flushed to disk.
+	$temp_topic_fh->flush;
+	$temp_error_fh->flush;
 
 	# Check if the generated diff was too big, and if so, throw an error
 	# message on the screen.
@@ -155,15 +165,18 @@ sub process($$$) {
 		"\" doesn't support topic text tag retrieval.\n";
 	}
 
-	# Open the file again for reading, so that it can be parsed.
-	$fh = new FileHandle $temp_topic_filename, "r" if $feedback eq "";
+	# Seek to the beginning of the temporary file so it can be parsed.
+	seek($temp_topic_fh, 0, 0);
+	
+	# Set $fh to this file reference which contains the topic data.
+	$fh = $temp_topic_fh;
     }
 
     if ($feedback ne "") {
 	# If there was a problem generating the diff file, remove the
 	# temporary files, and direct control to the create screen again.
-	unlink $temp_topic_filename if $temp_topic_filename ne "";
-	unlink $temp_error_filename if $temp_error_filename ne "";
+	$temp_topic_fh->close if defined $temp_topic_fh;
+	$temp_error_fh->close if defined $temp_error_fh;
 	_forward_create_topic($error_vars, $feedback);
 	$http_response->generate_footer();
 	return;
@@ -180,13 +193,13 @@ sub process($$$) {
 	    $topic_text .= $_;
 	}
 	if ($topic_text eq "") {
-	    if ($temp_error_filename ne "" &&
-		-f $temp_error_filename) {
-		local $/ = undef;
-		open(ERROR_FILE, "$temp_error_filename");
+	    if (defined $temp_error_fh) {
+		seek($temp_error_fh, 0, 0);
 		$feedback .= "Problem generating topic text:\n\n";
-		$feedback .= <ERROR_FILE>;
-		close ERROR_FILE;
+		my $buf = "";
+		while (read $temp_error_fh, $buf, 16384) {
+		    $feedback .= $buf;
+		}
 	    }
 	    else {
 		$feedback = "Uploaded file doesn't exist or is empty.\n";
@@ -194,8 +207,8 @@ sub process($$$) {
 
 	    # Remove the temporary files if required, and forward control
 	    # back to the create topic page.
-	    unlink $temp_topic_filename if $temp_topic_filename ne "";
-	    unlink $temp_error_filename if $temp_error_filename ne "";
+	    $temp_topic_fh->close if defined $temp_topic_fh;
+	    $temp_error_fh->close if defined $temp_error_fh;
 	    _forward_create_topic($error_vars, $feedback);
 	    $http_response->generate_footer();
 	    return;
@@ -203,8 +216,8 @@ sub process($$$) {
     }
 
     # Remove the temporary files if required.
-    unlink $temp_topic_filename if $temp_topic_filename ne "";
-    unlink $temp_error_filename if $temp_error_filename ne "";
+    $temp_topic_fh->close if defined $temp_topic_fh;
+    $temp_error_fh->close if defined $temp_error_fh;
 
     # Remove \r from the topic text.
     $topic_text =~ s/\r//g;
