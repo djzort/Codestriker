@@ -32,9 +32,15 @@ use Codestriker::Action::ViewTopic;
 use Codestriker::Action::EditTopic;
 use Codestriker::Action::SubmitComment;
 use Codestriker::Action::ViewFile;
+use Codestriker::Action::ViewSearch;
+use Codestriker::Action::SubmitSearch;
+use Codestriker::Action::ListTopics;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
+
+# Don't allow posts larger than 500K.
+$CGI::POST_MAX=1024 * 500;
 
 # Prototypes of subroutines used in this module.
 sub main();
@@ -55,7 +61,7 @@ sub main() {
 
     # Delegate the request to the appropriate Action module.
     my $action = $http_input->get("action");
-    if (! defined $action || $action eq "" || $action eq "create") {
+    if ($action eq "create") {
 	Codestriker::Action::CreateTopic->process($http_input, $http_response);
     } elsif ($action eq "submit_topic") {
 	Codestriker::Action::SubmitTopic->process($http_input, $http_response);
@@ -68,8 +74,18 @@ sub main() {
 						    $http_response);
     } elsif ($action eq "view_file") {
 	Codestriker::Action::ViewFile->process($http_input, $http_response);
+    } elsif ($action eq "search") {
+	Codestriker::Action::ViewSearch->process($http_input, $http_response);
+    } elsif ($action eq "submit_search") {
+	Codestriker::Action::SubmitSearch->process($http_input,
+						   $http_response);
+    } elsif ($action eq "list_topics") {
+	Codestriker::Action::ListTopics->process($http_input, $http_response);
+    } else {
+	# Default action is to list topics that are in state open.
+	Codestriker::Action::ListTopics->process($http_input, $http_response);
     }
-
+	
     # Output the HTML footer, and return.
     $http_response->generate_footer();
 }

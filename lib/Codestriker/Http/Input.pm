@@ -67,6 +67,16 @@ sub process($) {
     $self->{bug_ids} = $query->param('bug_ids');
     $self->{new} = $query->param('new');
     $self->{tabwidth} = $query->param('tabwidth');
+    $self->{sauthor} = $query->param('sauthor');
+    $self->{sreviewer} = $query->param('sreviewer');
+    $self->{scc} = $query->param('scc');
+    $self->{sbugid} = $query->param('sbugid');
+    $self->{stext} = $query->param('stext');
+    $self->{stitle} = $query->param('stitle');
+    $self->{sdescription} = $query->param('sdescription');
+    $self->{scomment} = $query->param('scomment');
+    $self->{sbody} = $query->param('sbody');
+    $self->{sstate} = $query->param('sstate');
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};

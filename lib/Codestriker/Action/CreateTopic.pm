@@ -12,9 +12,6 @@ package Codestriker::Action::CreateTopic;
 use strict;
 use Codestriker::Http::Cookie;
 
-# Prototypes.
-sub process( $$$ );
-
 # Create an appropriate form for creating a new topic.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;

@@ -10,25 +10,14 @@
 package Codestriker::Model::Topic;
 
 use strict;
-use CGI::Carp 'fatalsToBrowser';
 
 use Codestriker::DB::DBI;
 use Codestriker::Model::File;
 
-# Participant type constants.
-my $PARTICIPANT_REVIEWER = 0;
-my $PARTICIPANT_CC = 1;
-
-# Topic state constants.
-my $STATE_OPEN = 0;
-my $STATE_ACCEPTED = 1;
-my $STATE_REJECTED = 2;
-my $STATE_COMMITTED = 3;
-
 # Create a new topic with all of the specified properties.
-sub create($$$$$$$$$) {
+sub create($$$$$$$$$$) {
     my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document) = @_;
+	$description, $document, $timestamp) = @_;
     
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
@@ -39,51 +28,52 @@ sub create($$$$$$$$$) {
 
     # Create the prepared statements.
     my $insert_topic =
-	$dbh->prepare_cached('INSERT INTO TOPIC (id, author, title, ' .
-			     'description, document, state, creation_ts, '.
-			     'modified_ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+	$dbh->prepare_cached('INSERT INTO topic (id, author, title, ' .
+			     'description, document, state, creation_ts, ' .
+			     'modified_ts, version) VALUES ' .
+			     '(?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $insert_bugs =
-	$dbh->prepare_cached('INSERT INTO TOPICBUG (topicid, bugid) ' .
+	$dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
 			     'VALUES (?, ?)');
     my $insert_participant =
-	$dbh->prepare_cached('INSERT INTO PARTICIPANT (email, topicid, type,' .
-			     'state, modified_ts) VALUES (?, ?, ?, ?, ?)');
+	$dbh->prepare_cached('INSERT INTO participant (email, topicid, type,' .
+			     'state, modified_ts, version) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?)');
 
-    die "Could not create prepared statement: " . $dbh->errstr
-	unless defined $insert_topic && defined $insert_bugs &&
+    my $success = defined $insert_topic && defined $insert_bugs &&
 	defined $insert_participant;
 
-    my $success = 1;
-
-    # Create all of the necessary rows.
-    my $timestamp = Codestriker->get_current_timestamp();
+    # Create all of the necessary rows.  It is assumed sate 0 is the initial
+    # state.
     $success &&= $insert_topic->execute($topicid, $author, $title,
-					$description, $document, $STATE_OPEN,
-					$timestamp, $timestamp);
+					$description, $document, 0,
+					$timestamp, $timestamp, 0);
 					
     for (my $i = 0; $i <= $#bug_ids; $i++) {
 	$success &&= $insert_bugs->execute($topicid, $bug_ids[$i]);
     }
 
     for (my $i = 0; $i <= $#reviewers; $i++) {
-	$success &&= $insert_participant->execute($reviewers[$i], $topicid,
-						  $PARTICIPANT_REVIEWER, 0,
-						  $timestamp);
+	$success &&=
+	    $insert_participant->execute($reviewers[$i], $topicid,
+					 $Codestriker::PARTICIPANT_REVIEWER, 0,
+					 $timestamp, 0);
     }
     
     for (my $i = 0; $i <= $#cc; $i++) {
-	$success &&= $insert_participant->execute($cc[$i], $topicid,
-						  $PARTICIPANT_CC, 0,
-						  $timestamp);
+	$success &&=
+	    $insert_participant->execute($cc[$i], $topicid,
+					 $Codestriker::PARTICIPANT_CC, 0,
+					 $timestamp, 0);
     }
 
     # Create the appropriate file rows, if we diff file is being reviewed.
     $success &&= Codestriker::Model::File->create($dbh, $topicid, $document);
     
-    my $result = ($success ? $dbh->commit : $dbh->rollback);
-    die "Couldn't finish transaction" unless $result;
+    $success ? $dbh->commit : $dbh->rollback;
+    Codestriker::DB::DBI->release_connection($dbh);
 
-    return $success;
+    die $dbh->errstr unless $success;
 }
 
 # Read the contents of a specific topic, and return the results in the
@@ -96,43 +86,60 @@ sub read($$\$\$\$\$\$\$\$\$\$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    # Retrieve the topic information.
+    # Setup the prepared statements.
     my $select_topic = $dbh->prepare_cached('SELECT id, author, title, ' .
 					    'description, document, state, ' .
 					    'creation_ts, modified_ts '.
-					    'FROM topic WHERE id = ?')
-	|| die "Failed to prepare statement: " . $dbh->errstr;
-    $select_topic->execute($topicid)
-	|| die "Couldn't execute statement: " . $dbh->errstr;
-    my ($id, $author, $title, $description, $document, $state, $creationtime,
-	$modifiedtime) = $select_topic->fetchrow_array();
+					    'FROM topic WHERE id = ?');
+    my $select_bugs =
+	$dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
+    my $select_participants =
+	$dbh->prepare_cached('SELECT type, email FROM participant ' .
+			     'WHERE topicid = ?');
+
+    my $success = defined $select_topic && defined $select_bugs &&
+	defined $select_participants;
+
+    # Retrieve the topic information.
+    $success &&= $select_topic->execute($topicid);
+
+    my ($id, $author, $title, $description, $document, $state,
+	$creationtime, $modifiedtime);
+    if ($success) {
+	($id, $author, $title, $description, $document, $state,
+	 $creationtime, $modifiedtime) = $select_topic->fetchrow_array();
+	$select_topic->finish();
+    }
 
     # Retrieve the bug relating to this topic.
     my @bugs = ();
-    my $select_bugs =
-	$dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
-    $select_bugs->execute($topicid) ||
-	die "Couldn't execute statement: " . $dbh->errstr;
-    my @data;
-    while (@data = $select_bugs->fetchrow_array()) {
-	push @bugs, $data[0];
+    $success &&= $select_bugs->execute($topicid);
+    if ($success) {
+	my @data;
+	while (@data = $select_bugs->fetchrow_array()) {
+	    push @bugs, $data[0];
+	}
+	$select_bugs->finish();
     }
 
     # Retrieve the participants in this review.
     my @reviewers = ();
     my @cc = ();
-    my $select_participants =
-	$dbh->prepare_cached('SELECT type, email FROM participant ' .
-			     'WHERE topicid = ?');
-    $select_participants->execute($topicid) ||
-	die "Couldn't execute statement: " . $dbh->errstr;
-    while (@data = $select_participants->fetchrow_array()) {
-	if ($data[0] == 0) {
-	    push @reviewers, $data[1];
-	} else {
-	    push @cc, $data[1];
+    $success &&= $select_participants->execute($topicid);
+    if ($success) {
+	while (my @data = $select_participants->fetchrow_array()) {
+	    if ($data[0] == 0) {
+		push @reviewers, $data[1];
+	    } else {
+		push @cc, $data[1];
+	    }
 	}
+	$select_participants->finish();
     }
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
 
     # Store the data into the referenced variables.
     $$author_ref = $author;
@@ -153,17 +160,201 @@ sub exists($$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    # Prepare the statement.
+    # Prepare the statement and execute it.
     my $select_topic = $dbh->prepare_cached('SELECT COUNT(*) FROM topic ' .
-					    'WHERE id = ?')
-	|| die "Failed to prepare statement: " . $dbh->errstr;
+					    'WHERE id = ?');
+    my $success = defined $select_topic;
+    $success &&= $select_topic->execute($topicid);
 
-    # Execute it, and return the result.
-    $select_topic->execute($topicid)
-	|| die "Failed to execute statement: " . $dbh->errstr;
+    my $count;
+    if ($success) {
+	($count) = $select_topic->fetchrow_array();
+    }
 
-    my ($count) = $select_topic->fetchrow_array();
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
+
     return $count;
+}
+
+# Update the state of the specified topic.  The version parameter indicates
+# what version of the topic the user was operating on.
+sub change_state($$$$$) {
+    my ($type, $topicid, $new_state, $modified_ts, $version) = @_;
+
+    # Map the new state to its number.
+    my $state;
+    for ($state = 0; $state <= $#Codestriker::topic_states; $state++) {
+	last if ($Codestriker::topic_states[$state] eq $new_state);
+    }
+    if ($state == $#Codestriker::topic_states) {
+	die "Unable to change topic to invalid state: \"$new_state\"";
+    }
+	
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    # Check that the version reflects the current version in the DB.
+    my $select_topic = $dbh->prepare_cached('SELECT version FROM topic ' .
+					    'WHERE id = ?');
+    my $update_topic = $dbh->prepare_cached('UPDATE topic SET ' .
+					    'version = ?, state = ?, ' .
+					    'modified_ts = ? WHERE id = ?');
+    my $success = defined $select_topic && defined $update_topic;
+    my $errmsg;
+
+    # Retrieve the current topic data.
+    $success &&= $select_topic->execute($topicid);
+
+    my $current_version;
+    if ($success && 
+	! (($current_version) = $select_topic->fetchrow_array())) {
+	# Invalid topic id.
+	$errmsg = "Invalid topic id: $topicid";
+	$success = 0;
+    }
+    $success &&= $select_topic->finish();
+
+    # Check the version number.
+    if ($success && $version != $current_version) {
+	$errmsg = "Topic state has been modified by another user while " .
+	    " you were viewing it.\n";
+	$success = 0;
+    }
+
+    # Update the actual topic.
+    $success &&= $update_topic->execute($version+1, $state, $modified_ts,
+					$topicid);
+    $dbh->commit if ($success);
+    Codestriker::DB::DBI->release_connection($dbh);
+    
+    if (!$success) {
+	$errmsg = $dbh->errstr unless defined $errmsg;
+	die "$errmsg\n";
+    }
+}
+
+# Return back the list of topics which match the specified parameters.
+sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
+    my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $stext,
+	$stitle, $sdescription, $scomments, $sbody,
+	$id_array_ref, $title_array_ref,
+	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
+	$bugid_array_ref, $email_array_ref, $type_array_ref) = @_;
+
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    # Build up the query conditions.
+    my $author_part = $sauthor ne "" ? "topic.author = ?" : "";
+    my $reviewer_part = $sreviewer ne "" ?
+	"participant.email = ? AND " .
+	"type = $Codestriker::PARTICIPANT_REVIEWER" : "";
+    my $cc_part = $scc ne "" ?
+	"participant.email = ? AND type = $Codestriker::PARTICIPANT_CC" : "";
+    my $bugid_part = $sbugid ne "" ? "topicbug.bugid = ?" : "";
+
+    my @state_values;
+    my $state_part = "";
+    if ($sstate ne "") {
+	@state_values = split ',', $sstate;
+	my $state_set = $sstate;
+	$state_set =~ s/\d+/\?/g;
+	$state_part = "topic.state IN ($state_set)";
+    }
+
+    my $text_title_part = "lower(topic.title) LIKE ?";
+    my $text_description_part = "lower(topic.description) LIKE ?";
+    my $text_body_part = "lower(topic.document) LIKE ?";
+    my $text_comment_part = "lower(comment.commentfield) LIKE ?";
+
+    # Build up the base query.
+    my $query =
+	"SELECT topic.id, topic.title, topic.author, topic.creation_ts, " .
+	"topic.state, topicbug.bugid, participant.email, participant.type ".
+	"FROM topic LEFT OUTER JOIN topicbug ON topic.id = topicbug.topicid " .
+	"LEFT OUTER JOIN participant ON topic.id = participant.topicid ";
+
+    # Join with the comment table if required - GACK!
+    if ($stext ne "" && $scomments) {
+	$query .= "LEFT OUTER JOIN comment ON topic.id = comment.topicid ";
+    }
+
+    # Combine the "AND" conditions together.
+    my $first_condition = 1;
+    my @values = ();
+    $query = _add_condition($query, $author_part, $sauthor, \@values,
+			    \$first_condition);
+    $query = _add_condition($query, $reviewer_part, $sreviewer, \@values,
+			    \$first_condition);
+    $query = _add_condition($query, $cc_part, $scc, \@values,
+			    \$first_condition);
+    $query = _add_condition($query, $bugid_part, $sbugid, \@values,
+			    \$first_condition);
+
+    # Handle the state set.
+    if ($state_part ne "") {
+	$query = _add_condition($query, $state_part, undef, \@values,
+				\$first_condition);
+	push @values, @state_values;
+    }
+
+    # Handle the text searching part, which can be a series of ORs.
+    if ($stext ne "") {
+	$stext =~ tr/[A-Z]/[a-z]/; # make it lower case.
+	my @text_cond = ();
+	my @text_values = ();
+	push @text_cond, $text_title_part if $stitle;
+	push @text_cond, $text_description_part if $sdescription;
+	push @text_cond, $text_body_part if $sbody;
+	push @text_cond, $text_comment_part if $scomments;
+
+	if ($#text_cond >= 0) {
+	    my $cond = join  ' OR ', @text_cond;
+	    $query = _add_condition($query, $cond, undef,
+				    \@values, \$first_condition);
+	    for (my $i = 0; $i <= $#text_cond; $i++) {
+		push @values, "%${stext}%"; # Add wildcards
+	    }
+	}
+    }	
+
+    my $select_topic = $dbh->prepare_cached($query);
+    my $success = defined $select_topic;
+    $success &&= $select_topic->execute(@values);
+    if ($success) {
+	my ($id, $title, $author, $creation_ts, $state, $bugid, $email, $type);
+	while (($id, $title, $author, $creation_ts, $state, $bugid,
+		$email, $type) = $select_topic->fetchrow_array()) {
+	    push @$id_array_ref, $id;
+	    push @$title_array_ref, $title;
+	    push @$author_array_ref, $author;
+	    push @$creation_ts_array_ref, $creation_ts;
+	    push @$state_array_ref, $state;
+	    push @$bugid_array_ref, $bugid;
+	    push @$email_array_ref, $email;
+	    push @$type_array_ref, $type;
+	}
+	$select_topic->finish();
+    }
+
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
+}
+
+# Add the condition to the specified query string, returning the new query.
+sub _add_condition($$$\@\$) {
+    my ($query, $condition, $value, $values_array_ref, $first_cond_ref) = @_;
+
+    return $query if ($condition eq ""); # Nothing to do.
+    if ($$first_cond_ref) {
+	$$first_cond_ref = 0;
+	$query .= " WHERE (" . $condition . ") ";
+    } else {
+	$query .= " AND (" . $condition . ") ";	
+    }
+    push @$values_array_ref, $value if defined $value;
+    return $query;
 }
 
 1;

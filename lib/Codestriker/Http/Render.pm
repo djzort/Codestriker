@@ -17,24 +17,6 @@ use CGI::Carp 'fatalsToBrowser';
 # against.
 my $CONTEXT_COLOUR = "red";
 
-# Prototypes.
-sub new ( $$$$$$$\%\@\@ );
-sub display_data( $$$$$$$$$$$ );
-sub display_coloured_data ( $$$$$$$$$$$$$ );
-sub render_coloured_cell( $$ );
-sub render_linenumber( $$$$ );
-sub render_changes( $ );
-sub get_comment_digest( $$ );
-sub start( $ );
-sub finish( $ );
-sub print_coloured_table( $ );
-sub render_monospaced_line( $$$$$$ );
-sub add_plus_monospace_line( $$$ );
-sub add_minus_monospace_line( $$$ );
-sub flush_monospaced_lines( $$$$ );
-sub tabadjust( $$$$ );
-sub get_context( $$$$$\@ );
-
 sub _normal_mode_start( $ );
 sub _normal_mode_finish( $ );
 sub _coloured_mode_start( $ );
@@ -69,10 +51,10 @@ my @view_file_plus_offset = ();
 my $COMMENT_LINE_COLOUR = "red";
 
 # Constructor for rendering complex data.
-sub new ($$$$$$$\%\@\@) {
+sub new ($$$$$$$\%\@\@$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comment_exists_ref, $comment_linenumber_ref,
-	$comment_data_ref) = @_;
+	$comment_data_ref, $tabwidth) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -86,6 +68,7 @@ sub new ($$$$$$$\%\@\@) {
     $self->{comment_exists_ref} = $comment_exists_ref;
     $self->{comment_linenumber_ref} = $comment_linenumber_ref;
     $self->{comment_data_ref} = $comment_data_ref;
+    $self->{tabwidth} = $tabwidth;
 
     # Also have a number of additional private variables which need to
     # be initialised.

@@ -56,9 +56,11 @@ sub process($$$) {
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Display the "Create a new topic" link.
+    # Display the "Create a new topic" and "Search" links.
     my $create_topic_url = $url_builder->create_topic_url();
-    print $query->a({href=>"$create_topic_url"}, "Create a new topic");
+    my $search_url = $url_builder->search_url();
+    print $query->a({href=>$create_topic_url}, "Create a new topic") . " | ";
+    print $query->a({href=>$search_url}, "Search") . "\n";
     print $query->p;
 
     # Display the view topic summary information, the title, bugs it relates
@@ -175,7 +177,7 @@ sub process($$$) {
 						$max_digit_width, $topic,
 						$mode, \%comment_exists,
 						\@comment_linenumber,
-						\@comment_data);
+						\@comment_data, $tabwidth);
 
     # Record of the current CVS file being diffs (if the file is a
     # unidiff diff file).

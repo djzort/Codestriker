@@ -19,6 +19,7 @@ sub view_url( $$$$ );
 sub view_url_extended( $$$$$$$ );
 sub view_file_url( $$$$$$$ );
 sub create_topic_url( $ );
+sub search_url( $ );
 
 # Constants for different viewing file modes - set by the type CGI parameter.
 $UrlBuilder::OLD_FILE = 0;
@@ -45,8 +46,9 @@ sub new($$) {
 sub view_url_extended ($$$$$$$) {
     my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
-	"?topic=$topic&action=view&mode=$mode" .
+	"?topic=$topic&action=view" .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
+	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
 }
@@ -82,6 +84,29 @@ sub view_file_url ($$$$$$$) {
     my ($self, $topic, $filename, $new, $line, $prefix, $mode) = @_;
     return $self->{url_prefix} . "?action=view_file&filename=$filename&" .
 	"topic=$topic&mode=$mode&new=$new#" . "$prefix$line";
+}
+
+# Create the URL for the search page.
+sub search_url ($) {
+    my ($self) = @_;
+    return $self->{url_prefix} . "?action=search";
+}
+
+# Create the URL for listing the topics.
+sub list_topics_url ($$$$$$$$$$\@) {
+    my ($self, $sauthor, $sreviewer, $scc, $sbugid, $stext,
+	$stitle, $sdescription, $scomments, $sbody, $state_array_ref) = @_;
+
+    my $sstate = defined $state_array_ref ? (join ',', @$state_array_ref) : "";
+    return $self->{query}->url() . "?action=list_topics" .
+	($sauthor ne "" ? "&sauthor=$sauthor" : "") .
+	($sreviewer ne "" ? "&sreviewer=$sreviewer" : "") .
+	($scc ne "" ? "&scc=$scc" : "") .
+	($sbugid ne "" ? "&sbugid=$sbugid" : "") .
+	($stext ne "" ? "&stext=" . CGI::escape($stext) : "") .
+	"&stitle=$stitle&sdescription=$sdescription" .
+	"&scomments=$scomments&sbody=$sbody" .
+	($sstate ne "" ? "&sstate=$sstate" : "");
 }
 
 1;

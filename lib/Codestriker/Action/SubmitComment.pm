@@ -39,7 +39,9 @@ sub process($$$) {
     }
 
     # Create the comment in the database.
-    Codestriker::Model::Comment->create($topic, $line, $email, $comments);
+    my $timestamp = Codestriker->get_timestamp(time);
+    Codestriker::Model::Comment->create($topic, $line, $email, $comments,
+					$timestamp);
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
@@ -148,7 +150,7 @@ sub process($$$) {
     # they were adding comments to.
     my $redirect_url =
 	$url_builder->view_url_extended($topic, $line, $mode, "", $email, "");
-    print $query->redirect(-URI=>"$redirect_url");
+    print $query->redirect(-URI=>$redirect_url);
     return;
 }
 

@@ -10,7 +10,6 @@
 package Codestriker::Model::File;
 
 use strict;
-use CGI::Carp 'fatalsToBrowser';
 
 # Go through the document text, and if it is a diff file (CVS or patch),
 # create a new row for each file in the file table.  Note this gets called
@@ -29,17 +28,16 @@ sub create($$$$) {
     my $insert_file =
 	$dbh->prepare_cached('INSERT INTO FILE (topicid, sequence, filename,' .
 			     'topicoffset, revision, diff, binaryfile) ' .
-			     'VALUES (?, ?, ?, ?, ?, ?, ?)')
-	|| die "Could not create prepared statement: " . $dbh->errstr;
+			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
+    my $success = defined $insert_file;
 
     my $offset = 0;
     my $filename = "";
     my $revision = "";
-    my $success = 1;
     my $binary = 0;
     for (my $sequence_number = 0;
-	 _read_diff_header(\@document, \$offset, \$filename, \$revision,
-			   \$binary);
+	 $success && _read_diff_header(\@document, \$offset, \$filename,
+				       \$revision, \$binary);
 	 $sequence_number++) {
 
 	# Record the offset marking the start of program code.
@@ -63,8 +61,8 @@ sub create($$$$) {
 					   $diff, $binary);
     }
 
-    # Indicate if all database operations worked.
-    return $success;
+    $success ? $dbh->commit : $dbh->rollback;
+    die $dbh->errstr unless $success;
 }
 
 # Retrieve the details of a file for a specific topicid and filename.
@@ -78,16 +76,21 @@ sub get($$$$$$) {
     # Retrieve the file information.
     my $select_file =
 	$dbh->prepare_cached('SELECT topicoffset, revision, diff FROM file' .
-			     ' WHERE topicid = ? AND filename = ?')
-	|| die "Couldn't prepare statement: " . $dbh->errstr;
-    $select_file->execute($topicid, $filename) ||
-	die "Couldn't execute statement: " . $dbh->errstr;
-    my ($offset, $revision, $diff) = $select_file->fetchrow_array();
+			     ' WHERE topicid = ? AND filename = ?');
+    my $success = defined $select_file;
+    $success &&= $select_file->execute($topicid, $filename);
     
-    # Store the results in the reference variables and return.
-    $$offset_ref = $offset;
-    $$revision_ref = $revision;
-    $$diff_ref = $diff;
+    if ($success) {
+	my ($offset, $revision, $diff) = $select_file->fetchrow_array();
+	
+	# Store the results in the reference variables and return.
+	$$offset_ref = $offset;
+	$$revision_ref = $revision;
+	$$diff_ref = $diff;
+    }
+
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
 }
 
 # Retrieve the details of which files, revisions and offsets are present for
@@ -99,24 +102,26 @@ sub get_filetable($$$$$$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    # Setup the appropriate statement.
+    # Setup the appropriate statement and execute it.
     my $select_file =
 	$dbh->prepare_cached('SELECT filename, revision, topicoffset, ' .
-			     'binaryfile FROM file WHERE topicid = ?')
-	|| die "Prepare statement failed: " . $dbh->errstr;
-
-    # Execute the query.
-    $select_file->execute($topicid) ||
-	die "Couldn't execute statement: " . $dbh->errstr;
+			     'binaryfile FROM file WHERE topicid = ?');
+    my $success = defined $select_file;
+    $success &&= $select_file->execute($topicid);
     
     # Store the results in the referenced arrays.
-    my @data;
-    while (@data = $select_file->fetchrow_array()) {
-	push @$filename_array_ref, $data[0];
-	push @$revision_array_ref, $data[1];
-	push @$offset_array_ref, $data[2];
-	push @$binary_array_ref, $data[3];
+    if ($success) {
+	my @data;
+	while (@data = $select_file->fetchrow_array()) {
+	    push @$filename_array_ref, $data[0];
+	    push @$revision_array_ref, $data[1];
+	    push @$offset_array_ref, $data[2];
+	    push @$binary_array_ref, $data[3];
+	}
     }
+
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
 }
 
 # Read from $fh, and return true if we have read a diff header, with all of

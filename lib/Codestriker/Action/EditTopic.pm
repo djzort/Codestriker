@@ -121,7 +121,7 @@ sub process($$$) {
 						  -size=>50,
 						  -maxlength=>150)));
     print $query->end_table(), $query->p;
-    print $query->submit(-value=>'submit');
+    print $query->submit(-value=>'Submit');
     print $query->end_form();
 }
 

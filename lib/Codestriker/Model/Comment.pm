@@ -14,8 +14,8 @@ use strict;
 use Codestriker::DB::DBI;
 
 # Create a new topic with all of the specified properties.
-sub create($$$$$) {
-    my ($type, $topicid, $line, $email, $data) = @_;
+sub create($$$$$$) {
+    my ($type, $topicid, $line, $email, $data, $timestamp) = @_;
     
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -24,15 +24,16 @@ sub create($$$$$) {
     my $insert_comment =
 	$dbh->prepare_cached('INSERT INTO COMMENT (topicid, commentfield, ' .
 			     'author, line, creation_ts) ' .
-			     'VALUES (?, ?, ?, ?, ?)')
-	|| die "Failed to create prepared statement: " . $dbh->errstr;
+			     'VALUES (?, ?, ?, ?, ?)');
+    my $success = defined $insert_comment;
 
     # Create the comment row.
-    my $timestamp = Codestriker->get_current_timestamp();
-    $insert_comment->execute($topicid, $data, $email, $line, $timestamp) ||
-	die "Failed to insert comment: " . $dbh->errstr;
+    $success &&= $insert_comment->execute($topicid, $data, $email, $line,
+					  $timestamp);
 
-    $dbh->commit;
+    $dbh->commit if ($success);
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr if !$success;
 }
 
 # Read all of the comments made for a specified topic, and store the results
@@ -47,20 +48,25 @@ sub read($$\@\@\@\@\%) {
     # Retrieve all of the comment information for the specified topicid.
     my $select_comment =
 	$dbh->prepare_cached('SELECT commentfield, author, line, ' .
-			     'creation_ts FROM comment WHERE topicid = ?')
-	|| die "Creation of prepared statement failed: " . $dbh->errstr;
-    $select_comment->execute($topicid)
-	|| die "Couldn't execute statement: " . $dbh->errstr;
+			     'creation_ts FROM comment WHERE topicid = ?');
+    my $success = defined $select_comment;
+    $success &&= $select_comment->execute($topicid);
 
     # Store the results into the referenced arrays.
-    my @data;
-    while (@data = $select_comment->fetchrow_array()) {
-	push @$dataarray_ref, $data[0];
-	push @$authorarray_ref, $data[1];
-	push @$linearray_ref, $data[2];
-	push @$datearray_ref, Codestriker->format_timestamp($data[3]);
-	$$existshash_ref{$data[2]} = 1;
+    if ($success) {
+	my @data;
+	while (@data = $select_comment->fetchrow_array()) {
+	    push @$dataarray_ref, $data[0];
+	    push @$authorarray_ref, $data[1];
+	    push @$linearray_ref, $data[2];
+	    push @$datearray_ref, Codestriker->format_timestamp($data[3]);
+	    $$existshash_ref{$data[2]} = 1;
+	}
+	$select_comment->finish();
     }
+
+    Codestriker::DB::DBI->release_connection($dbh);
+    die $dbh->errstr unless $success;
 }
 
 1;

@@ -85,3 +85,15 @@ SPAN.smsnocom {font-family: Courier, monospaced; font-size: smaller}
 
 /* Style used for rendering data within popup window */
 PRE.ms {font-family: Courier, monospaced; font-size: medium}
+
+/* Styles to use for topic list display */
+
+/* Topic list heading */
+TR.tlh {background-color: #aaffaa; font-family: Helvetica, Arial}
+
+/* Topic list row type 1 */
+TR.tl1 {background-color: #cccccc; font-family: Helvetica, Arial}
+
+/* Topic list row type 1 */
+TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
+

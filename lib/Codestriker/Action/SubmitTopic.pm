@@ -73,11 +73,11 @@ sub process($$$) {
     } while (Codestriker::Model::Topic->exists($topicid));
     
     # Create the topic in the model.
-    if (!Codestriker::Model::Topic->create($topicid, $email, $topic_title,
-					   $bug_ids, $reviewers, $cc,
-					   $topic_description, $topic_text)) {
-	$http_response->error("Oh oh - database problem, please check logs.");
-    }
+    my $timestamp = Codestriker->get_timestamp(time);
+    Codestriker::Model::Topic->create($topicid, $email, $topic_title,
+				      $bug_ids, $reviewers, $cc,
+				      $topic_description, $topic_text,
+				      $timestamp);
     
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -104,8 +104,8 @@ sub process($$$) {
 	"$topic_description\n";
 
     # Send the email notification out.
-    if (!Codestriker::Smtp::SendEmail->doit($from, $to, $cc, $bcc, $subject,
-					    $body)) {
+    if (Codestriker::Smtp::SendEmail->doit($from, $to, $cc, $bcc, $subject,
+					   $body)) {
 	$http_response->error("Failed to send topic creation email");
     }
 

@@ -84,7 +84,7 @@ sub process($$$) {
 	Codestriker::Http::Render->new($query, $url_builder, $parallel,
 				       $max_digit_width, $topic, $mode,
 				       \%comment_exists, \@comment_linenumber,
-				       \@comment_data);
+				       \@comment_data, $tabwidth);
     # Print the heading information.
     if ($new == $UrlBuilder::BOTH_FILES) {
 	$render->print_coloured_table();
