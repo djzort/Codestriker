@@ -694,6 +694,61 @@ $default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
 	  </programlisting>
 	</para>
       </sect2>
+      <sect2>
+        <title>Metrics Support</title>
+        <para>
+	  As explained by the comments in the configuration file, it
+	  is possible to maintain software metrics obtained from the
+	  code reviewing process.  There is also scope for customising
+	  Codestriker to track your own software metrics.
+	  <programlisting>
+# This options configures the metric support in codestriker. You have
+# the following options:
+#
+# $metric_config = "none", "basic", "all", "metric name, metric name, etc"
+#
+# "none" - turns off all extra metric support in the application. The
+# metric page will only display and manage data that is strictly
+# required to perform the review.  Codestriker will not require any
+# addition data input from the reviewers and authors.  This is the
+# default. However, you still get basic data like how many topics are
+# being created and how problems are being found.
+#
+# "basic" - Turns on the metrics that are considered to be essential
+# for a metric program. It will require that reviewers and authors
+# enter the time spent reviewing the topic, the time spent in the
+# review meeting, and the time spent preparing for the review. The
+# metric selection assumes that you are following a formal review
+# process with a preparation meeting, and a defect review meeting.
+#   
+#   kickoff time - time spent preparing for the review
+#   checking time - time spent actually reviewing the topic.
+#   logging meeting duration - the time spent in the logging meeting.
+#
+# "all" - Turns on all of the metrics that one could possibly want to
+# track. The list of metrics is from the book "Software Inspection" by
+# Gilb and Graham.  You should probably not use this unless you are
+# using a formal process that is well established. You may want to
+# enable this temporally to get a idea of the types of metrics that
+# are supported.
+#
+# "name,name" - Lastly, you can pick and chose what metrics you would
+# like to enable.  just list the metric names in a comma separated
+# list. You can see all of the build in metrics in the
+# lib/Codestriker.pm file. For example, if you don't hold a kick off
+# meeting, and but do hold a logging meeting, the basic option will not
+# quit fit. You should set the $metric_confg = "checking time,logging
+# meeting duration".
+#
+# If you don't like our choices of metrics, the names, descriptions,
+# etc feel free to edit the lib/Codestriker.pm. It contains
+# documentations on how to add your own metrics into codestriker. It
+# is easy to do, and does not require any coding.
+
+$metric_config = "none";
+	  </programlisting>
+        </para>
+      </sect2>
     </sect1>
 
     <sect1 id="running-checksetup.pl">
@@ -782,9 +837,10 @@ File::Temp
     </sect1>
 
     <sect1>
-      <title>Webserver configuration</title>
+      <title>Apache webserver configuration</title>
       <para>
-        This section deals with deploying Codestriker on a webserver.
+        This section deals with deploying Codestriker using Apache, on
+        either a UN*X machine or Win32.
         Codestriker can run as an ordinary CGI script, which allows it
         to run under any CGI-complaint webserver.  The following
         configuration details are specific for the Apache webserver
@@ -983,16 +1039,48 @@ PerlSwitches -T
 </programlisting>
 	</para>
       </sect2>
-      <sect2>
-        <title>Other Webservers</title>
-	<para>
-	  There is no Apache-specific code in Codestriker, so it
-	  should work fine as a vanilla CGI script for other
-	  webservers.  If you have success running it under another
-	  webserver, please pass this information on so that it can be
-	  incorporated into this guide (see <xref linkend="contact">).
-	</para>
-      </sect2>
+    </sect1>
+
+    <sect1>
+      <title>IIS configuration</title>
+      <para>
+        This section deals with deploying Codestriker under IIS, as an
+        ordinary CGI script.  These instructions were perfomed on a
+        Windows 2000 machine, so hopefully this provides an indication
+        as to what needs to be performed for other Win32
+        configurations.  Startup the IIS configuration application by
+        going to "Control Panel" -> "Administrative Tools" ->
+        "Internet Services Manager".  Like the Apache configuration,
+        the webserver needs to be told where to find the Codestriker
+        CGI script, and where to find the associated CSS and html help
+        files.
+      </para>
+      <para>
+        Assuming you are deploying Codestriker under the "Default Web
+        site", right-click this entry on the left hand frame of the
+        window, and select "New" -> "Virtual Directory" -> "Next".
+        Enter in <filename>codestriker</filename> for the Alias
+        textfield, then "Next".  Then enter the
+        <filename>cgi-bin</filename> directory of your unpacked
+        Codestriker distribution into the "Directory" textfield, then
+        "Next".  Make sure the "Execute" access permission checkbox is
+        selected, then "Next" then "Finished".
+      </para>
+      <para>
+        Follow a similar process for the
+        <filename>codestrikerhtml</filename> directory.  Right-click
+        "Default Web site" and select "New" -> "Virtual Directory" ->
+        "Next".  Enter in <filename>codestrikerhtml</filename> for the
+        Alias textfield, then "Next".  Then enter the
+        <filename>html</filename> directory of your unpacked
+        Codestriker distribution into the "Directory" textfield, then
+        "Next".  Make sure the "Read" and "Browse" access permission
+        checkboxes are selected, then "Next", then "Finished".
+      </para>
+      <para>
+        Right-click "Default Web site" and select "Start" if the
+        website is not currently running, and test it.
+      </para>
     </sect1>
 
     <sect1>
