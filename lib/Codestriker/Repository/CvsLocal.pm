@@ -13,11 +13,12 @@ use strict;
 use IPC::Run;
 
 # Constructor, which takes as a parameter the CVSROOT.
-sub new ($$) {
-    my ($type, $cvsroot) = @_;
+sub new ($$$) {
+    my ($type, $cvsroot, $prefix) = @_;
 
     my $self = {};
     $self->{cvsroot} = $cvsroot;
+    $self->{prefix} = $prefix;
     bless $self, $type;
 }
 
@@ -27,7 +28,7 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
-    open(CVS, "$Codestriker::cvs -q -d " . $self->{cvsroot} .
+    open(CVS, "\"$Codestriker::cvs\" -q -d " . $self->{prefix} . $self->{cvsroot} .
 	 " co -p -r $revision $filename |")
 	|| die "Can't execute CVS command: $!";
     for (my $i = 1; <CVS>; $i++) {
@@ -55,7 +56,7 @@ sub getViewUrl ($$$) {
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return $self->getRoot();
+    return $self->{prefix} . $self->{cvsroot};
 }
 
 # Given a start tag, end tag and a module name, store the text into

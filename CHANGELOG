@@ -3,6 +3,9 @@
 
 Version 1.8.0
 
+* Some minor fixes to fully support Win32-based CVS repositories,
+  including use of the older-style :local:c:\\cvsrep syntax.
+
 * Improved useability of messages (when Perl modules are missing) for
   Win32 users.
 
