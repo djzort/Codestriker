@@ -54,12 +54,6 @@ Version 1.8.4
   as a reference to a bug id, and will be used in the topic's bugid
   field.
 
-* The "List Topics" screen now has an "rss" link, which produces an
-  RSS representation of the screen.  This allows users to track a
-  topic list page from their RSS readers, if they want to casually
-  monitor what topics have been created.  This adds another module to
-  the dependency list, being XML::RSS.
-
 Version 1.8.3
 
 * It is now possible to specify multiple metrics associated with a
