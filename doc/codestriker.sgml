@@ -831,9 +831,10 @@ $metric_config = "none";
         The first line of <filename>bin/codestriker.pl.base</filename>
         should look like:
 <programlisting>
-#!c:/perl/perl -wT
+#!c:/perl/perl -w
 </programlisting>
-        <emphasis>Note the use of forward slashes.</emphasis>
+        <emphasis>Note the use of forward slashes.  Also note the -T
+      flag must be removed for Win32 users, due to very obscure reasons.</emphasis>
       </para>
       <para>
         Perl is available by default for all *NIX systems.  For
@@ -1024,6 +1025,11 @@ PerlTaintCheck On
           linkend="running-checksetup.pl">) if you want to use
           Codestriker and LXR.
 	</para>
+        <para>
+          Also note there is a strange issue with Perl 5.8 on Win32,
+          the open3() call and taint mode.  For Win32 users, don't enable
+          tainted mode.
+        </para>
       </sect2>
       <sect2>
         <title>Apache 2.X mod_perl</title>
@@ -1065,6 +1071,10 @@ Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
 PerlSwitches -T
 </programlisting>
 	</para>
+        <para>
+          As mentioned in the previous section, Win32 users should
+          not enable this mode.
+        </para>
       </sect2>
     </sect1>
 
@@ -1103,11 +1113,9 @@ PerlSwitches -T
         entry looks like (substitute the path to your local
 	Perl installation):
 	<programlisting>
-C:\Perl\bin\perl.exe -T "%s" %s	  
+C:\Perl\bin\perl.exe "%s" %s	  
 	</programlisting>
-	If the <option>-T</option> flag is missing, it is very
-	important you modify the entry to include it, otherwise you
-	will get errors when you try to deploy Codestriker.  If there
+        If there
 	is no mapping for <filename>.pl</filename> files (which would
 	be odd, since the ActiveState install does this for you
 	automatically), add a new entry in with the above setting,
