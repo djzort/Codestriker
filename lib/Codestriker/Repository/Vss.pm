@@ -15,12 +15,37 @@ use File::Temp qw/ tmpnam tempdir /;
 
 # Constructor, which takes the username and password as parameters.
 sub new {
-    my ($type, $username, $password) = @_;
+    my ($type, $username, $password, $ssdir) = @_;
 
     my $self = {};
     $self->{username} = $username;
     $self->{password} = $password;
+    $self->{ssdir} = $ssdir;
     bless $self, $type;
+}
+
+# Method for wrapping the VSS command if necessary via a perl
+# invocation so that the SSDIR environment variable is set pointing to
+# the correct VSS repository.  We can't do this with $ENV since
+# apache2 doesn't allow us to do this.  We assume perl is in the
+# PATH.
+sub _wrap_vss_command {
+    my ($self, $cmd) = @_;
+
+    my $ssdir = $self->{ssdir};
+
+    if (defined $ssdir) {
+	my $perl_cmd = $cmd;
+	$perl_cmd =~ s/\"/\\\"/g;
+	$perl_cmd = "perl -e \"" .
+	    (defined $ssdir ? "\$ENV{SSDIR}='$ssdir' ; " : "") .
+	    "system('$perl_cmd')\"";
+	return $perl_cmd;
+    }
+    else {
+	# No need to change the command, as SSDIR does not need to be set.
+	return $cmd;
+    }
 }
 
 # Retrieve the data corresponding to $filename and $revision.  Store each line
@@ -43,9 +68,10 @@ sub retrieve ($$$\$) {
     # a temporary file, rather than stdout/stderr.
     my $varg = ($revision =~ /^\d+$/) ? "-V$revision" : "\"-VL$revision\"";
     my $command_output = "$tempdir\\___output.txt";
-    system("\"$Codestriker::vss\" get \"$filename\"" .
-	   " -y" . $self->{username} . "," . $self->{password} .
-	   " $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"");
+    my $cmd = "\"$Codestriker::vss\" get \"$filename\"" .
+	" -y" . $self->{username} . "," . $self->{password} .
+	" $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
+    system($self->_wrap_vss_command($cmd));
 
     $filename =~ /\/([^\/]+)$/o;
     my $basefilename = $1;
@@ -105,9 +131,15 @@ sub getDiff ($$$$$) {
     }
 
     # Execute the VSS command to retrieve all of the entries in this label.
-    open(VSS, "\"$Codestriker::vss\" dir \"$module_name\"" .
-	 " -y" . $self->{username} . "," . $self->{password} .
-	 " -R \"-VL${tag}\" -I-Y |")
+    # Note we can't set SSDIR in the environment, so we need to do that in
+    # the command below.
+
+    my $ssdir = $self->{ssdir};
+    my $cmd = "\"$Codestriker::vss\" dir \"$module_name\"" .
+	" -y" . $self->{username} . "," . $self->{password} .
+	" -R \"-VL${tag}\" -I-Y";
+
+    open(VSS, $self->_wrap_vss_command($cmd) . " |")
 	|| die "Can't open connection to VSS repository: $!";
 
     # Collect the list of filename and revision numbers into a list.
@@ -137,9 +169,10 @@ sub getDiff ($$$$$) {
     # files.
     for (my $i = 0; $i <= $#files; $i++) {
 	# Determine if the file is a text file, and if not, skip it.
-	open(VSS, "\"$Codestriker::vss\" properties \"$files[$i]\"" .
-	     " -y" . $self->{username} . "," . $self->{password} .
-	     " -I-Y |")
+	$cmd = "\"$Codestriker::vss\" properties \"$files[$i]\"" .
+	    " -y" . $self->{username} . "," . $self->{password} .
+	    " -I-Y";
+	open(VSS, $self->_wrap_vss_command($cmd) . " |")
 	    || die "Unable to run ss properties on $files[$i]\n";
 	my $text_type = 0;
 	while (<VSS>) {
@@ -153,10 +186,11 @@ sub getDiff ($$$$$) {
 
 	my $command_output = "$tempdir\\___output.txt";
 	if ($start_tag ne '' && $end_tag ne '') {
-	    system("\"$Codestriker::vss\" diff \"$files[$i]\"" .
+	    $cmd = "\"$Codestriker::vss\" diff \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
 		   " -I-Y -DU3000X5 \"-VL${start_tag}~L${end_tag}\"" .
-		   " -O\"$command_output\"");
+		   " -O\"$command_output\"";
+	    system($self->_wrap_vss_command($cmd));
 	    if (open(VSS, $command_output)) {
 		while (<VSS>) {
 		    print $fh $_;
@@ -167,9 +201,10 @@ sub getDiff ($$$$$) {
 	    # Retrieve a read-only copy of the file into a temporary
 	    # directory.  Make sure the command output is put into
 	    # a temporary file, rather than stdout/stderr.
-	    system("\"$Codestriker::vss\" get \"$files[$i]\"" .
+	    $cmd = "\"$Codestriker::vss\" get \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
-		   " \"-VL${tag}\" -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"");
+		   " \"-VL${tag}\" -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
+	    system($self->_wrap_vss_command($cmd));
 
 	    $files[$i] =~ /\/([^\/]+)$/o;
 	    my $basefilename = $1;

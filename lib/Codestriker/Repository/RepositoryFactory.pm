@@ -54,8 +54,14 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*perforce:(.*):(.*)@(.*):(.*)\s*$/i) {
 	# Perforce repository.
 	return Codestriker::Repository::Perforce->new($1, $2, $3, $4);
+    } elsif ($repository =~ /^\s*vss:(.*);(.*);(.*)$/i) {
+	# Visual Source Safe repository spec with SSDIR, user and password.
+	return Codestriker::Repository::Vss->new($2,$3,$1);
+    } elsif ($repository =~ /^\s*vss:(.*);(.*)$/i) {
+	# Visual Source Safe repository spec with user and password.
+	return Codestriker::Repository::Vss->new($1,$2);
     } elsif ($repository =~ /^\s*vss:(.*):(.*)$/i) {
-	# Visual Source Safe (VSS) repository.
+	# Older-style Visual Source Safe (VSS) repository spec.
 	return Codestriker::Repository::Vss->new($1,$2);
     } elsif ($repository =~ /^\s*clearcase:(.*)$/i) {
 	# ClearCase Snapshot repository.

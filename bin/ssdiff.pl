@@ -26,6 +26,13 @@ my $ss = 'C:/Program Files/Microsoft Visual Studio/VSS/win32/ss.exe';
 my $ss_username = 'admin';
 my $ss_password = 'password';
 
+# Specify the location of the SS repository.  If this is left empty
+# then the SSDIR environment variable will not be set, and ss.exe will
+# use the default repository.
+my $ssdir = '';
+#my $ssdir = '\\\\VisualSourceSafeMachineName\\SharedRepositoryPath';
+#my $ssdir = 'c:\\Program Files\\Microsoft Visual Studio\\VSS';
+
 # Set this to 1 to see all the SS commands being executed.
 my $verbose = 0;
 
@@ -54,6 +61,12 @@ if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
 }
 else {
     $tempdir = tempdir(CLEANUP => 1);
+}
+
+# Set the SSDIR environment variable if necessary.
+if (defined $ssdir && $ssdir ne '')
+{
+    $ENV{SSDIR} = $ssdir;
 }
 
 # Now execute an 'ss dir' command to determine what files are a part
