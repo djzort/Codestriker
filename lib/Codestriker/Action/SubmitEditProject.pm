@@ -38,7 +38,7 @@ sub process($$$) {
 	}
     }
     if (!$found) {
-	$http_response->error("Invalid project state specified: $project_state");
+	$http_response->error("Invalid project state: $project_state");
     }
 
     # Check if this action is allowed.
