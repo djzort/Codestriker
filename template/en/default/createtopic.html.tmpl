@@ -13,8 +13,19 @@
 
 <P>
 
+[%# Show any topics that this topic will obsolete #%]
+[% IF obsoleted_topics.size > 0 %]
+<font color="red"><strong>Topics to obsolete:</strong></font>
+[% FOREACH topic = obsoleted_topics %]
+<a href="[% topic.view_url %]">[% topic.title %]</a>[% IF ! loop.last() %],[% END %]
+
+[% END %]
+<p>
+[% END %]
+
 <FORM METHOD="POST" ENCTYPE="multipart/form-data">
 <INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic">
+<INPUT TYPE="hidden" NAME="obsoletes" VALUE="[% obsoletes %]">
 
 [%# The topic title input field #%]
 Topic title:

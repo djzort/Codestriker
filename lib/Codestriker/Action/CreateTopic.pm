@@ -18,6 +18,7 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
+    my $obsoletes = $http_input->get('obsoletes');
     $http_response->generate_header(topic_title=>"Create New Topic",
 				    reload=>0, cache=>1);
 
@@ -69,11 +70,45 @@ sub process($$$) {
     # when a topic is created.
     my @projects = Codestriker::Model::Project->list('Open');
     $vars->{'projects'} = \@projects;
+
+    # If this create topic action obsoletes some topics, then get their
+    # details now.  For now, don't check if a topic is stale with the
+    # version parameter.
+    $vars->{'obsoletes'} = $obsoletes;
+    if ($type->set_obsoleted_topics_parameter($vars, $url_builder) == -1) {
+	$http_response->error("Obsoleted topic no longer exists.");
+    }
                                           
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars);
 
     $http_response->generate_footer();
+}
+
+# Set the obsoleted_topics parameter correctly into $vars.  Return -1 if
+# there was a failure.
+sub set_obsoleted_topics_parameter {
+    my ($type, $vars, $url_builder) = @_;
+
+    my $obsoletes = $vars->{'obsoletes'};
+    my @obsoleted_topics = ();
+    if (defined $obsoletes and $obsoletes ne '') {
+	my @topics = split ',', $obsoletes;
+	for (my $i = 0; $i <= $#topics; $i+=2) {
+	    my $topicid = $topics[$i];
+	    if (Codestriker::Model::Topic::exists($topicid) == 0) {
+		return -1;
+	    }
+	    my $topic = Codestriker::Model::Topic->new($topicid);
+	    my $obsoleted_topic = {};
+	    $obsoleted_topic->{title} = $topic->{title};
+	    $obsoleted_topic->{view_url} =
+		$url_builder->view_url($topicid, -1);
+	    push @obsoleted_topics, $obsoleted_topic;
+	}
+    }
+    $vars->{'obsoleted_topics'} = \@obsoleted_topics;
+    return 0;
 }
 
 1;

@@ -103,6 +103,7 @@ sub process($) {
     $self->{module} = $query->param('module');
     $self->{topic_sort_change} = $query->param('topic_sort_change');
     $self->{content} = $query->param('content');
+    $self->{obsoletes} = $query->param('obsoletes');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
@@ -123,6 +124,7 @@ sub process($) {
     $self->{project_state} = "" if ! defined $self->{project_state};
     $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
     $self->{content} = "html" if ! defined $self->{content};
+    $self->{obsoletes} = "" if ! defined $self->{obsoletes};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;
@@ -217,6 +219,7 @@ sub process($) {
     $self->_untaint_digits('scontext');
     $self->_untaint_comma_digits('sstate');
     $self->_untaint_comma_digits('sproject');
+    $self->_untaint_comma_digits('obsoletes');
     
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});

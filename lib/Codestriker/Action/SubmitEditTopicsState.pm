@@ -25,6 +25,17 @@ sub process($$$) {
 
     my $topic_state = $http_input->get('topic_state');
     my $email = $http_input->get('email');
+    my $button = $http_input->get('button');
+
+    # Check if this is an obsolete function, and if so, redirect to the
+    # create topic screen.
+    if ($button eq "Obsolete Topic(s)") {
+	my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+	my $create_topic_url =
+	    $url_builder->create_topic_url((join ',', @topics));
+	print $query->redirect(-URI=>$create_topic_url);
+	return;
+    }
 
     # The main topic list page does not allow deletes, so block this out.
     if ($topic_state eq "Delete") {
@@ -51,35 +62,11 @@ sub process($$$) {
 	my $topicid = $1;
 	my $version = $2;
 
-	# Original topic object which won't be changed in the
-	# change_state operation.
-	my $topic_orig = Codestriker::Model::Topic->new($topicid);
-
-        # Don't do anything if the topic is already at the given state.
-        next if ($topic_state eq $topic_orig->{topic_state});
-
-	# Topic object to operate on.
-	my $topic = Codestriker::Model::Topic->new($topicid);
-	my $rc = $Codestriker::OK;
-	if ($topic->{version} == $version) {
-	    # Change the topic state.
-	    $rc = $topic->change_state($topic_state);
-	} else {
-	    # Stale version.
-	    $rc = $Codestriker::STALE_VERSION;
-	}
+	my $rc = $type->update_state($topicid, $version, $topic_state, $email);
 
 	# Record if there was a problem in changing the state.
 	$invalid = 1 if $rc == $Codestriker::INVALID_TOPIC;
 	$stale = 1 if $rc == $Codestriker::STALE_VERSION;
-
-	if ($rc == $Codestriker::OK) {
-	    # Fire a topic changed listener event.
-	    my $topic_new = Codestriker::Model::Topic->new($topicid);
-	    Codestriker::TopicListeners::Manager::topic_changed($email,
-								$topic_orig,
-								$topic_new);
-	}
     }
 
     # These message could be made more helpful in the future, but for now...
@@ -104,6 +91,41 @@ sub process($$$) {
     # feedback message.
     $http_input->{feedback} = $feedback;
     Codestriker::Action::ListTopics->process($http_input, $http_response);
+}
+
+# Static method for updating the state of a topic, and informing all of the
+# topic listeners.
+sub update_state {
+    my ($type, $topicid, $version, $topic_state, $email) = @_;
+
+    # Original topic object which won't be changed in the
+    # change_state operation.
+    my $topic_orig = Codestriker::Model::Topic->new($topicid);
+
+    # Don't do anything if the topic is already at the given state.
+    return $Codestriker::OK if ($topic_state eq $topic_orig->{topic_state});
+
+    # Topic object to operate on.
+    my $topic = Codestriker::Model::Topic->new($topicid);
+    my $rc = $Codestriker::OK;
+    if ($topic->{version} == $version) {
+	# Change the topic state.
+	$rc = $topic->change_state($topic_state);
+    } else {
+	# Stale version.
+	$rc = $Codestriker::STALE_VERSION;
+    }
+
+    if ($rc == $Codestriker::OK) {
+	# Fire a topic changed listener event.
+	my $topic_new = Codestriker::Model::Topic->new($topicid);
+	Codestriker::TopicListeners::Manager::topic_changed($email,
+							    $topic_orig,
+							    $topic_new);
+    }
+
+    # Indicate whether the operation was successful or not.
+    return $rc;
 }
 
 1;

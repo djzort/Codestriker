@@ -38,6 +38,8 @@ sub new {
     $self->{repository} = "";
     $self->{project_id} = "";
     $self->{project_name} = "";
+    $self->{obsoleted_topics} = [];
+    $self->{obsoleted_by} = [];
     $self->{comments} = [];
     $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
 
@@ -116,7 +118,7 @@ sub _insert_bug_ids($$$) {
 sub create($$$$$$$$$$$$) {
     my ($self, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
 	$description, $document, $start_tag, $end_tag, $module,
-	$repository, $projectid, $deltas_ref) = @_;
+	$repository, $projectid, $deltas_ref, $obsoleted_topics) = @_;
 
     my $timestamp = Codestriker->get_timestamp(time);        
         
@@ -139,6 +141,8 @@ sub create($$$$$$$$$$$$) {
     $self->{module} = $module;
     $self->{repository} = $repository;
     $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
+    $self->{obsoleted_topics} = [];
+    $self->{obsoleted_by} = [];
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -175,6 +179,26 @@ sub create($$$$$$$$$$$$) {
 
     # Create the appropriate delta rows.
     $success &&= Codestriker::Model::File->create($dbh, $topicid, $deltas_ref);
+
+    # Create any obsolete records, if any.
+    if (defined $obsoleted_topics && $obsoleted_topics ne '') {
+	my $insert_obsolete_topic =
+	    $dbh->prepare_cached('INSERT INTO topicobsolete ' .
+				 '(topicid, obsoleted_by) ' .
+				 'VALUES (?, ?)');
+	my $success = defined $insert_obsolete_topic;
+	my @data = split ',', $obsoleted_topics;
+	my @obsoleted = ();
+	for (my $i = 0; $success && $i <= $#data; $i+=2) {
+	    my $obsolete_topic_id = $data[$i];
+	    my $obsolete_topic_version = $data[$i+1];
+	    $success &&=
+		$insert_obsolete_topic->execute($obsolete_topic_id,
+						$topicid);
+	    push @obsoleted, $obsolete_topic_id if $success;
+	}
+	$self->{obsoleted_topics} = \@obsoleted;
+    }
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
@@ -212,9 +236,16 @@ sub read($$) {
     my $select_participants =
 	$dbh->prepare_cached('SELECT type, email FROM participant ' .
 			     'WHERE topicid = ?');
+    my $select_obsoleted_by =
+	$dbh->prepare_cached('SELECT obsoleted_by FROM topicobsolete ' .
+			     'WHERE topicid = ?');
+    my $select_topics_obsoleted =
+	$dbh->prepare_cached('SELECT topicid FROM topicobsolete ' .
+			     'WHERE obsoleted_by = ?');
 
     my $success = defined $select_topic && defined $select_bugs &&
-	defined $select_participants;
+	defined $select_participants && defined $select_obsoleted_by &&
+	defined $select_topics_obsoleted;
     my $rc = $Codestriker::OK;
 
     # Retrieve the topic information.
@@ -263,6 +294,26 @@ sub read($$) {
 	$select_participants->finish();
     }
 
+    # Retrieve the topics obsoleted by this topic.
+    $success &&= $select_topics_obsoleted->execute($topicid);
+    my @obsoleted_topics = ();
+    if ($success) {
+	while (my ($id) = $select_topics_obsoleted->fetchrow_array()) {
+	    push @obsoleted_topics, $id;
+	}
+	$select_topics_obsoleted->finish();
+    }
+
+    # Retrieve the topics that have obsoleted this topic.
+    $success &&= $select_obsoleted_by->execute($topicid);
+    my @obsoleted_by = ();
+    if ($success) {
+	while (my ($id) = $select_obsoleted_by->fetchrow_array()) {
+	    push @obsoleted_by, $id;
+	}
+	$select_obsoleted_by->finish();
+    }
+
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
@@ -287,6 +338,8 @@ sub read($$) {
 	$self->{module} = $module;
 	$self->{version} = $version;
         $self->{metrics} = Codestriker::Model::Metrics->new($topicid);
+	$self->{obsoleted_topics} = \@obsoleted_topics;
+	$self->{obsoleted_by} = \@obsoleted_by;
 	
 	# Set the repository to the default system value if it is not defined.
 	if (!defined $repository || $repository eq "") {
@@ -958,13 +1011,18 @@ sub delete($) {
 
     my $commentstate_history =
 	$dbh->prepare_cached('DELETE FROM commentstatehistory WHERE id = ?');
+    
+    my $obsolete_records =
+	$dbh->prepare_cached('DELETE FROM topicobsolete WHERE ' .
+			     'topicid = ? OR obsoleted_by = ?');
 
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&
 	defined $delete_file && defined $delete_delta && 
 	defined $topic_metrics && defined $user_metrics &&
 	defined $topic_history && defined $topic_view_history &&
-	defined $commentstate_history && $delete_commentstate_metric;
+	defined $commentstate_history && $delete_commentstate_metric &&
+	defined $obsolete_records;
 
     # Now do the deed.
     $success &&= $select->execute($self->{topicid});
@@ -990,6 +1048,8 @@ sub delete($) {
 	$self->_delete_participants($dbh, $Codestriker::PARTICIPANT_CC);
     $success &&= $topic_history->execute($self->{topicid});
     $success &&= $topic_view_history->execute($self->{topicid});
+    $success &&= $obsolete_records->execute($self->{topicid},
+					    $self->{topicid});
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

@@ -74,6 +74,9 @@
     </tr>
 </table>
 
+<table>
+<tr>
+<td>
 Change state: &nbsp;
   <select name="topic_state">
      [% FOREACH state = states %]
@@ -84,7 +87,18 @@ Change state: &nbsp;
      [% END %]
      [% END %]
   </select>
+</td>
+<td>
    <input type="submit" name="button" value="Update">
+</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>
+   <input type="submit" name="button" value="Obsolete Topic(s)">
+</td>
+</tr>
+</table>
 
    <table width="100%">
     <tr class="tlh"><td>&nbsp</td></tr>

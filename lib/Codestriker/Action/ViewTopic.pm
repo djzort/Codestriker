@@ -291,6 +291,28 @@ sub ProcessTopicHeader($$$) {
 
     $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
     $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
+
+    # Get the list of obsoleted topics.
+    my @obsoleted_topics = ();
+    foreach my $id (@{ $topic->{obsoleted_topics} }) {
+	my $obsoleted_topic = Codestriker::Model::Topic->new($id);
+	my $entry = {};
+	$entry->{title} = $obsoleted_topic->{title};
+	$entry->{view_url} = $url_builder->view_url($id, -1);
+	push @obsoleted_topics, $entry;
+    }
+    $vars->{'obsoleted_topics'} = \@obsoleted_topics;
+
+    # Get the list of topics this has been obsoleted by.
+    my @obsoleted_by = ();
+    foreach my $id (@{ $topic->{obsoleted_by} }) {
+	my $superseeded_topic = Codestriker::Model::Topic->new($id);
+	my $entry = {};
+	$entry->{title} = $superseeded_topic->{title};
+	$entry->{view_url} = $url_builder->view_url($id, -1);
+	push @obsoleted_by, $entry;
+    }
+    $vars->{'obsoleted_by'} = \@obsoleted_by;
 }
 
 1;

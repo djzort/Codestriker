@@ -36,3 +36,20 @@
 </tr>
 </table>
 
+[%# If this topic obsoletes any other topics, show them now #%]
+[% IF obsoleted_topics.size > 0 %]
+<font color="red"><strong>Topic obsoletes:</strong></font>
+  [% FOREACH entry = obsoleted_topics %]
+    <a href="[% entry.view_url %]">[% entry.title %]</a>[% IF ! loop.last() %],[% END %]
+  [% END %]
+  <br>
+[% END %]
+
+[%# If this topic is obsoleted by other topics, show them now #%]
+[% IF obsoleted_by.size > 0 %]
+<font color="red"><strong>Obsoleted by:</strong></font>
+  [% FOREACH entry = obsoleted_by %]
+    <a href="[% entry.view_url %]">[% entry.title %]</a>[% IF ! loop.last() %],[% END %]
+  [% END %]
+  <br>
+[% END %]

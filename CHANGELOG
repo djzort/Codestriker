@@ -6,6 +6,15 @@ Version 1.8.5
 * Modified log_accum.pl so that deleted files are also included in the
   topic.
 
+* On the topic list screen, there is a new button "Obsolete Topics",
+  which allows you to create a new topic which superseeds the selected
+  topics.  The obsoleted topics will be changed to state "Obsoleted"
+  and will become read-only.  Note the @topic_states configuration
+  variable in codestriker.conf has been modified to include the new
+  'Obsoleted' state.  The view topic screens have been modified to
+  include links if the topic being viewed has been obsoleted or
+  superseeds other topics.
+
 Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and

@@ -42,9 +42,12 @@ sub process($$$) {
     my $start_tag = $http_input->get('start_tag');
     my $end_tag = $http_input->get('end_tag');
     my $module = $http_input->get('module');
+    my $obsoletes = $http_input->get('obsoletes');
 
     my $feedback = "";
     my $topic_text = "";
+
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Indicate whether the topic text needs to be retrieved by the repository
     # object.
@@ -102,6 +105,7 @@ sub process($$$) {
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
+    $error_vars->{'obsoletes'} = $obsoletes;
 
     my $repository = undef;
     if (scalar(@Codestriker::valid_repositories)) {
@@ -144,7 +148,7 @@ sub process($$$) {
 		"For security reasons, please re-enter the " .
 		"file name to upload, if required.\n";
 	}
-	_forward_create_topic($error_vars, $feedback);
+	_forward_create_topic($error_vars, $feedback, $url_builder);
 	$http_response->generate_footer();
 	return;
     }
@@ -195,7 +199,7 @@ sub process($$$) {
 	# temporary files, and direct control to the create screen again.
 	$temp_topic_fh->close if defined $temp_topic_fh;
 	$temp_error_fh->close if defined $temp_error_fh;
-	_forward_create_topic($error_vars, $feedback);
+	_forward_create_topic($error_vars, $feedback, $url_builder);
 	$http_response->generate_footer();
 	return;
     }
@@ -227,7 +231,7 @@ sub process($$$) {
 	    # back to the create topic page.
 	    $temp_topic_fh->close if defined $temp_topic_fh;
 	    $temp_error_fh->close if defined $temp_error_fh;
-	    _forward_create_topic($error_vars, $feedback);
+	    _forward_create_topic($error_vars, $feedback, $url_builder);
 	    $http_response->generate_footer();
 	    return;
 	}
@@ -255,11 +259,11 @@ sub process($$$) {
 	    "lines long. Please remove content from topic, or break the " .
 	    "topic into several independent topics.\n";
                      
-        _forward_create_topic($error_vars, $feedback);
+        _forward_create_topic($error_vars, $feedback, $url_builder);
         $http_response->generate_footer();
         return;
     }
-    
+
     # Create the topic in the model.
     my $topic = Codestriker::Model::Topic->new($topicid);
     $topic->create($topicid, $email, $topic_title,
@@ -267,14 +271,24 @@ sub process($$$) {
 		   $topic_description, $topic_text,
 		   $start_tag, $end_tag, $module,
 		   $repository_url, $projectid,
-		   \@deltas);
+		   \@deltas, $obsoletes);
                                                                   
-    # tell all of the topic listener classes that a topic has 
+    # Obsolete any required topics.
+    if (defined $obsoletes && $obsoletes ne '') {
+	my @data = split ',', $obsoletes;
+	for (my $i = 0; $i <= $#data; $i+=2) {
+	    my $id = $data[$i];
+	    my $version = $data[$i+1];
+	    Codestriker::Action::SubmitEditTopicsState
+		->update_state($id, $version, 'Obsoleted', $email);
+	}
+    }
+    
+    # Tell all of the topic listener classes that a topic has 
     # just been created.
     Codestriker::TopicListeners::Manager::topic_create($topic);
                       
     # Obtain a URL builder object and determine the URL to the topic.
-    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
 						    $query->url(), 0);
                                                     
@@ -295,13 +309,15 @@ sub process($$$) {
 
 # Direct output to the create topic screen again, with the appropriate feedback
 # message.
-sub _forward_create_topic($$) {
-    my ($vars, $feedback) = @_;
+sub _forward_create_topic($$$) {
+    my ($vars, $feedback, $url_builder) = @_;
 
     $feedback =~ s/\n/<BR>/g;
     $vars->{'feedback'} = $feedback;
     my @projects = Codestriker::Model::Project->list();
     $vars->{'projects'} = \@projects;
+    Codestriker::Action::CreateTopic->
+	set_obsoleted_topics_parameter($vars, $url_builder);
     
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars);

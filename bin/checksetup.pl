@@ -299,6 +299,16 @@ my $topicmetric_table =
 		   ],
 	indexes => [dbindex(name=>"tm_idx", column_names=>["topicid"])]);
 
+# Holds record of which topics obsolete other topics, which is a many-to-many
+# relationship.
+my $topicobsolete_table =
+  table(name => "topicobsolete",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"obsoleted_by", type=>$INT32, pk=>1)
+		   ],
+	indexes => [dbindex(name=>"to1_idx", column_names=>["topicid"]),
+		    dbindex(name=>"to2_idx", column_names=>["obsoleted_by"])]);
+
 # Hold a specific datum of column data entered by a specific user for a
 # specific line.
 my $commentdata_table =
@@ -423,6 +433,7 @@ push @tables, $topichistory_table;
 push @tables, $topicviewhistory_table;
 push @tables, $topicusermetric_table;
 push @tables, $topicmetric_table;
+push @tables, $topicobsolete_table;
 push @tables, $commentdata_table;
 push @tables, $commentstate_table;
 push @tables, $commentstatemetric_table;

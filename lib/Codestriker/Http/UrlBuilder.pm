@@ -82,9 +82,10 @@ sub download_url ($$) {
 }
 
 # Create the URL for creating a topic.
-sub create_topic_url ($) {
-    my ($self) = @_;
-    return $self->{query}->url() . "?action=create";
+sub create_topic_url ($$) {
+    my ($self, $obsoletes) = @_;
+    return $self->{query}->url() . "?action=create" .
+	(defined $obsoletes ? "&obsoletes=$obsoletes" : "");
 }	    
 
 # Create the URL for editing a topic.
