@@ -3,6 +3,11 @@
 
 Version 1.8.0
 
+* Ported ODBC-specific code from an anonymous author, so that MS-SQL
+  Server and other ODBC-compatible databases can be used with
+  Codestriker.  The file table needed to be renamed to topicfile, as
+  file was a reserved word.
+
 * Added in a new topic listener which records all changes to a
   comment's state, property changes to a topic and when a topic has
   been viewed. Three new database tables have been added to store this

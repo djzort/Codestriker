@@ -37,15 +37,16 @@ sub _insert_topichistory_entry($$$) {
 	$dbh->prepare_cached('INSERT INTO topichistory ' .
 			     '(topicid, author, title, ' .
 			     'description, state, modified_ts, version, ' .
-			     'repository, projectid, modified_by_user) ' .
-			     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+			     'repository, projectid, reviewers, ' .
+			     'cc, modified_by_user) ' .
+			     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert;
     $success &&= $insert->execute($topic->{topicid}, $topic->{author},
 				  $topic->{title}, $topic->{description},
 				  $topic->{topic_state_id},
 				  $topic->{modified_ts}, $topic->{version},
 				  $topic->{repository}, $topic->{project_id},
-				  $user);
+				  $topic->{reviewers}, $topic->{cc}, $user);
 
     # Release the database connection.
     Codestriker::DB::DBI->release_connection($dbh, $success);

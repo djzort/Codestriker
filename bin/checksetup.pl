@@ -222,6 +222,8 @@ $table{topichistory} =
      version int NOT NULL,
      repository text,
      projectid int NOT NULL,
+     reviewers text NOT NULL,
+     cc text NOT NULL,
      modified_by_user varchar(255) NOT NULL,
      PRIMARY KEY (topicid, version)";
 
