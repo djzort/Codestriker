@@ -17,7 +17,8 @@ use File::Temp qw/ tempfile /;
 use IO::Handle;
 
 # Example usage.
-#doit({url => 'http://localhost.localdomain/codestriker/codestriker.pl',
+#Codestriker::Http::CreateTopic->
+#      doit({url => 'http://localhost.localdomain/codestriker/codestriker.pl',
 #      topic_title => 'Automatic Topic from script',
 #      topic_description => "Automatic Topic Description\nAnd more",
 #      project_name => 'Project2',
@@ -54,9 +55,9 @@ sub doit {
 
     # Indicate if the operation was successful.
     my $content = $response->content;
-    my $rc = $content =~ /Topic created/ && $content =~ /Topic URL/;
+    my $rc = $content =~ /Topic URL: \<A HREF=\"(.*)\"/i;
     print STDERR "Failed to create topic, response: $content\n" if $rc == 0;
-    return $rc;
+    return $rc ? $1 : undef;
 }
 
 1;
