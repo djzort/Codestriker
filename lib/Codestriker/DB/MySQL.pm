@@ -77,7 +77,7 @@ sub has_like_operator_for_text_field {
 
 # Function for generating an SQL subexpression for a case insensitive LIKE
 # operation.
-sub case_insensitive_like(field, expression) {
+sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
     
     $expression = $self->{dbh}->quote($expression);
