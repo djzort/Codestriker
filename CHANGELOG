@@ -1,6 +1,13 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.1.1
+
+* Minor fix to the untaint code for start tag, end tag and module
+  name, to make it accept filename characters.  That way, the module
+  argument can be a filename in a CVS repository, rather than a
+  module.
+
 Version 1.7.1
 
 * The notion of "projects" has been integrated.  Now every topic in

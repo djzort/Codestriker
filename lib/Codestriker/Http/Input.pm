@@ -153,9 +153,9 @@ sub process($) {
     $self->_untaint_bug_ids('bug_ids');
     $self->_untaint_digits('new');
     $self->_untaint_digits('tabwidth');
-    $self->_untaint_alphanumeric('start_tag');
-    $self->_untaint_alphanumeric('end_tag');
-    $self->_untaint_alphanumeric('module');
+    $self->_untaint_filename('start_tag');
+    $self->_untaint_filename('end_tag');
+    $self->_untaint_filename('module');
 
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
@@ -242,12 +242,6 @@ sub _untaint_name($$) {
     $self->_untaint($name, '[A-Za-z_]+');
 }
 
-sub _untaint_alphanumeric($$) {
-    my ($self, $name) = @_;
-
-    $self->_untaint($name, '[A-Za-z0-9_]+');
-}
-    
 # Untaint a parameter which should be a bunch of digits.
 sub _untaint_digits($$) {
     my ($self, $name) = @_;
