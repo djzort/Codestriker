@@ -101,10 +101,11 @@ TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
 A.fid {color: #777777; text-decoration: none}
 
 /* Style comment listings. */
-TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial}
-TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial}
-TR.commentb {background-color: #eeeeee}
-TD.commentb {background-color: #eeeeee}
+TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial} /* space */
+TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial} /* header */
+TR.commentb {background-color: #eeeeee} /* comment body */
+TD.commentb {background-color: #eeeeee} /* comment body */
+TR.commentc {background-color: #eeeeee} /* context */
 
 /* Style for topic title headings. */
 

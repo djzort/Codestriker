@@ -11,6 +11,7 @@ package Codestriker::Action::ListTopics;
 
 use strict;
 use Codestriker::Http::Template;
+use Codestriker::Model::Topic;
 use HTML::Entities ();
 
 # If the input is valid, list the appropriate topics.
@@ -50,6 +51,12 @@ sub process($$$) {
     # set the cookie explicitly.
     if ($sproject eq "-1") {
 	$sproject = (defined $projectid) ? $projectid : "";
+    }
+    
+    # Only show open topics if codestriker.pl was run without parameters.
+    if ( defined($http_input->{query}->param) == 0)
+    {
+    	$sstate=0; 
     }
 
     # Query the model for the specified data.

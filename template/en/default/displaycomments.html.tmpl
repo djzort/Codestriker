@@ -2,6 +2,45 @@
 
 [% PROCESS header.html.tmpl version = version %]
 
+<SCRIPT language="JavaScript">
+<!-- This function handles the three filter select boxes at the top of the table.
+function SelectFilter(post)
+{
+    var url = '';
+
+    var userSelectionIndex = document.form.filter_comments_author.options.selectedIndex;    
+    if (userSelectionIndex > 0)
+    {
+	var userSelection = document.form.filter_comments_author.options[userSelectionIndex].value;
+    	url = url + '&sauthor=' + userSelection;
+    }
+        
+    var stateIndex = document.form.filter_comments_state.options.selectedIndex;     
+    if ( stateIndex > 0)
+    {
+    	url = url + '&sstate=' + (stateIndex-1);
+    }
+    
+    var contextIndex = document.form.show_context_in_comments.options.selectedIndex;
+    var contextSelection = document.form.show_context_in_comments.options[contextIndex].value;
+    
+    url = url + '&scontext=' + contextSelection;
+    
+    // The filtering url parameters have been build, now a "get" back to the web server
+    // with the updated filter paramters, the ListComments.pm script will refilter then.
+    if (post == 0)
+    {
+    	window.location='[% view_comments_url %]' + url;
+    }
+    else
+    {
+    	window.form.action = '[% view_comments_url %]' + url ;
+        window.form.post();
+    }
+}
+// -->
+</SCRIPT>
+
 [%# Show the top-level link for "Refresh" and "View topic" #%]
 <P>
 <A HREF="[% view_comments_url %]">View all updated comments</A> |
@@ -16,11 +55,40 @@
     <p>
 [% END %]
 
-<H2>Comments:</H2>
-
-<FORM METHOD="POST" ENCTYPE="multipart/form-data">
+<FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="SelectFilter(1)">
 <INPUT TYPE="hidden" NAME="action" VALUE="change_comments">
 <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
+
+<INPUT TYPE="hidden" NAME="scontext" VALUE="[% scontext %]">
+<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
+<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
+
+
+<P><FONT size="5">Comments: &nbsp; &nbsp;</FONT>
+
+Show comments authored by: &nbsp;
+  <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
+     <OPTION value="1"> Everybody     
+     [% FOREACH user = users %]
+     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [%END%] >[% user %]
+     [% END %]
+  </SELECT>
+     
+with: 
+  <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
+     <OPTION value="Any" [%IF select_sstate == 0 %] SELECTED [%END%]> Any
+     [% FOREACH state = states %]
+     <OPTION value="[% state %]" [%IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
+     [% END %]
+  </SELECT>
+  
+state and
+
+  <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
+     <OPTION value="0" [%IF scontext == 0 %] SELECTED [% END %]>no context
+     <OPTION value="3" [%IF scontext == 3 %] SELECTED [% END %]>with context
+  </SELECT>
+.
 
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
@@ -48,6 +116,11 @@
 	    [% END %]
 	</TD>
     </TR>
+    [% IF comment.context != '' %]
+    <TR CLASS="commentc">
+        <TD></TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
+    </TR>
+    [% END %]
     [% last_fileline = comment.fileline %]
     [% last_filenumber = comment.filenumber %]
 

@@ -14,6 +14,8 @@ use strict;
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
 use Codestriker::Smtp::SendEmail;
+use Codestriker::Model::Topic;
+use Codestriker::Http::Render;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -129,7 +131,7 @@ sub process($$$) {
     $body .= "Context:\n";
     $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";
     my $email_context = $Codestriker::EMAIL_CONTEXT;
-    $body .= Codestriker::Http::Render->get_context($line, $topic,
+    $body .= Codestriker::Http::Render->get_context($line, 
 						    $email_context, 0,
 						    $delta->{old_linenumber},
 						    $delta->{new_linenumber},
@@ -149,11 +151,14 @@ sub process($$$) {
 	}
     }
 
-    # Send the email notification out.
+    # Send the email notification out, if it is allowed in the config file.
+    if ( $Codestriker::allow_comment_email || $cc_recipients ne "")
+    {
     if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
 					    $cc_recipients, $bcc,
 					    $subject, $body)) {
 	$http_response->error("Failed to send topic creation email");
+        }
     }
 
     # Display a simple screen indicating that the comment has been registered.

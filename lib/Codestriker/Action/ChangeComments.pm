@@ -11,6 +11,8 @@ package Codestriker::Action::ChangeComments;
 
 use strict;
 
+use Codestriker::Action::ListComments;
+
 # Attempt to change the comment states.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;

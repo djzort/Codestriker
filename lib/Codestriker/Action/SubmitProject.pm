@@ -12,6 +12,8 @@ package Codestriker::Action::SubmitProject;
 use strict;
 
 use Codestriker::Model::Project;
+use Codestriker::Action::ListProjects;
+use Codestriker::Action::CreateProject;
 
 # If the input is valid, create the appropriate project into the database.
 sub process($$$) {

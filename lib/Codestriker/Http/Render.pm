@@ -1052,7 +1052,7 @@ sub tabadjust ($$$$) {
 
 # Retrieve the data that forms the "context" when submitting a comment.
 sub get_context ($$$$$$$$$) {
-    my ($type, $targetline, $topic, $context, $html_view, $old_startline,
+    my ($type, $targetline, $context, $html_view, $old_startline,
 	$new_startline, $text, $new) = @_;
 
     # Break the text into lines.
@@ -1097,6 +1097,7 @@ sub get_context ($$$$$$$$$) {
 		$context_string .= HTML::Entities::encode("$linedata") ."\n";
 	    }
 	} else {
+            # This is the context for emails.
 	    $context_string .= ($i == $offset) ? "* " : "  ";
 	    $context_string .= $linedata . "\n";
 	}

@@ -11,6 +11,9 @@ package Codestriker::Action::ListComments;
 
 use strict;
 use Codestriker::Http::Template;
+use Codestriker::Http::Render;
+use Codestriker::Model::Comment;
+use Codestriker::Model::File;
 use HTML::Entities;
 
 # If the input is valid, list the appropriate comments for a topic.
@@ -24,6 +27,9 @@ sub process($$$) {
     my $email = $http_input->get('email');
     my $mode = $http_input->get('mode');
     my $feedback = $http_input->get('feedback');
+    my $show_context = $http_input->get('scontext');
+    my $show_comments_from_user = $http_input->get('sauthor');
+    my $show_comments_by_state  = $http_input->get('sstate');
     
     # Perform some error checking here on the parameters.
 
@@ -57,6 +63,48 @@ sub process($$$) {
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 				      
+    # Filter out comments that the user has said they don't want to see.
+    my %usersThatHaveComments;
+    
+    @comments = grep { 
+        my $comment = $_;
+        my $keep_comment = 1;
+                        
+        # check for filter via the state of the comment.
+        $keep_comment = 0 if ( $show_comments_by_state ne ""  && 
+                               $show_comments_by_state ne $comment->{state} );
+        
+        # check for filters via the comment author name.
+        if ($Codestriker::antispam_email) {
+            my $shortAuthor = 
+            		Codestriker->make_antispam_email( $comment->{author} );
+            my $shortFilterAuthor = 
+            		Codestriker->make_antispam_email( $show_comments_from_user );
+            $keep_comment = 0 if ( $show_comments_from_user ne "" && 
+                                   $shortAuthor ne $shortFilterAuthor);
+                                   
+            # Make a list of users while we are at it.
+            $usersThatHaveComments{$shortAuthor } = 1;                                   
+        }
+        else {
+            $keep_comment = 0 if ( $show_comments_from_user ne "" && 
+                                  $comment->{author} ne $show_comments_from_user);
+                                  
+            # Make a list of users while we are at it.
+            $usersThatHaveComments{$comment->{author}} = 1;                                  
+        }
+                                               
+                      
+ 	$keep_comment;
+    } @comments;
+    
+    # Filter the email address out, in the object.
+    if ( $Codestriker::antispam_email ) {
+    	foreach my $comment (@comments) {
+    	    $comment->{author} = Codestriker->make_antispam_email( $comment->{author} );
+        }
+    }     
+                                         
     # Go through all the comments and make them into an appropriate form for
     # displaying.
     my $last_filenumber = -1;
@@ -94,6 +142,22 @@ sub process($$$) {
 
 	# Make sure the comment data is HTML escaped.
 	$comment->{data} = HTML::Entities::encode($comment->{data});
+        
+        if ($show_context ne "" && $show_context > 0) {
+                my $new = 1;        
+                my $delta = Codestriker::Model::File->get_delta($topic, 
+                                $comment->{filenumber}, 
+                                $comment->{fileline} , 
+                                $new);
+
+                $comment->{context} = Codestriker::Http::Render->get_context(
+                                                $comment->{fileline} , 
+                                                $show_context, 1,
+                                                $delta->{old_linenumber},
+                                                $delta->{new_linenumber},
+                                                $delta->{text}, 
+                                                $new);
+       }
     }
 
     # Indicate what states the comments can be transferred to.
@@ -110,6 +174,22 @@ sub process($$$) {
     $vars->{'email'} = $email;
     $vars->{'comments'} = \@comments;
     $vars->{'states'} = \@states;
+    
+    my @usersThatHaveCommentsList = sort keys %usersThatHaveComments;
+    $vars->{'users'} = \@usersThatHaveCommentsList;
+    
+    # Push in the current filter combo box selections so the window remembers
+    # what the user has currently set.
+    $vars->{'scontext'} = $show_context;    
+    if ( $show_comments_by_state ne '') {
+    	$vars->{'select_sstate'} = $show_comments_by_state + 1;
+    }
+    else {
+    	$vars->{'select_sstate'} = 0;
+    }
+ 
+    $vars->{'sstate'} = $show_comments_by_state;     
+    $vars->{'sauthor'} = $http_input->get('sauthor');
 
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("displaycomments");

@@ -15,6 +15,7 @@ use Codestriker::Model::Topic;
 use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
+use Codestriker::Repository::RepositoryFactory;
 use HTML::Entities ();
 
 # If the input is valid, display the topic.

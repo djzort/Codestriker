@@ -11,6 +11,8 @@ package Codestriker::Action::EditTopic;
 
 use strict;
 use Codestriker::Action::SubmitComment;
+use Codestriker::Model::Topic;
+use Codestriker::Http::Render;
 
 # Create an appropriate form for adding a comment to a topic.
 sub process($$$) {
@@ -109,7 +111,7 @@ sub process($$$) {
     $vars->{'dec_context_url'} = $dec_context_url;
 
     $vars->{'context'} = $query->pre(
-	    Codestriker::Http::Render->get_context($line, $topic,
+	    Codestriker::Http::Render->get_context($line, 
 						   $context, 1,
 						   $delta->{old_linenumber},
 						   $delta->{new_linenumber},

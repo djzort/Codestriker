@@ -84,6 +84,7 @@ sub process($) {
     $self->{sfilename} = $query->param('sfilename');
     $self->{sstate} = $query->param('sstate');
     $self->{sproject} = $query->param('sproject');
+    $self->{scontext} = $query->param('scontext');
     $self->{version} = $query->param('version');
     $self->{redirect} = $query->param('redirect');
     $self->{a} = $query->param('a');
@@ -131,7 +132,12 @@ sub process($) {
     # otherwise.
     # Note topic_file is forced to be a string to get the filename (and
     # not have any confusion with the file object).  CGI.pm weirdness.
-    $self->{fh_filename} = "" . $query->param('topic_file');
+    if ( defined $query->param('topic_file')) {
+	$self->{fh_filename} = "" . $query->param('topic_file');
+    }
+    else {
+    	$self->{fh_filename} = undef;
+    }
     $self->{fh} = $query->upload('topic_file');
     $self->{fh_mime_type} = 'text/plain';
     if (defined $self->{fh_filename} &&
@@ -168,6 +174,11 @@ sub process($) {
     $self->_untaint_filename('end_tag');
     $self->_untaint_filename('module');
 
+    $self->_untaint_email('sauthor');
+    $self->_untaint_digits('scontext');
+    
+    $self->_untaint_digits('sstate');
+    
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
     $self->{cc} = $self->make_canonical_email_list($self->{cc});

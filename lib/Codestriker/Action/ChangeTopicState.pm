@@ -11,6 +11,9 @@ package Codestriker::Action::ChangeTopicState;
 
 use strict;
 
+use Codestriker::Model::Topic;
+use Codestriker::Action::ListTopics;
+
 # Attempt to change the topic's state, or to delete it.
 sub process($$$) {
     my ($type, $http_input, $http_response) = @_;

@@ -12,6 +12,7 @@ package Codestriker::Action::DownloadTopic;
 use strict;
 
 use Codestriker::Http::Render;
+use Codestriker::Model::Topic;
 
 # Prototypes.
 sub _read_cvs_file( $$$$$ );
