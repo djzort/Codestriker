@@ -120,6 +120,9 @@ $document_file = "document";
 # The name of the file which stores the comments.
 $comment_file = "comments";
 
+# The name of the file which stores the filetable.
+$filetable_file = "filetable";
+
 # The document data is stored as an array of strings, indexed by line number.
 @document = ();
 
@@ -211,9 +214,9 @@ sub add_new_change($$);
 sub render_changes($$);
 sub render_inplace_changes($$$$$$);
 sub render_coloured_cell($);
-sub normal_mode_start();
+sub normal_mode_start($);
 sub normal_mode_finish($$);
-sub coloured_mode_start();
+sub coloured_mode_start($);
 sub coloured_mode_finish($$);
 sub print_coloured_table();
 sub main();
@@ -790,8 +793,8 @@ sub view_topic ($$$) {
     my $index_filename = "";
 
     # Display the data that is being reviewed.
-    coloured_mode_start() if ($mode == $COLOURED_MODE);
-    normal_mode_start() if ($mode == $NORMAL_MODE);
+    coloured_mode_start($topic) if ($mode == $COLOURED_MODE);
+    normal_mode_start($topic) if ($mode == $NORMAL_MODE);
     for (my $i = 0; $i <= $#document; $i++) {
 
 	# Check for uni-diff information.
@@ -883,7 +886,8 @@ sub view_topic ($$$) {
 }
 
 # Start topic view display hook for normal mode.
-sub normal_mode_start () {
+sub normal_mode_start ($) {
+    my ($topic) = @_;
     print "<PRE>\n";
 }
 
@@ -893,10 +897,13 @@ sub normal_mode_finish ($$) {
 }
 
 # Start topic view display hook for coloured mode.  This displays a simple
-# legend, and opens up the initial table.
-sub coloured_mode_start () {
+# legend, displays the files involved in the review, and opens up the initial
+# table.
+sub coloured_mode_start ($) {
+    my ($topic) = @_;
+
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
-			       -border=>'0'});
+			       -border=>'0'}), "\n";
     print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"));
     print $query->Tr($query->td({-colspan=>'2'}, "Legend:"));
     print $query->Tr($query->td({-class=>'r'},
@@ -909,7 +916,41 @@ sub coloured_mode_start () {
 		     $query->td({-class=>'a'},
 				"Added to file"));
     print $query->end_table(), "\n";
-    print_coloured_table();
+
+    # Print out the "table of contents".
+    if (! open (FILETABLE, "$datadir/$topic/$filetable_file")) {
+	error_return("Could not open filetable in $topic: $!");
+    }
+    print $query->p;
+    print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
+			       -border=>'0'}), "\n";
+    print $query->Tr($query->td($query->a({name=>"contents"}, "Contents:")),
+		     $query->td("&nbsp;")), "\n";
+    while (<FILETABLE>) {
+	/\|(.*)\| ([\d\.]+)$/;
+	my $filename = $1;
+	my $revision = $2;
+	my $href_filename = "#" . "$filename";
+	if ($revision eq "1.0") {
+	    # Added file.
+	    print $query->Tr($query->td({-class=>'a', -colspan=>'2'},
+					$query->a({href=>"$href_filename"},
+						  "$filename"))), "\n";
+	} elsif ($revision eq "0.0") {
+	    # Removed file.
+	    print $query->Tr($query->td({-class=>'r', -colspan=>'2'},
+					$query->a({href=>"$href_filename"},
+						  "$filename"))), "\n";
+	} else {
+	    # Modified file.
+	    print $query->Tr($query->td({-class=>'c'},
+					$query->a({href=>"$href_filename"},
+						  "$filename")),
+			     $query->td({-class=>'c'}, "&nbsp; $revision"),
+			     "\n");
+	}
+    }
+    print $query->end_table(), "\n";
 }
 
 # Render the initial start of the coloured table, with an empty row setting
@@ -1005,15 +1046,24 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 					    $current_file_revision, 1);
 		my $url = "javascript: myOpen('$url_full','CVS')";
 					
-		print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
+		print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
 					    "Diff for ",
-					    $query->a({href=>"$url"},
+					    $query->a({href=>"$url",
+						       name=>"$current_file"},
 						      "$current_file"),
-					    "version $current_file_revision"));
+					    "version $current_file_revision"),
+				 $query->td({-class=>'file', align=>'right'},
+					     $query->a({href=>"#contents"},
+						       "[Go to Contents]")));
 	    } else {
 		# No match in repository - or a new file.
-		print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
-					    "Diff for $current_file"));
+		print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
+					    "Diff for ",
+					    $query->a({name=>"$current_file"},
+						      "$current_file")),
+				 $query->td({-class=>'file', align=>'right'},
+					    $query->a({href=>"#contents"},
+						      "[Go to contents]")));
 	    }
 	}
 
@@ -1521,6 +1571,11 @@ sub submit_topic ($$$$$$$) {
     generate_header($dirname, $topic_title, $email, $reviewers, $cc,
 		    $background_col);
 
+    # Process the document file.  If it is in CVS unidiff format, then
+    # extract all the information possible to allow for intelligent
+    # displaying later.
+    process_document($dirname);
+
     # Send the author, reviewers and the cc an email with the same information.
     my $topic_url = $query->url() . build_view_url($dirname, -1, "",
 						   $default_topic_create_mode);
@@ -1559,6 +1614,123 @@ sub submit_topic ($$$$$$$) {
     print $query->p, "Email has been sent to: $email, $reviewers";
     print ", $cc" if (defined $cc && $cc ne "");
 }
+
+# Go through the document, and if it is a CVS unidiff file, extract each diff
+# into their own file, and create a filetable file to record which files
+# there are, what their CVS revisions are, what are the line offsets and what
+# diff file are they stored in.
+sub process_document($) {
+    my ($dirname) = @_;
+
+    if (! open (DOCUMENT, "$datadir/$dirname/$document_file")) {
+	error_return("Could not open document file in $dirname: $!");
+    }
+
+    # Read the meta-data part of the document.
+    while (<DOCUMENT>) {
+	last if (/^Text$/);
+    }
+
+    my $offset = 0;
+    my @filenames = ();
+    my @revisions = ();
+    my $filename = "";
+    my $revision = "";
+    for (my $diff_number = 0;
+	 read_diff_header(\*DOCUMENT, \$offset, \$filename, \$revision);
+	 $diff_number++) {
+	# The filehandle is now positioned in the interesting part of the
+	# file.
+	push @filenames, $filename;
+	push @revisions, $revision;
+
+	if (! open (DIFF, ">$datadir/$dirname/diff.$diff_number")) {
+	    error_return("Could not create diff.$diff_number: $!");
+	}
+
+	while (<DOCUMENT>) {
+	    last if (/^Index/);	# The start of the next diff header.
+	    print DIFF $_;
+	}
+	close DIFF;
+    }
+    close DOCUMENT;
+
+    # Write out the file table.
+    if (! open(FILETABLE, ">$datadir/$dirname/$filetable_file")) {
+	error_return("Could not open filetable in $dirname: $!");
+    }
+    for (my $i = 0; $i <= $#filenames; $i++) {
+	print FILETABLE "|$filenames[$i]| $revisions[$i]\n";
+    }
+    close FILETABLE;
+}
+
+# Read from $fh, and return true if we have read a diff header, with all of
+# the appropriate values set to the reference variables passed in.
+sub read_diff_header($$$$) {
+    my ($fh, $offset, $filename, $revision) = @_;
+
+    # read any ? lines, denoting unknown files to CVS.
+    my $line = "";
+    while ($line = <$fh>) {
+	$$offset++;
+	last unless $line =~ /^\?/;
+    }
+    return 0 unless defined $line;
+
+    # Depending on how this is called, the Index line may or may not be
+    # present.
+    if ($line =~ /^Index:/) {
+	$line = <$fh>;
+	$$offset++;
+    }
+    
+    # Then we expect the separator line.
+    return 0 unless $line =~ /^===================================================================$/;
+
+    # Now we expect the RCS line, whose filename should include the CVS
+    # repository, and if not, it is probably a new file.
+    $line = <$fh>;  $$offset++;
+    if ($line =~ /^RCS file: $cvsrep\/(.*),v$/) {
+	$$filename = $1;
+    } elsif ($line =~ /^RCS file: (.*)$/) {
+	$$filename = $1;
+    } else {
+	return 0;		# Not a diff header.
+    }
+
+    # Now we expect the retrieving revision line, unless it is a new or
+    # removed file.
+    $line = <$fh>;  $$offset++;
+    if ($line =~ /^retrieving revision (.*)$/) {
+	$$revision = $1;
+	$line = <$fh>;  $$offset++;
+    }
+    
+    # Now read in the diff line, followed by the legend lines.
+    return 0 unless $line =~ /^diff/;
+    $line = <$fh>;  $$offset++;
+
+    if ($line =~ /^\-\-\- \/dev\/null/) {
+	# File has been added.
+	$$revision = "1.0";
+    } elsif (! $line =~ /^\-\-\-/) {
+	return 0;
+    }
+
+    $line = <$fh>;  $$offset++;
+    if ($line =~ /^\+\+\+ \/dev\/null/) {
+	# File has been removed.
+	$$revision = "0.0";
+    } elsif (! $line =~ /^\+\+\+/) {
+	return 0;
+    }
+
+    # Now up to the line chunks, so the diff header has been successfully read.
+    return 1;
+}
+
 
 # View the contents of a specific file from CVS.  This will normally by called
 # within a new window, so there is no navigation within it.
