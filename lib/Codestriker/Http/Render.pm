@@ -184,6 +184,11 @@ sub lxr_data($$) {
 	    if ($eol_comment || $in_comment) {
 		# Currently in a comment, don't LXRify.
 		$newdata .= $token;
+	    } elsif ($token eq "nbsp" || $token eq "quot" || $token eq "amp" ||
+		     $token eq "lt" || $token eq "gt") {
+		# HACK - ignore potential HTML entities.  This needs to be
+		# done in a smarter fashion later.
+		$newdata .= $token;
 	    } else {
 		$newdata .= $self->lxr_ident($token);
 	    }
@@ -465,12 +470,12 @@ sub render_coloured_cell($$)
 	return "&nbsp;";
     }
 
-    # Add LXR links to the output.
-    $data = $self->lxr_data($data);
-
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
     $data = tabadjust($self, $self->{tabwidth}, $data, 1);
     $data =~ s/\s/&nbsp;/g;
+
+    # Add LXR links to the output.
+    $data = $self->lxr_data($data);
 
     # Unconditionally add a &nbsp; at the start for better alignment.
     return "&nbsp;$data";
@@ -843,6 +848,9 @@ sub render_monospaced_line ($$$$$$$$) {
     my ($self, $filenumber, $linenumber, $new, $data, $link,
 	$max_line_length, $class) = @_;
 
+    # Convert any identifier to their LXR links.
+    my $data = $self->lxr_data(HTML::Entities::encode($data));
+
     my $prefix = "";
     my $digit_width = length($linenumber);
     my $max_digit_width = $self->{max_digit_width};
@@ -901,10 +909,7 @@ sub render_monospaced_line ($$$$$$$$) {
 	$line_cell = "$prefix$linenumber";
     }
 
-    $data = tabadjust($self, $self->{tabwidth}, $data, 0);
-
-    # Add LXR links to the output.
-    my $newdata = $self->lxr_data(HTML::Entities::encode($data));
+    my $newdata = tabadjust($self, $self->{tabwidth}, $data, 0);
 
     if ($class ne "") {
 	# Add the appropriate number of spaces to justify the data to a length
