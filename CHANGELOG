@@ -1,3 +1,27 @@
+Version 1.5.0:
+
+* Broke up the system into a number of Perl modules to make future
+  work far easier to accomplish.
+
+* Now uses a database for storing Codestriker's data.  This simplifies
+  serching and updating of the data, compared to the previous
+  filesystem persistance.
+
+* There is now a topic search screen, which displays its results in a
+  simple topic list screen.  From here, individual topics can be
+  selected for display.
+
+* Topic now has a simple notion of state.  When a topic is created, it
+  is in state "Open".  When a review has been done and the code has
+  been committed, the author changes the state to "Committed".  If the
+  review is not to be committed, but needs to be resubmitted, the
+  author moves the topic to state "Closed".  These states are useful
+  when displaying lists of topics in the system, to see what is
+  currently pending.
+
+* A migration tool is available to automatically transfer <= 1.4.X
+  codestriker data into the database.
+
 Version 1.4.5:
 
 * Fixed minor rendering bug with line numbers.

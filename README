@@ -1,4 +1,4 @@
-Codestriker v1.4.4
+Codestriker v1.5.0b1
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 (see the CHANGELOG file for details on changes).
@@ -37,14 +37,94 @@ Installation
 Please read the CHANGELOG file for functionality changes between
 releases.
 
-I use Codestriker with mod_perl, which reduces the startup costs of
-creating a new Perl interpreter and parsing the Codestriker script for
-each request.  The installation is as follows:
+Codestriker now uses a database for storing topic information.  It has
+been tested with PostgreSQL and MySQL, and should work fine for other
+databases, as it uses the Perl DBI.  Make sure you update
+codestriker.conf appropriately for your setup.
 
-	    mkdir /var/www/codestriker
-	    chown apache.apache /var/www/codestriker
-	    cd /var/www/codestriker
-            tar zxvf /from/installed/location/codestriker.X.Y.Z.tar.gz
+----------------------------------------------------------------------
+
+For MySQL, it is necessary to download the mysql, mysql-devel and
+mysql-server packages (or equivalent for non-RedHat distros), install
+them, and to then obtain the DBD::mysql package from
+http://www.cpan.org.  Start your database with something like:
+/etc/rc.d/init.d/mysql start
+
+Then enter the following commands to create the Codestriker database,
+and a codestriker database user with password "cspasswd".  Note, you
+should substitute this with your own value, and update
+codestriker.conf accordingly.
+
+% mysql -u root mysql
+
+CREATE DATABASE codestrikerdb;
+GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
+FLUSH PRIVILEGES;
+QUIT
+
+You can then check the Codestriker database at any time using the
+following command:
+
+mysql -u codestriker -D codestrikerdb -p
+
+Note you can remove the database by entering:
+
+DROP DATABASE codestrikerdb;
+
+from a "mysql -u root mysql" session.
+
+----------------------------------------------------------------------
+
+For PostgreSQL, download all of the relevant Postgres packages.  Make
+sure your version is at least 7.1, as prior versions had heavy
+restrictions on the size of "text" fields, which make it impractical
+for use with Codestriker.  Start your database with something like:
+/etc/rc.d/init.d/postgresql start
+
+Download and install the DBD::Pg package from http://www.cpan.org.
+
+To create the codestriker database and user, issue the following:
+
+createuser --username=postgres -d -A codestriker
+createdb --username=codestriker codestrikerdb
+
+For Redhat, by default PostgreSQL accepts connections from the
+localhost.  For Debian, if you want this behaviour, you may need to
+change your /etc/postgres/pg_hba.conf file to use "trust" rather than
+"ident" if appropriate for your setup.  I have found this to be
+appropriate for my usage.
+
+You can then check the database at any time using the following
+command:
+
+psql -U codestriker codestrikerdb
+
+Note you can remove the database by entering:
+
+dropdb --username=codestriker codestrikerdb
+
+----------------------------------------------------------------------
+
+I use Codestriker with Apache and mod_perl, although there is nothing
+specific to Apache, so it should work fine for other web servers too
+just as a plain CGI script.  This is how Codestriker is installed with
+Apache under Redhat 7.1 (it will be something similar to this for
+other distributions):
+
+      mkdir /var/www/codestriker
+      cd /var/www/codestriker
+      tar zxvf /from/installed/location/codestriker.X.Y.Z.tar.gz
+      chown -R apache.apache /var/www/codestriker
+      cp /var/www/codestriker/codestriker.X.Y.Z/html/codestriker.css ../html
+
+To create all of the necessary database tables, do the following:
+
+      cd /var/www/codestriker/codestriker.X.Y.Z/bin
+      ./checksetup.pl
+
+Note checksetup.pl can be executed again and again.  It should be run
+whenever codestriker is updated, as it will automatically adjust the
+database accordingly, and check that the necessary tables exist.
 
 Put the following lines in your httpd.conf file (probably located in
 /etc/httpd/conf), so that the
@@ -61,9 +141,24 @@ Alias /codestriker/  /var/www/codestriker/codestriker.X.Y.Z/cgi-bin/
 
 PerlTaintCheck On
 
-Most distributions of Linux seem to configure apache with mod_perl, so
-the above approach is recommended.  Restart apache with something like
+Restart apache (for upgrades) with something like
 "/etc/rc.d/init.d/httpd restart" and you should be away.
+
+Migrating old data
+------------------
+
+If you are upgrading Codestriker from a version <= 1.4.X, you need to
+migrate the data from the filesystem to the database if you want to
+preserve exisitng data.  This is a very straightforward process,
+simply do the following (assuming your database is up and running).
+
+      cd /var/www/codestriker/codestriker.X.Y.Z/bin
+      ./import.pl /var/www/codestriker
+
+The argument is import.pl is the location of your previous Codestriker
+installation.  By default, all imported topics are set to state
+"Closed".  You may need to modify some to state open via your browser
+for those topics which are still pending.
 
 Compression support
 -------------------
@@ -111,17 +206,19 @@ script, as an extra security precaution.
 Future plans
 ------------
 
-Codestriker 1.5 will store its data into a database using DBI.  The
-code will also be restructured into a number of modules.  There will
-eventually be support for performing a number of queries, such as
-"show me all topics I am a reviewer of".  Topics will also have a
-state field, which can be updated.  It should be possible to also be
-able to search over the entire codestriker database for text within
-the description, title and/or comment fields.
+Some basic things like the option to delete a topic, and some more
+functionality on the view topic screen.  For using Codestriker over
+the net where bandwidth is not a luxury (ie not a local LAN), it would
+be friendlier if you could just load the topic page once, batch all of
+your comments using javascript, and then send them all at once, rather
+than having to reload the topic page for each comment that is
+submitted.
 
-Please send your comments to sits@users.sourceforge.net, or visit the
+Please mail me any other suggestions you have to
+codestriker-user@lists.sourceforge.net.  Contributions are most
+welcome!
+
 Codestriker project page: http://sourceforge.net/projects/codestriker.
-
 The latest version of codestriker can be obtained from:
 http://codestriker.sourceforge.net.
 

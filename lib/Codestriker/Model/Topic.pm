@@ -208,21 +208,25 @@ sub change_state($$$$$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    # Check that the version reflects the current version in the DB.
-    my $select_topic = $dbh->prepare_cached('SELECT version, state ' .
-					    'FROM topic WHERE id = ?');
-    my $update_topic = $dbh->prepare_cached('UPDATE topic SET ' .
-					    'version = ?, state = ?, ' .
-					    'modified_ts = ? WHERE id = ?');
+    # Check that the version reflects the current version in the DB.  Note due
+    # to a weird MySQL bug, we need to also retrieve the creation_ts and store
+    # the same value when updating the record, otherwise it gets set to the
+    # current time!
+    my $select_topic =
+	$dbh->prepare_cached('SELECT version, state, creation_ts ' .
+			     'FROM topic WHERE id = ?');
+    my $update_topic =
+	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
+			     'creation_ts = ?, modified_ts = ? WHERE id = ?');
     my $success = defined $select_topic && defined $update_topic;
     my $errmsg;
 
     # Retrieve the current topic data.
     $success &&= $select_topic->execute($topicid);
 
-    my ($current_version, $current_stateid);
+    my ($current_version, $current_stateid, $creation_ts);
     if ($success && 
-	! (($current_version, $current_stateid)
+	! (($current_version, $current_stateid, $creation_ts)
 	   = $select_topic->fetchrow_array())) {
 	# Invalid topic id.
 	$errmsg = "Invalid topic id: $topicid";
@@ -241,7 +245,8 @@ sub change_state($$$$$) {
     # topic.
     if ($new_stateid != $current_stateid) {
 	$success &&= $update_topic->execute($version+1, $new_stateid,
-					    $modified_ts, $topicid);
+					    $creation_ts, $modified_ts,
+					    $topicid);
     }
     $dbh->commit if ($success);
     Codestriker::DB::DBI->release_connection($dbh);

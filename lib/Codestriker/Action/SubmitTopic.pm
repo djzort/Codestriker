@@ -90,7 +90,7 @@ sub process($$$) {
     my $from = $email;
     my $to = $reviewers;
     my $bcc = $email;
-    my $subject = "[REVIEW] Topic \"topic_title\" created\n";
+    my $subject = "[REVIEW] Topic \"$topic_title\" created\n";
     my $body =
 	"Topic \"$topic_title\" created\n" .
 	"Author: $email\n" .

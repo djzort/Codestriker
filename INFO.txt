@@ -19,9 +19,8 @@ mysqladmin drop codestrikerdb
 
 mysql -u root mysql
 
-GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES
-ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
-
+CREATE DATABASE codestrikerdb;
+GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
 FLUSH PRIVILEGES;
 
 mysql -u codestriker -D codestrikerdb -p
