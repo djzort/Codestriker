@@ -161,12 +161,12 @@ sub lxr_data($$) {
 	    $token =~ s/(\s|&nbsp;)//g;
 	    
 	    # Check if we are entering or exiting a comment.
-	    if ($token =~ /^\/\//) {
+	    if ($token =~ /\/\//) {
 		$eol_comment = 1;
-	    } elsif ($token =~ /^\/\*/) {
-		$in_comment = 1;
-	    } elsif ($token =~ /^\*+\//) {
+	    } elsif ($token =~ /\*+\//) {
 		$in_comment = 0;
+	    } elsif ($token =~ /\/\*/) {
+		$in_comment = 1;
 	    }
 	}
     }
