@@ -102,6 +102,7 @@ sub process($$$) {
 
     # Render the HTML header.
     my $vars = {};
+    $vars->{'closehead'} = 1;
 
     my $header = Codestriker::Http::Template->new("header");
     $header->process($vars);
