@@ -7,9 +7,9 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.7.7</subtitle>
+    <subtitle>Version 1.7.8</subtitle>
     <legalnotice>
-      <para>Copyright (c) 2001, 2002, 2003</para>
+      <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
     <authorgroup>
       <author>
@@ -102,6 +102,17 @@
         part is concerned with installing Codestriker and customising
         it.  Following that is the user's guide.  Lastly, details on
         Codestriker's code structure, database schema is presented.
+      </para>
+    </sect1>
+    <sect1>
+      <title>Codestriker Usage</title>
+      <para>
+        We are assembling a list of companies which are using
+        Codestriker, which we would like to publish onto the
+        Codestriker webpage, as an indication of its widespread use.
+        We would appreciate it if you could assist us, by sending an
+        email to <email>sits@users.sourceforge.net</email> with your
+        company name.  Thank you.
       </para>
     </sect1>
   </chapter>
@@ -822,6 +833,7 @@ Alias /codestrikerhtml/  /var/www/codestriker/codestriker-X.Y.Z/html/
    Options ExecCGI
    Order allow,deny
    Allow from all
+   SetHandler cgi-script
 &lt;/Directory&gt;
 
 &lt;Directory "/var/www/codestriker/codestriker-X.Y.Z/html/"&gt;
@@ -843,6 +855,7 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
    Options ExecCGI
    Order allow,deny
    Allow from all
+   SetHandler cgi-script
 &lt;/Directory&gt;
 
 &lt;Directory "C:/codestriker/codestriker-X.Y.Z/html/"&gt;
@@ -2148,6 +2161,15 @@ PerlSwitches -T
       (including relevant contents of your apache error log file), and
       I'll be happy to help you out.
     </para>
+    <para>
+      If you see an error message like:
+      <programlisting>
+[Tue Jan  6 08:41:49 2004] [error] Bizarre copy of HASH in aassign at
+/usr/lib/perl5/5.6.0/Carp/Heavy.pm line 79      
+      </programlisting>
+      This is apparently due to a bug in Perl 5.6.0.  If you upgrade
+      to Perl 5.6.1, the problem should go away.
+    </para>
   </chapter>
 
   <chapter>
@@ -2175,6 +2197,14 @@ PerlSwitches -T
       URL: <ulink
       url="http://lists.sourceforge.net/lists/listinfo/codestriker-user">http://lists.sourceforge.net/lists/listinfo/codestriker-user</ulink>.
       Contributions are most welcome!
+    </para>
+    <para>
+      In addition, we are assembling a list of companies which are
+      using Codestriker, which we would like to publish onto the
+      Codestriker webpage, as an indication of its widespread use.  We
+      would appreciate it if you could assist us, by sending an email
+      to <email>sits@users.sourceforge.net</email> with your company
+      name.  Thank you.
     </para>
   </chapter>
       
