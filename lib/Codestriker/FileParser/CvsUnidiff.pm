@@ -25,14 +25,7 @@ sub parse ($$$) {
     # Array of results found.
     my @result = ();
 
-    # CVS diffs may start with a number of unknown files, which start with a
-    # ? character.  These lines can be skipped, as can blank lines.
     my $line = <$fh>;
-    while (defined($line) && ($line =~ /^\?/o || $line =~ /^\s*$/)) {
-        $line = <$fh>;
-    }
-    return () unless defined $line;
-
     while (defined($line)) {
 	# Values associated with the diff.
 	my $revision;
@@ -42,6 +35,16 @@ sub parse ($$$) {
 	my $binary = 0;
 	my $repmatch = 0;
 	my $diff = "";
+	
+	# CVS diffs may start with a number of unknown files, which start
+	# with a ? character.  These lines can be skipped, as can blank lines.
+	# Note, some review text is formed by concatenating multiple
+	# cvs diffs together, so the check is done here.  Also, this handles
+	# trailing whitespace.
+	while (defined($line) && ($line =~ /^\?/o || $line =~ /^\s*$/)) {
+	    $line = <$fh>;
+	}
+	return @result unless defined $line;
 
 	# For CVS diffs, the start of the diff block is the Index line.
 	return () unless defined $line && $line =~ /^Index:/o;

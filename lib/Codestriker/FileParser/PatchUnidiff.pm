@@ -25,11 +25,6 @@ sub parse ($$) {
 
     # Ignore any whitespace at the start of the file.
     my $line = <$fh>;
-    while (defined($line) && $line =~ /s\s*$/) {
-	$line = <$fh>;
-    }
-    return () unless defined $line;
-
     while (defined($line)) {
 
 	# Values associated with the diff.
@@ -38,6 +33,13 @@ sub parse ($$) {
 	my $old_linenumber = -1;
 	my $new_linenumber = -1;
 	my $binary = 0;
+
+	# Skip any heading or trailing whitespace contained in the review
+	# text.
+	while (defined($line) && $line =~ /^\s*$/) {
+	    $line = <$fh>;
+	}
+	return @result unless defined $line;
 
 	# For unidiffs, the diff line may appear first, but is optional,
 	# depending on how the diff was generated.  In any case, the line
@@ -67,6 +69,7 @@ sub parse ($$) {
 	if ($binary == 0) {
 	    # Now expect the +++ line.
 	    $line = <$fh>;
+	    return () unless defined $line;
 
 	    # Check if it is a removed file.
 	    if ($line =~ /^\+\+\+ \/dev\/null/o) {

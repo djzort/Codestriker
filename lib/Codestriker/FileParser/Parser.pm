@@ -38,6 +38,17 @@ sub parse ($$$$) {
 							   $repository);
 	}
 
+	# Output all non-CVS files into a file.
+#	if ($#diffs == -1) {
+#	    seek($fh, 0, 0);
+#	    open(CVSFAIL, ">>/tmp/cvsfail1.txt") || die "Can't open: $!";
+#	    while ($_ = <$fh>) {
+#		print CVSFAIL $_;
+#	    }
+#	    print CVSFAIL "\n\n-----------------\n\n";
+#	    close CVSFAIL;
+#	}
+
 	# Check if it is a patch unidiff file.
 	if ($#diffs == -1) {
 	    seek($fh, 0, 0);
@@ -45,6 +56,18 @@ sub parse ($$$$) {
 		Codestriker::FileParser::PatchUnidiff->parse($fh,
 							     $repository);
 	}
+
+	# Output all non patch into a file.
+#	if ($#diffs == -1) {
+#	    seek($fh, 0, 0);
+#	    open(CVSFAIL, ">>/tmp/cvsfail2.txt") || die "Can't open: $!";
+#	    while ($_ = <$fh>) {
+#		print CVSFAIL $_;
+#	    }
+#	    print CVSFAIL "\n\n-----------------\n\n";
+#	    close CVSFAIL;
+	}
+
 
 	# Last stop-gap - the file format is unknown, treat it as a
 	# single file with filename "unknown".

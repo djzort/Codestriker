@@ -29,8 +29,9 @@ sub read_unidiff_text($$$$) {
 	# Now read in the diff text until finished.
 	my $diff = "";
 	$line = <$fh>;
-	while (defined $line && $line =~ /^[ \-\+]/o) {
-	    $diff .= $line;
+	while (defined $line && $line =~ /^[ \-\+\\]/o) {
+	    # Skip lines line "\ No newline at end of file".
+	    $diff .= $line unless $line =~ /^[\\]/o;
 	    $lastpos = tell $fh;
 	    $line = <$fh>;
 	}
