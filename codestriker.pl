@@ -41,12 +41,12 @@ $sendmail = "/usr/lib/sendmail";
 # The URL to the bug tracking system.  The bug number is appended to the
 # end of this string when URLs are generated.
 $bugtracker = "";
-#$bugtracker = "http://localhost.localdomain/show_bug.cgi?num=";
+#$bugtracker = "http://localhost.localdomain/show_bug.cgi?id=";
 
 # The URL to the CVS viewing system.  The filename is appended to the end
 # of this string when URLs are generated.
 $cvsviewer = "";
-#$cvsviewer = "http://localhost.localdomain/cgi-bin/cvsweb.cgi/";
+#$cvsviewer = "http://localhost.localdomain/cgi-bin/viewcvs.cgi/";
 
 # How the CVS repository is accessed.  For local access, this is set as the
 # empty string.
@@ -467,8 +467,15 @@ sub generate_header($$$$$$) {
  function myOpen(url,name) {
      windowHandle = window.open(url,name,
 				'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resize=yes,menubar=no');
+     if (windowHandle.opener == null) {
+	 windowHandle.opener = self;
+     }
      windowHandle.focus();
  }
+
+    function fetch(url) {
+	opener.location = url;
+    }
  //-->
 </SCRIPT>
 EOF
@@ -1944,9 +1951,8 @@ sub render_monospaced_line ($$$$$$) {
 	    $line_cell =
 		$query->td({class=>'ms'}, "$prefix" .
 			   $query->a({name=>"$linenumber",
-				      href=>"$edit_url",
+				      href=>"javascript:fetch('$edit_url')",
 				      class=>'mscom',
-				      target=>"top",
 				      title=>"$js_title",
 				      onmouseover=>
 					  "window.status='$js_title'; " .
@@ -1958,8 +1964,7 @@ sub render_monospaced_line ($$$$$$) {
 	    $line_cell =
 		$query->td({class=>'ms'}, "$prefix" .
 			   $query->a({name=>"$linenumber",
-				      href=>"$edit_url",
-				      target=>"top",
+				      href=>"javascript:fetch('$edit_url')",
 				      class=>'mscom'},
 				     $query->span({-class=>'msnocom'},
 						  "$linenumber")));
