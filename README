@@ -38,8 +38,8 @@ http://codestriker.sourceforge.net
 Installation
 ------------
 
-Please read the CHANGELOG file for functionality changes between
-releases.
+*** Please read the CHANGELOG file for functionality changes between
+    releases. ***
 
 Codestriker now uses a database for storing topic information.  It has
 been tested with PostgreSQL and MySQL, and should work fine for other

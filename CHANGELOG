@@ -1,3 +1,5 @@
+*** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
+
 Version 1.6.1
 
 * Modified to use Net::SMTP to allow Codestriker to run under Windows,
@@ -5,7 +7,7 @@ Version 1.6.1
 
 * Allow for the list/search topics and topic deletion to possibly be
   disabled.  This is required for a codestriker server which is
-  handling "anonymous" reviews.
+  handling "anonymous" reviews on a public site.
 
 * Added a "repository" attribute associated with a topic.  This is the
   source code repository associated with the review, and by default is
@@ -20,7 +22,7 @@ Version 1.6.1
 
   http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot
 
-  For a local repository, it can be set as just:
+  For a local repository, it could be just:
 
   /usr/local/cvsroot
 
@@ -28,6 +30,8 @@ Version 1.6.1
   be displayed in an "anti spam" form.  Eg:
 
   sits@users.sf.net -> sits@use...
+
+  This is required for a public deployment of Codestriker.
 
 * Created header and trailer templates which appear on every screen,
   to assist in customising a site's look.
