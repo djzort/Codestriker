@@ -1,7 +1,7 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
-Version 1.8.4
+Version 1.8.3
 
 * It is now possible to specify multiple metrics associated with a
   comment "thread".  In previous versions of Codestriker, there was a
@@ -45,8 +45,6 @@ Version 1.8.4
 * Fixed bug where a comment with a " character in it would cause
   Javascript errors with IE on the view topic page.
 
-Version 1.8.3
-
 * In the add comment window, clicking on the "increase context" or
   "decrease context" would erase any text which had been written.
   This has now been fixed by Kannan Goundan.
@@ -58,6 +56,14 @@ Version 1.8.3
 
 * Committed in a whole heap of test scripts from Jason Remilliard
   which are located in the test/ subdirectory.
+
+* The clearcase diff parser can now handle diffs which describe chunk
+  movements such as:
+
+  -----[deleted/moved 40 after 44 (now at 152)]----- 
+  -----[deleted/moved 42-43 after 44 (now at 154-155)]----- 
+  -----[after 135 inserted/moved 152 (was at 40)]-----
+  -----[after 135 inserted/moved 154-155 (was at 42-43)]-----
 
 Version 1.8.2
 

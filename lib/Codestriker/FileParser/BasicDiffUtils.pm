@@ -26,52 +26,52 @@ sub read_diff_text($$$$$$) {
     my $new_length = 0;
 
     if ($line =~ /^(\d+)a(\d+),(\d+)$/o ||
-	$line =~ /^\-\-\-\-\-\[after (\d+) inserted (\d+)\-(\d+)\]\-\-\-\-\-$/o) {
+	$line =~ /^\-\-\-\-\-\[after (\d+) inserted(?:\/moved)? (\d+)\-(\d+)(?: \(was at [\d\-]+\))?\]\-\-\-\-\-\s*$/o) {
 	# Added multiple lines of text.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
 	$new_length = $3 - $2 + 1;
     } elsif ($line =~ /^(\d+)a(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[after (\d+) inserted (\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[after (\d+) inserted(?:\/moved)? (\d+)(?: \(was at [\d\-]+\))?\]\-\-\-\-\-\s*$/o) {
 	# Added a single line of text.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
 	$new_length = 1;
     } elsif ($line =~ /^(\d+),(\d+)d(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[deleted (\d+)\-(\d+) after (\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[deleted(?:\/moved)? (\d+)\-(\d+) after (\d+)(?: \(now at [\d\-]+\))?\]\-\-\-\-\-\s*$/o) {
 	# Multiple lines deleted.
 	$old_linenumber = $1;
 	$new_linenumber = $3;
 	$old_length = $2 - $1 + 1;
     } elsif ($line =~ /^(\d+)d(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[deleted (\d+) after (\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[deleted(?:\/moved)? (\d+) after (\d+)(?: \(now at [\d\-]+\))?\]\-\-\-\-\-\s*$/o) {
 	# Single line deleted.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
 	$old_length = 1;
     } elsif ($line =~ /^(\d+),(\d+)c(\d+),(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[(\d+)\-(\d+) changed to (\d+)\-(\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[(\d+)\-(\d+) changed to (\d+)\-(\d+)\]\-\-\-\-\-\s*$/o) {
 	# Multiple text lines changed.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
 	$old_length = $2 - $1 + 1;
 	$new_length = $4 - $3 + 1;
     } elsif ($line =~ /^(\d+)c(\d+),(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[(\d+) changed to (\d+)\-(\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[(\d+) changed to (\d+)\-(\d+)\]\-\-\-\-\-\s*$/o) {
 	# Multiple source lines changed to single line.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
 	$old_length = 1;
 	$new_length = $3 - $2 + 1;
     } elsif ($line =~ /^(\d+),(\d+)c(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[(\d+)\-(\d+) changed to (\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[(\d+)\-(\d+) changed to (\d+)\]\-\-\-\-\-\s*$/o) {
 	# Single source line changed to multiple lines.
 	$old_linenumber = $1;
 	$new_linenumber = $3;
 	$old_length = $2 - $1 + 1;
 	$new_length = 1;
     } elsif ($line =~ /^(\d+)c(\d+)$/o ||
-	     $line =~ /^\-\-\-\-\-\[(\d+) changed to (\d+)\]\-\-\-\-\-$/o) {
+	     $line =~ /^\-\-\-\-\-\[(\d+) changed to (\d+)\]\-\-\-\-\-\s*$/o) {
 	# Single line changed to another line.
 	$old_linenumber = $1;
 	$new_linenumber = $2;
