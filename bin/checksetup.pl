@@ -786,7 +786,7 @@ eval {
 	    flush STDOUT;
 	    my $answer = <STDIN>;
 	    chop $answer;
-	    if ($answer ne "y") {
+	    if (! ($answer =~ /^y/i)) {
 		print "Aborting script... update \@old_comment_states in this script and run again.\n";
 		$stmt->finish();
 		exit(1);

@@ -290,9 +290,6 @@ sub _untaint($$$) {
 	    my $error_message = "Input parameter $name has invalid value: " .
 		"\"$value\"";
 	    $self->{http_response}->error($error_message);
-
-	    # Reset the value, so that if it is cookie-based, it gets reset.
-	    $self->{$name} = "";
 	}
     } else {
 	$self->{$name} = "";
@@ -339,14 +336,14 @@ sub _untaint_comma_digits($$) {
 sub _untaint_email($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*[-_\w\.]{1,255}\@[-_\w\.]{1,255}[\s]*');
+    $self->_untaint($name, '[\s]*[-_\w\.]{1,255}(\@[-_\w\.]{1,255})?[\s]*');
 }
 
 # Untaint a list of email addresses.
 sub _untaint_emails($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*([-_\w\.]{1,255}\@[-_\w\.]{1,255}[\s,;]*){1,100}[\s]*');
+    $self->_untaint($name, '[\s]*([-_\w\.]{1,255}(\@[-_\w\.]{1,255})?[\s,;]*){1,100}[\s]*');
 }
 
 # Untaint a list of bug ids.
