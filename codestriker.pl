@@ -44,7 +44,7 @@ $cvsaccess = "";
 
 # The path of the cvs repository";
 #$cvsrep = "/cvsroot/codestriker";
-$cvsrep = "/home/sits/cvs";
+$cvsrep = "/usr/local/cvsroot";
 
 # The CVS command to execute in order to retrieve file data.  The revision
 # argument and filename is appended to the end of this string.
@@ -606,7 +606,7 @@ sub build_edit_url ($$$$) {
 sub build_view_cvs_file_url ($$$) {
     my ($file, $rev, $line) = @_;
     my $viewline = $line - $diff_context;
-    $viewline = 0 if $viewline < 0;
+    $viewline = 1 if $viewline < 1;
     return "?action=view_cvs_file&filename=$file&revision=$rev" .
 	"&linenumber=$line#${viewline}";
 }
@@ -984,16 +984,16 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 				       -border=>'0',
 				       -cellspacing=>'0',
 				       -cellpadding=>'0'});
-	    print $query->Tr($query->td({-width=>'3%'}, "&nbsp;"),
-			     $query->td({-width=>'47%'}, "&nbsp;"),
-			     $query->td({-width=>'3%'}, "&nbsp;"),
-			     $query->td({-width=>'47%'}, "&nbsp;"));
+	    print $query->Tr($query->td({-width=>'2%'}, "&nbsp;"),
+			     $query->td({-width=>'48%'}, "&nbsp;"),
+			     $query->td({-width=>'2%'}, "&nbsp;"),
+			     $query->td({-width=>'48%'}, "&nbsp;"));
 
 	    if ($cvsmatch) {
 		# File matches something is CVS repository.
 		my $url_full = $query->url() .
 		    build_view_cvs_file_url($current_file,
-					    $current_file_revision, 0);
+					    $current_file_revision, 1);
 		my $url = "javascript: myOpen('$url_full','CVS')";
 					
 		print $query->Tr({-bgcolor=>"$diff_top_heading_col"},
@@ -1198,14 +1198,16 @@ sub render_linenumber($$$$) {
     my $linedata;
     if (defined $comment_exists{$line}) {
 	if (defined $face && $face ne "") {
-	    $linedata = "<FONT FACE=\"$face\" " .
+	    $linedata = "<FONT FACE=\"$face\" SIZE=\"$diff_font_size\" " .
 		"COLOR=\"$comment_line_colour\">$line</FONT>";
 	} else {
-	    $linedata = "<FONT COLOR=\"$comment_line_colour\">$line</FONT>";
+	    $linedata = "<FONT SIZE=\"$diff_font_size\" " .
+		"COLOR=\"$comment_line_colour\">$line</FONT>";
 	}
     } else {
 	if (defined $face && $face ne "") {
-	    $linedata = "<FONT FACE=\"$face\">$line</FONT>";
+	    $linedata = "<FONT SIZE=\"$diff_font_size\" " .
+		"FACE=\"$face\">$line</FONT>";
 	} else {
 	    $linedata = $line;
 	}
