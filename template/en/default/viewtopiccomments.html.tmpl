@@ -43,15 +43,15 @@ function SelectFilter(post)
     }
     else
     {
-    	window.form.action = '[% view_comments_url %]' + url ;
-        window.form.post();
+    	document.form.action = '[% view_comments_url %]' + url ;
     }
+    return true;
 }
 
 // -->
 </SCRIPT>
 
-<FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="SelectFilter(1)">
+<FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="return SelectFilter(1)">
 <INPUT TYPE="hidden" NAME="action" VALUE="change_comments_state">
 <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
 
