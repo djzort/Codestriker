@@ -7,6 +7,11 @@ Version 1.8.3
   "decrease context" would erase any text which had been written.
   This has now been fixed by Kannan Goundan.
 
+* Increasing/decreasing the context from the add comment window would
+  not focus the main browser window to the exact line the comment was
+  made from, after the comment has been submitted.  This has now been
+  fixed.
+
 Version 1.8.2
 
 * Codestriker now has the ability to view a specific file at a time in

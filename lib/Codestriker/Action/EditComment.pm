@@ -74,10 +74,10 @@ sub process($$$) {
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
 	$url_builder->edit_url($fn, $line, $new, $topicid,
-			       $inc_context, "", "");
+			       $inc_context, $anchor, "");
     my $dec_context_url =
 	$url_builder->edit_url($fn, $line, $new, $topicid,
-			       $dec_context, "", "");
+			       $dec_context, $anchor, "");
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
     $vars->{'context'} = $query->pre(
