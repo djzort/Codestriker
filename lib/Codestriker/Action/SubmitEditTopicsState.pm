@@ -66,7 +66,7 @@ sub process($$$) {
 	    $rc = $topic->change_state($topic_state);
 	} else {
 	    # Stale version.
-	    $rc = $Codestriker::STATE_VERSION;
+	    $rc = $Codestriker::STALE_VERSION;
 	}
 
 	# Record if there was a problem in changing the state.
