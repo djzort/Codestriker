@@ -59,7 +59,10 @@ sub process($$$) {
 sub process_download($$$) {
     my ($type, $http_input, $http_response) = @_;
 
-    print "Content-Type: text/plain\n\n";
+    my $query = $http_response->get_query();
+    print $query->header(-type=>'text/plain',
+			 -attachment=>"metrics.csv",
+			 -filename=>"metrics.csv");
 
     my $columns = Codestriker::Model::MetricStats::get_download_headers();
 
