@@ -3,6 +3,15 @@
 
 Version 1.8.2
 
+* Codestriker now has the ability to view a specific file at a time in
+  the view topic screen, with previous/next file links.  The old
+  behaviour of viewing the entire topic text in one page is still the
+  default behaviour.  The default behaviour can be changed by setting
+  the $default_file_to_view variable in the configuration file.  Note
+  there are now links on the view topic screen so the user can choose
+  dynamically which viewing mode they would prefer to use.
+  Contribution by Oliver Lohmann <oliver_lohmann@gmx.de>.
+
 * Codestriker can now sort by the column headers in the topic list
   view, from Jason Remilliard.
 

@@ -27,6 +27,7 @@ sub process($$$) {
     my $topicid = $http_input->get('topic');
     my $mode = $http_input->get('mode');
     my $brmode = $http_input->get('brmode');
+    my $fview = $http_input->get('fview');
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
     my $feedback = $http_input->get('feedback');
@@ -118,6 +119,9 @@ sub process($$$) {
     if (! defined $brmode) {
         $brmode = $Codestriker::default_topic_br_mode;
     }
+    if (! defined $fview) {
+	    $fview = $Codestriker::default_file_to_view;
+    }
     $vars->{'mode'} = $mode;
     $vars->{'brmode'} = $brmode;
     $vars->{'states'} = \@Codestriker::topic_states;
@@ -146,16 +150,16 @@ sub process($$$) {
     # option.
     my $coloured_url =
 	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE,
-			       $brmode);
+			       $brmode, $fview);
     my $coloured_mono_url =
 	$url_builder->view_url($topicid, -1,
-			       $Codestriker::COLOURED_MONO_MODE, $brmode);
+			       $Codestriker::COLOURED_MONO_MODE, $brmode, $fview);
     my $br_normal_url =
 	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_NORMAL_MODE);
+			       $Codestriker::LINE_BREAK_NORMAL_MODE, $fview);
     my $br_assist_url =
 	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_ASSIST_MODE);
+			       $Codestriker::LINE_BREAK_ASSIST_MODE, $fview);
 	
     if ($mode == $Codestriker::COLOURED_MODE) {
 	print " View in " .
@@ -181,7 +185,7 @@ sub process($$$) {
     my $change_tabwidth_url;
     $change_tabwidth_url =
 	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
-					"", "", 0, $brmode);
+					"", "", 0, $brmode, $fview);
 
     print " Tab width set to $tabwidth (";
     print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
@@ -200,19 +204,29 @@ sub process($$$) {
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
 						\@revisions, \@binary, -1,
-						$brmode);
+						$brmode, $fview);
 
     # Display the data that is being reviewed.
     $render->start();
 
     # Retrieve the delta set comprising this review.
-    my @deltas = Codestriker::Model::Delta->get_delta_set($topicid);
 
-    # Render the deltas.
     my $old_filename = "";
+    
+    # Determine which deltas are to be retrieved.
+    my @deltas = ();
+    if ($fview != -1) {
+	# Get only the deltas for the selected file.    
+        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, $fview);
+    }
+    else {
+	# Get the whole delta data.
+        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, -1);
+    }
+
+    # Now render the selected deltas.
     for (my $i = 0; $i <= $#deltas; $i++) {
 	my $delta =  $deltas[$i];
-
 	$render->delta($delta);
     }
 

@@ -371,7 +371,7 @@ sub get_topic_size_in_lines {
 
     my ($self) = @_;
 
-    my @deltas = Codestriker::Model::Delta->get_delta_set($self->{topicid});
+    my @deltas = Codestriker::Model::Delta->get_delta_set($self->{topicid}, -1);
 
     my $line_count = 0;
 

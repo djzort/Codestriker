@@ -34,9 +34,10 @@ sub new {
 }
 
 # Retrieve the ordered list of deltas that comprise this review.
-sub get_delta_set($$) {
-    my ($type, $topicid) = @_;
-    return $type->get_deltas($topicid, -1);
+# Input -1 for filenumber for a full file list of a specific topic.
+sub get_delta_set($$$) {
+    my ($type, $topicid, $filenumber) = @_;
+    return $type->get_deltas($topicid, $filenumber);
 }
 
 # Retrieve the delta for the specific filename and linenumber.

@@ -49,10 +49,10 @@ my @view_file_plus_offset = ();
 my $COMMENT_LINE_COLOUR = "red";
 
 # Constructor for rendering complex data.
-sub new ($$$$$$$\%\@$$\@\@\@$) {
+sub new ($$$$$$$\%\@$$\@\@\@$$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comments, $tabwidth, $repository, $filenames_ref,
-	$revisions_ref, $binaries_ref, $max_line_length, $brmode) = @_;
+	$revisions_ref, $binaries_ref, $max_line_length, $brmode, $fview) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -66,7 +66,11 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
     if (! defined $brmode) {
         $brmode = $Codestriker::default_topic_br_mode;
     }
+    if (! defined $fview) {
+	$fview = $Codestriker::default_file_to_view;
+    }	
     $self->{brmode} = $brmode;
+    $self->{fview}  = $fview;
     $self->{comments} = $comments;
     $self->{tabwidth} = $tabwidth;
     $self->{repository} = $repository;
@@ -259,18 +263,10 @@ sub delta ($$$$$$$$$$) {
 	# Special formatting for full file upload that is not a diff.
         # If it not a diff, show the entire delta (actually the file
         # contents) in a single column.
-        print $query->start_table({-width=>'100%',
-				   -border=>'0',
-				   -cellspacing=>'0',
-				   -cellpadding=>'0'}), "\n";
-        print $query->Tr($query->td({-width=>'2%'}, "&nbsp;"),
-			 $query->td({-width=>'98%'}, "&nbsp;"),"\n");
+	$self->delta_file_header($filename, $revision, $repmatch);
+
+        print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),"\n");
 	
-	print $query->Tr($query->td({-class=>'file'}),
-                         $query->td({-class=>'file'},
-				    "File  ",
-				    $query->a({name=>$filename},
-					      $filename)));
 	my @lines = split /\n/, $text;
         for (my $i = 0; $i <= $#lines; $i++) {
 	    my $line = $lines[$i];
@@ -301,6 +297,10 @@ sub delta_file_header ($$$$) {
     my ($self, $filename, $revision, $repmatch) = @_;
 
     my $query = $self->{query};
+    
+    # We need the file names for building the forward and backward
+    # url Strings.
+    my $filenames = $self->{filenames_ref};
 
     # Close the table, update the current filename, and open a new table.
     print $query->end_table();
@@ -310,8 +310,50 @@ sub delta_file_header ($$$$) {
     # Url to the table of contents on the same page.
     my $contents_url =
 	$self->{url_builder}->view_url($self->{topic}, -1,
-				       $self->{mode}, $self->{brmode})
-	. "#contents";
+				       $self->{mode}, $self->{brmode}, $self->{fview})
+                                       . "#contents";
+				       
+    # Variables to store the navigation Urls.	
+    my $fwd_index = "";
+    my $bwd_index = "";
+    my $fwd_url   = "";
+    my $bwd_url   = "";
+    
+    # Get the current file index.
+    my $cfi = $self->{fview};
+    
+    # Store the current view mode, single view = 0, all files = -1.
+    my $vmode = $self->{fview} == -1 ? -1 : 0; 
+    
+    # No better idea how I can get the array index of the current file. In the
+    # single display mode you got it through fview - but in multi mode?
+    if ($cfi == -1) {
+    	for (my $i = 0; $i <= $#$filenames; $i++) {
+	    if ($$filenames[$i] eq $filename) {
+		$cfi = $i;
+		last;
+	    }
+    	}
+    }
+    
+    # Check the bounds for the previous and next browser.  A value of -1
+    # indicates there it is not a valid link.
+    $fwd_index = ($cfi+1 > $#$filenames ? -1 : $cfi+1);
+    $bwd_index = ($cfi-1 < 0 ? -1 : $cfi-1);
+	
+    # Build the urls for next and previous file. Differ through $vmode between all and single file review.
+    if ($fwd_index != -1) {
+	$fwd_url = $self->{url_builder}->view_url($self->{topic}, -1,
+						  $self->{mode}, $self->{brmode},
+						  $vmode == -1 ? -1 : $fwd_index)
+                                 	          . "#$$filenames[$fwd_index]";
+    }
+    if ($bwd_index != -1) {
+	$bwd_url = $self->{url_builder}->view_url($self->{topic}, -1,
+						  $self->{mode}, $self->{brmode},
+						  $vmode == -1 ? -1 : $bwd_index)
+		                                  . "#$$filenames[$bwd_index]";
+    }
 
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
@@ -343,20 +385,26 @@ sub delta_file_header ($$$$) {
 			       $revision_text);
 	}
 
-	# Output the "back to contents" link.
-	print $query->Tr($cell,
-			 $query->td({-class=>'file', align=>'right'},
-				    $query->a({href=>$contents_url},
-					      "[Go to Contents]")));
+	# Output the "back to contents" link
+	# and some browsing links for visiting
+	# the previous and next file (<<, >>).
+	
+	print $query->Tr($cell,     # = file header     
+		
+		         $query->td({-class=>'file', align=>'right'},
+				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
+			            $query->a({href=>$contents_url},"[Top]"),
+			            ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
     } else {
 	# No match in repository, or a new file.
 	print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
-				    "Diff for ",
-				    $query->a({name=>$filename},
-					      $filename)),
+				    "File ",
+				    $query->a({name=>$filename},$filename)),
+                                    
 			 $query->td({-class=>'file', align=>'right'},
-				    $query->a({href=>$contents_url},
-					      "[Go to contents]")));
+				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
+				    $query->a({href=>$contents_url},"[Top]"),
+				    ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
     }
 
 }
@@ -820,7 +868,11 @@ sub _coloured_mode_start($) {
     my $topic = $self->{topic};
     my $mode = $self->{mode};
     my $brmode = $self->{brmode};
+    my $fview = $self->{fview};
+    my $display_all_url = $self->{url_builder}->view_url($topic, -1, $mode, $brmode, -1);
+    my $display_single_url = $self->{url_builder}->view_url($topic, -1, $mode, $brmode, 0);
 
+    
     # Print out the "table of contents".
     my $filenames = $self->{filenames_ref};
     my $revisions = $self->{revisions_ref};
@@ -829,17 +881,37 @@ sub _coloured_mode_start($) {
     print $query->p;
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
-    print $query->Tr($query->td($query->a({name=>"contents"}, "Files In Topic:")),
-		     $query->td("&nbsp;")), "\n";
+    
+	       
+    # Include a link to view all files in a topic, if we are in single
+    # display mode.
+    if ($fview != -1) {
+    	print $query->Tr($query->td($query->a({name=>"contents"}, "Files in Topic: ("),
+				    $query->a({href=>$display_all_url},
+					      "view all files"), ")"),
+			 $query->td("&nbsp;")), "\n";
+    }
+    else {
+	print $query->Tr($query->td($query->a({name=>"contents"}, "Files in Topic:")),
+			 $query->td("&nbsp;")), "\n";
+    }
     
     my $url_builder = $self->{url_builder};
     for (my $i = 0; $i <= $#$filenames; $i++) {
 	my $filename = $$filenames[$i];
 	my $revision = $$revisions[$i];
-	my $href_filename = $url_builder->view_url($topic, -1, $mode, $brmode) .
+	my $href_filename = $url_builder->view_url($topic, -1, $mode, $brmode, $i) .
+	    "#" . "$filename";
+	my $anchor_filename = $url_builder->view_url($topic, -1, $mode, $brmode, -1) .
 	    "#" . "$filename";
 	my $tddata = $$binaries[$i] ? $filename :
-	    $query->a({href=>"$href_filename"}, "$filename");
+	    $query->a({href=>$href_filename}, "$filename");
+
+	if ($fview == -1) {
+	    # Add a jump to link for the all files view.
+	    $tddata = "[" . $query->a({href=>$anchor_filename}, "Jump to") . "] " . $tddata;
+	}
+
 	my $class = "";
 	$class = "af" if ($revision eq $Codestriker::ADDED_REVISION);
 	$class = "rf" if ($revision eq $Codestriker::REMOVED_REVISION);
@@ -848,8 +920,8 @@ sub _coloured_mode_start($) {
  	    $revision eq $Codestriker::REMOVED_REVISION ||
  	    $revision eq $Codestriker::PATCH_REVISION) {
  	    # Added, removed or patch file.
- 	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
- 					$tddata)) . "\n";
+	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
+					$tddata)) . "\n";
  	} else {
  	    # Modified file.
  	    print $query->Tr($query->td({-class=>'cf'}, $tddata),

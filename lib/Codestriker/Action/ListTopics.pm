@@ -112,7 +112,7 @@ sub process($$$) {
 				      $stext, $stitle,
 				      $sdescription, $scomments,
 				      $sbody, $sfilename,
-				      [ split ','. $sstate] , \@project_ids);
+				      [ split ',', $sstate] , \@project_ids);
 
     # The list of topics.
     my @topics;
