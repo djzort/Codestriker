@@ -183,7 +183,8 @@ sub main() {
 	    my @deltas =
 		Codestriker::FileParser::Parser->parse(\*TEMP_FILE,
 						       "text/plain",
-						       $repository);
+						       $repository,
+						       $topicid);
 	    close TEMP_FILE;
 	    unlink($tmpfile);
 

@@ -602,7 +602,7 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
 	# Parse the document, and extract the diffs out of it.
 	@deltas =
 	    Codestriker::FileParser::Parser->parse(\*TEMP_FILE, "text/plain",
-						   $repository);
+						   $repository, $topicid);
 	print "Creating $#deltas deltas for topic $topicid\n";
 	my $deletefile_stmt =
 	    $dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');

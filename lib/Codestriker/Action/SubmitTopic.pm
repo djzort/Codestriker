@@ -157,7 +157,8 @@ sub process($$$) {
 
     # Try to parse the topic text into its diff chunks.
     my @deltas =
-	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository);
+	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
+					       $topicid);
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {

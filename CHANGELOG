@@ -34,6 +34,9 @@ Version 1.7.1
 * Support for parsing output from "cvs rdiff -uN -r TAG1 -r TAG2
   module".  This was required to support the "TAG input" method above.
 
+* Make sure that topic text that has DOS line endings \r\n are
+  correctly parsed.
+
 * Fixed a bug where searches over comment data wasn't returning
   correct results.
 
