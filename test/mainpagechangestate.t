@@ -132,7 +132,7 @@ sub CreateTopic
         topic_description=>'description',
         email=>$CodestrikerTest::Config::email_adddress[0],
         reviewers=>$CodestrikerTest::Config::email_adddress[1],
-        topic_file=>'testtopictexts/htmlfile.txt',
+        topic_file=>'testtopictexts/txt-htmlfile.txt',
         cc=>'');
 
     ok( $confirmPage->TopicCreated(),"created topic $title" );

@@ -1,6 +1,16 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.6
+
+* Extra options are now available in the codestriker.conf file in
+  regards to when emails are sent out.  It is now possible to control
+  whether emails are sent to the topic author and/or the comment
+  author when new comments are created.  Also, there is an option
+  which determines if all reviewers are notified if the topic's state
+  is changed.  This is all controlled by the $email_send_options
+  configuration item.  From Jason Remillard.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

@@ -61,7 +61,7 @@ foreach my $newState (@states)
     ok( $properties->CompareProperties( 'topic_state',$newState),"verify state to $newState");    
 }
 
-ok( $properties->SetTopicProperties( 'topic_state','Delete'),"delete topic, cleanup");
+ok( $properties->SetTopicProperties( 'topic_state','Deleted'),"delete topic, cleanup");
 
 sub TestField
 {
@@ -82,7 +82,6 @@ sub TestField
     {
         push @new_values,$CodestrikerTest::Config::email_adddress[0];
         push @new_values,$CodestrikerTest::Config::email_adddress[1];
-        push @bad_values,"xxxx";
     }
     elsif ($type eq 'email_list')
     {
@@ -98,9 +97,6 @@ sub TestField
         push @new_values,"$em1;$em2";
 
         push @new_values," $em1 , $em2 ";
-
-        push @bad_values,"xxxx";
-        push @bad_values,"$em1,xxxx";
     }
 
     if ( $allow_empty )

@@ -29,7 +29,7 @@ foreach my $topic (@topics)
 
     my $properties = $topic_content->GetLink('Topic Properties');
 
-    ok( $properties->SetTopicProperties( topic_state=>'Delete'),"delete topic $topic->{title}");
+    ok( $properties->SetTopicProperties( topic_state=>'Deleted'),"delete topic $topic->{title}");
 
 }
 

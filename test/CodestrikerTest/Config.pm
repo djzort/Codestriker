@@ -34,7 +34,8 @@ sub SetConfigOption
     close FILE;
 }
 
-BEGIN
+
+sub ReloadConfiguration
 {
     $run_quick = 0;
     $check_help_links = 0;
@@ -53,14 +54,17 @@ BEGIN
     close CONFIG_FILE;
 
     $title = "Codestriker $version";
+}
+
+# called at the start of each test. Used to process the command line args
+# from runtests.pl and reset the config of codestriker.
+sub ProcessCommandLine
+{
+    ReloadConfiguration();
 
     # Restore the default config file that is stored in the current directory.
     RestoreDefaultConfiguration();
-}
 
-
-sub ProcessCommandLine
-{
     if ( $ENV{CSTEST_OPTIONS} )
     {
         push @ARGV, split /\s/,$ENV{CSTEST_OPTIONS};

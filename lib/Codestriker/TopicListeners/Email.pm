@@ -92,6 +92,9 @@ sub topic_changed($$$$) {
     # removed reviewer,cc - sent to the removed reviewer, and author if != user.
     # added reviwer,cc - send to the new cc, and author if != user.
     # any change not made by the author, sent to the author.
+    #
+    # If topic_state_change_sent_to_reviewers is true, then topic state changes
+    # will be sent out to the reviewers.
 
     # Record the list of email addresses already handled.
     my %handled_addresses = ();
@@ -142,6 +145,15 @@ sub topic_changed($$$$) {
         $handled_addresses{ $user } = 1;
     }
 
+    # Check for state changes
+    if ($topic->{topic_state} ne $topic_orig->{topic_state} && 
+        $Codestriker::email_send_options->{topic_state_change_sent_to_reviewers}) {
+
+        foreach my $user ( split /, /, $topic->{reviewers} ) {
+            $handled_addresses{ $user } = 1;      
+        }
+    }
+
     my @to_list = keys( %handled_addresses );
 
     if ( @to_list ) {
@@ -160,22 +172,7 @@ sub topic_changed($$$$) {
 sub send_topic_changed_email {
     my ($self, $user_that_made_the_change, $topic_orig, $topic,@to_list) = @_;
 
-    my $changes;
-
-    # First line is naming names on who made the change to the topic.
-    if ($user_that_made_the_change ne "") {
-        $changes .= "The following changes were made by $user_that_made_the_change.\n";
-    }
-    else {
-        my $host = $ENV{'REMOTE_HOST'};
-	my $addr = $ENV{'REMOTE_ADDR'};
-
-        $host = "(unknown)" if !defined($host);
-	$addr = "(unknown)" if !defined($addr);
-
-        $changes .= "The following changes were made by an unknown user from " . 
-                    "host $host and address $addr\n";
-    }
+    my $changes = "";
 
     # Check for author change.
     if ($topic->{author} ne $topic_orig->{author}) {
@@ -229,11 +226,6 @@ sub send_topic_changed_email {
         $changes .= "The description was changed.\n";
     }
 
-    # Check for state changes
-    if ($topic->{topic_state} ne $topic_orig->{topic_state} ) {
-        $changes .= "The state was changed to $topic->{topic_state}.\n";
-    }
-
     if ($topic->{project_name} ne $topic_orig->{project_name}) {
         $changes .= "The project was changed to $topic->{project_name}.\n";
     }
@@ -241,6 +233,38 @@ sub send_topic_changed_email {
     if ($topic->{bug_ids} ne $topic_orig->{bug_ids}) {
         $changes .= "The bug list was changed to $topic->{bug_ids}.\n";
     }
+
+    my $change_event_name = "Modified";
+
+    # Check for state changes, has to be the last check.
+    if ($topic->{topic_state} ne $topic_orig->{topic_state} ) {
+        
+        if ( $changes eq "" ) {
+            # The state change is the only thing changed. This is a common
+            # case, so tell people in the title what state the topic is in 
+            # now.
+            $change_event_name = $topic->{topic_state};
+        }
+
+        $changes .= "The state was changed to $topic->{topic_state}.\n";
+    }
+
+    # First line is naming names on who made the change to the topic.
+    if ($user_that_made_the_change ne "") {
+        $changes = "The following changes were made by $user_that_made_the_change.\n" .
+            $changes
+    }
+    else {
+        my $host = $ENV{'REMOTE_HOST'};
+	my $addr = $ENV{'REMOTE_ADDR'};
+
+        $host = "(unknown)" if !defined($host);
+	$addr = "(unknown)" if !defined($addr);
+
+        $changes = "The following changes were made by an unknown user from " . 
+                    "host $host and address $addr\n" . $changes;
+    }
+
 
     # See if anybody needs an mail, if so then send it out.
     if (@to_list) {
@@ -271,7 +295,7 @@ sub send_topic_changed_email {
         my $cc = "";
 
         # Send off the email to the revelant parties.
-        $self->_send_topic_email($topic, 0, "Modified", 1, $from, 
+        $self->_send_topic_email($topic, 0,$change_event_name , 1, $from, 
 				 $to, $cc, $bcc,$changes);
     }
 }
@@ -319,7 +343,13 @@ sub comment_create($$$) {
        
     my $from = $comment->{author};
     my $to = $topic->{author};
-    my $bcc = $comment->{author};
+
+    # don't blind copy the comment authors unless configured to.
+    my $bcc = "";
+    if ( $Codestriker::email_send_options->{comments_sent_to_commenter} ) {
+        $bcc = $comment->{author};
+    }
+
     my $subject = "[REVIEW] Topic \"$topic->{title}\" comment added by $comment->{author}";
     my $body =
 	"$comment->{author} added a comment to Topic \"$topic->{title}\".\n\n" .
@@ -351,7 +381,8 @@ sub comment_create($$$) {
     }
 
     # Send the email notification out, if it is allowed in the config file.
-    if ( $Codestriker::allow_comment_email || $comment->{cc} ne "")
+    if ( $Codestriker::email_send_options->{comments_sent_to_topic_author} || 
+         $comment->{cc} ne "")
     {
 	if (!$self->doit(0, $comment->{topicid}, $from, $to,
 			join(', ',@cc_recipients), $bcc,

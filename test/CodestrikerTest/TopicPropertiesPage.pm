@@ -48,7 +48,10 @@ sub SetTopicProperties
     # The dumb form module does not like getting all of its params passed in at once.
     foreach my $key ( keys ( %options ))
     {
+        if ( $options{$key} ne $form->value( $key ) ) 
+        {
         $form->value($key,$options{$key});
+    }
     }
 
     #$form->dump();

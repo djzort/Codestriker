@@ -19,7 +19,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
-	      $lxr_map $allow_comment_email $default_topic_br_mode
+	      $lxr_map $email_send_options $default_topic_br_mode
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics

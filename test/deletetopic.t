@@ -40,7 +40,7 @@ ok( $topic_content,"get topic content page");
 
 my $properties = $topic_content->GetLink('Topic Properties');
 
-ok( $properties->SetTopicProperties( topic_state=>'Delete'),"change delete");
+ok( $properties->SetTopicProperties( topic_state=>'Deleted'),"change delete");
 
 my $searchPage = $main->GetLink("Search");
 

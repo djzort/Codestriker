@@ -141,7 +141,6 @@ sub _ParseTopicList
 
 	my $p = HTML::TokeParser->new(doc=>\$content);
 
-	# Skip the top table, remove this to run against 1.7.8.
 	$p->get_tag("table");
 	$p->get_tag("/table");
 
