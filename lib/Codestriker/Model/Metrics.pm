@@ -209,7 +209,14 @@ sub get_complete_list_of_topic_participants {
 	$metric_user_hash{$user->[0]} = 1;
     }
 
-    @metric_user_list = sort keys %metric_user_hash;
+    # Need to sort the empty user name last so that the template parameters 
+    # that are done by index don't start at 1, and therefor not allow users
+    # to save the metrics.
+    @metric_user_list = sort { 
+        return 1  if ( $a eq "");
+        return -1 if ( $b eq "");
+        return $a cmp $b; 
+    } keys %metric_user_hash;
 
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh, 1);
@@ -827,19 +834,19 @@ sub _verify_metric {
 	if ($metric->{filter} eq "hours") {
 	    $input_ok = ($value =~ /(^[\d]+([\.:][\d]*)?$)|(^$)/);
 	    $msg = $metric->{name} .
-		   " must be a valid time in hours. $value was " . 
+		   " must be a valid time in hours. " . HTML::Entities::encode($value) . " was " . 
 	           "not saved.<BR>" unless $input_ok;
 	}
 	elsif ($metric->{filter} eq "minutes") {
 	    $input_ok = ($value =~ /(^[\d]+)|(^$)/);
 	    $msg = $metric->{name} .
-		   " must be a valid time in minutes. $value was " . 
+		   " must be a valid time in minutes. " . HTML::Entities::encode($value) . " was " . 
 	           "not saved.<BR>" unless $input_ok;
 	}
 	elsif ($metric->{filter} eq "count") {
 	    $input_ok = ($value =~ /(^[\d]+$)|(^$)/);
 	    $msg = $metric->{name} . 
-		   " must be a valid count. $value was not " . 
+		   " must be a valid count. " . HTML::Entities::encode($value) . " was not " . 
 	           "saved.<BR>" unless $input_ok;
 	}
 	elsif ($metric->{filter} eq "percent") {
@@ -850,12 +857,12 @@ sub _verify_metric {
 	    }
 	    $msg = $metric->{name} . 
 		   " must be a valid percent, between 0 and 100. " . 
-	           "$value was not saved.<BR>" unless $input_ok;
+	           HTML::Entities::encode($value) . " was not saved.<BR>" unless $input_ok;
 	}
 	else {
 	    # invalid config.
 	    $input_ok = 0;
-	    $msg = $metric->{name} . 
+	    $msg = HTML::Entities::encode($metric->{name}) . 
 		   " invalid filter type in configuration. Must " . 
 	           "be hours, count, or percent.<BR>";
 	}

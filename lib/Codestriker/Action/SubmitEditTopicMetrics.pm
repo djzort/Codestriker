@@ -38,14 +38,15 @@ sub process($$$) {
     $metrics->set_user_metric($topic->{author},
 			      @{$http_input->{author_metric}});
 
-    my @reviewer_list = split /, /, $topic->{reviewers};
+    my @reviewer_list = $topic->get_metrics()->get_complete_list_of_topic_participants();
 
     # Remove the author from the list just in case somebody put themselves
     # in twice.
     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
 
     for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex) {
-	if (defined($http_input->get('reviewer_metric,$userindex'))) {
+
+	if (defined($http_input->get("reviewer_metric,$userindex"))) {
 	    my @usermetrics = @{$http_input->get("reviewer_metric,$userindex")};
 
 	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex],
@@ -60,7 +61,14 @@ sub process($$$) {
     $metrics->set_user_metric($topic->{author}, @author_metrics);
     $metrics->store();
 
-    my $rc = 0;
+    if ( $feedback eq "")
+    {
+        $feedback = "Topic metrics successfully updated.";
+    }
+
+    # The feedback var is not html escaped in the template, so it must be done directly
+    # with HTML::Entities::encode if needed.    
+    $http_input->{feedback} = $feedback;
 
     # Go to the view topic metrics screen.
     Codestriker::Action::ViewTopicInfo->process($http_input, $http_response);

@@ -111,7 +111,9 @@ sub process($$$) {
     }
 
     # Direct control to the appropriate action class, depending on the result
-    # of the above operation, and what screens are enabled.
+    # of the above operation, and what screens are enabled. The feedback
+    # var is not html escaped in the template, so it must be done directly
+    # with HTML::Entities::encode if needed.
     $feedback =~ s/\n/<BR>/g;
     $http_input->{feedback} = $feedback;
     if ($rc == $Codestriker::INVALID_TOPIC ||

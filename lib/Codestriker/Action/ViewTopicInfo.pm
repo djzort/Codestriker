@@ -149,9 +149,14 @@ sub process($$$) {
     {
 	my @user_metrics = $topic->get_metrics()->get_user_metrics($reviewer);
 
+        # Make a copy, we don't want to modify the names in the list. This is just
+        # for the consumption of the html templates.
+        my $reviewer_ui_name = $reviewer;
+        $reviewer_ui_name = "(unknown user)" if ($reviewer eq "");
+
 	my $metric = 
 	{
-	    reviewer => Codestriker->filter_email($reviewer),
+	    reviewer => Codestriker->filter_email($reviewer_ui_name),
 	    user_metrics => \@user_metrics
 	};
 
