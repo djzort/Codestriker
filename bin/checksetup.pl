@@ -54,10 +54,6 @@ my $modules = [
         version => '2.56' 
     }, 
     { 
-        name => 'CGI::Carp', 
-        version => '0' 
-    }, 
-    { 
         name => 'Net::SMTP', 
         version => '0' 
     }, 
