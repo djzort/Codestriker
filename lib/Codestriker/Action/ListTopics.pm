@@ -24,6 +24,7 @@ sub process($$$) {
     }
 
     # Check that the appropriate fields have been filled in.
+    my $mode = $http_input->get('mode');
     my $sauthor = $http_input->get('sauthor') || "";
     my $sreviewer = $http_input->get('sreviewer') || "";
     my $scc = $http_input->get('scc') || "";
@@ -34,17 +35,19 @@ sub process($$$) {
     my $sdescription = $http_input->get('sdescription') || 0;
     my $scomments = $http_input->get('scomments') || 0;
     my $sbody = $http_input->get('sbody') || 0;
+    my $feedback = $http_input->get('feedback');
     
     # Perform some error checking here on the parameters.
 
     # Query the model for the specified data.
     my (@state_group_ref, @text_group_ref);
-    my (@id, @title, @author, @ts, @state, @bugid, @email, @type);
+    my (@id, @title, @author, @ts, @state, @bugid, @email, @type, @version);
+
     Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $stext, $stitle, $sdescription,
 				     $scomments, $sbody, \@id, \@title,
 				     \@author, \@ts, \@state, \@bugid,
-				     \@email, \@type);
+				     \@email, \@type, \@version);
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header("", "Topic list", "", "", "", "", "", "",
@@ -52,9 +55,25 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'feedback'} = $feedback;
+
+    # Indicate if deletes are enabled in the system.
+    $vars->{'delete_enabled'} = $Codestriker::allow_delete;
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+
+    # Store the search parameters, which become hidden fields.
+    $vars->{'sauthor'} = $sauthor;
+    $vars->{'sreviewer'} = $sreviewer;
+    $vars->{'scc'} = $scc;
+    $vars->{'sbugid'} = $sbugid;
+    $vars->{'stext'} = $stext;
+    $vars->{'sstate'} = $sstate;
+    $vars->{'stitle'} = $stitle;
+    $vars->{'sdescription'} = $sdescription;
+    $vars->{'scomments'} = $scomments;
+    $vars->{'sbody'} = $sbody;
 
     # Display the "Create a new topic" and "Search" links.
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
@@ -70,6 +89,7 @@ sub process($$$) {
 	my @accum_reviewers = ();
 	my @accum_cc = ();
 	my $accum_id = $id[$index];
+	my $accum_version = $version[$index];
 	my $accum_title = CGI::escapeHTML($title[$index]);
 	my $accum_author = $author[$index];
 	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
@@ -115,7 +135,9 @@ sub process($$$) {
 
 	# Add this row to the list of topics.
 	my $topic = {};
-	$topic->{'view_topic_url'} = $url_builder->view_url($accum_id, -1, "");
+	$topic->{'view_topic_url'} =
+	    $url_builder->view_url($accum_id, -1, $mode);
+	$topic->{'id'} = $accum_id;
 	$topic->{'title'} = $accum_title;
 	$topic->{'author'} = $accum_author;
 	$topic->{'reviewer'} = $reviewer_text;
@@ -123,9 +145,14 @@ sub process($$$) {
 	$topic->{'created'} = $accum_ts;
 	$topic->{'bugids'} = $bugid_text;
 	$topic->{'state'} = $accum_state;
+	$topic->{'version'} = $accum_version;
 	push @topics, $topic;
     }
     $vars->{'topics'} = \@topics;
+    $vars->{'states'} = \@Codestriker::topic_states;
+
+    # Record the search parameters.
+
     my $template = Codestriker::Http::Template->new("listtopics");
     $template->process($vars) || die $template->error();
 }

@@ -35,25 +35,25 @@ sub process($$$) {
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
 
-    my $error_message = "";
+    my $feedback = "";
 
     if ($topic_title eq "") {
-	$error_message .= "No topic title was entered.\n";
+	$feedback .= "No topic title was entered.\n";
     }
     if ($topic_description eq "") {
-	$error_message .= "No topic description was entered.\n";
+	$feedback .= "No topic description was entered.\n";
     }
     if ($email eq "") {
-	$error_message .= "No email address was entered.\n";
+	$feedback .= "No email address was entered.\n";
     }	
     if ($topic_text eq "" && !defined $fh) {
-	$error_message .= "No topic text or filename was entered.\n";
+	$feedback .= "No topic text or filename was entered.\n";
     }
     if (defined $fh && $topic_text ne "") {
-	$error_message .= "Topic text and uploaded file were entered.\n";
+	$feedback .= "Topic text and uploaded file were entered.\n";
     }
     if ($reviewers eq "") {
-	$error_message .= "No reviewers were entered.\n";
+	$feedback .= "No reviewers were entered.\n";
     }
 
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
@@ -61,10 +61,10 @@ sub process($$$) {
 
     # If there is a problem with the input, redirect to the create screen
     # with the message.
-    if ($error_message ne "") {
-	$error_message =~ s/\n/<BR>/g;
+    if ($feedback ne "") {
+	$feedback =~ s/\n/<BR>/g;
 	my $vars = {};
-	$vars->{'error_message'} = $error_message;
+	$vars->{'feedback'} = $feedback;
 	$vars->{'email'} = $email;
 	$vars->{'reviewers'} = $reviewers;
 	$vars->{'cc'} = $cc;

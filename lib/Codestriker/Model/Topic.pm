@@ -106,7 +106,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 
     my $success = defined $select_topic && defined $select_bugs &&
 	defined $select_participants;
-    my $errmsg;
+    my $rc = $Codestriker::OK;
 
     # Retrieve the topic information.
     $success &&= $select_topic->execute($topicid);
@@ -121,7 +121,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 
 	if (!defined $id) {
 	    $success = 0;
-	    $errmsg = "Invalid topic: $topicid\n";
+	    $rc = $Codestriker::INVALID_TOPIC;
 	}
     }
 
@@ -153,30 +153,31 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh, $success);
-    if (!$success) {
-	$errmsg = $dbh->errstr unless defined $errmsg;
-	die "$errmsg\n";
+
+    # Store the data into the referenced variables if the operation was
+    # successful.
+    if ($success) {
+	$$author_ref = $author;
+	$$title_ref = $title;
+	$$bug_ids_ref = join ', ', @bugs;
+	$$reviewers_ref = join ', ', @reviewers;
+	$$cc_ref = join ', ', @cc;
+	$$description_ref = $description;
+	$$document_ref = $document;
+	$$creation_time_ref = Codestriker->format_timestamp($creationtime);
+	$$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
+	$$topic_state_ref = $Codestriker::topic_states[$state];
+	$$version_ref = $version;
+	
+	# Set the repository to the default system value if it is not defined.
+	if (!defined $repository || $repository eq "") {
+	    $$repository_ref = $Codestriker::default_repository;
+	} else {
+	    $$repository_ref = $repository;
+	}
     }
 
-    # Store the data into the referenced variables.
-    $$author_ref = $author;
-    $$title_ref = $title;
-    $$bug_ids_ref = join ', ', @bugs;
-    $$reviewers_ref = join ', ', @reviewers;
-    $$cc_ref = join ', ', @cc;
-    $$description_ref = $description;
-    $$document_ref = $document;
-    $$creation_time_ref = Codestriker->format_timestamp($creationtime);
-    $$modified_time_ref = Codestriker->format_timestamp($modifiedtime);
-    $$topic_state_ref = $Codestriker::topic_states[$state];
-    $$version_ref = $version;
-
-    # Set the repository to the default system value if it is not defined.
-    if (!defined $repository || $repository eq "") {
-	$$repository_ref = $Codestriker::default_repository;
-    } else {
-	$$repository_ref = $repository;
-    }
+    return $rc;
 }
 
 # Determine if the specified topic id exists in the table or not.
@@ -233,26 +234,26 @@ sub change_state($$$$$) {
 	$dbh->prepare_cached('UPDATE topic SET version = ?, state = ?, ' .
 			     'creation_ts = ?, modified_ts = ? WHERE id = ?');
     my $success = defined $select_topic && defined $update_topic;
-    my $errmsg;
+    my $rc = $Codestriker::OK;
 
     # Retrieve the current topic data.
     $success &&= $select_topic->execute($topicid);
 
+    # Make sure that the topic still exists, and is therefore valid.
     my ($current_version, $current_stateid, $creation_ts);
     if ($success && 
 	! (($current_version, $current_stateid, $creation_ts)
 	   = $select_topic->fetchrow_array())) {
 	# Invalid topic id.
-	$errmsg = "Invalid topic id: $topicid";
 	$success = 0;
+	$rc = $Codestriker::INVALID_TOPIC;
     }
     $success &&= $select_topic->finish();
 
     # Check the version number.
     if ($success && $version != $current_version) {
-	$errmsg = "Topic state has been modified by another user while " .
-	    " you were viewing it.\nGo back and refresh the topic screen.";
 	$success = 0;
+	$rc = $Codestriker::STALE_VERSION;
     }
 
     # If the state hasn't changed, don't do anything, otheriwse update the
@@ -263,20 +264,17 @@ sub change_state($$$$$) {
 					    $topicid);
     }
     Codestriker::DB::DBI->release_connection($dbh, $success);
-    
-    if (!$success) {
-	$errmsg = $dbh->errstr unless defined $errmsg;
-	die "$errmsg\n";
-    }
+    return $rc;
 }
 
 # Return back the list of topics which match the specified parameters.
-sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
+sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $stext,
 	$stitle, $sdescription, $scomments, $sbody,
 	$id_array_ref, $title_array_ref,
 	$author_array_ref, $creation_ts_array_ref, $state_array_ref,
-	$bugid_array_ref, $email_array_ref, $type_array_ref) = @_;
+	$bugid_array_ref, $email_array_ref, $type_array_ref,
+	$version_array_ref) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -307,7 +305,8 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
     # Build up the base query.
     my $query =
 	"SELECT topic.id, topic.title, topic.author, topic.creation_ts, " .
-	"topic.state, topicbug.bugid, participant.email, participant.type ".
+	"topic.state, topicbug.bugid, participant.email, participant.type, " .
+	"topic.version " .
 	"FROM topic LEFT OUTER JOIN topicbug ON topic.id = topicbug.topicid " .
 	"LEFT OUTER JOIN participant ON topic.id = participant.topicid ";
 
@@ -362,9 +361,10 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
     my $success = defined $select_topic;
     $success &&= $select_topic->execute(@values);
     if ($success) {
-	my ($id, $title, $author, $creation_ts, $state, $bugid, $email, $type);
+	my ($id, $title, $author, $creation_ts, $state, $bugid, $email, $type,
+	    $version);
 	while (($id, $title, $author, $creation_ts, $state, $bugid,
-		$email, $type) = $select_topic->fetchrow_array()) {
+		$email, $type, $version) = $select_topic->fetchrow_array()) {
 	    push @$id_array_ref, $id;
 	    push @$title_array_ref, $title;
 	    push @$author_array_ref, $author;
@@ -373,6 +373,7 @@ sub query($$$$$$$$$$$\@\@\@\@\@\@\@\@) {
 	    push @$bugid_array_ref, $bugid;
 	    push @$email_array_ref, $email;
 	    push @$type_array_ref, $type;
+	    push @$version_array_ref, $version;
 	}
 	$select_topic->finish();
     }
@@ -427,7 +428,8 @@ sub delete($$) {
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
-    die $dbh->errstr unless $success;
+    # Indicate the success of the operation.
+    return $success ? $Codestriker::OK : $Codestriker::INVALID_TOPIC;
 }
 
 1;

@@ -220,7 +220,6 @@ sub error($$) {
     }
 
     print $query->p, "<FONT COLOR='red'>$error_message</FONT>", $query->p;
-    print "Press the \"back\" button, fix the problem and try again.";
     print $query->end_html();
     exit;
 }

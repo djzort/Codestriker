@@ -28,6 +28,7 @@ sub process($$$) {
     $vars->{'topic_description'} = "";
     $vars->{'topic_title'} = "";
     $vars->{'bug_ids'} = "";
+    $vars->{'feedback'} = $http_input->get('feedback');
 
     # Retrieve the email, reviewers, cc and repository from the cookie.
     $vars->{'email'} =

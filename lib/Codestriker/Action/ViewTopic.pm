@@ -25,19 +25,28 @@ sub process($$$) {
     my $mode = $http_input->get('mode');
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
+    my $feedback = $http_input->get('feedback');
 
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,
 	$topic_data, $document_creation_time, $document_modified_time,
 	$topic_state, $version, $repository_url);
-    Codestriker::Model::Topic->read($topic, \$document_author,
-				    \$document_title, \$document_bug_ids,
-				    \$document_reviewers, \$document_cc,
-				    \$description, \$topic_data,
-				    \$document_creation_time,
-				    \$document_modified_time, \$topic_state,
-				    \$version, \$repository_url);
+    my $rc = Codestriker::Model::Topic->read($topic, \$document_author,
+					     \$document_title,
+					     \$document_bug_ids,
+					     \$document_reviewers,
+					     \$document_cc,
+					     \$description, \$topic_data,
+					     \$document_creation_time,
+					     \$document_modified_time,
+					     \$topic_state,
+					     \$version, \$repository_url);
+
+    if ($rc == $Codestriker::INVALID_TOPIC) {
+	# Topic no longer exists, most likely its been deleted.
+	$http_response->error("Topic no longer exists.");
+    }
 
     # Retrieve the changed files which are a part of this review.
     my (@filenames, @revisions, @offsets, @binary);
@@ -79,6 +88,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'feedback'} = $feedback;
     $vars->{'topicid'} = $topic;
 
     # Create the necessary template variables for generating the heading part
@@ -96,7 +106,10 @@ sub process($$$) {
 				      "", "", \@topic_states);
 
     # Display the "update" message if the topic state has been changed.
-    $vars->{'updated'} = $http_input->get('updated') ? 1 : 0;
+    $vars->{'updated'} = $http_input->get('updated');
+    $vars->{'rc_ok'} = $Codestriker::OK;
+    $vars->{'rc_stale_version'} = $Codestriker::STALE_VERSION;
+    $vars->{'rc_invalid_topic'} = $Codestriker::INVALID_TOPIC;
 
     # Indicate if the "delete" button should be visible or not.
     $vars->{'delete_enabled'} = $Codestriker::allow_delete;

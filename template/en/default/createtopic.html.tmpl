@@ -2,8 +2,9 @@
 
 [% PROCESS header.html.tmpl %]
 
-[% IF error_message != '' %]
-<FONT COLOR="red">[% error_message %]</FONT>
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
 [% END %]
 
 <P>

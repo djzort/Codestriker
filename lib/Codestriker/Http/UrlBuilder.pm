@@ -38,7 +38,7 @@ sub view_url_extended ($$$$$$$$) {
 	$updated) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
 	"?topic=$topic&action=view" .
-	($updated ? "&updated=updated" : "") .
+	($updated ? "&updated=$updated" : "") .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
 	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .

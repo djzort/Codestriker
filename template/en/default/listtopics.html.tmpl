@@ -8,13 +8,34 @@
     <a href="[% search_url %]">Search</a>
 </p>
 
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
+    <p>
+[% END %]
+
 [%# Display the heading and create the table #%]
 <h1>Topic list</h1>
+<FORM METHOD="POST" ENCTYPE="multipart/form-data">
+<INPUT TYPE="hidden" NAME="action" VALUE="change_topics">
+
+[%# Store the search parameters as hidden variables #%]
+<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
+<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer %]">
+<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc %]">
+<INPUT TYPE="hidden" NAME="sbugid" VALUE="[% sbugid %]">
+<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext %]">
+<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
+<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle %]">
+<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription %]">
+<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments %]">
+<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody %]">
+
 <table width="100%">
 
     [%# Display the table header #%]
     <tr class="tlh">
-        <th>Title</th>
+        <th colspan="2">Title</th>
         <th>Author</th>
         <th>Reviewer</th>
         <th>Cc</th>
@@ -28,6 +49,7 @@
     [% FLUSH IF loop.count() % 10 == 1 %]
 
     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+        <td><INPUT TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]"></td>
         <td><a href="[% topic.view_topic_url %]">[% topic.title %]</a></td>
         <td>[% topic.author %]</td>
         <td>[% topic.reviewer %]</td>
@@ -38,7 +60,35 @@
     </tr>
 
     [% END %]
+
+    <tr class="tlh">
+        <td colspan="8">&nbsp</td>
+    </tr>
 </table>
+
+Change state: &nbsp;
+  <select name="topic_state">
+     [% FOREACH state = states %]
+     [% IF state == default_state %]
+     <option selected value="[% state %]">[% state %]
+     [% ELSE %]           
+     <option value="[% state %]">[% state %]
+     [% END %]
+     [% END %]
+  </select>
+   <input type="submit" name="button" value="Update">
+
+   <table width="100%">
+    <tr class="tlh"><td>&nbsp</td></tr>
+    </tr>
+   </table> 
+
+   [% IF delete_enabled != 0 %]
+   <input type="submit" name="button" value="Delete topics"
+     onclick="return confirm('Are you sure you want to delete these topics?')">
+   [% END %]
+
+</FORM>
 
 [% PROCESS trailer.html.tmpl %]
 

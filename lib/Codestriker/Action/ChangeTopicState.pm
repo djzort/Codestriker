@@ -30,30 +30,80 @@ sub process($$$) {
 	$http_response->error("This function has been disabled");
     }
 
+    my $state = ($button eq "Delete") ? "Delete" : $topic_state;
+    my $rc = $type->change_state($query, $topic, $state, $version, $email);
+
+    # Set the feedback message to the user.
+    my $feedback = "";
+    if ($rc == $Codestriker::OK) {
+	if ($button eq "Delete") {
+	    $feedback = "Topic has been deleted.";
+	} else {
+	    $feedback = "Topic state updated.";
+	}
+    } elsif ($rc == $Codestriker::STALE_VERSION) {
+	$feedback = "Topic state has been modified by another user.";
+    } elsif ($rc == $Codestriker::INVALID_TOPIC) {
+	$feedback = "Topic no longer exists.";
+    }
+
+    # Direct control to the appropriate action class, depending on the result
+    # of the above operation, and what screens are enabled.
+    $http_input->{feedback} = $feedback;
+    if ($rc == $Codestriker::INVALID_TOPIC || $button eq "Delete") {
+	if ($Codestriker::allow_searchlist) {
+	    # Go to the topic list screen for just open topics.
+	    $http_input->{sstate} = "0";
+	    Codestriker::Action::ListTopics->process($http_input,
+						     $http_response);
+	} else {
+	    # Go to the create topic screen.
+	    Codestriker::Action::CreateTopic->process($http_input,
+						      $http_response);
+        }
+    } else {
+	# Go to the view topic screen.
+	Codestriker::Action::ViewTopic->process($http_input, $http_response);
+    }	
+}
+
+# Change the specified topic to the specified topic state, or delete it if
+# it is "Delete".  If Bugzilla connectivity is set, update the associated bugs.
+# This method is also used by the ChangeTopics action.
+sub change_state($$$$$$) {
+    my ($type, $query, $topic, $topic_state, $version, $email) = @_;
+
     # Retrieve the appropriate topic details (for the bug_ids).
     my ($_document_author, $_document_title, $_document_bug_ids,
 	$_document_reviewers, $_document_cc, $_description,
 	$_topic_data, $_document_creation_time, $_document_modified_time,
 	$_topic_state, $_version, $_repository);
-    Codestriker::Model::Topic->read($topic, \$_document_author,
-				    \$_document_title, \$_document_bug_ids,
-				    \$_document_reviewers, \$_document_cc,
-				    \$_description, \$_topic_data,
-				    \$_document_creation_time,
-				    \$_document_modified_time, \$_topic_state,
-				    \$_version, \$_repository);
+    my $rc = Codestriker::Model::Topic->read($topic, \$_document_author,
+					     \$_document_title,
+					     \$_document_bug_ids,
+					     \$_document_reviewers,
+					     \$_document_cc,
+					     \$_description, \$_topic_data,
+					     \$_document_creation_time,
+					     \$_document_modified_time,
+					     \$_topic_state,
+					     \$_version, \$_repository);
+    
+    return $rc if $rc != $Codestriker::OK;
+
     # Update the topic's state.
-    if ($button eq "Delete") {
-	Codestriker::Model::Topic->delete($topic);
+    if ($topic_state eq "Delete") {
+	$rc = Codestriker::Model::Topic->delete($topic);
     } else {
 	my $timestamp = Codestriker->get_timestamp(time);
-	Codestriker::Model::Topic->change_state($topic, $topic_state,
-						$timestamp, $version);
+	$rc = Codestriker::Model::Topic->change_state($topic, $topic_state,
+						      $timestamp, $version);
     }
 
     # If Codestriker is linked to a bug database, and this topic is associated
     # with some bugs, update them with an appropriate message.
-    if ($_document_bug_ids ne "" && $Codestriker::bug_db ne "") {
+    if ($rc == $Codestriker::OK &&
+	$_document_bug_ids ne "" && $Codestriker::bug_db ne "") {
 	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
 	$bug_db_connection->get_connection();
@@ -69,29 +119,8 @@ sub process($$$) {
 	$bug_db_connection->release_connection();
     }
 
-    # Redirect the user to the view topic page if the topic wasn't deleted,
-    # otherwise go to the list of open topics.
-    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $redirect_url = "";
-    if ($button eq "Delete") {
-	if ($Codestriker::allow_searchlist) {
-	    # Redirect to the topic list screen.
-	    my @topic_states = (0);
-	    $redirect_url =
-		$url_builder->list_topics_url("", "", "", "", "", "", "",
-					      "", "", \@topic_states);
-	} else {
-	    # Redirect to the create topic screen.
-	    $redirect_url = $url_builder->create_topic_url();
-	}
-	
-    } else {
-	$redirect_url =
-	    $url_builder->view_url_extended($topic, -1, $mode, "", "",
-					    $query->url(), 1);
-    }	
-	
-    print $query->redirect(-URI=>$redirect_url);
+    # Indicate the success of this operation to the client.
+    return $rc;
 }
 
 1;

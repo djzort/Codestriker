@@ -1,5 +1,15 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 
+Version 1.6.3
+
+* In the topic list screen, it is now possible to selected multiple
+  topics and mass update their state, or delete them.
+
+* Improved error message reporting when topics have been deleted and
+  they are trying to be viewed, or the state of a topic is attempted
+  to be updated when it has already been changed by another user (ie
+  the topic is "stale").
+
 Version 1.6.2
 
 * Fixed warnings in checksetup.pl for MySQL databases, where "commits"

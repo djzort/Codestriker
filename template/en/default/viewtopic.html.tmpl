@@ -17,9 +17,9 @@
 <HR>
 
 <p>
-[%# Display the "updated" text if necessary. #%]
-[% IF updated == 1 %]
-    <font color="red">Topic state has been updated</font>
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <font color="red">[% feedback %]</font>
     <p>
 [% END %]
 

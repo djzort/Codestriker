@@ -25,7 +25,12 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.6.1";
+$Codestriker::VERSION = "1.6.2";
+
+# Error codes from the model routines.
+$Codestriker::OK = 1;
+$Codestriker::STALE_VERSION = 2;
+$Codestriker::INVALID_TOPIC = 3;
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

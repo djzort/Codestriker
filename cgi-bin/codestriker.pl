@@ -33,6 +33,7 @@ use Codestriker::Action::SubmitSearch;
 use Codestriker::Action::ListTopics;
 use Codestriker::Action::DownloadTopic;
 use Codestriker::Action::ChangeTopicState;
+use Codestriker::Action::ChangeTopics;
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -85,6 +86,9 @@ sub main() {
     } elsif ($action eq "change_topic_state") {
         Codestriker::Action::ChangeTopicState->process($http_input,
 						       $http_response);
+    } elsif ($action eq "change_topics") {
+        Codestriker::Action::ChangeTopics->process($http_input,
+						   $http_response);
     } else {
 	# Default action is to list topics that are in state open if the
 	# list functionality is enabled, otherwise go to the create topic
@@ -97,7 +101,4 @@ sub main() {
 						      $http_response);
 	}
     }
-	
-    # Output the HTML footer, and return.
-    $http_response->generate_footer() unless $action eq "download";
 }

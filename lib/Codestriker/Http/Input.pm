@@ -84,6 +84,8 @@ sub process($) {
     $self->{a} = $query->param('a');
     $self->{updated} = $query->param('updated');
     $self->{repository} = $query->param('repository');
+    my @selected_topics = $query->param('selected_topics');
+    $self->{selected_topics} = \@selected_topics;
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
@@ -137,6 +139,9 @@ sub process($) {
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
     $self->{cc} = $self->make_canonical_email_list($self->{cc});
     $self->{bug_ids} = $self->make_canonical_bug_list($self->{bug_ids});
+
+    # Initialise the feedback field to empty.
+    $self->{feedback} = "";
 }
 
 # Return the query object associated with this object.
