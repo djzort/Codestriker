@@ -905,7 +905,7 @@ sub build_download_url ($) {
 
 # Create the URL for creating a topic.
 sub build_create_topic_url () {
-    return $url_prefix . "?action=create";
+    return $query->url() . "?action=create";
 }	    
 
 # Create the URL for editing a topic.
@@ -1141,7 +1141,7 @@ sub view_topic ($$$) {
 	") diff.\n";
     } else {
 	print "View as (", $query->a({href=>$coloured_url},
-				     " coloured variable-width"), " | ",
+				     "coloured variable-width"), " | ",
 	$query->a({href=>$coloured_mono_url}, "coloured monospace"),
 	") diff.\n";
     }
