@@ -273,7 +273,7 @@ sub render_inplace_changes($$$$$$$);
 sub render_coloured_cell($);
 sub normal_mode_start($);
 sub normal_mode_finish($$);
-sub coloured_mode_start($);
+sub coloured_mode_start($$);
 sub coloured_mode_finish($$);
 sub print_coloured_table();
 sub get_file_linenumber ($$$$$);
@@ -1176,7 +1176,7 @@ sub view_topic ($$$) {
 
     # Display the data that is being reviewed.
     if ($mode == $COLOURED_MODE || $mode == $COLOURED_MONO_MODE) {
-	coloured_mode_start($topic);
+	coloured_mode_start($topic, $mode);
     } else {
 	normal_mode_start($topic);
     }
@@ -1302,8 +1302,8 @@ sub normal_mode_finish ($$) {
 # Start topic view display hook for coloured mode.  This displays a simple
 # legend, displays the files involved in the review, and opens up the initial
 # table.
-sub coloured_mode_start ($) {
-    my ($topic) = @_;
+sub coloured_mode_start ($$) {
+    my ($topic, $mode) = @_;
 
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
@@ -1335,7 +1335,7 @@ sub coloured_mode_start ($) {
     for (my $i = 0; $i <= $#filetable_filename; $i++) {
 	my $filename = $filetable_filename[$i];
 	my $revision = $filetable_revision[$i];
-	my $href_filename = "#" . "$filename";
+	my $href_filename = build_view_url($topic, -1, $mode) . "#" . "$filename";
 	my $class = "";
 	$class = "af" if ($revision eq $ADDED_REVISION);
 	$class = "rf" if ($revision eq $REMOVED_REVISION);
@@ -1435,6 +1435,7 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 	    $diff_current_filename = $current_file;
 	    print_coloured_table();
 
+	    my $contents_url = build_view_url($topic, -1, $mode) . "#contents";
 	    if ($cvsmatch) {
 		# File matches something is CVS repository.  Link it to
 		# the CVS viewer if it is defined.
@@ -1458,7 +1459,7 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 		}
 		print $query->Tr($cell,
 				 $query->td({-class=>'file', align=>'right'},
-					     $query->a({href=>"#contents"},
+					     $query->a({href=>$contents_url},
 						       "[Go to Contents]")));
 	    } else {
 		# No match in repository - or a new file.
@@ -1467,7 +1468,7 @@ sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
 					    $query->a({name=>"$current_file"},
 						      "$current_file")),
 				 $query->td({-class=>'file', align=>'right'},
-					    $query->a({href=>"#contents"},
+					    $query->a({href=>$contents_url},
 						      "[Go to contents]")));
 	    }
 	}
