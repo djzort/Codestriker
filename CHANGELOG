@@ -1,5 +1,17 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 
+Version 1.6.5
+
+* Modified diff reader to handle diffs of the form:
+
+  cvs diff -uN -r TAG1 -r TAG2
+
+  This allows code reviews to occur for different development
+  practices, for example, if separate branches are used for
+  development before any code is collapsed into the mainline branch.
+
+* Also modified the pre-requisite Perl module version numbers.
+
 Version 1.6.4
 
 * Comments associated with a specific line in a review now have the
