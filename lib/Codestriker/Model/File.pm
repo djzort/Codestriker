@@ -11,18 +11,10 @@ package Codestriker::Model::File;
 
 use strict;
 
-# Go through the document text, and if it is a diff file (CVS or patch),
-# create a new row for each file in the file table.  Note this gets called
+# Create the appropriate delta rows for this review.  Note this gets called
 # from Topic::create(), which controls the transaction commit/rollback.
 sub create($$$$$) {
-    my ($type, $dbh, $topicid, $document_text, $repository_root) = @_;
-
-    # Break the document into lines, and remove any \r characters.
-    my @document = split /\n/, $document_text;
-    return if ($#document == -1);  # Nothing to do.
-    for (my $i = 0; $i <= $#document; $i++) {
-	$document[$i] =~ s/\r//g;
-    }
+    my ($type, $dbh, $topicid, $deltas_ref, $repository_root) = @_;
 
     # Create the appropriate prepared statements.
     my $insert_file =
@@ -31,42 +23,43 @@ sub create($$$$$) {
 			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert_file;
 
-    my $offset = 0;
-    my $filename = "";
-    my $revision = "";
-    my $binary = 0;
-    for (my $sequence_number = 0;
-	 $success && _read_diff_header(\@document, \$offset, \$filename,
-				       \$revision, \$binary, $repository_root);
-	 $sequence_number++) {
+    my $insert_delta =
+	$dbh->prepare_cached('INSERT INTO delta (topicid, file_sequence, ' .
+			     'delta_sequence, old_linenumber, ' .
+			     'new_linenumber, deltatext, description) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $success &&= defined $insert_delta;
 
-	# Record the offset marking the start of program code.
-	my $diff_offset = $offset;
-
-	# Now collect the data which corresponds to this diff hunk, and
-	# create a row for it.
-	my $diff;
-	for ($diff = ""; $offset <= $#document; $offset++) {
-	    # If the start of next diff header has been reached, the diff hunk
-	    # has been read.
-	    my $line = $document[$offset];
-	    last if ($line =~ /^Index/o || $line =~ /^diff/o ||
-		     $line =~ /^Binary/o || $line =~ /^Only/o);
-	    $diff .= $line . "\n";
+    my @deltas = @$deltas_ref;
+    my $last_filename = "";
+    my $file_sequence = -1;
+    my $delta_sequence = -1;
+    for (my $i = 0; $i <= $#deltas; $i++) {
+	my $delta = $deltas[$i];
+	if ($last_filename ne $delta->{filename}) {
+	    # Create new file entry.
+	    $success &&= $insert_file->execute($topicid, ++$file_sequence,
+					       $delta->{filename}, -1,
+					       $delta->{revision}, "",
+					       $delta->{binary});
+	    $last_filename = $delta->{filename};
 	}
 
-	# Create the appropriate file row.
-	$success &&= $insert_file->execute($topicid, $sequence_number,
-					   $filename, $diff_offset, $revision,
-					   $diff, $binary);
+	# Add the new delta entry.
+	$success &&= $insert_delta->execute($topicid, $file_sequence,
+					    ++$delta_sequence,
+					    $delta->{old_linenumber},
+					    $delta->{new_linenumber},
+					    $delta->{text},
+					    $delta->{description});
     }
 
     die $dbh->errstr unless $success;
 }
 
-# Retrieve the details of a file for a specific topicid and filename.
+# Retrieve the details of a file for a specific topicid and filenumber.
 sub get($$$$$$) {
-    my ($type, $topicid, $filename,
+    my ($type, $topicid, $filenumber,
 	$offset_ref, $revision_ref, $diff_ref) = @_;
 
     # Obtain a database connection.
@@ -75,9 +68,9 @@ sub get($$$$$$) {
     # Retrieve the file information.
     my $select_file =
 	$dbh->prepare_cached('SELECT topicoffset, revision, diff FROM file' .
-			     ' WHERE topicid = ? AND filename = ?');
+			     ' WHERE topicid = ? AND sequence = ?');
     my $success = defined $select_file;
-    $success &&= $select_file->execute($topicid, $filename);
+    $success &&= $select_file->execute($topicid, $filenumber);
     
     if ($success) {
 	my ($offset, $revision, $diff) = $select_file->fetchrow_array();
@@ -125,6 +118,88 @@ sub get_filetable($$$$$$) {
     die $dbh->errstr unless $success;
 }
 
+# Retrieve the ordered list of deltas that comprise this review.
+sub get_delta_set($$) {
+    my ($type, $topicid) = @_;
+    return $type->get_deltas($topicid, -1);
+}
+
+# Retrieve the ordered list of deltas applied to a specific file.
+sub get_deltas($$$) {
+    my ($type, $topicid, $filenumber) = @_;
+
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    # Setup the appropriate statement and execute it.
+    my $select_deltas =
+	$dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
+			     'binaryfile, old_linenumber, new_linenumber, ' .
+			     'deltatext, description, file.sequence ' .
+			     'FROM file, delta ' .
+			     'WHERE delta.topicid = ? AND ' .
+			     'delta.topicid = file.topicid AND ' .
+			     'delta.file_sequence = file.sequence ' .
+			     (($filenumber != -1) ? 'file.sequence = ? ' : '').
+			     'ORDER BY delta_sequence ASC');
+
+    my $success = defined $select_deltas;
+    if ($filenumber != -1) {
+	$success &&= $select_deltas->execute($topicid, $filenumber);
+    } else {
+	$success &&= $select_deltas->execute($topicid);
+    }
+    
+    # Store the results into an array of objects.
+    my @results = ();
+    if ($success) {
+	my @data;
+	while (@data = $select_deltas->fetchrow_array()) {
+	    my $delta = {};
+	    $delta->{filename} = $data[1];
+	    $delta->{revision} = $data[2];
+	    $delta->{binary} = $data[3];
+	    $delta->{old_linenumber} = $data[4];
+	    $delta->{new_linenumber} = $data[5];
+	    $delta->{text} = $data[6];
+	    $delta->{description} = $data[7];
+	    $delta->{filenumber} = $data[8];
+	    push @results, $delta;
+	}
+    }
+
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+
+    return @results;
+}
+
+# Retrieve the delta for the specific filename and linenumber.
+sub get_delta($$$) {
+    my ($type, $topicid, $filenumber, $linenumber, $new) = @_;
+
+    # Grab all the deltas for this file, and grab the delta with the highest
+    # starting line number lower than or equal to the specific linenumber,
+    # and matching the same file number.
+    my @deltas = Codestriker::Model::File->get_deltas($topicid, $filenumber);
+    my $found_delta = undef;
+    for (my $i = 0; $i <= $#deltas; $i++) {
+	my $delta = $deltas[$i];
+	my $delta_linenumber = $new ?
+	    $delta->{new_linenumber} : $delta->{old_linenumber};
+	if ($delta_linenumber <= $linenumber) {
+	    $found_delta = $delta;
+	} else {
+	    # Passed the delta of interest, return the previous one found.
+	    return $found_delta;
+	}
+    }
+	
+    # Return the matching delta found, if any.
+    return $found_delta;
+}
+
+# DEPRECATED - used only for data migration purposes.
 # Read from $fh, and return true if we have read a diff header, with all of
 # the appropriate values set to the reference variables passed in.
 sub _read_diff_header($$$$$$$) {

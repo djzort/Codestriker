@@ -64,8 +64,7 @@ sub process($$$) {
     my @document = split /\n/, $topic_data;
 
     # Retrieve the comment details for this topic.
-    my (@comments, %comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
+    my @comments = Codestriker::Model::Comment->read($topic);
 
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, $repository_url,
@@ -233,110 +232,26 @@ sub process($$$) {
     # Build the render which will be used to build this page.
     my $render = Codestriker::Http::Render->new($query, $url_builder, 0,
 						$max_digit_width, $topic,
-						$mode, \%comment_exists,
-						\@comments, $tabwidth,
+						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
 						\@revisions, \@binary);
-
-    # Record of the current CVS file being diffs (if the file is a
-    # unidiff diff file).
-    my $current_file = "";
-    my $current_file_revision = "";
-    my $current_old_file_linenumber = "";
-    my $current_new_file_linenumber = "";
-    my $diff_linenumbers_found = 0;
-    my $reading_diff_block = 0;
-    my $cvsmatch = 0;
-    my $index_filename = "";
-    my $block_description = "";
 
     # Display the data that is being reviewed.
     $render->start();
 
-    for (my $i = 0; $i <= $#document; $i++) {
+    # Retrieve the delta set comprising this review.
+    my @deltas = Codestriker::Model::File->get_delta_set($topic);
 
-	# Check for uni-diff information.
-	if ($document[$i] =~ /^===================================================================$/) {
-	    # The start of a diff block, reset all the variables.
-	    $current_file = "";
-	    $current_file_revision = "";
-	    $current_old_file_linenumber = "";
-	    $current_new_file_linenumber = "";
-	    $block_description = "";
-	    $reading_diff_block = 1;
-	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^Index: (.*)$/o &&
-		 ($mode == $Codestriker::COLOURED_MODE ||
-		  $mode == $Codestriker::COLOURED_MONO_MODE)) {
-	    $index_filename = $1;
-	    next;
-	} elsif ($document[$i] =~ /^\?/o &&
-		 ($mode == $Codestriker::COLOURED_MODE ||
-		  $mode == $Codestriker::COLOURED_MONO_MODE)) {
-	    next;
-	} elsif ($repository_root ne "" &&
-		 $document[$i] =~ /^RCS file: $repository_root\/(.*),v$/) {
-	    # The part identifying the file.
-	    $current_file = $1;
-	    $cvsmatch = 1;
-	} elsif ($document[$i] =~ /^RCS file:/o) {
-	    # A new file (or a file that doesn't match CVS repository path).
-	    $current_file = $index_filename;
-	    $index_filename = "";
-	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^retrieving revision (.*)$/o) {
-	    # The part identifying the revision.
-	    $current_file_revision = $1;
-	} elsif ($document[$i] =~ /^diff/o && $reading_diff_block == 0) {
-	    # The start for an ordinary patch file.
-	    $current_file = "";
-	    $current_file_revision = "";
-	    $current_old_file_linenumber = "";
-	    $current_new_file_linenumber = "";
-	    $block_description = "";
-	    $reading_diff_block = 1;
-	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^\-\-\- (.+?)\t.*$/o &&
-		 $current_file eq "") {
-	    # This is likely to be an ordinary patch file - not a CVS one, in
-	    # which case this is the start of the diff block.
-	    $current_file = $1;
-	    $index_filename = "";
-	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@(.*)$/o) {
-	    # The part identifying the line number.
-	    $current_old_file_linenumber = $1;
-	    $current_new_file_linenumber = $2;
-	    $block_description = $3;
-	    $diff_linenumbers_found = 1;
-	    $reading_diff_block = 0;
-	}
+    # Render the deltas.
+    my $old_filename = "";
+    for (my $i = 0; $i <= $#deltas; $i++) {
+	my $delta =  $deltas[$i];
 
-	# Display the data.
-	if ($mode == $Codestriker::NORMAL_MODE) {
-	   $render->display_data($i, $document[$i], $current_file,
-				 $current_file_revision,
-				 $current_old_file_linenumber,
-				 $current_new_file_linenumber,
-				 $reading_diff_block,
-				 $diff_linenumbers_found,
-				 $cvsmatch, $block_description);
-	} else {
-	    $render->display_coloured_data($i, $i, $i, $document[$i],
-					   $current_file,
-					   $current_file_revision,
-					   $current_old_file_linenumber,
-					   $current_new_file_linenumber,
-					   $reading_diff_block,
-					   $diff_linenumbers_found, $cvsmatch,
-					   $block_description);
-	}
-
-	# Reset the diff line numbers read, to handle the next diff block.
-	if ($diff_linenumbers_found) {
-	    $diff_linenumbers_found = 0;
-	    $current_old_file_linenumber = "";
-	    $current_new_file_linenumber = "";
-	}
+	print STDERR "Got!! filenumber: " . $delta->{filenumber} . "\n";
+	$render->delta($delta->{filename}, $delta->{filenumber},
+		       $delta->{revision}, $delta->{old_linenumber},
+		       $delta->{new_linenumber}, $delta->{text},
+		       $delta->{description});
     }
 
     $render->finish();

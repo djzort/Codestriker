@@ -64,18 +64,19 @@ sub create_topic_url ($) {
 }	    
 
 # Create the URL for editing a topic.
-sub edit_url ($$$$$$) {
-    my ($self, $line, $topic, $context, $anchor, $prefix) = @_;
+sub edit_url ($$$$$$$) {
+    my ($self, $filenumber, $line, $new, $topic, $context,
+	$anchor, $prefix) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
-	"?line=$line&topic=$topic&action=edit" .
+	"?fn=$filenumber&line=$line&new=$new&topic=$topic&action=edit" .
 	((defined $anchor && $anchor ne "") ? "&a=$anchor" : "") .
 	((defined $context && $context ne "") ? "&context=$context" : "");
 }
 
 # Create the URL for viewing a new file.
 sub view_file_url ($$$$$$$) {
-    my ($self, $topic, $filename, $new, $line, $prefix, $mode) = @_;
-    return $self->{url_prefix} . "?action=view_file&filename=$filename&" .
+    my ($self, $topic, $filenumber, $new, $line, $prefix, $mode) = @_;
+    return $self->{url_prefix} . "?action=view_file&fn=$filenumber&" .
 	"topic=$topic&mode=$mode&new=$new#" . "$prefix$line";
 }
 

@@ -37,9 +37,6 @@ my @diff_old_lines = ();
 # The corresponding lines they refer to.
 my @diff_old_lines_numbers = ();
 
-# The corresponding offsets they refer to.
-my @diff_old_lines_offsets = ();
-
 # A record of added and removed lines for a given diff block when displaying a
 # file in a popup window, along with their offsets.
 my @view_file_minus = ();
@@ -53,8 +50,8 @@ my $COMMENT_LINE_COLOUR = "red";
 # Constructor for rendering complex data.
 sub new ($$$$$$$\%\@$$\@\@\@) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
-	$mode, $comment_exists_ref, $comments, $tabwidth, $repository,
-	$filenames_ref, $revisions_ref, $binaries_ref) = @_;
+	$mode, $comments, $tabwidth, $repository, $filenames_ref,
+	$revisions_ref, $binaries_ref) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -65,13 +62,23 @@ sub new ($$$$$$$\%\@$$\@\@\@) {
     $self->{max_digit_width} = $max_digit_width;
     $self->{topic} = $topic;
     $self->{mode} = $mode;
-    $self->{comment_exists_ref} = $comment_exists_ref;
     $self->{comments} = $comments;
     $self->{tabwidth} = $tabwidth;
     $self->{repository} = $repository;
     $self->{filenames_ref} = $filenames_ref;
     $self->{revisions_ref} = $revisions_ref;
     $self->{binaries_ref} = $binaries_ref;
+
+    # Build a hash from filenumber|fileline|new -> comment array, so that
+    # when rendering, lines can be coloured appropriately.
+    my %comment_hash = ();
+    for (my $i = 0; $i <= $#$comments; $i++) {
+	my $comment = $$comments[$i];
+	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+	    $comment->{filenew};
+        push @{ $comment_hash{$key} }, $comment;
+    }
+    $self->{comment_hash} = \%comment_hash;
 
     # Also have a number of additional private variables which need to
     # be initialised.
@@ -196,193 +203,259 @@ sub display_data ($$$$$$$$$$$) {
     for (my $j = 0; $j < ($self->{max_digit_width} - $digit_width); $j++) {
 	print " ";
     }
-    print $self->render_linenumber($line, $line, "", 0);
+
+    print STDERR "display data called!!!!\n";
+    print $self->render_linenumber($line, $line, 0, "", 0);
 
     # Now render the data.
     print " $data\n";
 }
 
+# Render a delta.  If the filename has changed since the last delta, output the
+# appropriate file headers.
+sub delta ($$$$$$$$) {
+    my ($self, $filename, $filenumber, $revision, $old_linenumber,
+	$new_linenumber, $text, $description) = @_;
+
+    my $query = $self->{query};
+
+    # Determine if the filename matches the repository root.
+    my $repository = defined $self->{repository} ?
+	$self->{repository}->getRoot() : undef;
+    my $repmatch = defined $repository;
+    print STDERR "repository is $repository\n";
+
+    # Check if the file heading needs to be output.
+    if ($self->{diff_current_filename} ne $filename) {
+	$self->delta_file_header($filename, $revision, $repmatch);
+    }
+
+    # Display the delta heading.
+    $self->delta_heading($filenumber, $old_linenumber, $new_linenumber,
+			 $description, $repmatch);
+
+    # Now render the actual diff text itself.
+    $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
+		      $new_linenumber, $text, $repmatch);
+}
+
+# Output the header for a series of deltas for a specific file.
+sub delta_file_header ($$$$) {
+    my ($self, $filename, $revision, $repmatch) = @_;
+
+    my $query = $self->{query};
+
+    # Close the table, update the current filename, and open a new table.
+    print $query->end_table();
+    $self->{diff_current_filename} = $filename;
+    $self->print_coloured_table();
+
+    # Url to the table of contents on the same page.
+    my $contents_url =
+	$self->{url_builder}->view_url($self->{topic}, -1,
+				       $self->{mode}) .	"#contents";
+
+    if ($repmatch) {
+	# File matches something in the repository.  Link it to
+	# the repository viewer if it is defined.
+	my $cell = "";
+	my $revision_text = "revision $revision";
+	my $file_url = $self->{repository}->getViewUrl($filename);
+
+	if ($file_url eq "") {
+	    # Output the header without hyperlinking the filename.
+	    $cell = $query->td({-class=>'file', -colspan=>'3'},
+			       "Diff for ",
+			       $query->a({name=>$filename},
+					 $filename),
+			       $revision_text);
+	}
+	else {
+	    # Link the filename to the repository system with more information
+	    # about it.
+	    $cell = $query->td({-class=>'file', -colspan=>'3'},
+			       "Diff for ",
+			       $query->a({href=>$file_url,
+					  name=>$filename},
+					 $filename),
+			       $revision_text);
+	}
+	
+	# Output the "back to contents" link.
+	print $query->Tr($cell,
+			 $query->td({-class=>'file', align=>'right'},
+				    $query->a({href=>$contents_url},
+					      "[Go to Contents]")));
+    } else {
+	# No match in repository, or a new file.
+	print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
+				    "Diff for ",
+				    $query->a({name=>$filename},
+					      $filename)),
+			 $query->td({-class=>'file', align=>'right'},
+				    $query->a({href=>$contents_url},
+					      "[Go to contents]")));
+    }
+
+}
+
+# Output the delta heading, which consists of links to view the old and new
+# file in its entirety.
+sub delta_heading ($$$$$$) {
+    my ($self, $filenumber, $old_linenumber, $new_linenumber,
+	$description, $repmatch) = @_;
+
+    my $query = $self->{query};
+
+    # Output a diff block description if one is available, in a separate
+    # row.
+    if ($description ne "") {
+	my $description_escaped = CGI::escapeHTML($description);
+	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
+				    $description_escaped),
+			 $query->td({-class=>'line', -colspan=>'2'},
+				    $description_escaped));
+    }
+
+    # Create some blank space.
+    print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
+		     $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
+
+    if ($repmatch) {
+	# Display the line numbers corresponding to the patch, with links
+	# to the entire file.
+	my $url_builder = $self->{url_builder};
+	my $topic = $self->{topic};
+	my $mode = $self->{mode};
+	my $url_old_full =
+	    $url_builder->view_file_url($topic, $filenumber,
+					$UrlBuilder::OLD_FILE,
+					$old_linenumber, "", $mode);
+	my $url_old = "javascript: myOpen('$url_old_full','CVS')";
+	
+	my $url_old_both_full =
+	    $url_builder->view_file_url($topic, $filenumber,
+					$UrlBuilder::BOTH_FILES,
+					$old_linenumber, "L", $mode);
+	my $url_old_both =
+	    "javascript: myOpen('$url_old_both_full','CVS')";
+	
+	my $url_new_full =
+	    $url_builder->view_file_url($topic, $filenumber,
+					$UrlBuilder::NEW_FILE,
+					$new_linenumber, "", $mode);
+	my $url_new = "javascript: myOpen('$url_new_full','CVS')";
+	
+	my $url_new_both_full =
+	    $url_builder->view_file_url($topic, $filenumber,
+					$UrlBuilder::BOTH_FILES,
+					$new_linenumber, "R", $mode);
+	my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
+	
+	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
+				    $query->a({href=>$url_old}, "Line " .
+					      $old_linenumber) .
+				    " | " .
+				    $query->a({href=>$url_old_both},
+					      "Parallel")),
+			 $query->td({-class=>'line', -colspan=>'2'},
+				    $query->a({href=>$url_new}, "Line " .
+					      $new_linenumber) .
+				    " | " .
+				    $query->a({href=>$url_new_both},
+					      "Parallel"))),
+				    "\n";
+    } else {
+	# No match in the repository - or a new file.  Just display
+	# the headings.
+	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
+				    "Line $old_linenumber"),
+			 $query->td({-class=>'line', -colspan=>'2'},
+				    "Line $new_linenumber")),
+	"\n";
+    }
+}
+
+# Output the delta text chunk in the coloured format.
+sub delta_text ($$$$$$$$) {
+    my ($self, $filename, $filenumber, $revision, $old_linenumber,
+	$new_linenumber, $text, $repmatch) = @_;
+
+    my $query = $self->{query};
+
+    # Split up the lines, and display them, with the appropriate links.
+    my @lines = split /\n/, $text;
+    $self->{old_linenumber} = $old_linenumber;
+    $self->{new_linenumber} = $new_linenumber;
+    for (my $i = 0; $i <= $#lines; $i++) {
+	my $line = $lines[$i];
+	print STDERR "1 filenumber is $filenumber\n";
+	$self->display_coloured_data($filenumber, $line);
+    }
+
+    # Render the diff blocks.
+    $self->render_changes($filenumber);
+}
+
 # Display a line for coloured data.  Note special handling is done for
 # unidiff formatted text, to output it in the "coloured-diff" style.  This
 # requires storing state when retrieving each line.
-sub display_coloured_data ($$$$$$$$$$$$$) {
-    my ($self, $leftline, $rightline, $offset,
-	$data, $current_file, $current_file_revision,
-	$current_old_file_linenumber, $current_new_file_linenumber,
-	$reading_diff_block, $diff_linenumbers_found, $cvsmatch,
-	$block_description) = @_;
-
-    # Don't do anything if the diff block is still being read.  The upper
-    # functions are storing the necessary data.
-    return if ($reading_diff_block);
+sub display_coloured_data ($$$) {
+    my ($self, $filenumber, $data) = @_;
 
     my $query = $self->{query};
 
     # Escape the data.
     $data = CGI::escapeHTML($data);
 
-    if ($diff_linenumbers_found) {
-	if ($self->{diff_current_filename} ne $current_file) {
-	    # The filename has changed, render the current diff block (if any)
-	    # close the table, and open a new one.
-	    $self->render_changes();
-	    print $query->end_table();
+    my $leftline = $self->{old_linenumber};
+    my $rightline = $self->{new_linenumber};
+    if ($data =~ /^\-(.*)$/) {
+	# Line corresponds to something which has been removed.
+	add_old_change($1, $leftline);
+	$leftline++;
+    } elsif ($data =~ /^\+(.*)$/) {
+	# Line corresponds to something which has been removed.
+	add_new_change($1, $rightline);
+	$rightline++;
+    } elsif ($data =~ /^\\/) {
+	# A diff comment such as "No newline at end of file" - ignore it.
+    } else {
+	# Strip the first space off the diff for proper alignment.
+	$data =~ s/^\s//;
 
-	    $self->{diff_current_filename} = $current_file;
-	    $self->print_coloured_table();
+	# Render the previous diff changes visually.
+	$self->render_changes($filenumber);
 
-	    my $contents_url =
-		$self->{url_builder}->view_url($self->{topic}, -1,
-					       $self->{mode}) .	"#contents";
-	    if ($cvsmatch) {
-		# File matches something in CVS repository.  Link it to
-		# the CVS viewer if it is defined.
-		my $cell = "";
-		my $revision_text = "revision $current_file_revision";
-		if (!defined $self->{repository} ||
-		    $self->{repository}->getViewUrl($current_file) eq "") {
-		    $cell = $query->td({-class=>'file', -colspan=>'3'},
-				       "Diff for ",
-				       $query->a({name=>"$current_file"},
-						 "$current_file"),
-				       "$revision_text");
-		}
-		else {
-		    my $url = $self->{repository}->getViewUrl($current_file);
-		    $cell = $query->td({-class=>'file', -colspan=>'3'},
-				       "Diff for ",
-				       $query->a({href=>"$url",
-						  name=>"$current_file"},
-						 "$current_file"),
-				       "$revision_text");
-		}
-		print $query->Tr($cell,
-				 $query->td({-class=>'file', align=>'right'},
-					     $query->a({href=>$contents_url},
-						       "[Go to Contents]")));
-	    } else {
-		# No match in repository - or a new file.
-		print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
-					    "Diff for ",
-					    $query->a({name=>"$current_file"},
-						      "$current_file")),
-				 $query->td({-class=>'file', align=>'right'},
-					    $query->a({href=>$contents_url},
-						      "[Go to contents]")));
-	    }
-	}
-
-	print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
-			 $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
-
-	# Output a diff block description if one is available, in a separate
-	# row.
-	if ($block_description ne "") {
-	    my $description = CGI::escapeHTML($block_description);
-	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
-					$description),
-			     $query->td({-class=>'line', -colspan=>'2'},
-					$description));
-	}
+	# Render the current line for both cells.
+	my $celldata = $self->render_coloured_cell($data);
+	my $left_prefix = $self->{parallel} ? "L" : "";
+	my $right_prefix = $self->{parallel} ? "R" : "";
 	
-	if ($cvsmatch && defined $self->{repository} &&
-	    $self->{repository}->getRoot() ne "") {
-	    # Display the line numbers corresponding to the patch, with links
-	    # to the CVS file.
-	    my $url_builder = $self->{url_builder};
-	    my $topic = $self->{topic};
-	    my $mode = $self->{mode};
-	    my $url_old_full =
-		$url_builder->view_file_url($topic, $current_file,
-					    $UrlBuilder::OLD_FILE,
-					    $current_old_file_linenumber,
-					    "", $mode);
-	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
+	# Determine the appropriate classes to render.
+	my $cell_class =
+	    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
+	
+	my $rendered_left_linenumber =
+	    $self->render_linenumber($leftline, $filenumber, 0, $left_prefix);
+	my $rendered_right_linenumber =
+	    ($leftline == $rightline && !$self->{parallel}) ?
+	    $rendered_left_linenumber :
+	    $self->render_linenumber($rightline, $filenumber, 1, $right_prefix);
+	
+	print $query->Tr($query->td($rendered_left_linenumber),
+			 $query->td({-class=>$cell_class}, $celldata),
+			 $query->td($rendered_right_linenumber),
+			 $query->td({-class=>$cell_class}, $celldata),
+			 "\n");
 
-	    my $url_old_both_full =
-		$url_builder->view_file_url($topic, $current_file,
-					    $UrlBuilder::BOTH_FILES,
-					    $current_old_file_linenumber,
-					    "L", $mode);
-	    my $url_old_both =
-		"javascript: myOpen('$url_old_both_full','CVS')";
-
-	    my $url_new_full =
-		$url_builder->view_file_url($topic, $current_file,
-					    $UrlBuilder::NEW_FILE,
-					    $current_new_file_linenumber,
-					    "", $mode);
-	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
-
-	    my $url_new_both_full =
-		$url_builder->view_file_url($topic, $current_file,
-					    $UrlBuilder::BOTH_FILES,
-					    $current_new_file_linenumber,
-					    "R", $mode);
-	    my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
-
-	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
-					$query->a({href=>"$url_old"}, "Line " .
-						  "$current_old_file_linenumber") .
-					" | " .
-					$query->a({href=>"$url_old_both"},
-						  "Parallel")),
-			     $query->td({-class=>'line', -colspan=>'2'},
-					$query->a({href=>"$url_new"}, "Line " .
-						  "$current_new_file_linenumber") .
-					" | " .
-					$query->a({href=>"$url_new_both"},
-						  "Parallel"))),
-					"\n";
-	} else {
-	    # No match in the repository - or a new file.  Just display
-	    # the headings.
-	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
-					"Line $current_old_file_linenumber"),
-			     $query->td({-class=>'line', -colspan=>'2'},
-					"Line $current_new_file_linenumber")),
-			     "\n";
-	}
+	$leftline++;
+	$rightline++;
     }
-    else {
-	if ($data =~ /^\-(.*)$/) {
-	    # Line corresponds to something which has been removed.
-	    add_old_change($1, $leftline, $offset);
-	} elsif ($data =~ /^\+(.*)$/) {
-	    # Line corresponds to something which has been removed.
-	    add_new_change($1, $rightline, $offset);
-	} elsif ($data =~ /^\\/) {
-	    # A diff comment such as "No newline at end of file" - ignore it.
-	} else {
-	    # Strip the first space off the diff for proper alignment.
-	    $data =~ s/^\s//;
 
-	    # Render the previous diff changes visually.
-	    $self->render_changes();
-
-	    # Render the current line for both cells.
-	    my $celldata = $self->render_coloured_cell($data);
-	    my $left_prefix = $self->{parallel} ? "L" : "";
-	    my $right_prefix = $self->{parallel} ? "R" : "";
-
-	    # Determine the appropriate classes to render.
-	    my $cell_class =
-		$self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-
-	    my $rendered_left_linenumber =
-		$self->render_linenumber($leftline, $offset, $left_prefix);
-	    my $rendered_right_linenumber =
-		($leftline == $rightline && !$self->{parallel}) ?
-		$rendered_left_linenumber :
-		$self->render_linenumber($rightline, $offset, $right_prefix);
-
-	    print $query->Tr($query->td($rendered_left_linenumber),
-			     $query->td({-class=>$cell_class}, $celldata),
-			     $query->td($rendered_right_linenumber),
-			     $query->td({-class=>$cell_class}, $celldata),
-			     "\n");
-	}
-    }
+    # Update the left and right line nymber state variables.
+    $self->{old_linenumber} = $leftline;
+    $self->{new_linenumber} = $rightline;
 }
 
 # Render a cell for the coloured diff.
@@ -406,24 +479,22 @@ sub render_coloured_cell($$)
 }
 
 # Indicate a line of data which has been removed in the diff.
-sub add_old_change($$$) {
-    my ($data, $linenumber, $offset) = @_;
+sub add_old_change($$) {
+    my ($data, $linenumber) = @_;
     push @diff_old_lines, $data;
     push @diff_old_lines_numbers, $linenumber;
-    push @diff_old_lines_offsets, $offset;
 }
 
 # Indicate that a line of data has been added in the diff.
-sub add_new_change($$$) {
-    my ($data, $linenumber, $offset) = @_;
+sub add_new_change($$) {
+    my ($data, $linenumber) = @_;
     push @diff_new_lines, $data;
     push @diff_new_lines_numbers, $linenumber;
-    push @diff_new_lines_offsets, $offset;
 }
 
 # Render the current diff changes, if there is anything.
-sub render_changes($) {
-    my ($self) = @_;
+sub render_changes($$) {
+    my ($self, $filenumber) = @_;
 
     return if ($#diff_new_lines == -1 && $#diff_old_lines == -1);
 
@@ -451,51 +522,43 @@ sub render_changes($) {
 	    $arg1 = "msr"; $arg2 = "msrb"; $arg3 = "msr"; $arg4 = "msrb";
 	}
     }
-    $self->render_inplace_changes($arg1, $arg2, $arg3, $arg4);
+    $self->render_inplace_changes($arg1, $arg2, $arg3, $arg4, $filenumber);
 
     # Now that the diff changeset has been rendered, remove the state data.
     @diff_new_lines = ();
     @diff_new_lines_numbers = ();
-    @diff_new_lines_offsets = ();
     @diff_old_lines = ();
     @diff_old_lines_numbers = ();
-    @diff_old_lines_offsets = ();
 }
 
 # Render the inplace changes in the current diff change set.
-sub render_inplace_changes($$$$$)
+sub render_inplace_changes($$$$$$)
 {
     my ($self, $old_col, $old_notpresent_col, $new_col,
-	$new_notpresent_col) = @_;
+	$new_notpresent_col, $filenumber) = @_;
 
     my $old_data;
     my $new_data;
     my $old_data_line;
     my $new_data_line;
-    my $old_data_offset;
-    my $new_data_offset;
     while ($#diff_old_lines != -1 || $#diff_new_lines != -1) {
 
 	# Retrieve the next lines which were removed (if any).
 	if ($#diff_old_lines != -1) {
 	    $old_data = shift @diff_old_lines;
 	    $old_data_line = shift @diff_old_lines_numbers;
-	    $old_data_offset = shift @diff_old_lines_offsets;
 	} else {
 	    undef($old_data);
 	    undef($old_data_line);
-	    undef($old_data_offset);
 	}
 
 	# Retrieve the next lines which were added (if any).
 	if ($#diff_new_lines != -1) {
 	    $new_data = shift @diff_new_lines;
 	    $new_data_line = shift @diff_new_lines_numbers;
-	    $new_data_offset = shift @diff_new_lines_offsets;
 	} else {
 	    undef($new_data);
 	    undef($new_data_line);
-	    undef($new_data_offset);
 	}
 
 	my $render_old_data = $self->render_coloured_cell($old_data);
@@ -515,13 +578,16 @@ sub render_inplace_changes($$$$$)
 	my $new_prefix = $parallel ? "R" : "";
 
 	my $query = $self->{query};
+	print STDERR "RENDER_INPLACE_CHANGES called!!!\n";
 	print $query->Tr($query->td($self->render_linenumber($old_data_line,
-							     $old_data_offset,
+							     $filenumber,
+							     0,
 							     $old_prefix)),
 			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
 			 $query->td($self->render_linenumber($new_data_line,
-							     $new_data_offset,
+							     $filenumber,
+							     1,
 							     $new_prefix)),
 			 $query->td({-class=>"$render_new_colour"},
 				    $render_new_data), "\n");
@@ -533,8 +599,8 @@ sub render_inplace_changes($$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$$) {
-    my ($self, $line, $offset, $prefix) = @_;
+sub render_linenumber($$$$$) {
+    my ($self, $line, $filenumber, $new, $prefix) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
@@ -551,8 +617,10 @@ sub render_linenumber($$$$) {
     }
 
     my $linedata;
-    my $comment_exists_ref = $self->{comment_exists_ref};
-    if ($offset != -1 && defined $$comment_exists_ref{$offset}) {
+    my %comment_hash = %{ $self->{comment_hash} };
+    my $key = "$filenumber|$line|$new";
+    print STDERR "RENDER FILENUMBER IS $filenumber\n";
+    if ($filenumber != -1 && defined $comment_hash{$key}) {
 	if ($self->{mode} == $Codestriker::NORMAL_MODE) {
 	    $linedata = "<FONT COLOR=\"$COMMENT_LINE_COLOUR\">$line</FONT>";
 	} else {
@@ -568,18 +636,15 @@ sub render_linenumber($$$$) {
     }
     
     # Check if the linenumber is outside the review.
-    if ($offset == -1) {
+    if ($filenumber == -1) {
 	return $linedata;
     }
 
-    my $link_title = $self->get_comment_digest($offset);
+    my $link_title = $self->get_comment_digest($line, $filenumber, $new);
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
-    my $anchor = "$prefix$line";
-    my $edit_url =
-	$self->{url_builder}->edit_url($offset, $self->{topic}, "", $anchor,
-				       "");
-    $edit_url = "javascript:myOpen('$edit_url','e')";
+    my $anchor = $key;
+    my $edit_url = "javascript:eo('$filenumber','$line','$new')";
 
     my $query = $self->{query};
     if ($link_title ne "") {
@@ -597,28 +662,33 @@ sub render_linenumber($$$$) {
 # Generate a string which represents a digest of all the comments made for a
 # particular line number.  Used for "tool-tip" windows for line number links
 # and/or setting the status bar.
-sub get_comment_digest($$) {
-    my ($self, $line) = @_;
+sub get_comment_digest($$$$) {
+    my ($self, $line, $filenumber, $new) = @_;
 
     my $digest = "";
-    my $comment_exists_ref = $self->{comment_exists_ref};
-    if ($$comment_exists_ref{$line}) {
-	my $comments = $self->{comments};
-	for (my $i = 0; $i <= $#$comments; $i++) {
-	    my $comment = $$comments[$i];
-	    if ($comment->{line} == $line) {
-		# Need to remove the newlines for the data.
-		my $data = $comment->{data};
-		$data =~ s/\n/ /mg; # Remove newline characters
+    my %comment_hash = %{ $self->{comment_hash} };
+    my $key = "$filenumber|$line|$new";
+    print STDERR "Looking up key $key in hash %comment_hash\n";
+    if (defined $comment_hash{$key}) {
+	my @comments = @{ $comment_hash{$key} };
+    
+	print STDERR "i is $#comments\n";
+	for (my $i = 0; $i <= $#comments; $i++) {
+	    my $comment = $comments[$i];
 
-		if ($CGI::VERSION < 2.59) {
-		    # Gggrrrr... the way escaping has been done between these
-		    # versions has changed. This needs to be looked into more
-		    # but this does the job for now as a workaround.
-		    $data = CGI::escapeHTML($data);
-		}
-		$digest .= "$data ------- ";
+	    print STDERR "Got comment: " . $comment->{data} . "\n";
+
+	    # Need to remove the newlines for the data.
+	    my $data = $comment->{data};
+	    $data =~ s/\n/ /mg; # Remove newline characters
+
+	    if ($CGI::VERSION < 2.59) {
+		# Gggrrrr... the way escaping has been done between these
+		# versions has changed. This needs to be looked into more
+		# but this does the job for now as a workaround.
+		$data = CGI::escapeHTML($data);
 	    }
+	    $digest .= "$data ------- ";
 	}
 	# Chop off the last 9 characters.
 	substr($digest, -9) = "";
@@ -745,9 +815,6 @@ sub print_coloured_table($)
 # Finish topic view display hook for coloured mode.
 sub _coloured_mode_finish ($) {
     my ($self) = @_;
-
-    # Make sure the last diff block (if any) is written.
-    $self->render_changes();
 
     print "</TABLE>\n";
 }
@@ -915,20 +982,45 @@ sub tabadjust ($$$$) {
 }
 
 # Retrieve the data that forms the "context" when submitting a comment.	
-sub get_context ($$$$$\@) {
-    my ($type, $line, $topic, $context, $html_view, $document_ref) = @_;
+sub get_context ($$$$$$$$$) {
+    my ($type, $targetline, $topic, $context, $html_view, $old_startline,
+	$new_startline, $text, $new) = @_;
 
-    my @document = @$document_ref;
+    # Break the text into lines.
+    my @document = split /\n/, $text;
+    
+    # Calculate the location of the target line within the diff chunk.
+    my $offset;
+    my $old_linenumber = $old_startline;
+    my $new_linenumber = $new_startline;
+    for ($offset = 0; $offset <= $#document; $offset++) {
+
+	my $data = $document[$offset];
+
+	# Check if the target line as been found.
+	if ($data =~ /^ /o) {
+	    last if ($new && $new_linenumber == $targetline);
+	    last if ($new == 0 && $old_linenumber == $targetline);
+	    $old_linenumber++;
+	    $new_linenumber++;
+	} elsif ($data =~ /^\+/o) {
+	    last if ($new && $new_linenumber == $targetline);	    
+	    $new_linenumber++;
+	} elsif ($data =~ /^\-/o) {
+	    last if ($new == 0 && $old_linenumber == $targetline);
+	    $old_linenumber++;
+	}
+    }
 
     # Get the minimum and maximum line numbers for this context, and return
     # the data.  The line of interest will be rendered appropriately.
-    my $min_line = ($line - $context < 0 ? 0 : $line - $context);
-    my $max_line = $line + $context;
+    my $min_line = ($offset - $context < 0 ? 0 : $offset - $context);
+    my $max_line = $offset + $context;
     my $context_string = "";
     for (my $i = $min_line; $i <= $max_line && $i <= $#document; $i++) {
 	my $linedata = $document[$i];
 	if ($html_view) {
-	    if ($i == $line) {
+	    if ($i == $offset) {
 		$context_string .=
 		    "<font color=\"$CONTEXT_COLOUR\">" .
 		      CGI::escapeHTML($linedata) . "</font>\n";
@@ -936,7 +1028,7 @@ sub get_context ($$$$$\@) {
 		$context_string .= CGI::escapeHTML("$linedata") ."\n";
 	    }
 	} else {
-	    $context_string .= ($i == $line) ? "* " : "  ";
+	    $context_string .= ($i == $offset) ? "* " : "  ";
 	    $context_string .= $linedata . "\n";
 	}
     }

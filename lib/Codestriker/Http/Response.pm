@@ -163,6 +163,14 @@ sub generate_header($$$$$$$$$$$) {
 	windowHandle.focus();
     }
 
+    // Edit open function.  Name is kept short to reduce output size.
+    function eo(fn,line,newfile) {
+        var baseUrl = $query->url();
+	myOpen(baseUrl + '?fn=' + fn + '&line=' + line +
+	       '&new=' + newfile + '&topic=$topic&action=edit&a=' +
+               fn + '|' + line + '|' + newfile, 'e');
+    }
+
     function gotoAnchor(anchor, reload) {
 	if (anchor == "" || opener == null) return;
 

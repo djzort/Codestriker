@@ -15,9 +15,9 @@ use Codestriker::DB::DBI;
 use Codestriker::Model::File;
 
 # Create a new topic with all of the specified properties.
-sub create($$$$$$$$$$) {
+sub create($$$$$$$$$$$) {
     my ($type, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
-	$description, $document, $timestamp, $repository) = @_;
+	$description, $document, $timestamp, $repository, $deltas_ref) = @_;
     
     my @bug_ids = split /, /, $bug_ids;
     my @reviewers = split /, /, $reviewers;
@@ -70,10 +70,10 @@ sub create($$$$$$$$$$) {
 					 $timestamp, 0);
     }
 
-    # Create the appropriate file rows, if we diff file is being reviewed.
+    # Create the appropriate delta rows.
     my $repository_root = "";
     $repository_root = $repository->getRoot() if defined $repository;
-    $success &&= Codestriker::Model::File->create($dbh, $topicid, $document,
+    $success &&= Codestriker::Model::File->create($dbh, $topicid, $deltas_ref,
 						  $repository_root);
     
     Codestriker::DB::DBI->release_connection($dbh, $success);

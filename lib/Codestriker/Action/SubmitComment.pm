@@ -26,6 +26,8 @@ sub process($$$) {
     # Check that the appropriate fields have been filled in.
     my $topic = $http_input->get('topic');
     my $line = $http_input->get('line');
+    my $fn = $http_input->get('fn');
+    my $new = $http_input->get('new');
     my $comments = $http_input->get('comments');
     my $email = $http_input->get('email');
     my $cc = $http_input->get('comment_cc');
@@ -40,25 +42,17 @@ sub process($$$) {
 	$http_response->error("No email address was entered");
     }
 
-    # Try to determine what file and line number this comment refers to.
-    my $filename = "";
-    my $file_linenumber = 0;
-    my $accurate = 0;
-    $type->_get_file_linenumber($topic, $line, \$filename, \$file_linenumber,
-				\$accurate);
-
     # Create the comment in the database.
     my $timestamp = Codestriker->get_timestamp(time);
-    Codestriker::Model::Comment->create($topic, $line, $email, $comments,
-					$timestamp,
-					$Codestriker::COMMENT_SUBMITTED,
-					$filename, $file_linenumber);
+    Codestriker::Model::Comment->create($topic, $line, $fn, $new,
+					$email, $comments, $timestamp,
+					$Codestriker::COMMENT_SUBMITTED);
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
-    my $edit_url = $url_builder->edit_url($line, $topic, "", "",
-					  $query->url());
+    my $edit_url = $url_builder->edit_url($fn, $line, $new,
+					  $topic, "", "", $query->url());
     my $view_topic_url = $url_builder->view_url($topic, $line, $mode);
     my $view_comments_url = $url_builder->view_comments_url($topic);
 
@@ -83,14 +77,18 @@ sub process($$$) {
 	$http_response->error("Topic no longer exists.");
     }
 
+    # Retrieve the diff hunk for this file and line number.
+    my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
+
     # Retrieve the comment details for this topic.
-    my (@comments, %comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
+    my @comments = Codestriker::Model::Comment->read($topic);
     my %contributors = ();
     $contributors{$email} = 1;
     my $cc_recipients = "";
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{line} == $line &&
+	if ($comments[$i]{fileline} == $line &&
+	    $comments[$i]{filenumber} == $fn &&
+	    $comments[$i]{filenew} == $new &&
 	    $comments[$i]{author} ne $document_author &&
 	    ! exists $contributors{$comments[$i]{author}}) {
 	    $contributors{$comments[$i]{author}} = 1;
@@ -126,28 +124,24 @@ sub process($$$) {
 	"$email added a comment to Topic \"$document_title\".\n\n" .
 	"URL: $edit_url\n\n";
 
-    if ($filename ne "") {
-	if ($file_linenumber > 0) {
-	    $body .= "File: $filename" . ($accurate ? "" : " around") .
-		" line $file_linenumber.\n\n";
-	}
-	else {
-	    $body .= "File: $filename\n\n";
-	}
-    }
+    $body .= "File: " . $delta->{filename} . " line $line.\n\n";
 
     $body .= "Context:\n";
     $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";
-    my @document = split /\n/, $topic_data;
     my $email_context = $Codestriker::EMAIL_CONTEXT;
     $body .= Codestriker::Http::Render->get_context($line, $topic,
 						    $email_context, 0,
-						    \@document) . "\n";
+						    $delta->{old_linenumber},
+						    $delta->{new_linenumber},
+						    $delta->{text}, $new)
+	. "\n";
     $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";    
     
     # Now display the comments that have already been submitted.
     for (my $i = $#comments; $i >= 0; $i--) {
-	if ($comments[$i]{line} == $line) {
+	if ($comments[$i]{fileline} == $line &&
+	    $comments[$i]{filenumber} == $fn &&
+	    $comments[$i]{filenew} == $new) {
 	    my $data = $comments[$i]{data};
 
 	    $body .= "$comments[$i]{author} $comments[$i]{date}\n\n$data\n\n";
@@ -170,6 +164,8 @@ sub process($$$) {
     $http_response->generate_header($topic, "Comment submitted", $email, "",
 				    "", "", "", $repository, $anchor,
 				    $reload, 0);
+
+    print STDERR "ANCHOR IS $anchor\n";
     my $vars = {};
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
@@ -183,10 +179,12 @@ sub process($$$) {
 # were made against '+' lines or unchanged lins, this will give an
 # accurate result.  For other situations, the number returned will be
 # approximate.  The results are returned in $filename_ref,
-# $linenumber_ref and $accurate_ref references.
-sub _get_file_linenumber ($$$$$)
+# $linenumber_ref and $accurate_ref references.  This is a deprecated method
+# which is only used for data migration purposes (within checksetup.pl and
+# import.pl).
+sub _get_file_linenumber ($$$$$$$)
 {
-    my ($type, $topic, $topic_linenumber,
+    my ($type, $topic, $topic_linenumber, $filenumber_ref,
 	$filename_ref, $linenumber_ref, $accurate_ref) = @_;
     
     # Find the appropriate file that $topic_linenumber refers to.
@@ -219,8 +217,9 @@ sub _get_file_linenumber ($$$$$)
 	if ( ($topic_linenumber >=
 	      $offset[$index] - $diff_header_size) &&
 	     ($topic_linenumber <= $offset[$index]) ) {
+	    $$filenumber_ref = $index;
 	    $$filename_ref = $filename[$index];
-	    $$linenumber_ref = -1;
+	    $$linenumber_ref = 1;
 	    $$accurate_ref = 0;
 	    return;
 	}
@@ -229,6 +228,7 @@ sub _get_file_linenumber ($$$$$)
 
     # Couldn't find a matching linenumber.
     if ($index < 0 || $index > $#filename) {
+	$$filenumber_ref = -1;
 	$$filename_ref = "";
 	return;
     }
@@ -272,12 +272,14 @@ sub _get_file_linenumber ($$$$$)
 
     if ($current_topic_linenumber >= $topic_linenumber) {
 	# The topic linenumber was found.
+	$$filenumber_ref = $index;
 	$$filename_ref = $filename[$index];
 	$$linenumber_ref = $newfile_linenumber;
 	$$accurate_ref = $accurate_line;
     }
     else {
 	# The topic linenumber was not found.
+	$$filenumber_ref = -1;
 	$$filename_ref = "";
     }
     return;

@@ -16,6 +16,7 @@ use Codestriker::Smtp::SendEmail;
 use Codestriker::Http::Render;
 use Codestriker::BugDB::BugDBConnectionFactory;
 use Codestriker::Repository::RepositoryFactory;
+use Codestriker::FileParser::Parser;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {
@@ -31,6 +32,7 @@ sub process($$$) {
     my $email = $http_input->get('email');
     my $cc = $http_input->get('cc');
     my $fh = $http_input->get('fh');
+    my $mimetype = $http_input->get('fh_mimetype');
     my $topic_file = $http_input->get('fh_filename');
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
@@ -91,6 +93,11 @@ sub process($$$) {
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
 
+    # Try to parse the topic text into its diff chunks.  Create the mimetype
+    # from the filename extension.
+    my @deltas =
+	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository);
+
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
 	while (<$fh>) {
@@ -118,7 +125,7 @@ sub process($$$) {
     Codestriker::Model::Topic->create($topicid, $email, $topic_title,
 				      $bug_ids, $reviewers, $cc,
 				      $topic_description, $topic_text,
-				      $timestamp, $repository);
+				      $timestamp, $repository, \@deltas);
 
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

@@ -19,7 +19,7 @@ use Codestriker::Repository::CvsWeb;
 sub get ($$) {
     my ($type, $repository) = @_;
 
-    if ($repository eq "") {
+    if (!(defined $repository) || $repository eq "") {
 	return undef;
     }
 

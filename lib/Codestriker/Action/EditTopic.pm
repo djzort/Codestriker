@@ -21,6 +21,8 @@ sub process($$$) {
 
     # Retrieve the appropriate input fields.
     my $line = $http_input->get('line');
+    my $fn = $http_input->get('fn');
+    my $new = $http_input->get('new');
     my $topic = $http_input->get('topic');
     my $context = $http_input->get('context');
     my $email = $http_input->get('email');
@@ -51,12 +53,14 @@ sub process($$$) {
     }
 
     # Retrieve the comment details for this topic.
-    my (@comments, %comment_exists);
-    Codestriker::Model::Comment->read($topic, \@comments, \%comment_exists);
+    my @comments =
+	Codestriker::Model::Comment->read($topic);
 
-    # Retrieve line-by-line versions of the data and description.
+    # Retrieve line-by-line versions of the description.
     my @document_description = split /\n/, $description;
-    my @document = split /\n/, $topic_data;
+
+    # Retrieve the diff hunk for this file and line number.
+    my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
 
     # Display the header of this page.
     $http_response->generate_header($topic, $document_title, $email, "", "",
@@ -90,23 +94,28 @@ sub process($$$) {
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
-	$url_builder->edit_url($line, $topic, $inc_context, "", "");
+	$url_builder->edit_url($fn, $line, $new, $topic, $inc_context, "", "");
     my $dec_context_url =
-	$url_builder->edit_url($line, $topic, $dec_context, "", "");
+	$url_builder->edit_url($fn, $line, $new, $topic, $dec_context, "", "");
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
 
-    $vars->{'context'} =
-	$query->pre(Codestriker::Http::Render->get_context($line, $topic,
-							   $context, 1,
-							   \@document)) .
-							   $query->p . "\n";
+    $vars->{'context'} = $query->pre(
+	    Codestriker::Http::Render->get_context($line, $topic,
+						   $context, 1,
+						   $delta->{old_linenumber},
+						   $delta->{new_linenumber},
+						   $delta->{text},
+						   $new)) .
+						       $query->p . "\n";
 
     # Display the comments which have been made for this line number
     # in chronological order.
     my @display_comments = ();
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{line} == $line) {
+	if ($comments[$i]{fileline} == $line &&
+	    $comments[$i]{filenumber} == $fn &&
+	    $comments[$i]{filenew} == $new) {
 	    my $display_comment = {};
 	    my $author = $comments[$i]{author};
 	    if ($Codestriker::antispam_email) {
@@ -132,6 +141,10 @@ sub process($$$) {
     $vars->{'mode'} = $mode;
     $vars->{'anchor'} = $anchor;
     $vars->{'email'} = $email;
+    $vars->{'fn'} = $fn;
+    $vars->{'new'} = $new;
+
+    print STDERR "ANCHOR IS $anchor\n";
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("edittopic");
