@@ -67,11 +67,13 @@
  <td>[% number_of_lines %]</td>
 </tr>
 
+[% IF repository != '' %]
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Repository:</td>
  <td>[% repository %]</td>
 </tr>
+[% END %]
 
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]

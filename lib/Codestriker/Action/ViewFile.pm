@@ -28,6 +28,11 @@ sub process($$$) {
     my $filename = $http_input->get('filename');
     my $new = $http_input->get('new');
 
+    # Check if this action is allowed.
+    if ($Codestriker::allow_repositories == 0) {
+	$http_response->error("This function has been disabled");
+    }
+
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,

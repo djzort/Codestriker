@@ -50,11 +50,6 @@ sub process($$$) {
 	$mode = $Codestriker::NORMAL_MODE;
     }
 
-    # Retrieve the repository object.
-    my $repository =
-	Codestriker::Repository::RepositoryFactory->get($repository_url);
-    my $repository_root = defined $repository ? $repository->getRoot() : "";
-
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $description;
     my @document = split /\n/, $topic_data;
@@ -69,6 +64,18 @@ sub process($$$) {
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, $repository_url,
 				    "", 0, 1);
+
+    # Retrieve the repository object, if repository functionality is enabled.
+    my $repository;
+    my $repository_root = "";
+    if ($Codestriker::allow_repositories) {
+	$repository =
+	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+	$repository_root = defined $repository ? $repository->getRoot() : "";
+    } else {
+	# Indicate not to activate any repository-related links.
+	$repository_url = "";
+    }
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -256,7 +263,8 @@ sub process($$$) {
 		 ($mode == $Codestriker::COLOURED_MODE ||
 		  $mode == $Codestriker::COLOURED_MONO_MODE)) {
 	    next;
-	} elsif ($document[$i] =~ /^RCS file: $repository_root\/(.*),v$/) {
+	} elsif ($repository_root ne "" &&
+		 $document[$i] =~ /^RCS file: $repository_root\/(.*),v$/) {
 	    # The part identifying the file.
 	    $current_file = $1;
 	    $cvsmatch = 1;

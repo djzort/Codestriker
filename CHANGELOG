@@ -7,7 +7,8 @@ Version 1.6.1
 
 * Allow for the list/search topics and topic deletion to possibly be
   disabled.  This is required for a codestriker server which is
-  handling "anonymous" reviews on a public site.
+  handling "anonymous" reviews on a public site.  This option is set
+  from the codestriker.conf file.
 
 * Added a "repository" attribute associated with a topic.  This is the
   source code repository associated with the review, and by default is
@@ -25,6 +26,12 @@ Version 1.6.1
   For a local repository, it could be just:
 
   /usr/local/cvsroot
+
+* Allow for the view file screen to be disabled (allows viewing of an
+  entire file before and/or after a proposed change).  On some
+  deployments (eg, the sourceforge servers), the firewall has been
+  setup so that CGI scripts can't perform any remote HTTP connections.
+  This option is set from the codestriker.conf file.
 
 * Added a configuration flag to indicate that email addresses should
   be displayed in an "anti spam" form.  Eg:
