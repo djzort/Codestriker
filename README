@@ -141,21 +141,15 @@ run as a CGI script, it should be possible to deploy under any
 web-server on windows that supports CGI.
 
 Perl for windows can be downloaded from ActiveState, at
-http://www.activestate.com.  Once Perl is installed on your system,
-you can run the "ppm" command, to install perl modules easily off the
-web.  The first time you run "ppm", issue the following commands:
+http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl.
 
-set repository oi http://openinteract.sourceforge.net/ppmpackages/
-set save
+Once Perl is installed on your system, you can run the "ppm" command,
+to install perl modules easily off the web.  The first time you run
+"ppm", issue the following commands:
 
-This tells PPM to also include
-http://openinteract.sourceforge.net/ppmpackages/ as a location when
-searching for Perl packages.  At this stage, you can use the install
-commands to install missing modules on your system, for example:
+install DBI
 
-install mod_perl
-
-will install the mod_perl package on your system.
+will install the DBI package on your system.
 
 ----------------------------------------------------------------------
 
@@ -251,10 +245,19 @@ Apache 1.X mod_perl configuration
 
 Mod_perl is available for download from http://perl.apache.org.  For
 most Linux distributions, it is available by default with Apache.  For
-installing mod_perl under Windows, http://fill.me.in contains all the
-instructions you need.  As can be seen in the previous section, the
-Windows configuration is the same as the UNIX one, except for the
-syntax in defining filenames.
+installing mod_perl under Windows,
+http://www.webmatrix.net/log/modperl-win32 contains installation
+information.  One point to note however, I found I could not run ppm
+as "ppm --location=..." as shown on this site, but had to run ppm
+interactively, and issue commands like:
+
+ppm
+set location http://theoryx5.uwinnipeg.ca/ppmpackages
+set save
+install mod_perl
+
+As can be seen in the previous section, the Windows configuration is
+the same as the UNIX one, except for the syntax in defining filenames.
 
 Use the following configuration for Codestriker under Apache 1.X and
 mod_perl.
