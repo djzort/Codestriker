@@ -179,6 +179,22 @@ I have only used Codestriker with Apache 1.x with mod_perl, but have
 used it as an ordinary CGI script with Apache2.  A user has reported a
 successful deployment of Codestriker under mod_perl Apache2:
 
+                  I had to change the apache configuration by hand.  I
+                  used ModPerl::Registry for the perl handler. And
+                  place mod_perl into compatibility mode in a perl
+                  startup script.
+
+                  Then I modified the cgi-bin/codestriker.pl to change 
+                  its directory 
+
+                  chdir "/var/www/codestriker/codestriker-1.6.4/lib 
+
+                  so it finds the configuration file, and the template
+                  module will use this for its scratch data directory
+                  then.
+
+                  Seems to be working fine now :) 
+
 Using Windows
 -------------
 
@@ -187,6 +203,16 @@ Codestriker under Windows XP, with the following software components.
 Unfortunately, there is no simple installation process, so you need to
 be experienced with installing Perl web applications with Apache,
 before embarking on this task.
+
+    I've just gotten it up and running on my system and plan to get
+    our team using it very soon. If you're interested or are keeping
+    track, here are my details:
+
+                  - CodeStriker v1.6.4 
+                  - Windows XP Pro 
+                  - indigo Perl 5.6.1.626 
+                  - Apache web server 
+                  - mysql v3.23.53 
 
 Migrating old data
 ------------------
