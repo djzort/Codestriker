@@ -68,24 +68,13 @@
 	url="http://www.sourceforge.net/projects/codestriker">http://www.sourceforge.net/projects/codestriker</ulink>.
       </para>
       <para>
-        This document is available in the following printable formats:
-	<itemizedlist>
-	  <listitem>
-	    <para>
-	      PDF: <ulink url="codestriker.pdf">codestriker.pdf</ulink>
-	    </para>
-          </listitem>
-	  <listitem>
-	    <para>
-	      Postscript: <ulink url="codestriker.ps">codestriker.ps</ulink>
-	    </para>
-          </listitem>
-	  <listitem>
-	    <para>
-	      RTF: <ulink url="codestriker.rtf">codestriker.rtf</ulink>
-	    </para>
-          </listitem>
-	</itemizedlist>
+        An example Codestriker topic can be seen at
+	<ulink
+	url="http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view">http://codestriker.sourceforge.net/cgi-bin/codestriker.pl?topic=7063366&amp;action=view</ulink>
+      </para>
+      <para>
+        This document is available as a PDF:
+	<ulink url="codestriker.pdf">codestriker.pdf</ulink>.
       </para>
       <para>
         A screenshot of Codestriker is action can be seen in <xref
@@ -1110,7 +1099,7 @@ PerlSwitches -T
         summary of the topic.  This title is used when the topic is
         displayed in the "Topic list" screen (see <xref
         linkend="topic-list">).  The topic description contains a more
-        detailed description of the review itself, and show be enough
+        detailed description of the review itself, and should be enough
         for a reviewer to understand the purpose of the review.  If
         Codestriker is linked to a bug tracking system, further down in
         the form, the "Bug IDs" field gives the opportunity to enter
@@ -1166,7 +1155,7 @@ PerlSwitches -T
           and removed files.  Depending on your development process,
           you may want to issue different cvs diff commands with
           different flags, or even using "cvs rdiff" instead.
-          Codestriker can accept any output, as long as
+          Codestriker can accept any input, as long as
           <option>-u</option> is specified, to ensure the diff is in
           unidiff format.
 	</para>
@@ -1175,21 +1164,20 @@ PerlSwitches -T
 	  text upload" field, or selected from a file dialog which is
 	  created when the "Browse" button is pressed.  The "Start
 	  tag", "End tag" and "Module" fields can be left blank.  Once
-	  all the other fields have been entered, click the "Submit"
-	  button will create the review, and show a confirmation
-	  screen.
+	  all the other fields have been entered, clicking the
+	  "Submit" button will create the review, and show a
+	  confirmation screen.
 	</para>
 	<para>
 	  In some development processes, CVS tags are used to mark
-	  units of work that have been applied to the repository,
-	  which may or may not exist on separate branches to the main
-	  branch.  Rather than generating the review text via a CVS
-	  command, as specified in the previous section, the review
-	  text can be specified by entering in the "Start tag", "End
-	  tag" and "Module" name into their respective fields.
-	  Codestriker will then fetch the review text from the
-	  nominated repository automatically, by executing the
-	  appropriate CVS command itself.
+	  units of work that have been applied to the repository.
+	  Rather than generating the review text via a CVS command, as
+	  specified in the previously, the review text can be
+	  specified by entering in the "Start tag", "End tag" and
+	  "Module" name into their respective fields.  Codestriker
+	  will then fetch the review text from the nominated
+	  repository automatically, by executing the appropriate CVS
+	  command itself.
 	</para>
       </sect2>
       <sect2>
@@ -1220,12 +1208,14 @@ PerlSwitches -T
       <sect2>
 	<title>Creating Plain Text Topics</title>
 	<para>
-	  It is also possible to use Codestriker to simple review text
+	  It is also possible to use Codestriker to simply review text
 	  that is not in the form as a diff.  In this situation,
-	  Codestriker will simply treat the text as a single new
-	  file.  Reviewers will still be able to view the text and
-	  make comments on a per-line basis as before.  Simple put the
+	  Codestriker will simply treat the text as a single new file.
+	  Reviewers will still be able to view the text and make
+	  comments on a per-line basis as before.  Simply put the
 	  filename to be reviewed in the "Topic text upload" field.
+	  The "Start tag", "End tag" and "Module" fields have no
+	  relevance in this situation.
 	</para>
       </sect2>
       <sect2>
@@ -1235,7 +1225,7 @@ PerlSwitches -T
 	  to the top of your project directory, and issuing the
 	  following command:
 	  <programlisting>
-% svn diff -uN > /tmp/review.txt
+% svn diff -N > /tmp/review.txt
 	  </programlisting>
 	  This file should then be selected for the "Topic text
 	  upload" field.  The "Start tag", "End tag" and "Module"
@@ -1355,10 +1345,10 @@ PerlSwitches -T
 	  The next part of the screen shows the topic's attributes,
 	  such as the title, author, creation date, reviewer, the size
 	  of the topic text, the repository the code in the review has
-	  been made against and the project the review is associated
-	  with, the topic description.  If the topic fixes any bugs,
-	  the links to the bug descriptions will be shown here.  The
-	  topic's state is also shown here, and can be modified if
+	  been made against the project the review is associated with,
+	  and the topic description.  If the topic fixes any bugs, the
+	  links to the associated bug descriptions will be shown here.
+	  The topic's state is also shown here, and can be modified if
 	  appropriate, by selected the state from the drop-down list
 	  and pressing "Update".  If deletion has been enabled, a
 	  "Delete" button will appear, that allows the topic to be
@@ -1441,11 +1431,12 @@ PerlSwitches -T
 	  of the file.  If a comment needs to be made against a
 	  specific linenumber, click on the linenumber, and a new
 	  browser window will come up with the "Add Comment" page (see
-	  <xref linkend="add-comment">).
-	  This may take some time the first time, as a new browser
-	  window needs to be created.  After the comment has been
-	  entered, the window is not closed, so that for subsequent
-	  comments, the add comment window can be displayed quickly.
+	  <xref linkend="add-comment">).  This may take some time the
+	  first time, as a new browser window needs to be created.
+	  After the comment has been entered, the main browser window
+	  is displayed, and the comment window is not closed, so that
+	  for subsequent comments, the add comment window can be
+	  displayed quickly.
 	</para>
       </sect2>
       <sect2 id="add-comment">
@@ -1470,7 +1461,7 @@ PerlSwitches -T
 	  displayed, followed by the code in question.  The "increase"
 	  link can increase the amount of context code to display,
 	  while "decrease" will decrease the amount of context code.
-	  The line in question will be highlighted in red.
+	  The code line in question will be highlighted in red.
 	</para>
 	<para>
 	  Any previous comments made on this line will then be
@@ -1489,10 +1480,10 @@ PerlSwitches -T
 	  discussion happening.
 	</para>  
 	<para>
-	  On the comment has been submitted, the main "View Topic"
+	  Once the comment has been submitted, the main "View Topic"
 	  window will be displayed so that the review can quickly
 	  continue.  If a new comment needs to be added, the comment
-	  browser window will be bought quickly into focus.
+	  browser window will be bought back quickly into focus.
 	</para>
       </sect2>
       <sect2 id="view-file">
@@ -1501,10 +1492,10 @@ PerlSwitches -T
 	  As mention in <xref linkend="view-topic">, it is possible to
 	  view the entire contents of a file in a review in its
 	  original form, or in its proposed form, or side-by-side
-	  depending on which "Line" or "Parallel" link was selected.
-	  The review has to be linked to a SCM repository, so that it
-	  can fetch parts of the file which aren't a part of the review
-	  text.
+	  depending on whether the "Line" or "Parallel" link was
+	  selected.  The review has to be linked to a SCM repository,
+	  so that it can fetch parts of the file which aren't a part
+	  of the review text.
 	</para>
 	<para>
 	  When a "Line" link is clicked, a new browser window will
@@ -1588,10 +1579,10 @@ PerlSwitches -T
       <para>
         A separate heading is shown in the display, for each line in
         the review which has at least one comment made against it.
-        For each line, all of the comments made is shown, including
+        For each line, all of the comments made are shown, including
         the author and date information.  Each comment block has a
         state associated with it, which is primarily for the author's
-        benefit to change.  The following states are available:
+        benefit to change.  The following states are defined:
 	<variablelist>
 	  <varlistentry>
 	    <term>Submitted</term>
@@ -1835,13 +1826,14 @@ PerlSwitches -T
 	        A number of objects implement the Repository API,
 		which is used throughout the system.  Repositories
 		currently supported include a local CVS repository, a
-		remote CVS repository whose data is accessed by HTTP,
-		and Subversion.  Future repositories can be easily
-		added to this framework.  The methods in the
-		repository API include a way of retrieving the entire
-		contents of a specified file and revision (which is
-		used in the ViewFile action module), and the
-		generation of a revision file log URL.
+		remote CVS repository whose data is accessed by HTTP
+		or the pserver protocol, and Subversion.  Future
+		repositories can be easily added to this framework.
+		The methods in the repository API include a way of
+		retrieving the entire contents of a specified file and
+		revision (which is used in the ViewFile action
+		module), and the generation of a revision file log
+		URL.
 	      </para>
 	    </listitem>
 	  </varlistentry>
@@ -1965,7 +1957,7 @@ PerlSwitches -T
 	        A participant is associated with a topic, and contains
 	        an email address, and the type of participant they
 	        are, such as the author, reviewer or observer
-	        (somebody was is CC'ed the review).
+	        (somebody was is CC'ed for the review).
 	      </para>
 	    </listitem>
 	  </varlistentry>
@@ -1983,11 +1975,11 @@ PerlSwitches -T
 	    <term>commentstate</term>
 	    <listitem>
 	      <para>
-	        A commentstate row is associated with a comment, and
-	        contains exact information as to what file and
-	        linenumber the comment was made against.  It also
-	        contains state information about the comment, whether
-	        it is marked a "submitted", "complete" or "invalid".
+	        A commentstate row represents a comment block - a list
+		of comments made against a specific file and line
+		number.  The comment block has the notion of state,
+		whether it is marked "submitted", "complete" or
+		"invalid".
 	      </para>
 	    </listitem>
 	  </varlistentry>
@@ -1997,7 +1989,7 @@ PerlSwitches -T
 	      <para>
 	        This table records a many-to-many relationship between
 	        topics and bug ids.  A topic may fix more than one bug
-	        ids, and likewise, a bug id can be fixed by many
+	        id, and likewise, a bug id can be fixed by many
 	        topics.
 	      </para>
 	    </listitem>
@@ -2059,7 +2051,10 @@ PerlSwitches -T
     <para>
       Please mail me any other suggestions you have to
       <email>codestriker-user@lists.sourceforge.net</email> or to me
-      personally at <email>sits@users.sourceforge.net</email>.
+      personally at <email>sits@users.sourceforge.net</email>.  To
+      subscribe to the Codestriker mailing list, go to the following
+      URL: <ulink
+      url="http://lists.sourceforge.net/lists/listinfo/codestriker-user">http://lists.sourceforge.net/lists/listinfo/codestriker-user</ulink>.
       Contributions are most welcome!
     </para>
   </chapter>

@@ -76,8 +76,8 @@ EPS_FILES=$(PNG_FILES:.png=.eps)
 %.eps: %.png
 	$(PNG2EPS) $< > $@
 
-install: $(HTML_TARGETS) $(PDF_TARGETS) $(RTF_TARGETS) $(PS_TARGETS)
-	$(CP) $(PDF_TARGETS) $(PS_TARGETS) $(RTF_TARGETS) *.html *.png ../html
+install: $(HTML_TARGETS) $(PDF_TARGETS)
+	$(CP) $(PDF_TARGETS) *.html *.png ../html
 
 clean:
 	$(RM) $(PDF_TARGETS) $(HTML_TARGETS) $(TEX_TARGETS) $(DVI_TARGETS) \

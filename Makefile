@@ -18,7 +18,8 @@ default: build-zip build-tar-gz
 
 build-zip: build
 	cd build ; \
-	$(ZIP) -r -l codestriker-$(VERSION).zip codestriker-$(VERSION)
+	$(ZIP) -r -l codestriker-$(VERSION).zip codestriker-$(VERSION) -x *.png -x *.pdf ; \
+	$(ZIP) -r codestriker-$(VERSION).zip codestriker-$(VERSION) -i *.pdf -i *.png
 
 build-tar-gz: build
 	cd build ; \
@@ -32,11 +33,11 @@ build: build-docs
 	$(RSYNC) -Cavz html/ $(BUILD_DIR)/html/ 
 	$(RSYNC) -Cavz cgi-bin/ $(BUILD_DIR)/cgi-bin/ 
 	$(RSYNC) -Cavz template/ $(BUILD_DIR)/template
-	$(CP) README CHANGELOG HACKING LICENSE $(BUILD_DIR)
+	$(CP) codestriker.conf README CHANGELOG HACKING LICENSE $(BUILD_DIR)
 
 build-docs:
 	cd doc ; $(MAKE) codestriker.html
 
 clean:
 	cd doc ; $(MAKE) clean
-	$(RM) -fr $(BUILD_DIR)
+	$(RM) -fr build
