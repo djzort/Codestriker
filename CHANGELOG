@@ -49,8 +49,11 @@ Version 1.8.6
 * When creating new topics linked to Bugzilla, also include the topic
   description field in the Bugzilla comment.
 
-* Searching on the bugid and cc fields was not working ocrrectly.
+* Searching on the bugid and cc fields was not working correctly.
   This has now been fixed.
+
+* On UNIX platforms, missing modules can be fetched and installed
+  automatically using the CPAN module, if required.
 
 Version 1.8.5
 
