@@ -143,6 +143,33 @@ sub _oracle_handle_auto_increment
     }
 }
 
+# Add a field to a specific table.  If the field already exists, then catch
+# the error and continue silently.  The SYNTAX for SQL Server is slightly
+# different to standard SQL, there is no "COLUMN" keyword after "ADD".
+sub add_field {
+    my ($self, $table, $field, $definition) = @_;
+
+    my $dbh = $self->{dbh};
+    my $rc = 0;
+
+    eval {
+	$dbh->{PrintError} = 0;
+	my $field_type = $self->_map_type($definition);
+
+	$dbh->do("ALTER TABLE $table ADD $field $field_type");
+	print "Added new field $field to table $table.\n";
+	$rc = 1;
+	$self->commit();
+    };
+    if ($@) {
+	eval { $self->rollback() };
+    }
+    
+    $dbh->{PrintError} = 1;
+
+    return $rc;
+}
+
 # Indicate if the LIKE operator can be applied on a "text" field.
 # For Oracle, this is false.
 sub has_like_operator_for_text_field {
