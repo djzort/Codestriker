@@ -33,10 +33,6 @@ sub process($$$) {
     # Create the hash for the template variables.
     my $vars = {};
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
- 
     # Create the list of valid states that can be searched over.
     my @states = ("Any");
     push @states, @Codestriker::topic_states;

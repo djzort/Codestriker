@@ -80,13 +80,6 @@ sub process($$$) {
     $vars->{'commentcounts'} = \@commentcounts;   
 
     my @projectids = ($topic->{project_id});
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [0], undef);
-    $vars->{'list_url_in_project'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [0],
-				      \@projectids);
 
     $vars->{'view_topic_url'} =
 	$url_builder->view_url($topicid, -1, $mode);
@@ -121,9 +114,7 @@ sub process($$$) {
     $vars->{'suggested_topic_size_lines'} =
 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
 	$Codestriker::suggested_topic_size_lines;    
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
+
     # Prepare the data for displaying the state update option.
     # Make sure the old mode setting is no longer used.
     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {

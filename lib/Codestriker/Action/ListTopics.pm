@@ -85,10 +85,6 @@ sub process($$$) {
     my $vars = {};
     $vars->{'feedback'} = $feedback;
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-
     # Store the search parameters, which become hidden fields.
     $vars->{'sauthor'} = $sauthor;
     $vars->{'sreviewer'} = $sreviewer;

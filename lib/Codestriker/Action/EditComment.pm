@@ -53,10 +53,6 @@ sub process($$$) {
     my $vars = {};
     $vars->{'topic_title'} = $topic->{title};
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-                                          
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic, $url_builder);
 
     my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);

@@ -55,10 +55,6 @@ sub process($$$) {
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
 						       $url_builder);
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-
     # Get the list of users that have put comments in against the
     # comment, and filter if needed.
     my @usersThatHaveComments =

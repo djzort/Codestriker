@@ -44,10 +44,6 @@ sub process($$$) {
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("editproject");
     $template->process($vars);

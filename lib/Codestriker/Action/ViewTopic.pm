@@ -82,13 +82,6 @@ sub process($$$) {
     ProcessTopicHeader($vars, $topic, $url_builder);
 
     my @projectids = ($topic->{project_id});
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [0], undef);
-    $vars->{'list_url_in_project'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [0],
-				      \@projectids);
 
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');
@@ -118,9 +111,6 @@ sub process($$$) {
     $vars->{'suggested_topic_size_lines'} =
 	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
 	$Codestriker::suggested_topic_size_lines;    
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
 
     # Prepare the data for displaying the state update option.
     # Make sure the old mode setting is no longer used.

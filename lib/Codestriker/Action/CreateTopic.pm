@@ -52,10 +52,6 @@ sub process($$$) {
     $vars->{'default_projectid'} =
 	Codestriker::Http::Cookie->get_property($query, 'projectid');
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-
     # Set the default repository to select.
     if (! (defined $vars->{'default_repository'}) ||
 	$vars->{'default_repository'} eq "") {

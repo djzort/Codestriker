@@ -78,10 +78,6 @@ sub process($$$) {
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
 
-    $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
-
     my $template = Codestriker::Http::Template->new("submitnewcomment");
     $template->process($vars);
 
