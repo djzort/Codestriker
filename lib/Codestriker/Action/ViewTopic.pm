@@ -81,8 +81,6 @@ sub process($$$) {
 
     ProcessTopicHeader($vars, $topic, $url_builder);
 
-    my @projectids = ($topic->{project_id});
-
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');
     $vars->{'rc_ok'} = $Codestriker::OK;
@@ -265,6 +263,11 @@ sub ProcessTopicHeader($$$) {
 
     $vars->{'view_topic_properties_url'} =
 	$url_builder->view_topic_properties_url($topic->{topicid});
+
+    my @project_ids = ($topic->{project_id});
+    $vars->{'list_open_topics_in_project_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "", "", "",
+				      "", undef, \@project_ids);
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
