@@ -69,7 +69,7 @@ sub _get_connection {
 # Release the connection associated with the database, and either commit or
 # rollback it depending on the value of $commit.
 sub release_connection {
-    my ($self, $commit) = @_;
+    my ($self) = @_;
 
     # Check there is an active connection.
     if (! defined $self->{dbh}) {

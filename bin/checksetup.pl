@@ -725,6 +725,6 @@ if (-d 'template/en') {
 print "Done\n";
 
 # Release the database connection.
-$database->release_connection(1);
+$database->release_connection();
 
 

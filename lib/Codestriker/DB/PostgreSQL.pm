@@ -86,6 +86,24 @@ sub create_table {
     $self->SUPER::create_table($table);
 }
 
+# Indicate if the LIKE operator can be applied on a "text" field.
+# For PostgreSQL, this is true.
+sub has_like_operator_for_text_field {
+    my $self = shift;
+    return 1;
+}
+
+# Function for generating an SQL subexpression for a case insensitive LIKE
+# operation.
+sub case_insensitive_like(field, expression) {
+    my ($self, $field, $expression) = @_;
+
+    $expression = $self->{dbh}->quote($expression);
+    
+    # Use the ILIKE operator.
+    return "$field ILIKE $expression";
+}
+
 1;
 
 	

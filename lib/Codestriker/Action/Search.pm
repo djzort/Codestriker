@@ -11,6 +11,7 @@ package Codestriker::Action::Search;
 
 use strict;
 use Codestriker::Model::Project;
+use Codestriker::DB::Database;
 
 # Create an appropriate form for topic searching.
 sub process($$$) {
@@ -54,21 +55,24 @@ sub process($$$) {
     }
     $vars->{'projects'} = \@projects;
 
-    if ($Codestriker::db =~ /^DBI:Oracle/i) {
-	# Oracle only supports searching over the topic title and filename
-	# as the other fields are clobs.
-	$vars->{'enable_title'} = 1;
-	$vars->{'enable_description'} = 0;
-	$vars->{'enable_comment'} = 0;
-	$vars->{'enable_body'} = 0;
-	$vars->{'enable_filename'} = 1;
-    }
-    else {
-	# All other fields can be searched over.
+    # Check if the database supports the like operator over text fields.
+    my $database = Codestriker::DB::Database->get_database();
+
+    if ($database->has_like_operator_for_text_field()) {
+	# Can use LIKE over text fields, everything is searchable.
 	$vars->{'enable_title'} = 1;
 	$vars->{'enable_description'} = 1;
 	$vars->{'enable_comment'} = 1;
 	$vars->{'enable_body'} = 1;
+	$vars->{'enable_filename'} = 1;
+    }
+    else {
+	# Only varchar fields can be searched over, limit the search
+	# capability.
+	$vars->{'enable_title'} = 1;
+	$vars->{'enable_description'} = 0;
+	$vars->{'enable_comment'} = 0;
+	$vars->{'enable_body'} = 0;
 	$vars->{'enable_filename'} = 1;
     }
 

@@ -68,6 +68,25 @@ sub get_field_def {
     }
 }
 
+# Indicate if the LIKE operator can be applied on a "text" field.
+# For MySQL, this is true.
+sub has_like_operator_for_text_field {
+    my $self = shift;
+    return 1;
+}
+
+# Function for generating an SQL subexpression for a case insensitive LIKE
+# operation.
+sub case_insensitive_like(field, expression) {
+    my ($self, $field, $expression) = @_;
+    
+    $expression = $self->{dbh}->quote($expression);
+
+    # MySQL is case insensitive by default, no need to do anything.
+    return "$field LIKE $expression";
+}
+
+
 # These are no-ops for MySQL.
 sub commit {}
 sub rollback {}

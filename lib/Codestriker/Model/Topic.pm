@@ -495,49 +495,61 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	$version_array_ref) = @_;
 
     # Obtain a database connection.
-    my $dbh = Codestriker::DB::DBI->get_connection();
-    my $using_oracle = ($Codestriker::db =~ /^DBI:Oracle/i);
+    my $database = Codestriker::DB::Database->get_database();
+    my $dbh = $database->get_connection();
 
-    # If there are wildcards in the author, reviewer or CC fields, replace
-    # them with the appropriate SQL wildcards.
+    # If there are wildcards in the author, reviewer, or CC fields,
+    # replace them with the appropriate SQL wildcards.
     $sauthor =~ s/\*/%/g if $sauthor ne "";
     $sreviewer =~ s/\*/%/g if $sreviewer ne "";
     $scc =~ s/\*/%/g if $scc ne "";
 
+    # Automatically surround the search term term in wildcards, and replace
+    # any wildcards appropriately.
+    if ($stext ne "") {
+	$stext =~ s/\*/%/g;
+	if (! ($stext =~ /^%/o) ) {
+	    $stext = "%${stext}";
+	}
+	if (! ($stext =~ /%$/o) ) {
+	    $stext = "${stext}%";
+	}
+    }
+
     # Build up the query conditions.
-    my $author_part = $sauthor ne "" ? "topic.author LIKE ?" : "";
-    my $reviewer_part = $sreviewer ne "" ?
-	"participant.email LIKE ? AND " .
-	"type = $Codestriker::PARTICIPANT_REVIEWER" : "";
-    my $cc_part = $scc ne "" ?
-	"participant.email LIKE ? AND type = $Codestriker::PARTICIPANT_CC" : "";
-    my $bugid_part = $sbugid ne "" ? "topicbug.bugid = ?" : "";
+    my $author_part = $sauthor eq "" ? "" :
+	$database->case_insensitive_like("topic.author", $sauthor);
+    my $reviewer_part = $sreviewer eq "" ? "" :
+	($database->case_insensitive_like("participant.email", $sreviewer) .
+	 " AND type = $Codestriker::PARTICIPANT_REVIEWER");
+    my $cc_part = $scc eq "" ? "" :
+	($database->case_insensitive_like("participant.email", $scc) .
+	 " AND type = $Codestriker::PARTICIPANT_CC");
+    my $bugid_part = $sbugid eq "" ? "" :
+	("topicbug.bugid = " . $dbh->quote($sbugid));
 
     # Build up the state condition.
-    my @state_values;
     my $state_part = "";
     if ($sstate ne "") {
-	@state_values = split ',', $sstate;
-	my $state_set = $sstate;
-	$state_set =~ s/\d+/\?/g;
-	$state_part = "topic.state IN ($state_set)";
+	$state_part = "topic.state IN ($sstate)";
     }
 
     # Build up the project condition.
-    my @project_values;
     my $project_part = "";
     if ($sproject ne "") {
-	@project_values = split ',', $sproject;
-	my $project_set = $sproject;
-	$project_set =~ s/\d+/\?/g;
-	$project_part = "topic.projectid IN ($project_set)";
+	$project_part = "topic.projectid IN ($sproject)";
     }
 
-    my $text_title_part = "lower(topic.title) LIKE ?";
-    my $text_description_part = "lower(topic.description) LIKE ?";
-    my $text_body_part = "lower(topic.document) LIKE ?";
-    my $text_filename_part = "lower(topicfile.filename) LIKE ?";
-    my $text_comment_part = "lower(commentdata.commentfield) LIKE ?";
+    my $text_title_part =
+	$database->case_insensitive_like("topic.title", $stext);
+    my $text_description_part =
+	$database->case_insensitive_like("topic.description", $stext);
+    my $text_body_part = 
+	$database->case_insensitive_like("topic.document", $stext);
+    my $text_filename_part =
+	$database->case_insensitive_like("topicfile.filename", $stext);
+    my $text_comment_part =
+	$database->case_insensitive_like("commentdata.commentfield", $stext);
 
     # Build up the base query.
     my $query =
@@ -547,6 +559,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Since Oracle < 9i can't handle LEFT OUTER JOIN, determine what tables
     # are required in this query and add them in.
+    my $using_oracle = $Codestriker::db =~ /^DBI:Oracle/i;
     if ($using_oracle) {
 	my @fromlist = ("topic", "topicbug", "participant");
 	if ($stext ne "" && $scomments) {
@@ -602,33 +615,24 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     # Combine the "AND" conditions together.  Note for Oracle, the 'WHERE'
     # keyword has already been used.
     my $first_condition = $using_oracle ? 0 : 1;
-    my @values = ();
-    $query = _add_condition($query, $author_part, $sauthor, \@values,
-			    \$first_condition);
-    $query = _add_condition($query, $reviewer_part, $sreviewer, \@values,
-			    \$first_condition);
-    $query = _add_condition($query, $cc_part, $scc, \@values,
-			    \$first_condition);
-    $query = _add_condition($query, $bugid_part, $sbugid, \@values,
+    $query = _add_condition($query, $author_part, \$first_condition);
+    $query = _add_condition($query, $reviewer_part, \$first_condition);
+    $query = _add_condition($query, $cc_part, $scc, \$first_condition);
+    $query = _add_condition($query, $bugid_part, $sbugid,
 			    \$first_condition);
 
     # Handle the state set.
     if ($state_part ne "") {
-	$query = _add_condition($query, $state_part, undef, \@values,
-				\$first_condition);
-	push @values, @state_values;
+	$query = _add_condition($query, $state_part, \$first_condition);
     }
 
     # Handle the project set.
     if ($project_part ne "") {
-	$query = _add_condition($query, $project_part, undef, \@values,
-				\$first_condition);
-	push @values, @project_values;
+	$query = _add_condition($query, $project_part, \$first_condition);
     }
 
-    # Handle the text searching part, which can be a series of ORs.
+    # Handle the text searching part, which is a series of ORs.
     if ($stext ne "") {
-	$stext =~ tr/[A-Z]/[a-z]/; # make it lower case.
 	my @text_cond = ();
 	
 	push @text_cond, $text_title_part if $stitle;
@@ -639,23 +643,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
 	if ($#text_cond >= 0) {
 	    my $cond = join  ' OR ', @text_cond;
-	    $query = _add_condition($query, $cond, undef,
-				    \@values, \$first_condition);
-	    for (my $i = 0; $i <= $#text_cond; $i++) {
-		# Replace '*' wildcards with SQL wildcards, and make sure the
-		# expression is wildcard-wrapped given this is a "contains"
-		# text search term.
-		my $wildcard = $stext;
-		
-		$wildcard =~ s/\*/%/g;
-		if (! ($wildcard =~ /^%/o) ) {
-		    $wildcard = "%${wildcard}";
-		}
-		if (! ($wildcard =~ /%$/o) ) {
-		    $wildcard = "${wildcard}%";
-		}
-		push @values, $wildcard;
-	    }
+	    $query = _add_condition($query, $cond, \$first_condition);
 	}
     }
 
@@ -664,7 +652,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     my $select_topic = $dbh->prepare_cached($query);
     my $success = defined $select_topic;
-    $success &&= $select_topic->execute(@values);
+    $success &&= $select_topic->execute();
     if ($success) {
 	my ($id, $title, $author, $creation_ts, $state, $bugid, $email, $type,
 	    $version);
@@ -683,13 +671,13 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 	$select_topic->finish();
     }
 
-    Codestriker::DB::DBI->release_connection($dbh, $success);
+    $database->release_connection();
     die $dbh->errstr unless $success;
 }
 
 # Add the condition to the specified query string, returning the new query.
-sub _add_condition($$$\@\$) {
-    my ($query, $condition, $value, $values_array_ref, $first_cond_ref) = @_;
+sub _add_condition($$\$) {
+    my ($query, $condition, $first_cond_ref) = @_;
 
     return $query if ($condition eq ""); # Nothing to do.
     if ($$first_cond_ref) {
@@ -698,7 +686,6 @@ sub _add_condition($$$\@\$) {
     } else {
 	$query .= " AND (" . $condition . ") ";
     }
-    push @$values_array_ref, $value if defined $value;
     return $query;
 }
 

@@ -139,5 +139,26 @@ sub _oracle_handle_auto_increment
     }
 }
 
+# Indicate if the LIKE operator can be applied on a "text" field.
+# For Oracle, this is false.
+sub has_like_operator_for_text_field {
+    my $self = shift;
+    return 0;
+}
+
+# Function for generating an SQL subexpression for a case insensitive LIKE
+# operation.
+sub case_insensitive_like(field, expression) {
+    my ($self, $field, $expression) = @_;
+    
+    # Convert the field and expression to lower case to get case insensitivity.
+    my $field_lower = "lower($field)";
+    my $expression_lower = $expression;
+    $expression_lower =~ tr/[A-Z]/[a-z]/;
+    $expression_lower = $self->{dbh}->quote($expression_lower);
+
+    return "$field_lower LIKE $expression_lower";
+}
+
 1;
 
