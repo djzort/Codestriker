@@ -258,8 +258,8 @@ DROP DATABASE codestrikerdb;
 	  Codestriker has been deployed under Linux 2.4 using
 	  Oracle 8i.  If you have Oracle installed, you most likely
 	  will have somebody that can easily create a new Codestriker
-	  database for you.  Install the DBD::Oracle Perl module, modify the
-	  <varname>$db</varname> variable in the
+	  database for you.  Install the DBD::Oracle Perl module, and
+          modify the <varname>$db</varname> variable in the
 	  <filename>codestriker.conf</filename> file appropriately so
 	  that Codestriker knows how to connect to its database.  An
 	  example is given in the configuration file.  For more
@@ -273,15 +273,21 @@ DROP DATABASE codestrikerdb;
           Codestriker has been deployed using SQL Server, via the ODBC
           interface.  The first step is to create a "Codestriker"
           system data source, by going to "Control Panel" ->
-	  "Administrative Tools" -> "Data Sources".  From here, select
-          the "System DSN" tab, enter in "Codestriker" for the data
-          source name, and choose the driver for SQL Server, then
-          "OK".  Modify the <varname>$db</varname> variable in the
+	  "Administrative Tools" -> "Data Sources (ODBC)".
+          From here, select the "System DSN" tab, and click "Add".
+          Select the driver named "SQL Server", then click "Finish".
+          Enter in "Codestriker" for the name textfield, "Codestriker
+          database" for the description textfield, and select the
+          appropriate SQL Server from the server dropdown box,
+          then click "Next".  Choose the authentication appropriate
+          for your site, and work your way through the final
+          configuration options.  Install the DBD::ODBC Perl module,
+          modify the <varname>$db</varname> variable in the
 	  <filename>codestriker.conf</filename> file appropriately so
-	  that Codestriker knows how to connect to this datasource.
-	  An example is given in the configuration file.
-	  Starting and stopping SQL Server can be controlled 
-	  via the "Services" program within "Administrative Tools".
+	  that Codestriker knows how to connect to this datasource.  An
+	  example is given in the configuration file.  For more
+	  advanced connection strings, please consult the DBD::ODBC
+	  man page.
 	</para>
       </sect2>
       <sect2>
