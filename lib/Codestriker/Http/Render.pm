@@ -124,13 +124,13 @@ sub lxr_data($$) {
 		     /^(\s|&nbsp;)*\*\/(\s|&nbsp;)*$/);
     
     # Handle package Java statements.
-    if ($data =~ /^(package\s+)([\w\.]+)(\s*)$/) {
-	return $1 . $self->lxr_ident($2) . $3;
+    if ($data =~ /^(package(\s|&nbsp;)+)([\w\.]+)(.*)$/) {
+	return $1 . $self->lxr_ident($3) . $4;
     }
     
     # Handle Java import statements.
-    if ($data =~ /^(import\s+)([\w\.]+)\.(\w+)(\s*)(.*)$/) {
-	return $1 . $self->lxr_ident($2) . "." . $self->lxr_ident($3) . "$4$5";
+    if ($data =~ /^(import(\s|&nbsp;)+)([\w\.]+)\.(\w+)((\s|&nbsp;)*)(.*)$/) {
+	return $1 . $self->lxr_ident($3) . "." . $self->lxr_ident($4) . "$5$7";
     }
     
     # Handle #include statements.  Note, these aren't identifier lookups, but
@@ -158,7 +158,7 @@ sub lxr_data($$) {
 	    }
 	} else {
 	    $newdata .= $token;
-	    $token =~ s/\s//g;
+	    $token =~ s/(\s|&nbsp;)//g;
 	    
 	    # Check if we are entering or exiting a comment.
 	    if ($token =~ /^\/\//) {
