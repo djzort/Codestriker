@@ -83,6 +83,13 @@ sub main() {
     $0 =~ /^(.*)cgi-bin/;
     Codestriker->initialise($1);
 
+    # If allow_delete is defined, but topic state 'Delete' is not, add it
+    # in.  This accounts for older configuration files.
+    if (defined $Codestriker::allow_delete && $Codestriker::allow_delete &&
+	(! grep /^Deleted$/, @Codestriker::topic_states)) {
+	push @Codestriker::topic_states, 'Deleted';
+    }
+
     # Limit the size of the posts that can be done.
     $CGI::POST_MAX=$Codestriker::DIFF_SIZE_LIMIT;
 
