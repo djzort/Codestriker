@@ -75,10 +75,6 @@ my $modules = [
         version => '1.13' 
     }, 
     { 
-        name => 'HTML::Mason', 
-        version => '0' 
-    }, 
-    { 
         name => 'Template', 
         version => '2.07' 
     },
