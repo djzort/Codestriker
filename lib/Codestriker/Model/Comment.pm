@@ -75,7 +75,7 @@ sub create {
 					      '(?, ?, ?, ?, ?, ?, ?, ?)');
 	    $success &&= defined $insert;
 	    $success &&= $insert->execute($topicid, $fileline, $filenumber,
-					  $filenew, 0, 0,
+					  $filenew, -100, 0,
 					  $creation_ts, $creation_ts);
 	    $success &&= $insert->finish();
 	} else {
