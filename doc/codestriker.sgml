@@ -663,6 +663,7 @@ DBI
 IPC::Run
 Template
 HTML::Entities
+File::Temp
 </programlisting>
       You'll also require <filename>DBD::Pg</filename> for PostgreSQL
       or <filename>DBD::Mysql</filename> for MySQL, depending on which

@@ -53,6 +53,10 @@ my $modules = [
     { 
         name => 'HTML::Entities', 
         version => '0' 
+    },
+    { 
+        name => 'File::Temp', 
+        version => '0' 
     } 
 ];
 

@@ -3,6 +3,9 @@
 
 Version 1.7.5
 
+* Added in support for parsing VSS diffs, and retrieving file data
+  from a VSS repository.
+
 The following changes below were from Jason Remillard
 <jremillardshop@yahoo.com>:
 

@@ -14,7 +14,7 @@ use strict;
 use Time::Local;
 
 # Export codestriker.conf configuration variables.
-use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
+use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      @valid_repositories $default_topic_create_mode $default_tabwidth
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
@@ -25,7 +25,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.4";
+$Codestriker::VERSION = "1.7.5-pre1";
 
 # The maximum size of a diff file to accept.  At the moment, this is 20Mb.
 $Codestriker::DIFF_SIZE_LIMIT = 20000 * 1024;

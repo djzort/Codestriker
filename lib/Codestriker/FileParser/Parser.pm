@@ -18,6 +18,7 @@ use strict;
 use FileHandle;
 use Codestriker::FileParser::CvsUnidiff;
 use Codestriker::FileParser::SubversionDiff;
+use Codestriker::FileParser::VssDiff;
 use Codestriker::FileParser::PatchUnidiff;
 use Codestriker::FileParser::UnknownFormat;
 
@@ -64,6 +65,14 @@ sub parse ($$$$$) {
 	    @diffs =
 		Codestriker::FileParser::SubversionDiff->parse($tmpfh,
 							       $repository);
+	}
+
+	# Check if it is a VSS diff file.
+	if ($#diffs == -1) {
+	    seek($tmpfh, 0, 0);
+	    @diffs =
+		Codestriker::FileParser::VssDiff->parse($tmpfh,
+							$repository);
 	}
 
 	# Check if it is a patch unidiff file.
