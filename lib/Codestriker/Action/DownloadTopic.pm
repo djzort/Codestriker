@@ -38,7 +38,8 @@ sub process($$$) {
 				    \$version);
 
     # Dump the raw topic data as text/plain.
-    print $query->header(-type=>'text/plain');
+    print $query->header(-type=>'text/plain',
+			 -attachment=>"topic${topic}.txt");
     print $topic_data;
 }
 
