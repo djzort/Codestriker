@@ -59,6 +59,12 @@ sub process($$$) {
     # Create the hash for the template variables.
     my $vars = {};
     $vars->{'topic_title'} = "Edit topic: $document_title";
+    if ($Codestriker::antispam_email) {
+	$document_author = Codestriker->make_antispam_email($document_author);
+	$document_reviewers =
+	    Codestriker->make_antispam_email($document_reviewers);
+	$document_cc = Codestriker->make_antispam_email($document_cc);
+    }
     $vars->{'author'} = $document_author;
     $vars->{'reviewers'} = $document_reviewers;
 
@@ -94,7 +100,11 @@ sub process($$$) {
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
 	if ($comment_linenumber[$i] == $line) {
 	    my $comment = {};
-	    $comment->{'author'} = $comment_author[$i];
+	    my $author = $comment_author[$i];
+	    if ($Codestriker::antispam_email) {
+		$author = Codestriker->make_antispam_email($author);
+	    }
+	    $comment->{'author'} = $author;
 	    $comment->{'date'} = $comment_date[$i];
 	    $comment->{'text'} = $http_response->escapeHTML($comment_data[$i]);
 	    push @comments, $comment;

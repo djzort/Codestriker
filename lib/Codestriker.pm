@@ -20,7 +20,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
-	      $allow_delete $allow_searchlist
+	      $allow_delete $allow_searchlist $antispam_email
 	      );
 
 # Version of Codestriker.
@@ -115,6 +115,16 @@ sub format_short_timestamp($$) {
     } else {
 	return $timestamp;
     }
+}
+
+# Given an email string, replace it in a non-SPAM friendly form.
+# sits@users.sf.net -> (sits 'at' users 'dot' sf 'dot' net).
+sub make_antispam_email($$) {
+    my ($type, $email) = @_;
+
+    $email =~ s/\./ \'dot\' /g;
+    $email =~ s/\@/ \'at\' /g;
+    return "$email";
 }
 
 1;

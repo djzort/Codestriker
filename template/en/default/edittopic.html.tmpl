@@ -37,7 +37,7 @@
 [% FOREACH comment = comments %]
 [% FLUSH IF loop.count() % 10 == 1 %]
 <P>
-[% comment.author %] [% comment.date %] <BR>
+[% comment.author %]&nbsp;[% comment.date %] <BR>
 <PRE>[% comment.text %]</PRE><P><HR>
 [% END %]
 

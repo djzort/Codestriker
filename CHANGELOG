@@ -20,6 +20,15 @@ Version 1.6.1
 
   http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot
 
+  For a local repository, it can be set as just:
+
+  /usr/local/cvsroot
+
+* Added a configuration flag to indicate that email addresses should
+  be displayed in an "anti spam" form.  Eg:
+
+  sits@users.sf.net -> sits 'at' users 'dot' sf 'dot' net.
+
 Version 1.6.0
 
 * Modified to use the "Template Toolkit" so that the HTML pages can be

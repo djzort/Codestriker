@@ -89,7 +89,12 @@ sub process($$$) {
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
     $vars->{'escaped_title'} = CGI::escapeHTML($document_title);
+
+    if ($Codestriker::antispam_email) {
+	$document_author = Codestriker->make_antispam_email($document_author);
+    }
     $vars->{'document_author'} = $document_author;
+    
     $vars->{'document_creation_time'} = $document_creation_time;
     
     if ($document_bug_ids ne "") {
@@ -106,6 +111,10 @@ sub process($$$) {
 	$vars->{'bug_string'} = "";
     }
 
+    if ($Codestriker::antispam_email) {
+	$document_reviewers =
+	    Codestriker->make_antispam_email($document_reviewers);
+    }
     $vars->{'document_reviewers'} = $document_reviewers;
     $vars->{'repository'} = $repository_url;
     $vars->{'number_of_lines'} = $#document + 1;
@@ -311,7 +320,13 @@ sub process($$$) {
 	print $query->a({href=>"javascript:myOpen('$edit_url','e')",
 			 name=>"C$i"},
 			"line $comment_linenumber[$i]"), ": ";
-	print "$comment_author[$i] $comment_date[$i]", $query->br, "\n";
+	my $author;
+	if ($Codestriker::antispam_email) {
+	    $author = Codestriker->make_antispam_email($comment_author[$i]);
+	} else {
+	    $author = $comment_author[$i];
+	}
+	print "$author $comment_date[$i]", $query->br, "\n";
 	print $query->pre($http_response->escapeHTML($comment_data[$i])) .
 	    $query->p;
     }
