@@ -318,7 +318,7 @@ sub format_timestamp($$) {
 	    localtime($time_value);
 	$year += 1900;
 	return sprintf("$Codestriker::days[$wday] " .
-		       "$Codestriker::months[$mon] $mday , $year %02d:%02d:%02d ",
+		       "$Codestriker::months[$mon] $mday, $year %02d:%02d:%02d ",
 		       $hour, $min, $sec);
     } else {
 	return $timestamp;
