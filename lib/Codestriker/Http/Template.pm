@@ -96,10 +96,12 @@ sub process($$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Handle the links and parameters in the main title bar.
+    $vars->{'list_url'} =
+	$url_builder->list_topics_url("", "", "", "", "", "", "",
+				      "", "", "", [ 0 ], undef);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
-    $vars->{'create_topic_url'} = $url_builder->create_topic_url();
 
     my $data = "";
     my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
