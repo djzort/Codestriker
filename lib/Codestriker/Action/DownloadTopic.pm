@@ -30,7 +30,8 @@ sub process($$$) {
 
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain',
-			 -attachment=>"topic${topicid}.txt");
+			 -attachment=>"topic${topicid}.txt",
+			 -filename=>"topic${topicid}.txt");
     print $topic->{document};
 }
 
