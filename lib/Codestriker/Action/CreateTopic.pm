@@ -33,6 +33,9 @@ sub process($$$) {
     $vars->{'repository'} =
 	Codestriker::Http::Cookie->get_property($query, 'repository');
 
+    # Indicate if the repository field should be displayed.
+    $vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+
     # Set the default repository.
     if (! (defined $vars->{'repository'}) || $vars->{'repository'} eq "") {
 	$vars->{'repository'} = $Codestriker::default_repository;

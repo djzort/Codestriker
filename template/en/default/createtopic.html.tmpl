@@ -76,6 +76,8 @@ Ordinary source files can also be uploaded.
 </TR>
 
 [%# The repository the review is made against #%]
+
+[% IF allow_repositories != 0 %]
 <TR>
  <TD>Repository:
 <FONT SIZE="-2"><A HREF="javascript:alert('
@@ -97,6 +99,7 @@ only the cvsroot path needs to be specified.  For example:\n
 </TD>
  <TD><INPUT TYPE="text" NAME="repository" VALUE="[% repository %]" SIZE=50 MAXLENGTH=200></TD>
 </TR>
+[% END %]
 
 [%# The bug ids input field #%]
 <TR>
