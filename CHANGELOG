@@ -19,6 +19,8 @@ Version 1.8.6
 * Added RSS support, so that the topic list screen now has an
   equivalent RSS view.  From Jason Remillard.
 
+* Optimised database ocnnection code, from Jason Remillard.
+
 * Added a "add other reviewers" link next to the Cc: field in the "add
   comment" screen.  This allows the comment author to easily Cc all
   the other reviewers of the topic, for important comments that needs

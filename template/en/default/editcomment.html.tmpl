@@ -1,5 +1,6 @@
 [% USE AutomagicLinks %]
 [% USE JavascriptEscape %]
+[% USE StringObfuscator %]
 
 <SCRIPT type="text/javascript">
 
@@ -124,7 +125,7 @@ function add_other_reviewer(reviewer) {
 // reviewers to the Cc: field.
 function add_other_reviewers() {
   [% FOREACH reviewer = reviewers %]
-    add_other_reviewer("[% reviewer | $JavascriptEscape %]");
+    add_other_reviewer("[% reviewer | $JavascriptEscape | $StringObfuscator %]");
   [% END %]
 }
 </Script>
