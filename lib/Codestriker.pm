@@ -118,12 +118,11 @@ sub format_short_timestamp($$) {
 }
 
 # Given an email string, replace it in a non-SPAM friendly form.
-# sits@users.sf.net -> (sits 'at' users 'dot' sf 'dot' net).
+# sits@users.sf.net -> sits@us...
 sub make_antispam_email($$) {
     my ($type, $email) = @_;
 
-    $email =~ s/\./ \'dot\' /g;
-    $email =~ s/\@/ \'at\' /g;
+    $email =~ s/([0-9A-Za-z\._]+@[0-9A-Za-z\._]{3})[0-9A-Za-z\._]+/$1\.\.\./g;
     return "$email";
 }
 
