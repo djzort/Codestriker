@@ -18,6 +18,9 @@ use lib '../lib';
 use Codestriker;
 use Codestriker::Model::Topic;
 use Codestriker::Model::Comment;
+use Codestriker::FileParser::Parser;
+use Codestriker::Repository::RepositoryFactory;
+use Codestriker::Action::SubmitComment;
 
 # Prototypes.
 sub main();
@@ -162,6 +165,28 @@ sub main() {
 	    }
 	    close COMMENTS;
 	    
+	    # Build the deltas from the topic document.
+	    my $repository_url = $Codestriker::valid_repositories[0];
+	    my $repository =
+		Codestriker::Repository::RepositoryFactory->get($repository_url);
+
+	    # Create a temporary file containing the document, so that the
+	    # standard parsing routines can be used.
+	    my $tmpfile = "tmptopic.txt";
+	    open(TEMP_FILE, ">$tmpfile") ||
+		die "Failed to create temporary topic file \"$tmpfile\": $!";
+	    print TEMP_FILE $document_text;
+	    close TEMP_FILE;
+	    open(TEMP_FILE, "$tmpfile") ||
+		die "Failed to open temporary file \"$tmpfile\": $!";
+
+	    my @deltas =
+		Codestriker::FileParser::Parser->parse(\*TEMP_FILE,
+						       "text/plain",
+						       $repository);
+	    close TEMP_FILE;
+	    unlink($tmpfile);
+
 	    # Now write the topic information to the database.
 	    my $bug_ids = join ', ', (split / /, $document_bug_ids);
 	    Codestriker::Model::Topic->create($topicid, $document_author,
@@ -171,8 +196,10 @@ sub main() {
 					      $document_cc,
 					      $document_description,
 					      $document_text,
-					      $document_ts);
-
+					      $document_ts,
+					      $repository,
+					      \@deltas);
+					      
 	    # Now create each comment.
 	    my $comment_ts;
 	    for (my $i = 0; $i <= $#comment_author; $i++) {
@@ -208,12 +235,25 @@ sub main() {
 				      $year, $month, $mday,
 				      $hour, $min, $sec);
 
-		# Now actually create the comment.
+		# Now actually create the comment.  Determine what the file
+		# and linenumber are.
+		my $line = $comment_linenumber[$i];
+		my ($filenumber, $filename, $fileline, $accurate);
+		Codestriker::Action::SubmitComment->
+		    _get_file_linenumber($topicid, $line, \$filenumber,
+					 \$filename, \$fileline, \$accurate);
+		if ($filenumber == -1) {
+		    $filenumber = 1;
+		    $fileline = 1;
+		}
+
+		my $comment_state = $Codestriker::COMMENT_SUBMITTED;
 		Codestriker::Model::Comment->create($topicid,
-						    $comment_linenumber[$i],
+						    $fileline, $filenumber,
 						    $comment_author[$i],
 						    $comment_data[$i],
-						    $comment_ts);
+						    $comment_ts,
+						    $comment_state);
 	    }
 
 	    # The last comment will be the most recent.  Change the topic's

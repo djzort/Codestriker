@@ -25,7 +25,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.6.4";
+$Codestriker::VERSION = "1.7.0";
 
 # Error codes from the model routines.
 $Codestriker::OK = 1;

@@ -1,4 +1,10 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
+*** Also, it is advisable to make a backup of your data before upgrading ***
+
+Version 1.7.0
+
+* Modified HTML generation so topic view output is smaller, by using
+  javascript functions to reduce the HREF size for each filenumber.
 
 Version 1.6.5
 
@@ -8,7 +14,8 @@ Version 1.6.5
 
   This allows code reviews to occur for different development
   practices, for example, if separate branches are used for
-  development before any code is collapsed into the mainline branch.
+  development, which are then reviewed, before collapsing into
+  the mainline branch.
 
 * Also modified the pre-requisite Perl module version numbers.
 
