@@ -120,6 +120,19 @@ sub process($$$) {
 	}
     }
 
+    # Set the projectid to the first (default) if it is invalid.
+    my @projects = Codestriker::Model::Project->list();
+    my $found_project = 0;
+    foreach my $project (@projects) {
+        if ($project->{id} == $projectid) {
+            $found_project = 1;
+            last;
+        }
+    }
+    if ($found_project == 0) {
+        $projectid = $projects[0]->{id};
+    }
+
     # If there is a problem with the input, redirect to the create screen
     # with the message.
     if ($feedback ne "") {

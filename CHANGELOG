@@ -68,6 +68,10 @@ Version 1.8.3
 * Perforce integration has been improved to work with older versions
   of p4.
 
+* Make sure topics are linked to the default hidden project when
+  $allow_projects is set to 0.  This allows the "topic properties"
+  screen to work correctly.
+
 Version 1.8.2
 
 * Codestriker now has the ability to view a specific file at a time in
