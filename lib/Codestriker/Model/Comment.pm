@@ -65,7 +65,10 @@ sub create {
 	$success &&= $select_commentstate->finish();
 	if (! defined $version) {
 	    # A comment has not been made on this particular line yet,
-	    # create the commentstate row now.
+	    # create the commentstate row now.  Note the old column of
+	    # state has its value set to -100 so the data migration code
+	    # in checksetup.pl knows this is a new row that can be
+	    # ignored.
 	    $creation_ts = $timestamp;
 	    my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
 					      '(topicid, fileline, ' .

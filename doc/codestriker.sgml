@@ -138,10 +138,12 @@
       <para>
         Codestriker stores all code review topics and comments into a
         relational database.  Currently,
-	<ulink url="http://www.mysql.com">MySQL</ulink> and
-	<ulink url="http://www.postgresql.org">PostgreSQL</ulink> are
-        supported, but any database system can be used provided it has
-        an implementation of Perl's DBI interface.
+	<ulink url="http://www.mysql.com">MySQL</ulink>,
+	<ulink url="http://www.postgresql.org">PostgreSQL</ulink>,
+	Oracle and SQL Server are
+        supported, but any database system can be used, provided it has
+        an implementation of Perl's DBI interface, which is the case
+	for all major database implementations.
       </para>
       <sect2>
         <title>Using MySQL</title>
@@ -466,9 +468,13 @@ $use_compression = 0;
 	  The next value which is likely to be common for many
 	  deployments is an anonymous CVS pserver specification.  The
 	  string is actually in the same form as a CVS pserver URL.
-	  For more information of setting up anonymous pserver access,
-	  please consult the CVS manual.  Note if your anonymous account
-          does not have a password, the setting would be (note the colons):
+	  Note you can also use the :ext method with SSH, if the user
+	  running the Codestriker application has the ability to
+	  connect to the CVS server via SSH (see the configuration
+	  file for an example).  For more information of setting up
+	  anonymous pserver access, please consult the CVS manual.
+	  Note if your anonymous account does not have a password, the
+	  setting would be (note the colons):
           <programlisting>
      ':pserver:anonymous:@cvs.sourceforge.net:/cvsroot'
           </programlisting>
@@ -795,6 +801,60 @@ $default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
 # with links to display the other files.  This is useful for those
 # deployments that review a large amount of code.
 $default_file_to_view = -1;
+	  </programlisting>
+	</para>
+      </sect2>
+      <sect2>
+        <title>Comment Thread Metrics</title>
+	<para>
+	  As explained by the comments in the configuration file, it
+	  is possible to defined a number of metrics associated with
+	  each comment thread (issue) created in the review.
+	  <programlisting>
+# Each comment thread (or issue) that is created against a specific
+# code line in Codestriker can have a configurable number of
+# user-defined metrics recorded against it.
+#
+# Every site has their own requirements, below are a number of example
+# configurations.  The "name" attribute refers to the name of the
+# metric being recorded.  The "values" attribute is a list of values
+# that this metric can be assigned to.  The "default_value" attribute
+# is optional, and indicates what the default value of the metric is
+# assigned to.  If this attribute is not specified, then the user will
+# be required to specify a value for a metric when creating a new
+# comment thread.  This is recommended, so that users think about what
+# these values should be, rather than blindly accepting default
+# values.  For the "Status" metric below however, it is recording the
+# "state" of the thread, so an initial state of "Submitted" is reasonable.
+# For the other metrics below, an initial value makes no sense.
+$comment_state_metrics =
+    [ 
+      { name=>'Status', values=>['Submitted', 'Invalid', 'Completed'],
+	                default_value=>'Submitted' }
+    ];
+
+# Two metrics defined: Status and Type.
+#$comment_state_metrics =
+#    [
+#      { name=>'Status', values=>['Submitted', 'Invalid', 'Completed'],
+#	                default_value=>'Submitted' },
+#      { name=>'Type', values=>['Style', 'Minor', 'Major', 'Severe'] }
+#    ];
+#
+# Four metrics defined: Status, Level, Mode and Type.
+#$comment_state_metrics =
+#    [
+#      { name=>'Status', values=>['Submitted', 'Invalid', 'Completed'],
+#	                default_value=>'Submitted' },
+#      { name=>'Level', values=>['Major', 'Minor'] },
+#      { name=>'Mode', values=>['Missing', 'Wrong', 'Unclear', 'Suggestion'] },
+#      { name=>'Type', values=>['Logic', 'Data Handling', 'Interface',
+#			       'Error Handling', 'Performance', 'Comments',
+#			       'Standards'] }
+#    ];
+#
+# Case where no comment thread metrics are to be used.
+#$comment_state_metrics = [];
 	  </programlisting>
 	</para>
       </sect2>
@@ -1501,6 +1561,20 @@ C:\Perl\bin\perl.exe "%s" %s
 	  Codestriker does when values are entered into the "Start
 	  tag", "End Tag" and "Module" fields when creating a topic.
 	</para>
+	<para>
+	  If you want to review code in its full form as it exists in
+	  the repository for a specific tag value, you only need to
+	  specify this tag value in either the START_TAG
+	  <emphasis>or</emphasis> END_TAG field, and an appropriate
+	  value in the MODULE field.  Codestriker will fetch all of
+	  the source files for this module and tag into the topic, and
+	  treat all of the files as "new" (ie, no diffs).  This is no
+	  different to executing the following command to generate a
+	  diff:
+	  <programlisting>
+% cvs rdiff -uN -r 1.0 -r TAG MODULE
+	  </programlisting>
+	</para>
       </sect2>
       <sect2>
         <title>Creating Diff Topics</title>
@@ -1876,32 +1950,33 @@ C:\Perl\bin\perl.exe "%s" %s
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
-	  As can be seen in the figure, a summary of the topic
-          title is displayed, followed by a text box where the
-	comment can be entered.  Any formatting will be preserved, so that you can
-	  enter new code fragments, if required.  As before, your
-	  email address is remembered in the browser's cookie, to
-	  prevent you from having to enter it each time you make a
-	  comment.  When the "Submit" button is pressed, an email will
-	  be generated and sent to the author of the review, to the
-	  email address in the "Your email address" field as a
-	  reference, to the email address in the "Cc" field, just in
-	  case there is a requirement to send the email elsewhere, and
-	  to any other email addresses that have made a comment on
-	  this line, so that it is possible to get a form of
-	  discussion happening.
+	  As can be seen in the figure, a summary of the topic title
+          is displayed, followed by a text box where the comment can
+          be entered.  Any formatting will be preserved, so that you
+          can enter new code fragments, if required.  Any comment
+          metrics defined in the Codestriker configuration will appear
+          here as a series of dropdown boxes.  In this example, there
+          is only the comment metric "Status" defined.  As before,
+          your email address is remembered in the browser's cookie, to
+          prevent you from having to enter it each time you make a
+          comment.  When the "Submit" button is pressed, an email will
+          be generated and sent to the author of the review, to the
+          email address in the "Your email address" field as a
+          reference, to the email address in the "Cc" field, just in
+          case there is a requirement to send the email elsewhere, and
+          to any other email addresses that have made a comment on
+          this line, so that it is possible to get a form of
+          discussion happening.
           </para>
           <para>
-          Any comments already made (if any) against
-	this specific line will then be displayed.  The screenshot
-	shows one comment has already been made against this code
-	line.
-        The code line
-	the comment is being made against is then displayed.  
-	  The "increase"
-	  link can increase the amount of context code to display,
-	  while "decrease" will decrease the amount of context code.
-	  The code line in question will be highlighted in red.
+          Any comments already made (if any) against this specific
+	  line will then be displayed.  The screenshot shows one
+	  comment has already been made against this code line.  The
+	  code line the comment is being made against is then
+	  displayed.  The "increase" link can increase the amount of
+	  context code to display, while "decrease" will decrease the
+	  amount of context code.  The code line in question will be
+	  highlighted in red.
 	</para>
 	<para>
 	  Once the comment has been submitted, the main "View Topic"
@@ -2004,44 +2079,19 @@ C:\Perl\bin\perl.exe "%s" %s
 	</figure>
       </para>
       <para>
-        A separate heading is shown in the display, for each line in
-        the review which has at least one comment made against it.
-        For each line, all of the comments made are shown, including
-        the author and date information.  Each comment block has a
-        state associated with it, which is primarily for the author's
-        benefit to change.  The following states are defined:
-	<variablelist>
-	  <varlistentry>
-	    <term>Submitted</term>
-	    <listitem>
-	      <para>
-	        This is the initial state that a comment block will have.
-	      </para>
-	    </listitem>
-	  </varlistentry>
-
-	  <varlistentry>
-	    <term>Invalid</term>
-	    <listitem>
-	      <para>
-	        This can be set to indicate that the comments made in
-	        this block are actually not valid.
-	      </para>
-	    </listitem>
-	  </varlistentry>
-
-	  <varlistentry>
-	    <term>Completed</term>
-	    <listitem>
-	      <para>
-	        This is typically set by the author, as a record, to
-	        indicate that the comments in this block have been
-	        subsequently addressed in their code.
-	      </para>
-	    </listitem>
-	  </varlistentry>
-	</variablelist>
-	For each comment block, there are three links to other
+        A separate heading is shown in the display, for each comment
+        thread, which represents a series of comments made against a
+        specific code line.  For each thread, all of the comments made
+        are shown, including author and date information.  For each
+        comment thread, the current values of the comment metrics
+        associated with the thread will be displayed.  In this
+        example, there is only a single comment metric clled "Status".
+        The metric values associated with the thread can be updated by
+        changing the value of the metric dropdowns, and clicking the
+        "Update" button at the bottom of the page.
+      </para>
+      <para>
+	For each comment thread, there are three links to other
 	Codestriker screens.  The first link will bring up a "View
 	File" page (see <xref linkend="view-file">) centered on the
 	line number of the comment, "Parallel" will do the same, by
@@ -2057,8 +2107,8 @@ C:\Perl\bin\perl.exe "%s" %s
       <para>
         At the top of this page are a number of filtering options,
         which control what comments are displayed.  Comments can be
-        filtered by the author of the comment and/or by comment block
-        state.  In addition, for each comment block, it is also
+        filtered by the author of the comment and/or specific comment
+        metric values.  In addition, for each comment block, it is also
         possible to display the context of the topic text the comment
         block is made against (as is done for the "Add Comment" page,
         see
@@ -2117,11 +2167,19 @@ C:\Perl\bin\perl.exe "%s" %s
 	</figure>
       </para>
       <para>
-            This page provides the opportunity for users to modify any
-	    user-defined metrics associated with the topic.  The page
-	    will also display all Codestriker-derived metrics, as can
-	    be seen in the screenshot, as well as the topic history at
-	    the bottom of the page.
+            This page is divided into four sections.  The "Comment
+            Metrics" section provides an aggregate count for the
+            number of comment threads with specific comment metric
+            values.  The "Total" subsection displays the number of
+            comment threads in the topic, followed by the total number
+            of comments submitted.  This is followed by the "Topic
+            Metrics" and "User Metrics" sections for this topic.  If
+            there are additional metrics defined here via the
+            Codestriker configuration file, the user will be able to
+            update their values here.  The last part of the page is
+            the "Activity Log", which provides an audit trail of all
+            the important events that occurred in the topic's
+            lifetime, such as creation and state changes.
       </para>
       <para>
          The Codestriker time metric is calculated by keeping

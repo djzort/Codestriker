@@ -760,7 +760,12 @@ $database->commit();
 # by the user, they could always modify the DB values appropriately.
 eval {
     $dbh->{PrintError} = 0;
+
+    # This array should reflect the value of @comment_states in your old
+    # codestriker.conf file, and is used for data migration purposes.
+    # This value represents the default value used in Codestriker.
     my @old_comment_states = ("Submitted", "Invalid", "Completed");
+
     $stmt = $dbh->prepare_cached('SELECT id, state, creation_ts, modified_ts '.
 				 'FROM commentstate WHERE state >= 0');
     $stmt->execute();
@@ -775,7 +780,18 @@ eval {
     my $count = 0;
     while (my ($id, $state, $creation_ts, $modified_ts) =
 	   $stmt->fetchrow_array()) {
-	print "Migrating old commentstate records... \n" if $count == 0;
+	if ($count == 0) {
+	    print "Migrating old commentstate records... \n";
+	    print "Have you updated the \@old_comment_states variable on line 767? (y/n): ";
+	    flush STDOUT;
+	    my $answer = <STDIN>;
+	    chop $answer;
+	    if ($answer ne "y") {
+		print "Aborting script... update \@old_comment_states in this script and run again.\n";
+		$stmt->finish();
+		exit(1);
+	    }
+	}
 	# Update the state to its negative value, so the information isn't
 	# lost, but also to mark it as being migrated.
 	$update->execute(-$state - 1, $creation_ts, $modified_ts, $id);
