@@ -143,7 +143,7 @@ sub create {
 	$self->{metrics}->{$metric->{name}} = $metric->{value};
     }
         
-    # get the filename, for the new comment.
+    # Get the filename, for the new comment.
     my $get_filename = $dbh->prepare_cached('SELECT filename ' .
 					    'FROM topicfile ' .
 					    'WHERE topicid = ? AND ' .
@@ -153,8 +153,8 @@ sub create {
                 
     ( $self->{filename} ) = $get_filename->fetchrow_array();
     
-    $select_commentstate = undef;
-    $get_filename = undef;
+    $select_commentstate->finish();
+    $get_filename->finish();
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr if !$success;
@@ -256,6 +256,9 @@ sub read_all_comments_for_topic($$) {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
+    # Determine if we are using Oracle, since it can't handle LEFT OUTER JOINs.
+    my $using_oracle = $Codestriker::db =~ /^DBI:Oracle/i;
+
     # Store the results into an array of objects.
     my @results = ();
 
@@ -272,11 +275,17 @@ sub read_all_comments_for_topic($$) {
 			     'commentstate.id, ' .
 			     'commentstate.creation_ts, ' .
 			     'commentstate.modified_ts ' .
-			     'FROM commentdata, commentstate, topicfile ' .
-			     'WHERE commentstate.topicid = ? ' .
-			     'AND commentstate.id = commentdata.commentstateid ' .
-			     'AND topicfile.topicid = commentstate.topicid ' .
-			     'AND topicfile.sequence = commentstate.filenumber ' .
+			     'FROM commentdata, commentstate ' .
+			     ($using_oracle ?
+			      (', topicfile WHERE commentstate.topicid = ? ' .
+			       'AND commentstate.id = commentdata.commentstateid ' .
+			       'AND topicfile.topicid = commentstate.topicid(+) ' .
+			       'AND topicfile.sequence = commentstate.filenumber(+) ') :
+			      ('LEFT OUTER JOIN topicfile ON ' .
+			       'commentstate.topicid = topicfile.topicid AND ' .
+			       'commentstate.filenumber = topicfile.sequence ' .
+			       'WHERE commentstate.topicid = ? ' .
+			       'AND commentstate.id = commentdata.commentstateid ')) .
 			     'ORDER BY ' .
 			     'commentstate.filenumber, ' .
 			     'commentstate.fileline, ' .
@@ -379,7 +388,7 @@ sub read_filtered {
     return @comments;
 }
 
-# Update the specified metriuc for the specified commentstate.  The version
+# Update the specified metric for the specified commentstate.  The version
 # parameter indicates what version of the commentstate the user was operating
 # on.
 sub change_state {

@@ -41,10 +41,6 @@ sub process($$$) {
     # Retrieve line-by-line versions of the description.
     my @document_description = split /\n/, $topic->{description};
 
-    # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
-						     $line, $new);
-
     # Display the header of this page.
     $http_response->generate_header(topic=>$topicid,
 				    topic_title=>"Edit Comment: $topic->{title}",
@@ -80,7 +76,14 @@ sub process($$$) {
 			       $dec_context, $anchor, "");
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
-    $vars->{'context'} = $query->pre(
+    $vars->{'context'} = "";
+    if ($line != -1) {
+	# Retrieve the context for a comment made against a specific line.
+	my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
+							 $line, $new);
+	
+    $vars->{'context'} =
+	$query->pre(
 	    Codestriker::Http::Render->get_context($line, 
 						   $context, 1,
 						   $delta->{old_linenumber},
@@ -88,6 +91,7 @@ sub process($$$) {
 						   $delta->{text},
 						   $new)) .
 						       $query->p . "\n";
+    }
 
     # Display the comments which have been made for this line number
     # in chronological order.

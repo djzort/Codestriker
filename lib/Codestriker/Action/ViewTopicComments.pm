@@ -79,8 +79,8 @@ sub process($$$) {
                                              
     # Go through all the comments and make them into an appropriate form for
     # displaying.
-    my $last_filenumber = -1;
-    my $last_fileline = -1;
+    my $last_filenumber = -999;
+    my $last_fileline = -999;
     my $index = 0;
     for (my $i = 0; $i <= $#comments; $i++) {
 	my $comment = $comments[$i];

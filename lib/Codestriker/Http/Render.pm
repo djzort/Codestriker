@@ -368,6 +368,11 @@ sub delta_file_header ($$$$) {
 		                                  . "#$$filenames[$bwd_index]";
     }
 
+    # Generate the text for the link to add a file-level comment.
+    my $add_file_level_comment_link = "javascript:eo('$cfi','-1','1')";
+    my $add_file_level_comment_text =
+	$query->a({href=>$add_file_level_comment_link}, "[Add comment]");
+
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
 	# File matches something in the repository.  Link it to
@@ -398,12 +403,13 @@ sub delta_file_header ($$$$) {
 			       $revision_text);
 	}
 
-	# Output the "back to contents" link
-	# and some browsing links for visiting
-	# the previous and next file (<<, >>).
-	
+	# Output the "back to contents" link and some browsing links
+	# for visiting the previous and next file (<<, >>), in
+	# addition to the "add file-level comment" link.
+
 	print $query->Tr($cell,     # = file header     
 		         $query->td({-class=>'file', align=>'right'},
+				    "$add_file_level_comment_text ",
 				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
 			            $query->a({href=>$contents_url},"[Top]"),
 			            ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
@@ -413,6 +419,7 @@ sub delta_file_header ($$$$) {
 				    "File ",
 				    $query->a({name=>$filename},$filename)),
 			 $query->td({-class=>'file', align=>'right'},
+				    "$add_file_level_comment_text ",
 				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
 				    $query->a({href=>$contents_url},"[Top]"),
 				    ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
@@ -963,7 +970,10 @@ sub _coloured_mode_start($) {
  	}
     }
     print $query->end_table() . "\n";
-    $self->print_coloured_table();
+
+    # Render the "Add comment to topic" link.
+    print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
+			      "Add comment") . " to topic.");
 }
 
 # Render the initial start of the coloured table, with an empty row setting
@@ -997,6 +1007,11 @@ sub _coloured_mode_finish ($) {
     }
 
     print "</TABLE>\n";
+
+    # Render the "Add comment to topic" link.
+    my $query = $self->{query};
+    print $query->p($query->a({href=>"javascript:eo('-1','-1',1)"},
+			      "Add comment") . " to topic.");
 }
 
 # Display a line for a single file view.

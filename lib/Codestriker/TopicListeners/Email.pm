@@ -315,13 +315,6 @@ sub comment_create($$$) {
 					  $comment->{topicid}, "", "",
 					  $query->url());
 
-    # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::Delta->get_delta(
-                    $comment->{topicid}, 
-                    $comment->{filenumber}, 
-		    $comment->{fileline}, 
-		    $comment->{filenew});
-
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
 
@@ -350,23 +343,41 @@ sub comment_create($$$) {
         $bcc = $comment->{author};
     }
 
-    my $subject = "[REVIEW] Topic \"$topic->{title}\" comment added by $comment->{author}";
+    my $subject = "[REVIEW] Topic \"$topic->{title}\" " .
+	"comment added by $comment->{author}";
     my $body =
-	"$comment->{author} added a comment to Topic \"$topic->{title}\".\n\n" .
+	"$comment->{author} added a comment to " .
+	"Topic \"$topic->{title}\".\n\n" .
 	"URL: $edit_url\n\n";
 
-    $body .= "File: " . $delta->{filename} . " line $comment->{fileline}.\n\n";
+    if (defined $comment->{filename} && $comment->{filename} ne '') {
+	$body .= "File: " . $comment->{filename};
+    }
 
-    $body .= "Context:\n$EMAIL_HR\n\n";
-    my $email_context = $Codestriker::EMAIL_CONTEXT;
-    $body .= Codestriker::Http::Render->get_context($comment->{fileline}, 
+    if ($comment->{fileline} != -1) {
+	$body .= " line $comment->{fileline}.\n\n";
+
+	# Only show the context for a comment made against a specific line.
+	$body .= "Context:\n$EMAIL_HR\n\n";
+	my $email_context = $Codestriker::EMAIL_CONTEXT;
+
+	# Retrieve the diff hunk for this file and line number.
+	my $delta =
+	    Codestriker::Model::Delta->get_delta($comment->{topicid}, 
+						 $comment->{filenumber}, 
+						 $comment->{fileline}, 
+						 $comment->{filenew});
+	$body .=
+	     Codestriker::Http::Render->get_context($comment->{fileline}, 
 						    $email_context, 0,
 						    $delta->{old_linenumber},
 						    $delta->{new_linenumber},
 						    $delta->{text}, 
 						    $comment->{filenew})
 	. "\n";
-    $body .= "$EMAIL_HR\n\n";    
+	$body .= "$EMAIL_HR";
+    }
+    $body .= "\n\n";
     
     # Now display the comments that have already been submitted.
     for (my $i = $#comments; $i >= 0; $i--) {

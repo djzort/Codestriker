@@ -3,6 +3,11 @@
 
 Version 1.8.6
 
+* It is now possible to create a comment associated with a specific
+  file, or the topic itself, rather than being associated with a
+  specific line.  This allows reviewers to create file-level or
+  topic-level comments.
+
 * Extra options are now available in the codestriker.conf file in
   regards to when emails are sent out.  It is now possible to control
   whether emails are sent to the topic author and/or the comment

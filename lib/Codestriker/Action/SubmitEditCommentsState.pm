@@ -51,7 +51,7 @@ sub process($$$) {
 	foreach my $metric (@{$Codestriker::comment_state_metrics}) {
 	    my $metric_name = $metric->{name};
 	    my $prefix = "comment_state_metric\\|$metric_name";
-	    if ($param_name =~ /^($prefix\|\d+\|\d+\|\d+)\|(\d+)$/) {
+	    if ($param_name =~ /^($prefix\|\-?\d+\|\-?\d+\|\d+)\|(\d+)$/) {
 		$comment_state_version_map{$1} = $2;
 		$comment_state_new_map{$1} = $query->param($param_name);
 	    }
