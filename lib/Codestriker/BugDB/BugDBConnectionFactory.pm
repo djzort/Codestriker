@@ -10,7 +10,6 @@
 package Codestriker::BugDB::BugDBConnectionFactory;
 
 use strict;
-
 use Codestriker::BugDB::BugzillaConnection;
 
 # Factory method for retrieving a BugDBConnection object.

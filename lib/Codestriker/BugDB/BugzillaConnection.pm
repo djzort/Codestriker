@@ -10,7 +10,6 @@
 package Codestriker::BugDB::BugzillaConnection;
 
 use strict;
-
 use DBI;
 
 # Static method for building a database connection.
