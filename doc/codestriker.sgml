@@ -9,7 +9,7 @@
     <title>The Codestriker Guide</title>
     <subtitle>Version 1.7.5</subtitle>
     <legalnotice>
-      <para>Copyright (c) 2001, 2002, 2003, 2004</para>
+      <para>Copyright (c) 2001, 2002, 2003</para>
     </legalnotice>
     <authorgroup>
       <author>
@@ -652,6 +652,32 @@ $suggested_topic_size_lines = '';
 # a cc user, an email is always sent out, regardless of this setting.
 $allow_comment_email = 1;
 	   </programlisting>
+	</para>
+      </sect2>
+      <sect2>
+        <title>Default View Topic Line Break Mode</title>
+	<para>
+	  As explained by the comments in the configuration file, it
+	  is possible to set the default view topic line break mode,
+	  by setting the <varname>$default_topic_br_mode</varname>
+	  variable.  There is usually no need to change the default
+	  setting unless you regularly review code with very long
+	   lines.
+	  <programlisting>
+# The default line break viewing mode to use in the URL when viewing a
+# topic.  Can be either $LINE_BREAK_NORMAL_MODE or $LINE_BREAK_ASSIST_MODE.
+# Using $LINE_BREAK_ASSIST_MODE indicates that extra line breaks may be
+# used in the topic display if the review has very long code lines.  Using
+# $LINE_BREAK_NORMAL_MODE will ensure that the display matches the line
+# breaks present in the code.  The line break mode can also be changed
+# dynamically in the view topic screen.  There is usually no need to
+# change this setting unless you regularly review code with very long
+# lines.
+$LINE_BREAK_NORMAL_MODE = 1;
+$LINE_BREAK_ASSIST_MODE = 2;
+
+$default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
+	  </programlisting>
 	</para>
       </sect2>
     </sect1>
