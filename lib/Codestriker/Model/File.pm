@@ -140,7 +140,8 @@ sub get_deltas($$$) {
 			     'WHERE delta.topicid = ? AND ' .
 			     'delta.topicid = file.topicid AND ' .
 			     'delta.file_sequence = file.sequence ' .
-			     (($filenumber != -1) ? 'file.sequence = ? ' : '').
+			     (($filenumber != -1) ?
+			      'AND file.sequence = ? ' : '').
 			     'ORDER BY delta_sequence ASC');
 
     my $success = defined $select_deltas;

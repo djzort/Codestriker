@@ -234,7 +234,7 @@ sub process($$$) {
 						$max_digit_width, $topic,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
-						\@revisions, \@binary);
+						\@revisions, \@binary, -1);
 
     # Display the data that is being reviewed.
     $render->start();
@@ -251,7 +251,7 @@ sub process($$$) {
 	$render->delta($delta->{filename}, $delta->{filenumber},
 		       $delta->{revision}, $delta->{old_linenumber},
 		       $delta->{new_linenumber}, $delta->{text},
-		       $delta->{description});
+		       $delta->{description}, $UrlBuilder::BOTH_FILES);
     }
 
     $render->finish();

@@ -89,7 +89,7 @@ sub process($$$) {
 	}
     }
 
-    # Output the new file, with the delats applied.
+    # Output the new file, with the deltas applied.
     my $title = $new == $UrlBuilder::NEW_FILE ?
 	"New $filename" : "$filename v$revision";
     $http_response->generate_header($topic, $title, "", "", "", $mode,
@@ -112,8 +112,9 @@ sub process($$$) {
 				       $max_digit_width, $topic, $mode,
 				       \@comments, $tabwidth,
 				       $repository, \@toc_filenames,
-				       \@toc_revisions, \@toc_binaries);
-    # Print the heading information.
+				       \@toc_revisions, \@toc_binaries,
+				       $max_line_length);
+    # Prepare the output.
     if ($new == $UrlBuilder::BOTH_FILES) {
 	$render->print_coloured_table();
     }
@@ -123,113 +124,39 @@ sub process($$$) {
 
     # Read through all the deltas, and apply them to the original form of the
     # file.
-    my $linenumber = 1;
-    my $old_linenumber = 1;
-    my $new_linenumber = 1;
-    my $chunk_end = 1;
-    my $next_chunk_end = 1;
-    for (my $d = 0; $d <= $#deltas; $d++) {
-	my $delta = $deltas[$d];
+    my $delta = undef;
+    for (my $delta_index = 0; $delta_index <= $#deltas; $delta_index++) {
+	$delta = $deltas[$delta_index];
 
-	my $patch_line_start = $delta->{old_linenumber};
-	
-	# Output those lines leading up to $patch_line_start.  These lines
-	# are not part of the review, so they can't be acted upon.
-	for (my $i = $chunk_end; $i < $patch_line_start; $i++, $linenumber++) {
-	    if ($new == $UrlBuilder::BOTH_FILES) {
-		$render->display_coloured_data(-1, " $filedata[$i]");
-		$old_linenumber++;
-		$new_linenumber++;
-	    }
-	    else {
-		print $render->render_monospaced_line($linenumber,
-						      $filedata[$i], -1,
-						      $max_line_length, "");
-	    }
+	# Output those lines leading up to the start of the next delta.
+	# Build up a delta with no changes, and render it.
+	my $delta_text = "";
+	my $next_delta_linenumber = $delta->{old_linenumber};
+	for (my $i = $render->{old_linenumber};
+	     $i < $next_delta_linenumber; $i++) {
+	    $delta_text .= " $filedata[$i]\n";
 	}
-	
-	# Read the information from the patch, and "apply" it to the
-	# output.
-	my @difflines = split /\n/, $delta->{text};
-	my $patch_index = 0;
-	while ($patch_index <= $#difflines) {
-	    $_ = $difflines[$patch_index++];
-	    my $data = Codestriker::Http::Render->tabadjust($tabwidth, $_, 0);
-
-	    # Handle the processing of the side-by-side view separately.
-	    if ($new == $UrlBuilder::BOTH_FILES &&
-		($data =~ /^\s/o || $data =~ /^\-/o || $data =~ /^\+/o ||
-		 $data =~ /^$/o)) {
-		$render->display_coloured_data(-1, $_);
-		$old_linenumber++ if $data =~ /^\s/o || $data =~ /^\-/o;
-		$new_linenumber++ if $data =~ /^\s/o || $data =~ /^\+/o;
-		next;
-	    }
-
-	    my $offset = 0;
-	    if (/^\-(.*)$/o) {
-		# A removed line.
-		$render->add_minus_monospace_line($1, $offset);
-	    } elsif (/^\+(.*)$/o) {
-		# An added line.
-		$render->add_plus_monospace_line($1, $offset);
-	    } elsif (/^\\/o) {
-		# A line with a diff comment, such as:
-		# \ No newline at end of file.
-		# The easiest way to deal with these lines is to just ignore
-		# them.
-	    } else {
-		# An unchanged line, output it and anything pending, and remove
-		# the leading space for alignment reasons.
-		my $linedata = $_;
-		$linedata =~ s/^\s//;
-		$render->flush_monospaced_lines(\$linenumber,
-						$max_line_length, $new);
-		print $render->render_monospaced_line($linenumber, $linedata,
-						      $offset,
-						      $max_line_length, "");
-		$linenumber++;
-	    }
-	}
-	if ($new != $UrlBuilder::BOTH_FILES) {
-	    $render->flush_monospaced_lines(\$linenumber,
-					    $max_line_length, $new);
-	}
-
-	$chunk_end = $next_chunk_end;
-
-	if ($patch_index > $#difflines) {
-	    if ($new != $UrlBuilder::BOTH_FILES) {
-		# Reached the end of the patch file.  Flush anything pending.
-		$render->flush_monospaced_lines(\$linenumber,
-						$max_line_length, $new);
-	    }
-	    else {
-		# Flush anything pending.
-		$render->render_changes();
-	    }
-	    last;
-	}
+	$render->delta_text($filename, $fn, $revision,
+			    $render->{old_linenumber},
+			    $render->{new_linenumber},
+			    $delta_text, 0, $new, 0);
+			    
+	# Render the actual change delta.
+	$render->delta_text($filename, $fn, $revision,
+			    $delta->{old_linenumber},
+			    $delta->{new_linenumber}, $delta->{text}, 1,
+			    $new, 1);
     }
 
-    # Display the last part of the file.
-    for (my $i = $chunk_end; $i <= $#filedata; $i++, $linenumber++) {
-	if ($new == $UrlBuilder::BOTH_FILES) {
-	    $render->display_coloured_data($old_linenumber,
-					   $new_linenumber, -1,
-					   " $filedata[$i]", "", "",
-					   $old_linenumber,
-					   $new_linenumber, 0, 0, 1, "");
-	    $old_linenumber++;
-	    $new_linenumber++;
-	}
-	else {
-	    print $render->render_monospaced_line($linenumber,
-						  $filedata[$i], -1,
-						  $max_line_length, "");
-	}
+    # Render the tail part of the file, again by building up a delta.
+    my $delta_text = "";
+    for (my $i = $render->{old_linenumber}; $i <= $#filedata; $i++) {
+	$delta_text .= " $filedata[$i]\n";
     }
-
+    $render->delta_text($filename, $fn, $revision, $render->{old_linenumber},
+			$render->{new_linenumber}, $delta_text, 0, $new, 0);
+    
+    # Close off the rendering.    
     if ($new == $UrlBuilder::BOTH_FILES) {
 	print $query->end_table();
     }

@@ -151,6 +151,7 @@ sub generate_header($$$$$$$$$$$) {
     # opener.location.hash = "#" + anchor;
     #
     # As the old netscapes don't handle it properly.
+    my $base_url = $query->url();
     my $jscript=<<END;
     var windowHandle = '';
 
@@ -165,8 +166,7 @@ sub generate_header($$$$$$$$$$$) {
 
     // Edit open function.  Name is kept short to reduce output size.
     function eo(fn,line,newfile) {
-        var baseUrl = $query->url();
-	myOpen(baseUrl + '?fn=' + fn + '&line=' + line +
+	myOpen('$base_url' + '?fn=' + fn + '&line=' + line +
 	       '&new=' + newfile + '&topic=$topic&action=edit&a=' +
                fn + '|' + line + '|' + newfile, 'e');
     }

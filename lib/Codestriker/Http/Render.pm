@@ -48,10 +48,10 @@ my @view_file_plus_offset = ();
 my $COMMENT_LINE_COLOUR = "red";
 
 # Constructor for rendering complex data.
-sub new ($$$$$$$\%\@$$\@\@\@) {
+sub new ($$$$$$$\%\@$$\@\@\@$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comments, $tabwidth, $repository, $filenames_ref,
-	$revisions_ref, $binaries_ref) = @_;
+	$revisions_ref, $binaries_ref, $max_line_length) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -68,6 +68,9 @@ sub new ($$$$$$$\%\@$$\@\@\@) {
     $self->{filenames_ref} = $filenames_ref;
     $self->{revisions_ref} = $revisions_ref;
     $self->{binaries_ref} = $binaries_ref;
+    $self->{max_line_length} = $max_line_length;
+    $self->{old_linenumber} = 1;
+    $self->{new_linenumber} = 1;
 
     # Build a hash from filenumber|fileline|new -> comment array, so that
     # when rendering, lines can be coloured appropriately.
@@ -203,9 +206,7 @@ sub display_data ($$$$$$$$$$$) {
     for (my $j = 0; $j < ($self->{max_digit_width} - $digit_width); $j++) {
 	print " ";
     }
-
-    print STDERR "display data called!!!!\n";
-    print $self->render_linenumber($line, $line, 0, "", 0);
+    print $self->render_linenumber($line, $line, 0, "", 0, 1);
 
     # Now render the data.
     print " $data\n";
@@ -223,7 +224,6 @@ sub delta ($$$$$$$$) {
     my $repository = defined $self->{repository} ?
 	$self->{repository}->getRoot() : undef;
     my $repmatch = defined $repository;
-    print STDERR "repository is $repository\n";
 
     # Check if the file heading needs to be output.
     if ($self->{diff_current_filename} ne $filename) {
@@ -236,7 +236,8 @@ sub delta ($$$$$$$$) {
 
     # Now render the actual diff text itself.
     $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
-		      $new_linenumber, $text, $repmatch);
+		      $new_linenumber, $text, $repmatch,
+		      $UrlBuilder::BOTH_FILES, 1);
 }
 
 # Output the header for a series of deltas for a specific file.
@@ -377,9 +378,9 @@ sub delta_heading ($$$$$$) {
 }
 
 # Output the delta text chunk in the coloured format.
-sub delta_text ($$$$$$$$) {
+sub delta_text ($$$$$$$$$$$) {
     my ($self, $filename, $filenumber, $revision, $old_linenumber,
-	$new_linenumber, $text, $repmatch) = @_;
+	$new_linenumber, $text, $repmatch, $new, $link) = @_;
 
     my $query = $self->{query};
 
@@ -389,19 +390,27 @@ sub delta_text ($$$$$$$$) {
     $self->{new_linenumber} = $new_linenumber;
     for (my $i = 0; $i <= $#lines; $i++) {
 	my $line = $lines[$i];
-	print STDERR "1 filenumber is $filenumber\n";
-	$self->display_coloured_data($filenumber, $line);
+	if ($new == $UrlBuilder::BOTH_FILES) {
+	    $self->display_coloured_data($filenumber, $line, $link);
+	} else {
+	    $self->display_single_filedata($filenumber, $line, $new, $link);
+	}
     }
 
     # Render the diff blocks.
-    $self->render_changes($filenumber);
+    if ($new == $UrlBuilder::BOTH_FILES) {
+	$self->render_changes($filenumber, $link);
+    } else {
+	$self->flush_monospaced_lines($filenumber, $self->{max_line_length},
+				      $new, $link);
+    }
 }
 
 # Display a line for coloured data.  Note special handling is done for
 # unidiff formatted text, to output it in the "coloured-diff" style.  This
 # requires storing state when retrieving each line.
-sub display_coloured_data ($$$) {
-    my ($self, $filenumber, $data) = @_;
+sub display_coloured_data ($$$$) {
+    my ($self, $filenumber, $data, $link) = @_;
 
     my $query = $self->{query};
 
@@ -425,7 +434,7 @@ sub display_coloured_data ($$$) {
 	$data =~ s/^\s//;
 
 	# Render the previous diff changes visually.
-	$self->render_changes($filenumber);
+	$self->render_changes($filenumber, $link);
 
 	# Render the current line for both cells.
 	my $celldata = $self->render_coloured_cell($data);
@@ -437,11 +446,13 @@ sub display_coloured_data ($$$) {
 	    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
 	
 	my $rendered_left_linenumber =
-	    $self->render_linenumber($leftline, $filenumber, 0, $left_prefix);
+	    $self->render_linenumber($leftline, $filenumber, 0, $left_prefix,
+				     $link);
 	my $rendered_right_linenumber =
 	    ($leftline == $rightline && !$self->{parallel}) ?
 	    $rendered_left_linenumber :
-	    $self->render_linenumber($rightline, $filenumber, 1, $right_prefix);
+	    $self->render_linenumber($rightline, $filenumber, 1, $right_prefix,
+				     $link);
 	
 	print $query->Tr($query->td($rendered_left_linenumber),
 			 $query->td({-class=>$cell_class}, $celldata),
@@ -493,8 +504,8 @@ sub add_new_change($$) {
 }
 
 # Render the current diff changes, if there is anything.
-sub render_changes($$) {
-    my ($self, $filenumber) = @_;
+sub render_changes($$$) {
+    my ($self, $filenumber, $link) = @_;
 
     return if ($#diff_new_lines == -1 && $#diff_old_lines == -1);
 
@@ -522,7 +533,8 @@ sub render_changes($$) {
 	    $arg1 = "msr"; $arg2 = "msrb"; $arg3 = "msr"; $arg4 = "msrb";
 	}
     }
-    $self->render_inplace_changes($arg1, $arg2, $arg3, $arg4, $filenumber);
+    $self->render_inplace_changes($arg1, $arg2, $arg3, $arg4, $filenumber,
+				  $link);
 
     # Now that the diff changeset has been rendered, remove the state data.
     @diff_new_lines = ();
@@ -532,10 +544,10 @@ sub render_changes($$) {
 }
 
 # Render the inplace changes in the current diff change set.
-sub render_inplace_changes($$$$$$)
+sub render_inplace_changes($$$$$$$)
 {
     my ($self, $old_col, $old_notpresent_col, $new_col,
-	$new_notpresent_col, $filenumber) = @_;
+	$new_notpresent_col, $filenumber, $link) = @_;
 
     my $old_data;
     my $new_data;
@@ -578,17 +590,18 @@ sub render_inplace_changes($$$$$$)
 	my $new_prefix = $parallel ? "R" : "";
 
 	my $query = $self->{query};
-	print STDERR "RENDER_INPLACE_CHANGES called!!!\n";
 	print $query->Tr($query->td($self->render_linenumber($old_data_line,
 							     $filenumber,
 							     0,
-							     $old_prefix)),
+							     $old_prefix,
+							     $link)),
 			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
 			 $query->td($self->render_linenumber($new_data_line,
 							     $filenumber,
 							     1,
-							     $new_prefix)),
+							     $new_prefix,
+							     $link)),
 			 $query->td({-class=>"$render_new_colour"},
 				    $render_new_data), "\n");
     }
@@ -599,8 +612,8 @@ sub render_inplace_changes($$$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$$$) {
-    my ($self, $line, $filenumber, $new, $prefix) = @_;
+sub render_linenumber($$$$$$) {
+    my ($self, $line, $filenumber, $new, $prefix, $link) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
@@ -619,7 +632,6 @@ sub render_linenumber($$$$$) {
     my $linedata;
     my %comment_hash = %{ $self->{comment_hash} };
     my $key = "$filenumber|$line|$new";
-    print STDERR "RENDER FILENUMBER IS $filenumber\n";
     if ($filenumber != -1 && defined $comment_hash{$key}) {
 	if ($self->{mode} == $Codestriker::NORMAL_MODE) {
 	    $linedata = "<FONT COLOR=\"$COMMENT_LINE_COLOUR\">$line</FONT>";
@@ -636,7 +648,7 @@ sub render_linenumber($$$$$) {
     }
     
     # Check if the linenumber is outside the review.
-    if ($filenumber == -1) {
+    if ($link == 0) {
 	return $linedata;
     }
 
@@ -668,15 +680,11 @@ sub get_comment_digest($$$$) {
     my $digest = "";
     my %comment_hash = %{ $self->{comment_hash} };
     my $key = "$filenumber|$line|$new";
-    print STDERR "Looking up key $key in hash %comment_hash\n";
     if (defined $comment_hash{$key}) {
 	my @comments = @{ $comment_hash{$key} };
     
-	print STDERR "i is $#comments\n";
 	for (my $i = 0; $i <= $#comments; $i++) {
 	    my $comment = $comments[$i];
-
-	    print STDERR "Got comment: " . $comment->{data} . "\n";
 
 	    # Need to remove the newlines for the data.
 	    my $data = $comment->{data};
@@ -819,10 +827,46 @@ sub _coloured_mode_finish ($) {
     print "</TABLE>\n";
 }
 
+# Display a line for a single file view.
+sub display_single_filedata ($$$$$) {
+    my ($self, $filenumber, $data, $new, $link) = @_;
+    
+    my $leftline = $self->{old_linenumber};
+    my $rightline = $self->{new_linenumber};
+    my $max_line_length = $self->{max_line_length};
+
+    # Handling of either an old or new view.
+    if ($data =~ /^\-(.*)$/o) {
+	# A removed line.
+	$self->add_minus_monospace_line($1, $leftline++);
+    } elsif ($data =~ /^\+(.*)$/o) {
+	# An added line.
+	$self->add_plus_monospace_line($1, $rightline++);
+    } else {
+	# An unchanged line, output it and anything pending, and remove
+	# the leading space for alignment reasons.
+	$data =~ s/^\s//;
+	$self->flush_monospaced_lines($filenumber, $max_line_length, $new,
+				      $link);
+
+	my $linenumber = $new ? $rightline : $leftline;
+	print $self->render_monospaced_line($filenumber, $linenumber, $new,
+					    $data, $link,
+					    $max_line_length, "");
+	$leftline++;
+	$rightline++;
+    }
+
+    # Update the left and right line nymber state variables.
+    $self->{old_linenumber} = $leftline;
+    $self->{new_linenumber} = $rightline;
+}
+
 # Print out a line of data with the specified line number suitably aligned,
 # and with tabs replaced by spaces for proper alignment.
-sub render_monospaced_line ($$$$$$) {
-    my ($self, $linenumber, $data, $offset, $max_line_length, $class) = @_;
+sub render_monospaced_line ($$$$$$$$) {
+    my ($self, $filenumber, $linenumber, $new, $data, $link,
+	$max_line_length, $class) = @_;
 
     my $prefix = "";
     my $digit_width = length($linenumber);
@@ -847,36 +891,33 @@ sub render_monospaced_line ($$$$$$) {
     }
 
     # Render the line data.  If the user clicks on a topic line, the
-    # main window is moved to the edit page.  I'm not sure if this is
-    # the best thing from a useability perspective, but we'll see for
-    # now.
+    # edit window is focused to the appropriate line.
     my $query = $self->{query};
     my $line_cell = "";
-    if ($offset != -1) {
+    if ($link) {
 	# A line corresponding to the review.
-	my $edit_url =
-	    $self->{url_builder}->edit_url($offset, $self->{topic}, "",
-					   $linenumber, "");
-	my $comment_exists_ref = $self->{comment_exists_ref};
-	if (defined $$comment_exists_ref{$offset}) {
-	    my $link_title = $self->get_comment_digest($offset);
+	my $edit_url = "javascript:eo('$filenumber','$linenumber','$new')";
+	my %comment_hash = %{ $self->{comment_hash} };
+	my $key = "$filenumber|$linenumber|$new";
+	if (defined $comment_hash{$key}) {
+	    my $link_title =
+		$self->get_comment_digest($linenumber, $filenumber, $new);
 	    my $js_title = $link_title;
 	    $js_title =~ s/\'/\\\'/mgo;
-	    $line_cell = "$prefix" .
-		$query->a({name=>"$linenumber",
-			   href=>"javascript:myOpen('$edit_url','e')",
+	    $line_cell = $prefix .
+		$query->a({name=>$key,
+			   href=>$edit_url,
 			   title=>$js_title,
 			   onmouseover=> "window.status='$js_title'; " .
 			       "return true;" },
-			  $query->span({-class=>$comment_class},
-				       "$linenumber"));
+			  $query->span({-class=>$comment_class}, $linenumber));
 	}
 	else {
-	    $line_cell = "$prefix" .
-		$query->a({name=>"$linenumber",
-			   href=>"javascript:myOpen('$edit_url','e')"},
+	    $line_cell = $prefix .
+		$query->a({name=>$key,
+			   href=>$edit_url},
 			  $query->span({-class=>$no_comment_class},
-				       "$linenumber"));
+				       $linenumber));
 	}
     }
     else {
@@ -920,11 +961,10 @@ sub add_minus_monospace_line ($$$) {
     push @view_file_minus_offset, $offset;
 }
 
-# Flush the current diff chunk, and update the line count.  Note if the
-# original file is being rendered, the minus lines are used, otherwise the
-# plus lines.
-sub flush_monospaced_lines ($$$$) {
-    my ($self, $linenumber_ref, $max_line_length, $new) = @_;
+# Flush the current diff chunk.  Note if the original file is being rendered,
+# the minus lines are used, otherwise the plus lines.
+sub flush_monospaced_lines ($$$$$) {
+    my ($self, $filenumber, $max_line_length, $new, $link) = @_;
 
     my $class = "";
     if ($#view_file_plus != -1 && $#view_file_minus != -1) {
@@ -942,20 +982,20 @@ sub flush_monospaced_lines ($$$$) {
 
     if ($new) {
 	for (my $i = 0; $i <= $#view_file_plus; $i++) {
-	    print $self->render_monospaced_line($$linenumber_ref,
-						$view_file_plus[$i],
+	    print $self->render_monospaced_line($filenumber,
 						$view_file_plus_offset[$i],
+						$new,
+						$view_file_plus[$i], $link,
 						$max_line_length, $class);
-	    $$linenumber_ref++;
 	}
     }
     else {
 	for (my $i = 0; $i <= $#view_file_minus; $i++) {
-	    print $self->render_monospaced_line($$linenumber_ref,
-						$view_file_minus[$i],
+	    print $self->render_monospaced_line($filenumber,
 						$view_file_minus_offset[$i],
+						$new,
+						$view_file_minus[$i], $link,
 						$max_line_length, $class);
-	    $$linenumber_ref++;
 	}
     }
     $#view_file_minus = -1;
