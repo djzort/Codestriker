@@ -38,6 +38,11 @@ describe version;
 show tables;
 
 
+----------------------------------------------------------------------
+
+/usr/lib/postgresql/bin/postmaster -D /var/lib/postgres/data
+
+
 mysql> select modified_ts, creation_ts from topic;
 ERROR 1146: Table 'codestrikerdb.topic' doesn't exist
 mysql> update topic set version=10, state=5, modified_ts=20020116104906 where id=7168516;

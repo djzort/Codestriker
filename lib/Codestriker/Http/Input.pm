@@ -59,6 +59,7 @@ sub process($) {
     $self->{topic_description} = $query->param('topic_description');
     $self->{reviewers} = $query->param('reviewers');
     $self->{cc} = $query->param('cc');
+    $self->{comment_cc} = $query->param('comment_cc');
     $self->{topic_state} = $query->param('topic_state');
     $self->{revision} = $query->param('revision');
     $self->{filename} = $query->param('filename');

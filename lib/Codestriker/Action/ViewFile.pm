@@ -36,7 +36,7 @@ sub process($$$) {
     my ($offset, $revision, $diff_text);
     Codestriker::Model::File->get($topic, $filename, \$offset, \$revision,
 				  \$diff_text);
-    
+
     # Retrieve the comment details for this topic.
     my (@comment_linenumber, @comment_author, @comment_data, @comment_date,
 	%comment_exists);
@@ -249,6 +249,7 @@ sub _read_cvs_file ($$$$$) {
     } else {
 	die "Bad data in CVS configuration variables";
     }
+
     return 0 if (! open (CVSFILE, "$command 2>/dev/null |"));
 
     $$maxline_length_ref = 0;
@@ -262,6 +263,7 @@ sub _read_cvs_file ($$$$$) {
 	}
     }
     close CVSFILE;
+    return 1;
 }
 
 1;

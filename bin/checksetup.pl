@@ -64,7 +64,7 @@ $table{participant} =
      state smallint NOT NULL,
      modified_ts timestamp NOT NULL,
      version int NOT NULL,
-     PRIMARY KEY (topicid, email)';
+     PRIMARY KEY (topicid, email, type)';
 
 $index{participant} =
     "CREATE INDEX participant_tid_idx ON participant(topicid)";

@@ -119,7 +119,7 @@ sub process($$$) {
 						  -override=>1,
 						  -maxlength=>100)));
     print $query->Tr($query->td("Cc: "),
-		     $query->td($query->textfield(-name=>'cc',
+		     $query->td($query->textfield(-name=>'comment_cc',
 						  -size=>50,
 						  -maxlength=>150)));
     print $query->end_table(), $query->p;

@@ -106,7 +106,8 @@ sub get_filetable($$$$$$) {
     # Setup the appropriate statement and execute it.
     my $select_file =
 	$dbh->prepare_cached('SELECT filename, revision, topicoffset, ' .
-			     'binaryfile FROM file WHERE topicid = ?');
+			     'binaryfile FROM file WHERE topicid = ? ' .
+			     'ORDER BY sequence');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid);
     

@@ -27,7 +27,7 @@ sub process($$$) {
     my $line = $http_input->get('line');
     my $comments = $http_input->get('comments');
     my $email = $http_input->get('email');
-    my $cc = $http_input->get('cc');
+    my $cc = $http_input->get('comment_cc');
     my $mode = $http_input->get('mode');
     
     # Check that the fields have been filled appropriately.
