@@ -1,0 +1,4 @@
+this is a text file to test the HTML escaping code.
+<PRE><TABLE>
+If the code is not escaped, the www pages will not lint property.
+

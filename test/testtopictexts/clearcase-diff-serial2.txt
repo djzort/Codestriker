@@ -1,0 +1,18 @@
+********************************
+<<< file 1: c:\my_stuff\view_name\vob_name\dir1\dir2\zot2.c@@\main\1
+>>> file 2: zot2.c
+********************************
+-----[deleted/moved 40 after 44 (now at 152)]----- 
+< #if FTLE 
+-----[deleted 41 after 44]----- 
+< offset = 7 - offset; 
+-----[deleted/moved 42-43 after 44 (now at 154-155)]----- 
+< #endif 
+< 
+-----[after 135 inserted/moved 152 (was at 40)]-----
+> #if FTLE
+-----[after 135 inserted 153]-----
+> ip = (char *) (((ulong) ip) ^ 0x7);
+-----[after 135 inserted/moved 154-155 (was at 42-43)]-----
+> #endif
+> 

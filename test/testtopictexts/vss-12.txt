@@ -1,0 +1,13 @@
+Version not found
+Version not found
+Version not found
+Version not found
+Version not found
+Diffing: $/JonathanTest/test.txt;version1
+Against: $/JonathanTest/test.txt;version3
+
+1c1,3
+< version 1---
+> version 2
+> 
+> This used to be version 1

@@ -1,0 +1,30 @@
+Index: codestriker/template/en/default/displaycomments.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/displaycomments.html.tmpl,v
+retrieving revision 1.10
+diff -u -b -r1.10 displaycomments.html.tmpl
+--- codestriker/template/en/default/displaycomments.html.tmpl	4 Jan 2004 10:03:58 -0000	1.10
++++ codestriker/template/en/default/displaycomments.html.tmpl	4 Jan 2004 23:11:34 -0000
+@@ -93,7 +93,7 @@
+   </SELECT>
+ .
+ 
+-<TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
++<TABLE CELLPADDING="3%" CELLSPACING="3%" BORDER="0" WIDTH="100%">
+ 
+ [% last_fileline = -1 %]
+ [% last_filenumber = -1 %]
+@@ -103,11 +103,11 @@
+     [% IF comment.fileline != last_fileline ||
+           comment.filenumber != last_filenumber %]
+     <TR CLASS="comments">
+-        <TD>
++        <TD width="1%">
+             <INPUT TYPE="checkbox" NAME="selected_comments" 
+ 	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
+         </TD>
+-	<TD><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
++	<TD width="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+ 	<TD>
+ 	    [% IF comment.filename != '' %]
+ 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |

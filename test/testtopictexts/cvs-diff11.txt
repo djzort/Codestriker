@@ -1,0 +1,814 @@
+? codestriker/cgi-bin/codestriker.pl
+? codestriker/cgi-bin/data
+Index: codestriker/codestriker.conf
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/codestriker.conf,v
+retrieving revision 1.33
+diff -u -b -r1.33 codestriker.conf
+--- codestriker/codestriker.conf	20 Aug 2003 12:59:25 -0000	1.33
++++ codestriker/codestriker.conf	2 Sep 2003 03:01:16 -0000
+@@ -3,14 +3,14 @@
+ 
+ # Database to use for storing codestriker data.  Examples given are Postgresql
+ # and MySQL
+-$db = 'DBI:Pg:dbname=codestrikerdb';
+-#$db = 'DBI:mysql:dbname=codestrikerdb';
++#$db = 'DBI:Pg:dbname=codestrikerdb';
++$db = 'DBI:mysql:dbname=codestrikerdb';
+ 
+ # Database user.
+ $dbuser = 'codestriker';
+ 
+ # Database password.
+-$dbpasswd = '';
++$dbpasswd = 'xxxxx';
+ #$dbpasswd = 'cspasswd';
+ 
+ # Location of the mailing host.  This is used when sending out codestriker
+@@ -55,7 +55,7 @@
+ # be set to an anonymous user.
+ @valid_repositories =
+     (
+-     '/home/sits/cvs',
++     '/usr/local/cvsroot',
+      'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
+      'svn:http://svn.collab.net/repos/svn/trunk',
+      ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot'
+@@ -103,11 +103,19 @@
+ $allow_repositories = 1;
+ 
+ # Indicate whether project operations (create, edit, list) can be performed.
+-$allow_projects = 1;
++$allow_projects = 0;
+ 
+ # If true, don't display any email addresses in their true form, but
+ # truncate them, to beat SPAM harvesters.
+ $antispam_email = 0;
++
++# If true, code striker will send out emails to the topic owner and
++# comment submitter when a comment is added. If this option is false,
++# no email will be sent to either the topic owner of the comment
++# submitter. Email's about each comments may not be needed if a meeting
++# is planed to discuss the topic. If the comment submitter specifies
++# a cc user, an email is always sent out, regardless of this setting.
++$allow_comment_email = 1;
+ 
+ # Default width of tabs.  Most developers expect this to be 8, but
+ # some expect to see 4.  This is also stored in the user's cookie, and
+Index: codestriker/bin/codestriker.pl.base
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/bin/codestriker.pl.base,v
+retrieving revision 1.1
+diff -u -b -r1.1 codestriker.pl.base
+--- codestriker/bin/codestriker.pl.base	25 May 2003 08:09:37 -0000	1.1
++++ codestriker/bin/codestriker.pl.base	2 Sep 2003 03:01:16 -0000
+@@ -29,25 +29,8 @@
+ use Codestriker;
+ use Codestriker::Http::Input;
+ use Codestriker::Http::Response;
+-use Codestriker::Action::CreateTopic;
+-use Codestriker::Action::SubmitTopic;
+-use Codestriker::Action::ViewTopic;
+-use Codestriker::Action::EditTopic;
+-use Codestriker::Action::SubmitComment;
+-use Codestriker::Action::ViewFile;
+-use Codestriker::Action::ViewSearch;
+-use Codestriker::Action::SubmitSearch;
+-use Codestriker::Action::ListTopics;
+-use Codestriker::Action::DownloadTopic;
+-use Codestriker::Action::ChangeTopicState;
+-use Codestriker::Action::ChangeTopics;
+-use Codestriker::Action::ListComments;
+-use Codestriker::Action::ChangeComments;
+-use Codestriker::Action::ListProjects;
+-use Codestriker::Action::EditProject;
+-use Codestriker::Action::CreateProject;
+-use Codestriker::Action::SubmitProject;
+-use Codestriker::Action::SubmitEditProject;
++use Codestriker::Http::Template;
++use Codestriker::Http::UrlBuilder;
+ 
+ # Set the PATH to something sane.
+ $ENV{'PATH'} = "/bin:/usr/bin";
+@@ -76,53 +59,72 @@
+     # Delegate the request to the appropriate Action module.
+     my $action = $http_input->get("action");
+     if ($action eq "create") {
++    	eval require Codestriker::Action::CreateTopic;
+ 	Codestriker::Action::CreateTopic->process($http_input, $http_response);
+     } elsif ($action eq "submit_topic") {
++    	eval require Codestriker::Action::SubmitTopic;
+ 	Codestriker::Action::SubmitTopic->process($http_input, $http_response);
+     } elsif ($action eq "view") {
++    	eval require Codestriker::Action::ViewTopic;
+ 	Codestriker::Action::ViewTopic->process($http_input, $http_response);
+     } elsif ($action eq "edit") {
++    	eval require Codestriker::Action::EditTopic;
+ 	Codestriker::Action::EditTopic->process($http_input, $http_response);
+     } elsif ($action eq "submit_comment") {
++    	eval require Codestriker::Action::SubmitComment;
+ 	Codestriker::Action::SubmitComment->process($http_input,
+ 						    $http_response);
+     } elsif ($action eq "view_file") {
++    	eval require Codestriker::Action::ViewFile;
+ 	Codestriker::Action::ViewFile->process($http_input, $http_response);
+     } elsif ($action eq "search") {
++    	eval require Codestriker::Action::ViewSearch;
+ 	Codestriker::Action::ViewSearch->process($http_input, $http_response);
+     } elsif ($action eq "submit_search") {
++    	eval require Codestriker::Action::SubmitSearch;
+ 	Codestriker::Action::SubmitSearch->process($http_input,
+ 						   $http_response);
+     } elsif ($action eq "list_topics") {
++    	eval require Codestriker::Action::ListTopics;
+ 	Codestriker::Action::ListTopics->process($http_input, $http_response);
+     } elsif ($action eq "download") {
++	eval require Codestriker::Action::DownloadTopic;
+ 	Codestriker::Action::DownloadTopic->process($http_input,
+ 						    $http_response);
+     } elsif ($action eq "change_topic_state") {
++	eval require Codestriker::Action::ChangeTopicState;
+         Codestriker::Action::ChangeTopicState->process($http_input,
+ 						       $http_response);
+     } elsif ($action eq "change_topics") {
++        eval require Codestriker::Action::ChangeTopics;
+         Codestriker::Action::ChangeTopics->process($http_input,
+ 						   $http_response);
+     } elsif ($action eq "list_comments") {
++    	eval require Codestriker::Action::ListComments;
+ 	Codestriker::Action::ListComments->process($http_input,
+ 						   $http_response);
+     } elsif ($action eq "change_comments") {
++   	eval require Codestriker::Action::ChangeComments; 
+ 	Codestriker::Action::ChangeComments->process($http_input,
+ 						     $http_response);
+     } elsif ($action eq "list_projects") {
++	eval require Codestriker::Action::ListProjects;
+ 	Codestriker::Action::ListProjects->process($http_input,
+ 						   $http_response);
+     } elsif ($action eq "edit_project") {
++	eval require Codestriker::Action::EditProject;
+ 	Codestriker::Action::EditProject->process($http_input,
+ 						  $http_response);
+     } elsif ($action eq "create_project") {
++	eval require Codestriker::Action::CreateProject;
+ 	Codestriker::Action::CreateProject->process($http_input,
+ 						    $http_response);
+     } elsif ($action eq "submit_project") {
++	eval require Codestriker::Action::SubmitProject;
+ 	Codestriker::Action::SubmitProject->process($http_input,
+ 						    $http_response);
+     } elsif ($action eq "submit_editproject") {
++	eval require Codestriker::Action::SubmitEditProject;
+ 	Codestriker::Action::SubmitEditProject->process($http_input,
+ 							$http_response);
+     } else {
+@@ -130,9 +132,11 @@
+ 	# list functionality is enabled, otherwise go to the create topic
+ 	# screen.
+ 	if ($Codestriker::allow_searchlist) {
++	    eval require Codestriker::Action::ListTopics;
+ 	    Codestriker::Action::ListTopics->process($http_input,
+ 						     $http_response);
+         } else {
++	    eval require Codestriker::Action::CreateTopic;
+ 	    Codestriker::Action::CreateTopic->process($http_input,
+ 						      $http_response);
+ 	}
+Index: codestriker/html/codestriker.css
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/html/codestriker.css,v
+retrieving revision 1.5
+diff -u -b -r1.5 codestriker.css
+--- codestriker/html/codestriker.css	30 Mar 2003 20:41:25 -0000	1.5
++++ codestriker/html/codestriker.css	2 Sep 2003 03:01:16 -0000
+@@ -101,10 +101,11 @@
+ A.fid {color: #777777; text-decoration: none}
+ 
+ /* Style comment listings. */
+-TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial}
+-TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial}
+-TR.commentb {background-color: #eeeeee}
+-TD.commentb {background-color: #eeeeee}
++TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial} /* space */
++TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial} /* header */
++TR.commentb {background-color: #eeeeee} /* comment body */
++TD.commentb {background-color: #eeeeee} /* comment body */
++TR.commentc {background-color: #eeeeee} /* context */
+ 
+ /* Style for topic title headings. */
+ 
+Index: codestriker/lib/Codestriker.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker.pm,v
+retrieving revision 1.35
+diff -u -b -r1.35 Codestriker.pm
+--- codestriker/lib/Codestriker.pm	19 Aug 2003 12:51:42 -0000	1.35
++++ codestriker/lib/Codestriker.pm	2 Sep 2003 03:01:16 -0000
+@@ -19,7 +19,7 @@
+ 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
+ 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
+ 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
+-	      $lxr_map
++	      $lxr_map $allow_comment_email
+ 	      $allow_delete $allow_searchlist $allow_repositories
+               $allow_projects $antispam_email $VERSION $BASEDIR
+ 	      );
+Index: codestriker/lib/Codestriker/Action/ChangeComments.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ChangeComments.pm,v
+retrieving revision 1.2
+diff -u -b -r1.2 ChangeComments.pm
+--- codestriker/lib/Codestriker/Action/ChangeComments.pm	30 Mar 2003 20:41:25 -0000	1.2
++++ codestriker/lib/Codestriker/Action/ChangeComments.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,8 @@
+ 
+ use strict;
+ 
++use Codestriker::Action::ListComments;
++
+ # Attempt to change the comment states.
+ sub process($$$) {
+     my ($type, $http_input, $http_response) = @_;
+Index: codestriker/lib/Codestriker/Action/ChangeTopicState.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ChangeTopicState.pm,v
+retrieving revision 1.6
+diff -u -b -r1.6 ChangeTopicState.pm
+--- codestriker/lib/Codestriker/Action/ChangeTopicState.pm	12 Jan 2003 09:44:59 -0000	1.6
++++ codestriker/lib/Codestriker/Action/ChangeTopicState.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,9 @@
+ 
+ use strict;
+ 
++use Codestriker::Model::Topic;
++use Codestriker::Action::ListTopics;
++
+ # Attempt to change the topic's state, or to delete it.
+ sub process($$$) {
+     my ($type, $http_input, $http_response) = @_;
+Index: codestriker/lib/Codestriker/Action/ChangeTopics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ChangeTopics.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 ChangeTopics.pm
+--- codestriker/lib/Codestriker/Action/ChangeTopics.pm	13 Jan 2003 20:54:22 -0000	1.1
++++ codestriker/lib/Codestriker/Action/ChangeTopics.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,9 @@
+ 
+ use strict;
+ 
++use Codestriker::Action::ChangeTopicState;
++use Codestriker::Action::ListTopics;
++
+ # Attempt to change the topic's state, or to delete it.
+ sub process($$$) {
+     my ($type, $http_input, $http_response) = @_;
+Index: codestriker/lib/Codestriker/Action/DownloadTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/DownloadTopic.pm,v
+retrieving revision 1.5
+diff -u -b -r1.5 DownloadTopic.pm
+--- codestriker/lib/Codestriker/Action/DownloadTopic.pm	12 Jan 2003 09:44:59 -0000	1.5
++++ codestriker/lib/Codestriker/Action/DownloadTopic.pm	2 Sep 2003 03:01:16 -0000
+@@ -12,6 +12,7 @@
+ use strict;
+ 
+ use Codestriker::Http::Render;
++use Codestriker::Model::Topic;
+ 
+ # Prototypes.
+ sub _read_cvs_file( $$$$$ );
+Index: codestriker/lib/Codestriker/Action/EditTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/EditTopic.pm,v
+retrieving revision 1.19
+diff -u -b -r1.19 EditTopic.pm
+--- codestriker/lib/Codestriker/Action/EditTopic.pm	17 Aug 2003 13:03:34 -0000	1.19
++++ codestriker/lib/Codestriker/Action/EditTopic.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,8 @@
+ 
+ use strict;
+ use Codestriker::Action::SubmitComment;
++use Codestriker::Model::Topic;
++use Codestriker::Http::Render;
+ 
+ # Create an appropriate form for adding a comment to a topic.
+ sub process($$$) {
+@@ -109,7 +111,7 @@
+     $vars->{'dec_context_url'} = $dec_context_url;
+ 
+     $vars->{'context'} = $query->pre(
+-	    Codestriker::Http::Render->get_context($line, $topic,
++	    Codestriker::Http::Render->get_context($line, 
+ 						   $context, 1,
+ 						   $delta->{old_linenumber},
+ 						   $delta->{new_linenumber},
+Index: codestriker/lib/Codestriker/Action/ListComments.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ListComments.pm,v
+retrieving revision 1.6
+diff -u -b -r1.6 ListComments.pm
+--- codestriker/lib/Codestriker/Action/ListComments.pm	17 Aug 2003 13:03:34 -0000	1.6
++++ codestriker/lib/Codestriker/Action/ListComments.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,9 @@
+ 
+ use strict;
+ use Codestriker::Http::Template;
++use Codestriker::Http::Render;
++use Codestriker::Model::Comment;
++use Codestriker::Model::File;
+ use HTML::Entities;
+ 
+ # If the input is valid, list the appropriate comments for a topic.
+@@ -24,11 +27,16 @@
+     my $email = $http_input->get('email');
+     my $mode = $http_input->get('mode');
+     my $feedback = $http_input->get('feedback');
++    my $show_context = $http_input->get('scontext');
++    my $show_comments_from_user = $http_input->get('sauthor');
++    my $show_comments_by_state  = $http_input->get('sstate');
+     
+     # Perform some error checking here on the parameters.
+ 
+     # Retrieve the comment details for this topic.
+-    my @comments = Codestriker::Model::Comment->read($topic);
++    my @comments = Codestriker::Model::Comment->read_filtered($topic, 
++    	$show_comments_by_state, 
++        $show_comments_from_user);
+ 
+     # Display the data, with each topic title linked to the view topic screen.
+     $http_response->generate_header($topic, "Comment list", $email, "", "", "",
+@@ -57,6 +65,19 @@
+ 	$url_builder->list_topics_url("", "", "", "", "", "", "",
+ 				      "", "", "", [ 0 ], undef);
+ 				      
++                                      
++    my @usersThatHaveComments = Codestriker::Model::Comment->read_authors( $topic );
++                                      
++    # Filter the email address out if the system is configured with antispam email.
++    if ( $Codestriker::antispam_email ) {
++    	foreach my $comment (@comments) {
++    	    $comment->{author} = Codestriker->make_antispam_email( $comment->{author} );
++        }
++        
++        @usersThatHaveComments = map
++          { Codestriker->make_antispam_email($_) } @usersThatHaveComments;
++    }     
++                                                                                          
+     # Go through all the comments and make them into an appropriate form for
+     # displaying.
+     my $last_filenumber = -1;
+@@ -94,6 +115,22 @@
+ 
+ 	# Make sure the comment data is HTML escaped.
+ 	$comment->{data} = HTML::Entities::encode($comment->{data});
++        
++        if ($show_context ne "" && $show_context > 0) {
++                my $new = 1;        
++                my $delta = Codestriker::Model::File->get_delta($topic, 
++                                $comment->{filenumber}, 
++                                $comment->{fileline} , 
++                                $comment->{filenew});
++
++                $comment->{context} = Codestriker::Http::Render->get_context(
++                                                $comment->{fileline} , 
++                                                $show_context, 1,
++                                                $delta->{old_linenumber},
++                                                $delta->{new_linenumber},
++                                                $delta->{text}, 
++                                                $comment->{filenew});
++       }
+     }
+ 
+     # Indicate what states the comments can be transferred to.
+@@ -110,6 +147,21 @@
+     $vars->{'email'} = $email;
+     $vars->{'comments'} = \@comments;
+     $vars->{'states'} = \@states;
++    
++    $vars->{'users'} = \@usersThatHaveComments;
++    
++    # Push in the current filter combo box selections so the window remembers
++    # what the user has currently set.
++    $vars->{'scontext'} = $show_context;    
++    if ( $show_comments_by_state ne '') {
++    	$vars->{'select_sstate'} = $show_comments_by_state + 1;
++    }
++    else {
++    	$vars->{'select_sstate'} = 0;
++    }
++ 
++    $vars->{'sstate'} = $show_comments_by_state;     
++    $vars->{'sauthor'} = $http_input->get('sauthor');
+ 
+     # Send the data to the template for rendering.
+     my $template = Codestriker::Http::Template->new("displaycomments");
+Index: codestriker/lib/Codestriker/Action/ListTopics.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ListTopics.pm,v
+retrieving revision 1.14
+diff -u -b -r1.14 ListTopics.pm
+--- codestriker/lib/Codestriker/Action/ListTopics.pm	17 Aug 2003 13:03:34 -0000	1.14
++++ codestriker/lib/Codestriker/Action/ListTopics.pm	2 Sep 2003 03:01:16 -0000
+@@ -11,6 +11,7 @@
+ 
+ use strict;
+ use Codestriker::Http::Template;
++use Codestriker::Model::Topic;
+ use HTML::Entities ();
+ 
+ # If the input is valid, list the appropriate topics.
+@@ -50,6 +51,12 @@
+     # set the cookie explicitly.
+     if ($sproject eq "-1") {
+ 	$sproject = (defined $projectid) ? $projectid : "";
++    }
++    
++    # Only show open topics if codestriker.pl was run without parameters.
++    if ( defined($http_input->{query}->param) == 0)
++    {
++    	$sstate=0; 
+     }
+ 
+     # Query the model for the specified data.
+Index: codestriker/lib/Codestriker/Action/SubmitComment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitComment.pm,v
+retrieving revision 1.16
+diff -u -b -r1.16 SubmitComment.pm
+--- codestriker/lib/Codestriker/Action/SubmitComment.pm	17 Aug 2003 13:03:34 -0000	1.16
++++ codestriker/lib/Codestriker/Action/SubmitComment.pm	2 Sep 2003 03:01:17 -0000
+@@ -14,6 +14,8 @@
+ use Codestriker::Model::Comment;
+ use Codestriker::Model::File;
+ use Codestriker::Smtp::SendEmail;
++use Codestriker::Model::Topic;
++use Codestriker::Http::Render;
+ 
+ # If the input is valid, create the appropriate topic into the database.
+ sub process($$$) {
+@@ -129,7 +131,7 @@
+     $body .= "Context:\n";
+     $body .= "$Codestriker::Smtp::SendEmail::EMAIL_HR\n\n";
+     my $email_context = $Codestriker::EMAIL_CONTEXT;
+-    $body .= Codestriker::Http::Render->get_context($line, $topic,
++    $body .= Codestriker::Http::Render->get_context($line, 
+ 						    $email_context, 0,
+ 						    $delta->{old_linenumber},
+ 						    $delta->{new_linenumber},
+@@ -149,11 +151,14 @@
+ 	}
+     }
+ 
+-    # Send the email notification out.
++    # Send the email notification out, if it is allowed in the config file.
++    if ( $Codestriker::allow_comment_email || $cc_recipients ne "")
++    {
+     if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
+ 					    $cc_recipients, $bcc,
+ 					    $subject, $body)) {
+ 	$http_response->error("Failed to send topic creation email");
++        }
+     }
+ 
+     # Display a simple screen indicating that the comment has been registered.
+Index: codestriker/lib/Codestriker/Action/SubmitEditProject.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitEditProject.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 SubmitEditProject.pm
+--- codestriker/lib/Codestriker/Action/SubmitEditProject.pm	6 Apr 2003 04:52:50 -0000	1.1
++++ codestriker/lib/Codestriker/Action/SubmitEditProject.pm	2 Sep 2003 03:01:17 -0000
+@@ -12,6 +12,8 @@
+ use strict;
+ 
+ use Codestriker::Model::Project;
++use Codestriker::Action::ListProjects;
++use Codestriker::Action::EditProject;
+ 
+ # If the input is valid, update the appropriate project into the database.
+ sub process($$$) {
+Index: codestriker/lib/Codestriker/Action/SubmitProject.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/SubmitProject.pm,v
+retrieving revision 1.1
+diff -u -b -r1.1 SubmitProject.pm
+--- codestriker/lib/Codestriker/Action/SubmitProject.pm	6 Apr 2003 04:52:50 -0000	1.1
++++ codestriker/lib/Codestriker/Action/SubmitProject.pm	2 Sep 2003 03:01:17 -0000
+@@ -12,6 +12,8 @@
+ use strict;
+ 
+ use Codestriker::Model::Project;
++use Codestriker::Action::ListProjects;
++use Codestriker::Action::CreateProject;
+ 
+ # If the input is valid, create the appropriate project into the database.
+ sub process($$$) {
+Index: codestriker/lib/Codestriker/Action/ViewTopic.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Action/ViewTopic.pm,v
+retrieving revision 1.26
+diff -u -b -r1.26 ViewTopic.pm
+--- codestriker/lib/Codestriker/Action/ViewTopic.pm	27 Aug 2003 12:15:59 -0000	1.26
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	2 Sep 2003 03:01:17 -0000
+@@ -15,6 +15,7 @@
+ use Codestriker::Model::Comment;
+ use Codestriker::Http::UrlBuilder;
+ use Codestriker::Http::Render;
++use Codestriker::Repository::RepositoryFactory;
+ use HTML::Entities ();
+ 
+ # If the input is valid, display the topic.
+Index: codestriker/lib/Codestriker/Http/Input.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Input.pm,v
+retrieving revision 1.20
+diff -u -b -r1.20 Input.pm
+--- codestriker/lib/Codestriker/Http/Input.pm	28 Aug 2003 08:59:52 -0000	1.20
++++ codestriker/lib/Codestriker/Http/Input.pm	2 Sep 2003 03:01:17 -0000
+@@ -84,6 +84,7 @@
+     $self->{sfilename} = $query->param('sfilename');
+     $self->{sstate} = $query->param('sstate');
+     $self->{sproject} = $query->param('sproject');
++    $self->{scontext} = $query->param('scontext');
+     $self->{version} = $query->param('version');
+     $self->{redirect} = $query->param('redirect');
+     $self->{a} = $query->param('a');
+@@ -131,7 +132,12 @@
+     # otherwise.
+     # Note topic_file is forced to be a string to get the filename (and
+     # not have any confusion with the file object).  CGI.pm weirdness.
++    if ( defined $query->param('topic_file')) {
+     $self->{fh_filename} = "" . $query->param('topic_file');
++    }
++    else {
++    	$self->{fh_filename} = undef;
++    }
+     $self->{fh} = $query->upload('topic_file');
+     $self->{fh_mime_type} = 'text/plain';
+     if (defined $self->{fh_filename} &&
+@@ -168,6 +174,11 @@
+     $self->_untaint_filename('end_tag');
+     $self->_untaint_filename('module');
+ 
++    $self->_untaint_email('sauthor');
++    $self->_untaint_digits('scontext');
++    
++    $self->_untaint_digits('sstate');
++    
+     # Canonicalise the bug_ids and email list parameters if required.
+     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
+     $self->{cc} = $self->make_canonical_email_list($self->{cc});
+Index: codestriker/lib/Codestriker/Http/Render.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Http/Render.pm,v
+retrieving revision 1.25
+diff -u -b -r1.25 Render.pm
+--- codestriker/lib/Codestriker/Http/Render.pm	27 Aug 2003 12:15:59 -0000	1.25
++++ codestriker/lib/Codestriker/Http/Render.pm	2 Sep 2003 03:01:17 -0000
+@@ -1052,7 +1052,7 @@
+ 
+ # Retrieve the data that forms the "context" when submitting a comment.
+ sub get_context ($$$$$$$$$) {
+-    my ($type, $targetline, $topic, $context, $html_view, $old_startline,
++    my ($type, $targetline, $context, $html_view, $old_startline,
+ 	$new_startline, $text, $new) = @_;
+ 
+     # Break the text into lines.
+@@ -1097,6 +1097,7 @@
+ 		$context_string .= HTML::Entities::encode("$linedata") ."\n";
+ 	    }
+ 	} else {
++            # This is the context for emails.
+ 	    $context_string .= ($i == $offset) ? "* " : "  ";
+ 	    $context_string .= $linedata . "\n";
+ 	}
+Index: codestriker/lib/Codestriker/Model/Comment.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Model/Comment.pm,v
+retrieving revision 1.7
+diff -u -b -r1.7 Comment.pm
+--- codestriker/lib/Codestriker/Model/Comment.pm	30 Mar 2003 20:41:26 -0000	1.7
++++ codestriker/lib/Codestriker/Model/Comment.pm	2 Sep 2003 03:01:17 -0000
+@@ -96,6 +96,44 @@
+     die $dbh->errstr if !$success;
+ }
+ 
++# This function returns as a list the authors emails address that have entered 
++# comments against a topic.
++sub read_authors
++{
++   my ($type, $topicid ) = @_;
++   
++    # Obtain a database connection.
++    my $dbh = Codestriker::DB::DBI->get_connection();
++
++    # Store the results into an array of objects.
++    my @results;
++
++    # Retrieve all of the comment information for the specified topicid.
++    my $select_comment =
++	$dbh->prepare_cached('SELECT distinct( comment.author) ' .
++			     'FROM comment, commentstate ' .
++			     'WHERE commentstate.topicid = ? ' .
++			     'AND commentstate.id = comment.commentstateid ');
++                             
++    my $success = defined $select_comment;
++    my $rc = $Codestriker::OK;
++    $success &&= $select_comment->execute($topicid);
++
++    # Store the results into the referenced arrays.
++    if ($success) {
++	my @data;
++	while (@data = $select_comment->fetchrow_array()) {
++	    push @results, $data[0];
++	}
++	$select_comment->finish();
++    }
++    
++    Codestriker::DB::DBI->release_connection($dbh, $success);
++    die $dbh->errstr unless $success;
++
++    return @results;   
++}
++
+ # Return all of the comments made for a specified topic.
+ sub read($$) {
+     my ($type, $topicid) = @_;
+@@ -153,6 +191,43 @@
+     die $dbh->errstr unless $success;
+ 
+     return @results;
++}
++
++# Return all of the comments made for a specified topic filtered by state 
++# and author. The filtered parameter is not used if it is empty.
++sub read_filtered
++{
++    my ($type, $topicid, $filtered_by_state_index, $filtered_by_author) = @_;
++    
++    # Read all of the comments from the database. 
++    my @comments = $type->read( $topicid );
++
++    # Now filter out comments that don't match the comment state and author filter.
++    @comments = grep { 
++        my $comment = $_;
++        my $keep_comment = 1;
++                                
++        # check for filter via the state of the comment.
++        $keep_comment = 0 if ( $filtered_by_state_index ne ""  && 
++                               $filtered_by_state_index ne $comment->{state} );
++        
++        # check for filters via the comment author name.
++        if ($Codestriker::antispam_email) {
++            my $shortAuthor = 
++            		Codestriker->make_antispam_email( $comment->{author} );
++            my $shortFilterAuthor = 
++            		Codestriker->make_antispam_email( $filtered_by_author );
++            $keep_comment = 0 if ( $filtered_by_author ne "" && 
++                                   $shortAuthor ne $shortFilterAuthor);                                   
++        }
++        else {
++            $keep_comment = 0 if ( $filtered_by_author ne "" && 
++                                  $comment->{author} ne $filtered_by_author);
++        }                                                                     
++ 	$keep_comment;
++    } @comments;
++    
++    return @comments;
+ }
+ 
+ # Update the state of the specified commentstate.  The version parameter
+Index: codestriker/lib/Codestriker/Repository/CvsLocal.pm
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/lib/Codestriker/Repository/CvsLocal.pm,v
+retrieving revision 1.5
+diff -u -b -r1.5 CvsLocal.pm
+Index: codestriker/template/en/default/createtopic.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/createtopic.html.tmpl,v
+retrieving revision 1.15
+diff -u -b -r1.15 createtopic.html.tmpl
+--- codestriker/template/en/default/createtopic.html.tmpl	19 Aug 2003 21:46:57 -0000	1.15
++++ codestriker/template/en/default/createtopic.html.tmpl	2 Sep 2003 03:01:19 -0000
+@@ -218,7 +218,7 @@
+  <TD>Cc: 
+ <FONT SIZE="-2"><A HREF="javascript:alert('
+ This is a comma separated list of email addresses, which are\n
+-not indented to be reviewers, but typically a mailing list\n
++not intended to be reviewers, but typically a mailing list\n
+ to notify a number of people about the creation of a new topic.
+ ')">(What's this?)</A></FONT>
+ </TD>
+Index: codestriker/template/en/default/displaycomments.html.tmpl
+===================================================================
+RCS file: /cvsroot/codestriker/codestriker/template/en/default/displaycomments.html.tmpl,v
+retrieving revision 1.5
+diff -u -b -r1.5 displaycomments.html.tmpl
+--- codestriker/template/en/default/displaycomments.html.tmpl	19 Aug 2003 21:46:57 -0000	1.5
++++ codestriker/template/en/default/displaycomments.html.tmpl	2 Sep 2003 03:01:19 -0000
+@@ -2,6 +2,45 @@
+ 
+ [% PROCESS header.html.tmpl version = version %]
+ 
++<SCRIPT language="JavaScript">
++<!-- This function handles the three filter select boxes at the top of the table.
++function SelectFilter(post)
++{
++    var url = '';
++
++    var userSelectionIndex = document.form.filter_comments_author.options.selectedIndex;    
++    if (userSelectionIndex > 0)
++    {
++	var userSelection = document.form.filter_comments_author.options[userSelectionIndex].value;
++    	url = url + '&sauthor=' + userSelection;
++    }
++        
++    var stateIndex = document.form.filter_comments_state.options.selectedIndex;     
++    if ( stateIndex > 0)
++    {
++    	url = url + '&sstate=' + (stateIndex-1);
++    }
++    
++    var contextIndex = document.form.show_context_in_comments.options.selectedIndex;
++    var contextSelection = document.form.show_context_in_comments.options[contextIndex].value;
++    
++    url = url + '&scontext=' + contextSelection;
++    
++    // The filtering url parameters have been build, now a "get" back to the web server
++    // with the updated filter paramters, the ListComments.pm script will refilter then.
++    if (post == 0)
++    {
++    	window.location='[% view_comments_url %]' + url;
++    }
++    else
++    {
++    	window.form.action = '[% view_comments_url %]' + url ;
++        window.form.post();
++    }
++}
++// -->
++</SCRIPT>
++
+ [%# Show the top-level link for "Refresh" and "View topic" #%]
+ <P>
+ <A HREF="[% view_comments_url %]">View all updated comments</A> |
+@@ -16,12 +55,42 @@
+     <p>
+ [% END %]
+ 
+-<H2>Comments:</H2>
+-
+-<FORM METHOD="POST" ENCTYPE="multipart/form-data">
++<FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form" onSubmit="SelectFilter(1)">
+ <INPUT TYPE="hidden" NAME="action" VALUE="change_comments">
+ <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
+ 
++<INPUT TYPE="hidden" NAME="scontext" VALUE="[% scontext %]">
++<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
++<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
++
++
++<P><FONT size="5">Comments: &nbsp; &nbsp;</FONT>
++
++Show comments authored by: &nbsp;
++  <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
++     <OPTION value="1"> Everybody     
++     [% FOREACH user = users %]
++     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [%END%] >[% user %]
++     [% END %]
++  </SELECT>
++     
++with: 
++  <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
++     <OPTION value="Any" [%IF select_sstate == 0 %] SELECTED [%END%]> Any
++     [% FOREACH state = states %]
++     <OPTION value="[% state %]" [%IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
++     [% END %]
++  </SELECT>
++  
++state and
++
++  <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
++     <OPTION value="0" [%IF scontext == 0 %] SELECTED [% END %]>no context
++     <OPTION value="3" [%IF scontext == 3 %] SELECTED [% END %]>with context 3 lines
++     <OPTION value="6" [%IF scontext == 6 %] SELECTED [% END %]>with context 6 lines
++  </SELECT>
++.
++
+ <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
+ 
+ [% last_fileline = -1 %]
+@@ -48,6 +117,11 @@
+ 	    [% END %]
+ 	</TD>
+     </TR>
++    [% IF comment.context != '' %]
++    <TR CLASS="commentc">
++        <TD></TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
++    </TR>
++    [% END %]
+     [% last_fileline = comment.fileline %]
+     [% last_filenumber = comment.filenumber %]
+ 

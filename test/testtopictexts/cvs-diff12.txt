@@ -1,0 +1,1945 @@
+diff -ur codestriker-1.7.7/CHANGELOG codestriker/CHANGELOG
+--- codestriker-1.7.7/CHANGELOG	Wed Oct 15 07:13:38 2003
++++ codestriker/CHANGELOG	Tue Jan  6 17:40:53 2004
+@@ -1,11 +1,48 @@
+ *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
+ *** Also, it is _highly_ advisable to backup your data before upgrading ***
+ 
++Version 1.7.8
++
++* If a badly-formatted repository value from codestriker.conf is used
++  when creating a topic, report this in a user-friendly manner.
++
++* Report an error if a new topic to be created specifies both the
++  uploaded file and topic tag fields.
++
++* Fixed bug where selecting multiple states in the search screen
++  reported an input error.
++
++* HTML escaping for the topic title on the topic confirmation screen,
++  project information on the projects screens were not working
++  correctly.  Most HTML escaping are now performed within the
++  templates directly using the html_entity filter.
++
++* In some cases when displaying comment or topic description text,
++  hyperlinks were not automagically being created.  If the text
++  contains a URL such as http://zot.com, it needs to be rendered for
++  convenience as <A HREF="http://zot.com">http://zot.com</A>.  In
++  addition, if the text contains a pattern like [Bb]ug \d+ (ie Bug
++  122), this will be hyperlinked to the appropriate URL of the
++  bugtracking system, if one has been specified in the Codestriker
++  configuration.
++
++* In the view comments screen with context displayed, very long topic
++  lines would push the "filename:linenumber", "Parallel" and "Add
++  Comment" links way off to the far right of the page, requiring
++  horizontal scrolling to see them.  Rework the display so that they
++  are always pushed to the left, regardless of the length of the topic
++  lines.
++
++* Added "Check All"/"Clear All" links in the view comments page for
++  convenience.
++
+ Version 1.7.7
+ 
+ * The table of contents links on the view topic page didn't include
+   the brmode parameter, so clicking on a filename link reloaded the
+-  whole topic page, which is inconvenient.  This has been fixed.
++  whole topic page, which is inconvenient.  This reloading behaviour
++  has also been fixed when coming from the topic list or create topic
++  page.
+ 
+ Version 1.7.6
+ 
+diff -ur codestriker-1.7.7/bin/codestriker.pl.base codestriker/bin/codestriker.pl.base
+--- codestriker-1.7.7/bin/codestriker.pl.base	Mon Sep  1 22:51:22 2003
++++ codestriker/bin/codestriker.pl.base	Tue Jan  6 16:41:53 2004
+@@ -16,9 +16,12 @@
+ # Set this to the location of the Codestriker libraries on your system.
+ # Ideally, this should be done in the apache configs, but trying to do this
+ # in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
+-# checking turned out to be a amjor headache.  For mod_perl, setting this
++# checking turned out to be a major headache.  For mod_perl, setting this
+ # ensures the first time Codestiker is loaded, it can be compiled properly,
+-# even if @INC is blatted later.
++# even if @INC is blatted later.  Also note all the use declarations below
++# effectively "pre-load" all of the Codestriker modules in the system, as the
++# modules below load all of their supporting modules.  That is why the
++# template plugins are "pre-loaded" here.
+ @CODESTRIKER_LIB_DECLARATION@
+ 
+ use strict;
+@@ -48,6 +51,7 @@
+ use Codestriker::Action::CreateProject;
+ use Codestriker::Action::SubmitProject;
+ use Codestriker::Action::SubmitEditProject;
++use Codestriker::Template::Plugin::AutomagicLinks;
+ 
+ # Set the PATH to something sane.
+ $ENV{'PATH'} = "/bin:/usr/bin";
+Only in codestriker/cgi-bin: .cvsignore
+diff -ur codestriker-1.7.7/cgi-bin/codestriker.pl codestriker/cgi-bin/codestriker.pl
+--- codestriker-1.7.7/cgi-bin/codestriker.pl	Thu Oct 23 22:56:54 2003
++++ codestriker/cgi-bin/codestriker.pl	Tue Jan  6 21:56:28 2004
+@@ -20,10 +20,13 @@
+ # Set this to the location of the Codestriker libraries on your system.
+ # Ideally, this should be done in the apache configs, but trying to do this
+ # in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
+-# checking turned out to be a amjor headache.  For mod_perl, setting this
++# checking turned out to be a major headache.  For mod_perl, setting this
+ # ensures the first time Codestiker is loaded, it can be compiled properly,
+-# even if @INC is blatted later.
+-use lib '/var/www/codestriker-1.7.7/bin/../lib';
++# even if @INC is blatted later.  Also note all the use declarations below
++# effectively "pre-load" all of the Codestriker modules in the system, as the
++# modules below load all of their supporting modules.  That is why the
++# template plugins are "pre-loaded" here.
++use lib '/var/www/codestriker/bin/../lib';
+ 
+ use strict;
+ 
+@@ -52,6 +55,7 @@
+ use Codestriker::Action::CreateProject;
+ use Codestriker::Action::SubmitProject;
+ use Codestriker::Action::SubmitEditProject;
++use Codestriker::Template::Plugin::AutomagicLinks;
+ 
+ # Set the PATH to something sane.
+ $ENV{'PATH'} = "/bin:/usr/bin";
+Only in codestriker/cgi-bin/data/var/www: codestriker
+Only in codestriker-1.7.7/cgi-bin/data/var/www: codestriker-1.7.7
+diff -ur codestriker-1.7.7/html/book1.html codestriker/html/book1.html
+--- codestriker-1.7.7/html/book1.html	Wed Oct 15 07:13:37 2003
++++ codestriker/html/book1.html	Tue Jan  6 17:40:52 2004
+@@ -30,7 +30,7 @@
+ ></H1
+ ><H2
+ CLASS="SUBTITLE"
+->Version 1.7.7</H2
++>Version 1.7.8</H2
+ ><H3
+ CLASS="AUTHOR"
+ ><A
+@@ -45,7 +45,7 @@
+ ><P
+ ></P
+ ><P
+->Copyright (c) 2001, 2002, 2003</P
++>Copyright (c) 2001, 2002, 2003, 2004</P
+ ><P
+ ></P
+ ></DIV
+@@ -74,258 +74,263 @@
+ HREF="x38.html"
+ >Document Structure</A
+ ></DT
++><DT
++>1.3. <A
++HREF="x41.html"
++>Codestriker Usage</A
++></DT
+ ></DL
+ ></DD
+ ><DT
+ >2. <A
+-HREF="c41.html"
++HREF="c45.html"
+ >Installation</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.1. <A
+-HREF="c41.html#CODESTRIKER-DATABASE-CREATION"
++HREF="c45.html#CODESTRIKER-DATABASE-CREATION"
+ >Codestriker database creation</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.1.1. <A
+-HREF="c41.html#AEN56"
++HREF="c45.html#AEN60"
+ >Using MySQL</A
+ ></DT
+ ><DT
+ >2.1.2. <A
+-HREF="c41.html#AEN69"
++HREF="c45.html#AEN73"
+ >Using PostgreSQL</A
+ ></DT
+ ><DT
+ >2.1.3. <A
+-HREF="c41.html#AEN83"
++HREF="c45.html#AEN87"
+ >Other Databases</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.2. <A
+-HREF="x86.html"
++HREF="x90.html"
+ >Configuration</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.2.1. <A
+-HREF="x86.html#AEN95"
++HREF="x90.html#AEN99"
+ >Codestriker Database</A
+ ></DT
+ ><DT
+ >2.2.2. <A
+-HREF="x86.html#AEN104"
++HREF="x90.html#AEN108"
+ >Email</A
+ ></DT
+ ><DT
+ >2.2.3. <A
+-HREF="x86.html#AEN108"
++HREF="x90.html#AEN112"
+ >Compression</A
+ ></DT
+ ><DT
+ >2.2.4. <A
+-HREF="x86.html#AEN112"
++HREF="x90.html#AEN116"
+ >Source Code Management Systems</A
+ ></DT
+ ><DT
+ >2.2.5. <A
+-HREF="x86.html#AEN132"
++HREF="x90.html#AEN136"
+ >Bug-Tracking Integration</A
+ ></DT
+ ><DT
+ >2.2.6. <A
+-HREF="x86.html#AEN150"
++HREF="x90.html#AEN154"
+ >LXR Integration</A
+ ></DT
+ ><DT
+ >2.2.7. <A
+-HREF="x86.html#AEN170"
++HREF="x90.html#AEN174"
+ >Deployment Options</A
+ ></DT
+ ><DT
+ >2.2.8. <A
+-HREF="x86.html#AEN174"
++HREF="x90.html#AEN178"
+ >Topic Length Restrictions</A
+ ></DT
+ ><DT
+ >2.2.9. <A
+-HREF="x86.html#AEN178"
++HREF="x90.html#AEN182"
+ >Comment Email Configuration</A
+ ></DT
+ ><DT
+ >2.2.10. <A
+-HREF="x86.html#AEN183"
++HREF="x90.html#AEN187"
+ >Default View Topic Line Break Mode</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.3. <A
+-HREF="x188.html"
++HREF="x192.html"
+ >Running checksetup.pl</A
+ ></DT
+ ><DT
+ >2.4. <A
+-HREF="x218.html"
++HREF="x222.html"
+ >Webserver configuration</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.4.1. <A
+-HREF="x218.html#AEN227"
++HREF="x222.html#AEN231"
+ >CGI Script</A
+ ></DT
+ ><DT
+ >2.4.2. <A
+-HREF="x218.html#AEN238"
++HREF="x222.html#AEN242"
+ >Apache 1.X mod_perl</A
+ ></DT
+ ><DT
+ >2.4.3. <A
+-HREF="x218.html#AEN262"
++HREF="x222.html#AEN266"
+ >Apache 2.X mod_perl</A
+ ></DT
+ ><DT
+ >2.4.4. <A
+-HREF="x218.html#AEN271"
++HREF="x222.html#AEN275"
+ >Other Webservers</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.5. <A
+-HREF="x275.html"
++HREF="x279.html"
+ >Upgrading</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3. <A
+-HREF="c282.html"
++HREF="c286.html"
+ >User's Guide</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.1. <A
+-HREF="c282.html#AEN284"
++HREF="c286.html#AEN288"
+ >Introduction</A
+ ></DT
+ ><DT
+ >3.2. <A
+-HREF="x287.html"
++HREF="x291.html"
+ >Topic List Screen</A
+ ></DT
+ ><DT
+ >3.3. <A
+-HREF="x314.html"
++HREF="x318.html"
+ >Creating a new Project</A
+ ></DT
+ ><DT
+ >3.4. <A
+-HREF="x338.html"
++HREF="x342.html"
+ >Creating a new Topic</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.4.1. <A
+-HREF="x338.html#AEN355"
++HREF="x342.html#AEN359"
+ >Creating CVS Diff Topics</A
+ ></DT
+ ><DT
+ >3.4.2. <A
+-HREF="x338.html#AEN366"
++HREF="x342.html#AEN370"
+ >Creating Diff Topics</A
+ ></DT
+ ><DT
+ >3.4.3. <A
+-HREF="x338.html#AEN379"
++HREF="x342.html#AEN383"
+ >Creating Plain Text Topics</A
+ ></DT
+ ><DT
+ >3.4.4. <A
+-HREF="x338.html#AEN382"
++HREF="x342.html#AEN386"
+ >Creating Subversion Diff Topics</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3.5. <A
+-HREF="x386.html"
++HREF="x390.html"
+ >Reviewing Topics</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.5.1. <A
+-HREF="x386.html#VIEW-TOPIC"
++HREF="x390.html#VIEW-TOPIC"
+ >Viewing a Topic</A
+ ></DT
+ ><DT
+ >3.5.2. <A
+-HREF="x386.html#ADD-COMMENT"
++HREF="x390.html#ADD-COMMENT"
+ >Adding a Comment</A
+ ></DT
+ ><DT
+ >3.5.3. <A
+-HREF="x386.html#VIEW-FILE"
++HREF="x390.html#VIEW-FILE"
+ >Viewing Complete old/new Files</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3.6. <A
+-HREF="x499.html"
++HREF="x503.html"
+ >Viewing Comments</A
+ ></DT
+ ><DT
+ >3.7. <A
+-HREF="x533.html"
++HREF="x537.html"
+ >Topic Search</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >4. <A
+-HREF="c569.html"
++HREF="c573.html"
+ >Hacking</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >4.1. <A
+-HREF="c569.html#AEN571"
++HREF="c573.html#AEN575"
+ >Codestriker Layout</A
+ ></DT
+ ><DT
+ >4.2. <A
+-HREF="x635.html"
++HREF="x639.html"
+ >Database Schema</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >5. <A
+-HREF="c674.html"
++HREF="c678.html"
+ >Troubleshooting</A
+ ></DT
+ ><DT
+ >6. <A
+-HREF="c679.html"
++HREF="c685.html"
+ >Future Plans</A
+ ></DT
+ ><DT
+ >7. <A
+-HREF="c682.html"
++HREF="c689.html"
+ >Contact Details</A
+ ></DT
+ ></DL
+@@ -345,57 +350,57 @@
+ ></DT
+ ><DT
+ >3-1. <A
+-HREF="x287.html#FIGURE-TOPICLIST"
++HREF="x291.html#FIGURE-TOPICLIST"
+ >Topic List Screenshot</A
+ ></DT
+ ><DT
+ >3-2. <A
+-HREF="x314.html#FIGURE-PROJECT-LIST"
++HREF="x318.html#FIGURE-PROJECT-LIST"
+ >Project List Screenshot</A
+ ></DT
+ ><DT
+ >3-3. <A
+-HREF="x314.html#FIGURE-CREATE-PROJECT"
++HREF="x318.html#FIGURE-CREATE-PROJECT"
+ >Create Project Screenshot</A
+ ></DT
+ ><DT
+ >3-4. <A
+-HREF="x338.html#FIGURE-CREATE-TOPIC"
++HREF="x342.html#FIGURE-CREATE-TOPIC"
+ >Create Topic Screenshot</A
+ ></DT
+ ><DT
+ >3-5. <A
+-HREF="x386.html#FIGURE-VIEWTOPIC"
++HREF="x390.html#FIGURE-VIEWTOPIC"
+ >View Topic Screenshot</A
+ ></DT
+ ><DT
+ >3-6. <A
+-HREF="x386.html#FIGURE-VIEWTOPICDETAIL"
++HREF="x390.html#FIGURE-VIEWTOPICDETAIL"
+ >View Topic Detail Screenshot</A
+ ></DT
+ ><DT
+ >3-7. <A
+-HREF="x386.html#FIGURE-ADD-COMMENT"
++HREF="x390.html#FIGURE-ADD-COMMENT"
+ >Add Comment Screenshot</A
+ ></DT
+ ><DT
+ >3-8. <A
+-HREF="x386.html#FIGURE-VIEWFILE"
++HREF="x390.html#FIGURE-VIEWFILE"
+ >View File Screenshot</A
+ ></DT
+ ><DT
+ >3-9. <A
+-HREF="x386.html#FIGURE-PARALLELFILEVIEW"
++HREF="x390.html#FIGURE-PARALLELFILEVIEW"
+ >Parallel View File Screenshot</A
+ ></DT
+ ><DT
+ >3-10. <A
+-HREF="x499.html#FIGURE-VIEWCOMMENTS"
++HREF="x503.html#FIGURE-VIEWCOMMENTS"
+ >View Comments Screenshot</A
+ ></DT
+ ><DT
+ >3-11. <A
+-HREF="x533.html#FIGURE-SEARCH"
++HREF="x537.html#FIGURE-SEARCH"
+ >Topic Search Screenshot</A
+ ></DT
+ ></DL
+diff -ur codestriker-1.7.7/html/c12.html codestriker/html/c12.html
+--- codestriker-1.7.7/html/c12.html	Wed Oct 15 07:13:37 2003
++++ codestriker/html/c12.html	Tue Jan  6 17:40:52 2004
+@@ -32,7 +32,7 @@
+ ><TH
+ COLSPAN="3"
+ ALIGN="center"
+->The Codestriker Guide: Version 1.7.7</TH
++>The Codestriker Guide: Version 1.7.8</TH
+ ></TR
+ ><TR
+ ><TD
+@@ -84,6 +84,11 @@
+ >1.2. <A
+ HREF="x38.html"
+ >Document Structure</A
++></DT
++><DT
++>1.3. <A
++HREF="x41.html"
++>Codestriker Usage</A
+ ></DT
+ ></DL
+ ></DIV
+Only in codestriker-1.7.7/html: c282.html
+Only in codestriker/html: c286.html
+Only in codestriker-1.7.7/html: c41.html
+Only in codestriker/html: c45.html
+Only in codestriker-1.7.7/html: c569.html
+Only in codestriker/html: c573.html
+Only in codestriker-1.7.7/html: c674.html
+Only in codestriker/html: c678.html
+Only in codestriker-1.7.7/html: c679.html
+Only in codestriker-1.7.7/html: c682.html
+Only in codestriker/html: c685.html
+Only in codestriker/html: c689.html
+diff -ur codestriker-1.7.7/html/codestriker.html codestriker/html/codestriker.html
+--- codestriker-1.7.7/html/codestriker.html	Wed Oct 15 07:13:37 2003
++++ codestriker/html/codestriker.html	Tue Jan  6 17:40:52 2004
+@@ -30,7 +30,7 @@
+ ></H1
+ ><H2
+ CLASS="SUBTITLE"
+->Version 1.7.7</H2
++>Version 1.7.8</H2
+ ><H3
+ CLASS="AUTHOR"
+ ><A
+@@ -45,7 +45,7 @@
+ ><P
+ ></P
+ ><P
+->Copyright (c) 2001, 2002, 2003</P
++>Copyright (c) 2001, 2002, 2003, 2004</P
+ ><P
+ ></P
+ ></DIV
+@@ -74,258 +74,263 @@
+ HREF="x38.html"
+ >Document Structure</A
+ ></DT
++><DT
++>1.3. <A
++HREF="x41.html"
++>Codestriker Usage</A
++></DT
+ ></DL
+ ></DD
+ ><DT
+ >2. <A
+-HREF="c41.html"
++HREF="c45.html"
+ >Installation</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.1. <A
+-HREF="c41.html#CODESTRIKER-DATABASE-CREATION"
++HREF="c45.html#CODESTRIKER-DATABASE-CREATION"
+ >Codestriker database creation</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.1.1. <A
+-HREF="c41.html#AEN56"
++HREF="c45.html#AEN60"
+ >Using MySQL</A
+ ></DT
+ ><DT
+ >2.1.2. <A
+-HREF="c41.html#AEN69"
++HREF="c45.html#AEN73"
+ >Using PostgreSQL</A
+ ></DT
+ ><DT
+ >2.1.3. <A
+-HREF="c41.html#AEN83"
++HREF="c45.html#AEN87"
+ >Other Databases</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.2. <A
+-HREF="x86.html"
++HREF="x90.html"
+ >Configuration</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.2.1. <A
+-HREF="x86.html#AEN95"
++HREF="x90.html#AEN99"
+ >Codestriker Database</A
+ ></DT
+ ><DT
+ >2.2.2. <A
+-HREF="x86.html#AEN104"
++HREF="x90.html#AEN108"
+ >Email</A
+ ></DT
+ ><DT
+ >2.2.3. <A
+-HREF="x86.html#AEN108"
++HREF="x90.html#AEN112"
+ >Compression</A
+ ></DT
+ ><DT
+ >2.2.4. <A
+-HREF="x86.html#AEN112"
++HREF="x90.html#AEN116"
+ >Source Code Management Systems</A
+ ></DT
+ ><DT
+ >2.2.5. <A
+-HREF="x86.html#AEN132"
++HREF="x90.html#AEN136"
+ >Bug-Tracking Integration</A
+ ></DT
+ ><DT
+ >2.2.6. <A
+-HREF="x86.html#AEN150"
++HREF="x90.html#AEN154"
+ >LXR Integration</A
+ ></DT
+ ><DT
+ >2.2.7. <A
+-HREF="x86.html#AEN170"
++HREF="x90.html#AEN174"
+ >Deployment Options</A
+ ></DT
+ ><DT
+ >2.2.8. <A
+-HREF="x86.html#AEN174"
++HREF="x90.html#AEN178"
+ >Topic Length Restrictions</A
+ ></DT
+ ><DT
+ >2.2.9. <A
+-HREF="x86.html#AEN178"
++HREF="x90.html#AEN182"
+ >Comment Email Configuration</A
+ ></DT
+ ><DT
+ >2.2.10. <A
+-HREF="x86.html#AEN183"
++HREF="x90.html#AEN187"
+ >Default View Topic Line Break Mode</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.3. <A
+-HREF="x188.html"
++HREF="x192.html"
+ >Running checksetup.pl</A
+ ></DT
+ ><DT
+ >2.4. <A
+-HREF="x218.html"
++HREF="x222.html"
+ >Webserver configuration</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >2.4.1. <A
+-HREF="x218.html#AEN227"
++HREF="x222.html#AEN231"
+ >CGI Script</A
+ ></DT
+ ><DT
+ >2.4.2. <A
+-HREF="x218.html#AEN238"
++HREF="x222.html#AEN242"
+ >Apache 1.X mod_perl</A
+ ></DT
+ ><DT
+ >2.4.3. <A
+-HREF="x218.html#AEN262"
++HREF="x222.html#AEN266"
+ >Apache 2.X mod_perl</A
+ ></DT
+ ><DT
+ >2.4.4. <A
+-HREF="x218.html#AEN271"
++HREF="x222.html#AEN275"
+ >Other Webservers</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >2.5. <A
+-HREF="x275.html"
++HREF="x279.html"
+ >Upgrading</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3. <A
+-HREF="c282.html"
++HREF="c286.html"
+ >User's Guide</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.1. <A
+-HREF="c282.html#AEN284"
++HREF="c286.html#AEN288"
+ >Introduction</A
+ ></DT
+ ><DT
+ >3.2. <A
+-HREF="x287.html"
++HREF="x291.html"
+ >Topic List Screen</A
+ ></DT
+ ><DT
+ >3.3. <A
+-HREF="x314.html"
++HREF="x318.html"
+ >Creating a new Project</A
+ ></DT
+ ><DT
+ >3.4. <A
+-HREF="x338.html"
++HREF="x342.html"
+ >Creating a new Topic</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.4.1. <A
+-HREF="x338.html#AEN355"
++HREF="x342.html#AEN359"
+ >Creating CVS Diff Topics</A
+ ></DT
+ ><DT
+ >3.4.2. <A
+-HREF="x338.html#AEN366"
++HREF="x342.html#AEN370"
+ >Creating Diff Topics</A
+ ></DT
+ ><DT
+ >3.4.3. <A
+-HREF="x338.html#AEN379"
++HREF="x342.html#AEN383"
+ >Creating Plain Text Topics</A
+ ></DT
+ ><DT
+ >3.4.4. <A
+-HREF="x338.html#AEN382"
++HREF="x342.html#AEN386"
+ >Creating Subversion Diff Topics</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3.5. <A
+-HREF="x386.html"
++HREF="x390.html"
+ >Reviewing Topics</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >3.5.1. <A
+-HREF="x386.html#VIEW-TOPIC"
++HREF="x390.html#VIEW-TOPIC"
+ >Viewing a Topic</A
+ ></DT
+ ><DT
+ >3.5.2. <A
+-HREF="x386.html#ADD-COMMENT"
++HREF="x390.html#ADD-COMMENT"
+ >Adding a Comment</A
+ ></DT
+ ><DT
+ >3.5.3. <A
+-HREF="x386.html#VIEW-FILE"
++HREF="x390.html#VIEW-FILE"
+ >Viewing Complete old/new Files</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >3.6. <A
+-HREF="x499.html"
++HREF="x503.html"
+ >Viewing Comments</A
+ ></DT
+ ><DT
+ >3.7. <A
+-HREF="x533.html"
++HREF="x537.html"
+ >Topic Search</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >4. <A
+-HREF="c569.html"
++HREF="c573.html"
+ >Hacking</A
+ ></DT
+ ><DD
+ ><DL
+ ><DT
+ >4.1. <A
+-HREF="c569.html#AEN571"
++HREF="c573.html#AEN575"
+ >Codestriker Layout</A
+ ></DT
+ ><DT
+ >4.2. <A
+-HREF="x635.html"
++HREF="x639.html"
+ >Database Schema</A
+ ></DT
+ ></DL
+ ></DD
+ ><DT
+ >5. <A
+-HREF="c674.html"
++HREF="c678.html"
+ >Troubleshooting</A
+ ></DT
+ ><DT
+ >6. <A
+-HREF="c679.html"
++HREF="c685.html"
+ >Future Plans</A
+ ></DT
+ ><DT
+ >7. <A
+-HREF="c682.html"
++HREF="c689.html"
+ >Contact Details</A
+ ></DT
+ ></DL
+@@ -345,57 +350,57 @@
+ ></DT
+ ><DT
+ >3-1. <A
+-HREF="x287.html#FIGURE-TOPICLIST"
++HREF="x291.html#FIGURE-TOPICLIST"
+ >Topic List Screenshot</A
+ ></DT
+ ><DT
+ >3-2. <A
+-HREF="x314.html#FIGURE-PROJECT-LIST"
++HREF="x318.html#FIGURE-PROJECT-LIST"
+ >Project List Screenshot</A
+ ></DT
+ ><DT
+ >3-3. <A
+-HREF="x314.html#FIGURE-CREATE-PROJECT"
++HREF="x318.html#FIGURE-CREATE-PROJECT"
+ >Create Project Screenshot</A
+ ></DT
+ ><DT
+ >3-4. <A
+-HREF="x338.html#FIGURE-CREATE-TOPIC"
++HREF="x342.html#FIGURE-CREATE-TOPIC"
+ >Create Topic Screenshot</A
+ ></DT
+ ><DT
+ >3-5. <A
+-HREF="x386.html#FIGURE-VIEWTOPIC"
++HREF="x390.html#FIGURE-VIEWTOPIC"
+ >View Topic Screenshot</A
+ ></DT
+ ><DT
+ >3-6. <A
+-HREF="x386.html#FIGURE-VIEWTOPICDETAIL"
++HREF="x390.html#FIGURE-VIEWTOPICDETAIL"
+ >View Topic Detail Screenshot</A
+ ></DT
+ ><DT
+ >3-7. <A
+-HREF="x386.html#FIGURE-ADD-COMMENT"
++HREF="x390.html#FIGURE-ADD-COMMENT"
+ >Add Comment Screenshot</A
+ ></DT
+ ><DT
+ >3-8. <A
+-HREF="x386.html#FIGURE-VIEWFILE"
++HREF="x390.html#FIGURE-VIEWFILE"
+ >View File Screenshot</A
+ ></DT
+ ><DT
+ >3-9. <A
+-HREF="x386.html#FIGURE-PARALLELFILEVIEW"
++HREF="x390.html#FIGURE-PARALLELFILEVIEW"
+ >Parallel View File Screenshot</A
+ ></DT
+ ><DT
+ >3-10. <A
+-HREF="x499.html#FIGURE-VIEWCOMMENTS"
++HREF="x503.html#FIGURE-VIEWCOMMENTS"
+ >View Comments Screenshot</A
+ ></DT
+ ><DT
+ >3-11. <A
+-HREF="x533.html#FIGURE-SEARCH"
++HREF="x537.html#FIGURE-SEARCH"
+ >Topic Search Screenshot</A
+ ></DT
+ ></DL
+Binary files codestriker-1.7.7/html/codestriker.pdf and codestriker/html/codestriker.pdf differ
+Only in codestriker-1.7.7/html: x188.html
+Only in codestriker/html: x192.html
+Only in codestriker-1.7.7/html: x218.html
+Only in codestriker/html: x222.html
+Only in codestriker-1.7.7/html: x275.html
+Only in codestriker/html: x279.html
+Only in codestriker-1.7.7/html: x287.html
+Only in codestriker/html: x291.html
+Only in codestriker-1.7.7/html: x314.html
+Only in codestriker/html: x318.html
+Only in codestriker-1.7.7/html: x338.html
+Only in codestriker/html: x342.html
+diff -ur codestriker-1.7.7/html/x38.html codestriker/html/x38.html
+--- codestriker-1.7.7/html/x38.html	Wed Oct 15 07:13:37 2003
++++ codestriker/html/x38.html	Tue Jan  6 17:40:52 2004
+@@ -15,8 +15,8 @@
+ TITLE="Introduction"
+ HREF="c12.html"><LINK
+ REL="NEXT"
+-TITLE="Installation"
+-HREF="c41.html"></HEAD
++TITLE="Codestriker Usage"
++HREF="x41.html"></HEAD
+ ><BODY
+ CLASS="SECT1"
+ BGCOLOR="#FFFFFF"
+@@ -35,7 +35,7 @@
+ ><TH
+ COLSPAN="3"
+ ALIGN="center"
+->The Codestriker Guide: Version 1.7.7</TH
++>The Codestriker Guide: Version 1.7.8</TH
+ ></TR
+ ><TR
+ ><TD
+@@ -56,7 +56,7 @@
+ ALIGN="right"
+ VALIGN="bottom"
+ ><A
+-HREF="c41.html"
++HREF="x41.html"
+ >Next</A
+ ></TD
+ ></TR
+@@ -110,7 +110,7 @@
+ ALIGN="right"
+ VALIGN="top"
+ ><A
+-HREF="c41.html"
++HREF="x41.html"
+ >Next</A
+ ></TD
+ ></TR
+@@ -132,7 +132,7 @@
+ WIDTH="33%"
+ ALIGN="right"
+ VALIGN="top"
+->Installation</TD
++>Codestriker Usage</TD
+ ></TR
+ ></TABLE
+ ></DIV
+Only in codestriker-1.7.7/html: x386.html
+Only in codestriker/html: x390.html
+Only in codestriker/html: x41.html
+Only in codestriker-1.7.7/html: x499.html
+Only in codestriker/html: x503.html
+Only in codestriker-1.7.7/html: x533.html
+Only in codestriker/html: x537.html
+Only in codestriker-1.7.7/html: x635.html
+Only in codestriker/html: x639.html
+Only in codestriker-1.7.7/html: x86.html
+Only in codestriker/html: x90.html
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/ChangeTopicState.pm codestriker/lib/Codestriker/Action/ChangeTopicState.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/ChangeTopicState.pm	Wed Sep  3 07:20:25 2003
++++ codestriker/lib/Codestriker/Action/ChangeTopicState.pm	Fri Jan  2 18:25:47 2004
+@@ -107,7 +107,6 @@
+ 	$_document_bug_ids ne "" && $Codestriker::bug_db ne "") {
+ 	my $bug_db_connection =
+ 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
+-	$bug_db_connection->get_connection();
+ 	my @ids = split /, /, $_document_bug_ids;
+ 	my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+ 	my $topic_url = $url_builder->view_url_extended($topic, -1, "", "",
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/EditTopic.pm codestriker/lib/Codestriker/Action/EditTopic.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/EditTopic.pm	Wed Oct 15 06:45:01 2003
++++ codestriker/lib/Codestriker/Action/EditTopic.pm	Sat Jan  3 03:12:02 2004
+@@ -134,8 +134,7 @@
+ 	    $display_comment->{author} = $author;
+ 	}
+ 	$display_comment->{date} = $comments[$i]{date};
+-	$display_comment->{data} =
+-	    $http_response->escapeHTML($comments[$i]{data});
++	$display_comment->{data} = $comments[$i]{data};
+ 	$display_comment->{line} = "";
+ 	$display_comment->{lineurl} = "";
+ 	$display_comment->{linename} = "";
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/ListComments.pm codestriker/lib/Codestriker/Action/ListComments.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/ListComments.pm	Wed Oct 15 06:45:01 2003
++++ codestriker/lib/Codestriker/Action/ListComments.pm	Sun Jan  4 00:07:11 2004
+@@ -14,7 +14,6 @@
+ use Codestriker::Http::Render;
+ use Codestriker::Model::Comment;
+ use Codestriker::Model::File;
+-use HTML::Entities;
+ 
+ # If the input is valid, list the appropriate comments for a topic.
+ sub process($$$) {
+@@ -114,9 +113,6 @@
+ 	my $state = $comment->{state};
+ 	$comment->{state} = $Codestriker::comment_states[$state];
+ 
+-	# Make sure the comment data is HTML escaped.
+-	$comment->{data} = HTML::Entities::encode($comment->{data});
+-        
+         if ($show_context ne "" && $show_context > 0) {
+                 my $delta = Codestriker::Model::File->get_delta($topic, 
+                                 $comment->{filenumber}, 
+@@ -162,7 +158,7 @@
+  
+     $vars->{'sstate'} = $show_comments_by_state;     
+     $vars->{'sauthor'} = $http_input->get('sauthor');
+-
++    
+     # Send the data to the template for rendering.
+     my $template = Codestriker::Http::Template->new("displaycomments");
+     $template->process($vars);
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/ListTopics.pm codestriker/lib/Codestriker/Action/ListTopics.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/ListTopics.pm	Wed Oct 15 06:45:01 2003
++++ codestriker/lib/Codestriker/Action/ListTopics.pm	Tue Jan  6 17:35:01 2004
+@@ -12,7 +12,6 @@
+ use strict;
+ use Codestriker::Http::Template;
+ use Codestriker::Model::Topic;
+-use HTML::Entities ();
+ 
+ # If the input is valid, list the appropriate topics.
+ sub process($$$) {
+@@ -127,7 +126,7 @@
+ 	my @accum_cc = ();
+ 	my $accum_id = $id[$index];
+ 	my $accum_version = $version[$index];
+-	my $accum_title = HTML::Entities::encode($title[$index]);
++	my $accum_title = $title[$index];
+ 	my $accum_author = $author[$index];
+ 	my $accum_ts = Codestriker->format_short_timestamp($ts[$index]);
+ 	my $accum_state = $Codestriker::topic_states[$state[$index]];
+@@ -159,8 +158,7 @@
+ 	}
+ 
+ 	my $reviewer_text = join ', ', @accum_reviewers;
+-	$reviewer_text = "&nbsp;" if $reviewer_text eq "";
+-	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "&nbsp;";
++	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "";
+ 
+ 	for (my $i = 0; $i <= $#accum_bugs; $i++) {
+ 	    $accum_bugs[$i] =
+@@ -168,7 +166,6 @@
+ 			  $accum_bugs[$i]);
+ 	}
+ 	my $bugid_text = join ', ', @accum_bugs;
+-	$bugid_text = "&nbsp;" if $bugid_text eq "";
+ 
+ 	# Add this row to the list of topics.
+ 	my $topic = {};
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/SubmitTopic.pm codestriker/lib/Codestriker/Action/SubmitTopic.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/SubmitTopic.pm	Wed Oct 15 07:12:15 2003
++++ codestriker/lib/Codestriker/Action/SubmitTopic.pm	Sat Jan  3 01:50:40 2004
+@@ -74,15 +74,16 @@
+     if ($reviewers eq "") {
+ 	$feedback .= "No reviewers were entered.\n";
+     }
+-    if ($feedback ne "" && defined $fh) {
+-	$feedback .= "For security reasons, please re-enter the file name to upload.\n";
++    if ($retrieve_text_from_rep && defined $fh) {
++	$feedback .= "Topic text specified using tags and uploaded file.\n";
++	$feedback .= "Please choose one topic text method, and try again.\n";
+     }
+     
+     $http_response->generate_header("", "Create new topic", $email, $reviewers,
+ 				    $cc, "", "", $repository_url, $projectid,
+ 				    "", 0, 0);
+ 
+-    # Set the error_vars in case of any errorsm that will require forwarding
++    # Set the error_vars in case of any errors that will require forwarding
+     # to the create topic screen again.
+     my $error_vars = {};
+     $error_vars->{'version'} = $Codestriker::VERSION;
+@@ -100,21 +101,13 @@
+     $error_vars->{'start_tag'} = $start_tag;
+     $error_vars->{'end_tag'} = $end_tag;
+     $error_vars->{'module'} = $module;
+-    $error_vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
+-                                          0 : 
+-                                          $Codestriker::maximum_topic_size_lines;
++    $error_vars->{'maximum_topic_size_lines'} =
++	$Codestriker::maximum_topic_size_lines eq "" ?
++	0 : $Codestriker::maximum_topic_size_lines;
+                                           
+-    $error_vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
+-                                          0 : 
+-                                          $Codestriker::suggested_topic_size_lines;
+-
+-    # If there is a problem with the input, redirect to the create screen
+-    # with the message.
+-    if ($feedback ne "") {
+-	_forward_create_topic($error_vars, $feedback);
+-	$http_response->generate_footer();
+-	return;
+-    }
++    $error_vars->{'suggested_topic_size_lines'} =
++	$Codestriker::suggested_topic_size_lines eq "" ?
++	0 : $Codestriker::suggested_topic_size_lines;
+ 
+     # Set the repository to the default if it is not entered.
+     if ($repository_url eq "") {
+@@ -124,6 +117,23 @@
+     # Check if the repository argument is valid.
+     my $repository =
+ 	Codestriker::Repository::RepositoryFactory->get($repository_url);
++    if (! defined $repository) {
++	$feedback .= "The repository value \"$repository_url\" is invalid.\n";
++	$feedback .= "Please correct this value in your codestriker.conf " .
++	    "file, and try again.\n";
++    }
++
++    # If there is a problem with the input, redirect to the create screen
++    # with the message.
++    if ($feedback ne "") {
++	if (defined $fh) {
++	    $feedback .= "For security reasons, please re-enter the " .
++		"file name to upload, if required.\n";
++	}
++	_forward_create_topic($error_vars, $feedback);
++	$http_response->generate_footer();
++	return;
++    }
+ 
+     # For "hysterical" reasons, the topic id is randomly generated.  Seed the
+     # generator based on the time and the pid.  Keep searching until we find
+@@ -275,7 +285,6 @@
+     if ($bug_ids ne "" && $Codestriker::bug_db ne "") {
+ 	my $bug_db_connection =
+ 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
+-	$bug_db_connection->get_connection();
+ 	my @ids = split /, /, $bug_ids;
+ 	my $text = "Codestriker topic: $topic_url created.\n" .
+ 	    "Author: $email\n" .
+diff -ur codestriker-1.7.7/lib/Codestriker/Action/ViewTopic.pm codestriker/lib/Codestriker/Action/ViewTopic.pm
+--- codestriker-1.7.7/lib/Codestriker/Action/ViewTopic.pm	Sun Sep 28 06:56:15 2003
++++ codestriker/lib/Codestriker/Action/ViewTopic.pm	Mon Jan  5 18:09:39 2004
+@@ -16,7 +16,6 @@
+ use Codestriker::Http::UrlBuilder;
+ use Codestriker::Http::Render;
+ use Codestriker::Repository::RepositoryFactory;
+-use HTML::Entities ();
+ 
+ # If the input is valid, display the topic.
+ sub process($$$) {
+@@ -128,7 +127,7 @@
+ 
+     # Obtain the view topic summary information, the title, bugs it relates
+     # to, and who the participants are.
+-    $vars->{'escaped_title'} = HTML::Entities::encode($document_title);
++    $vars->{'document_title'} = $document_title;
+ 
+     if ($Codestriker::antispam_email) {
+ 	$document_author = Codestriker->make_antispam_email($document_author);
+@@ -181,18 +180,10 @@
+     $vars->{'states'} = \@Codestriker::topic_states;
+     $vars->{'default_state'} = $topic_state;
+ 
+-    # Obtain the topic description, with "Bug \d\d\d" links rendered to links
+-    # to the bug tracking system.
++    # Set the description of the topic.
+     my $data = "";
+     for (my $i = 0; $i <= $#document_description; $i++) {
+ 	$data .= $document_description[$i] . "\n";
+-    }
+-    
+-    $data = HTML::Entities::encode($data);
+-
+-    # Replace occurances of bug strings with the appropriate links.
+-    if ($Codestriker::bugtracker ne "") {
+-	$data =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${Codestriker::bugtracker}$3">$1$2$4<\/A>/mg;
+     }
+     $vars->{'description'} = $data;
+ 
+diff -ur codestriker-1.7.7/lib/Codestriker/Http/Input.pm codestriker/lib/Codestriker/Http/Input.pm
+--- codestriker-1.7.7/lib/Codestriker/Http/Input.pm	Sun Sep 28 06:56:15 2003
++++ codestriker/lib/Codestriker/Http/Input.pm	Sun Jan  4 04:55:46 2004
+@@ -184,8 +184,8 @@
+ 
+     $self->_untaint_email('sauthor');
+     $self->_untaint_digits('scontext');
+-    
+-    $self->_untaint_digits('sstate');
++    $self->_untaint_comma_digits('sstate');
++    $self->_untaint_comma_digits('sproject');
+     
+     # Canonicalise the bug_ids and email list parameters if required.
+     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
+@@ -291,6 +291,13 @@
+     my ($self, $name) = @_;
+ 
+     $self->_untaint($name, '[\d\.]+');
++}
++
++# Untaint a parameter that should be a comma separated list of digits.
++sub _untaint_comma_digits($$) {
++    my ($self, $name) = @_;
++
++    $self->_untaint($name, '[\d\,]+');
+ }
+ 	    
+ # Untaint a single email address, which should be a regular email address.
+diff -ur codestriker-1.7.7/lib/Codestriker/Http/Response.pm codestriker/lib/Codestriker/Http/Response.pm
+--- codestriker-1.7.7/lib/Codestriker/Http/Response.pm	Sun May 25 04:09:37 2003
++++ codestriker/lib/Codestriker/Http/Response.pm	Tue Jan  6 00:39:04 2004
+@@ -241,27 +241,6 @@
+     exit;
+ }
+ 
+-# Routine to convert text into an HTML version, but with hyperlinks rendered.
+-sub escapeHTML($$) {
+-    my ($self, $text) = @_;
+-
+-    my $query = $self->{query};
+-
+-    # Split the text into words, and for any URL, convert it appropriately.
+-    my @words = split /([\s\n\t])/, $text;
+-    my $result = "";
+-    for (my $i = 0; $i <= $#words; $i++) {
+-	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {
+-	    # A URL, create a link to it.
+-	    $result .= $query->a({href=>$1}, $1) . HTML::Entities::encode($2);
+-	} else {
+-	    # Regular text, just escape it apprporiately and append it.
+-	    $result .= HTML::Entities::encode($words[$i]);
+-	}
+-    }
+-    return $result;
+-}
+-
+ # Implement a gzipped file handle via the Compress:Zlib compression
+ # library.  This code was stolen from CVSweb.
+ 
+diff -ur codestriker-1.7.7/lib/Codestriker/Http/Template.pm codestriker/lib/Codestriker/Http/Template.pm
+--- codestriker-1.7.7/lib/Codestriker/Http/Template.pm	Sat May 24 23:31:07 2003
++++ codestriker/lib/Codestriker/Http/Template.pm	Mon Jan  5 23:49:38 2004
+@@ -35,7 +35,10 @@
+ 	    TRIM => 1, 
+ 	    
+ 	    # Where to compile the templates.
+-	    COMPILE_DIR => $Codestriker::BASEDIR . 'cgi-bin/data/'
++	    COMPILE_DIR => $Codestriker::BASEDIR . 'cgi-bin/data/',
++
++	    # Codestriker-specific plugins.
++	    PLUGIN_BASE => 'Codestriker::Template::Plugin'
+ 	    })
+ 	|| die Template->error();
+ 
+@@ -57,10 +60,10 @@
+ sub process($$) {
+     my ($self, $vars) = @_;
+ 
+-    my $data;
++    my $data = "";
+     my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
+ 					$vars, \$data);
+-    die $self->{template}->error() if ($rc == 0);
++    die $self->{template}->error() if (!defined $rc || $rc == 0);
+     print $data;
+     return $rc;
+ }
+diff -ur codestriker-1.7.7/lib/Codestriker/Http/UrlBuilder.pm codestriker/lib/Codestriker/Http/UrlBuilder.pm
+--- codestriker-1.7.7/lib/Codestriker/Http/UrlBuilder.pm	Wed Oct 15 07:09:07 2003
++++ codestriker/lib/Codestriker/Http/UrlBuilder.pm	Mon Jan  5 17:46:36 2004
+@@ -74,7 +74,7 @@
+ # Create the URL for downloading the topic text.
+ sub download_url ($$) {
+     my ($self, $topic) = @_;
+-    return $self->{url_prefix} . "?action=download&topic=$topic";
++    return $self->{query}->url() . "?action=download&topic=$topic";
+ }
+ 
+ # Create the URL for creating a topic.
+@@ -104,7 +104,7 @@
+ # Create the URL for the search page.
+ sub search_url ($) {
+     my ($self) = @_;
+-    return $self->{url_prefix} . "?action=search";
++    return $self->{query}->url() . "?action=search";
+ }
+ 
+ # Create the URL for the documentation page.
+Only in codestriker/lib/Codestriker: Template
+diff -ur codestriker-1.7.7/lib/Codestriker.pm codestriker/lib/Codestriker.pm
+--- codestriker-1.7.7/lib/Codestriker.pm	Wed Oct 15 06:45:01 2003
++++ codestriker/lib/Codestriker.pm	Sun Jan  4 00:03:26 2004
+@@ -25,7 +25,7 @@
+ 	      );
+ 
+ # Version of Codestriker.
+-$Codestriker::VERSION = "1.7.7";
++$Codestriker::VERSION = "1.7.8";
+ 
+ # The maximum size of a diff file to accept.  At the moment, this is 20Mb.
+ $Codestriker::DIFF_SIZE_LIMIT = 20000 * 1024;
+@@ -155,6 +155,7 @@
+     return "$email";
+ }
+ 
++    
+ 1;
+ 
+ 
+diff -ur codestriker-1.7.7/template/en/default/createproject.html.tmpl codestriker/template/en/default/createproject.html.tmpl
+--- codestriker-1.7.7/template/en/default/createproject.html.tmpl	Fri Oct 10 07:30:05 2003
++++ codestriker/template/en/default/createproject.html.tmpl	Tue Jan  6 17:25:20 2004
+@@ -6,7 +6,7 @@
+ <p>
+     <a href="[% list_projects_url %]">Project list</a> | 
+     <a href="[% search_url %]">Search</a> |
+-    <a href="[% doc_url %]/x314.html">Help</a>
++    <a href="[% doc_url %]/x318.html">Help</a>
+ </p>
+ 
+ [%# Display any "feedback" to the user if necessary. #%]
+@@ -26,13 +26,14 @@
+ [%# The project name input field #%]
+ Project name:
+ <BR>
+-<INPUT TYPE="text" NAME="project_name" VALUE="[% project_name %]" SIZE=70 MAXLENGTH=70>
++<INPUT TYPE="text" NAME="project_name" VALUE="[% project_name | html_entity %]" SIZE=70 MAXLENGTH=70>
+ <P>
+ 
+ [%# The project description input field #%]
+ Project description: 
+ <BR>
+-<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[% project_description %]</TEXTAREA>
++<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[%
++project_description | html_entity %]</TEXTAREA>
+ <P>
+ 
+ <P>
+diff -ur codestriker-1.7.7/template/en/default/createtopic.html.tmpl codestriker/template/en/default/createtopic.html.tmpl
+--- codestriker-1.7.7/template/en/default/createtopic.html.tmpl	Fri Oct 10 07:30:26 2003
++++ codestriker/template/en/default/createtopic.html.tmpl	Tue Jan  6 17:25:43 2004
+@@ -5,7 +5,7 @@
+ [%# Show the top-level links for "Search" and "Help" #%]
+ <p>
+     <a href="[% search_url %]">Search</a> |
+-    <a href="[% doc_url %]/x338.html">Help</a>
++    <a href="[% doc_url %]/x342.html">Help</a>
+ </p>
+ 
+ [%# Display any "feedback" to the user if necessary. #%]
+@@ -30,7 +30,7 @@
+ subject of sent emails, and in the topic list screen.
+ ')">(What's this?)</A></FONT>
+ <BR>
+-<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title %]" SIZE=70 MAXLENGTH=70>
++<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70>
+ <P>
+ 
+ [%# The topic description input field #%]
+@@ -42,7 +42,8 @@
+ notification email to all reviewers.
+ ')">(What's this?)</A></FONT>
+ <BR>
+-<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[% topic_description %]</TEXTAREA>
++<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[%
++topic_description | html_entity %]</TEXTAREA>
+ <P>
+ 
+ <TABLE>
+@@ -76,7 +77,7 @@
+ directly from a repository.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
++ <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200></TD>
+ </TR>
+ 
+ [% IF allow_repositories != 0 %]
+@@ -93,14 +94,14 @@
+ ')">(What's this?)</A></FONT>
+ </TD>
+ <TD>
+-<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag %]" SIZE=20 MAXLENGTH=150>
++<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
+ </TD>
+ <TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
+ This is the version number or tag that identifies the new\n
+ version of the file that you want reviewed.
+ ')">(What's this?)</A></FONT></TD>
+ <TD>
+-<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag %]" SIZE=20 MAXLENGTH=150>
++<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>
+ </TD>
+ </TR>
+ <TR>
+@@ -114,7 +115,7 @@
+ ')">(What's this?)</A></FONT>
+ </TD>
+ <TD>
+-<INPUT TYPE="text" NAME="module" VALUE="[% module %]" SIZE=20 MAXLENGTH=150>
++<INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
+ </TD>
+ </TR>
+ [% END %]
+@@ -159,9 +160,9 @@
+  <TD COLSPAN="3"><SELECT NAME="projectid">
+        [% FOREACH project = projects %]
+           [% IF project.id == default_projectid %]
+-	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
++	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
+ 	  [% ELSE %]
+-	      <OPTION VALUE="[% project.id %]">[% project.name %]
++	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
+ 	  [% END %]
+        [% END %]
+       </SELECT>
+@@ -199,7 +200,7 @@
+ to it.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
++ <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50></TD>
+ </TR>
+ [% END %]
+ 
+@@ -212,7 +213,7 @@
+ will also be sent to this address.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=80></TD>
++ <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80></TD>
+ </TR>
+ 
+ [%# The reviewers input field #%]
+@@ -224,7 +225,7 @@
+ the new topic notification  email will be sent to these addresses.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers %]" SIZE=50 MAXLENGTH=150></TD>
++ <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
+ </TR>
+ 
+ [%# The Cc input field #%]
+@@ -236,7 +237,7 @@
+ to notify a number of people about the creation of a new topic.
+ ')">(What's this?)</A></FONT>
+ </TD>
+- <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc %]" SIZE=50 MAXLENGTH=150></TD>
++ <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
+ </TR>
+ </TABLE>
+ 
+diff -ur codestriker-1.7.7/template/en/default/displaycomments.html.tmpl codestriker/template/en/default/displaycomments.html.tmpl
+--- codestriker-1.7.7/template/en/default/displaycomments.html.tmpl	Sun Jan  4 15:30:21 2004
++++ codestriker/template/en/default/displaycomments.html.tmpl	Tue Jan  6 17:18:09 2004
+@@ -1,5 +1,7 @@
+ [%# Display a list of comments #%]
+ 
++[% USE AutomagicLinks %]
++
+ [% PROCESS header.html.tmpl version = version %]
+ 
+ <SCRIPT language="JavaScript">
+@@ -38,6 +40,52 @@
+         window.form.post();
+     }
+ }
++
++// This function checks all comment checkboxes.
++function CheckAll()
++{
++    if (document.form.selected_comments == null)
++    {
++        return;  // No comments.
++    }
++
++    if (document.form.selected_comments.length == null)
++    {
++        // Only one comment, older browsers don't represent checkboxes
++        // in array notation when there is only one element.
++        document.form.selected_comments.checked = true;
++        return;
++    }
++
++    // Check all the arrays.    
++    for (var i = 0; i < document.form.selected_comments.length; i++)
++    {
++        document.form.selected_comments[i].checked = true;
++    }    
++}
++
++// This function clear all comment checkboxes.
++function ClearAll()
++{
++    if (document.form.selected_comments == null)
++    {
++        return;  // No comments.
++    }
++
++    if (document.form.selected_comments.length == null)
++    {
++        // Only one comment, older browsers don't represent checkboxes
++        // in array notation when there is only one element.
++        document.form.selected_comments.checked = false;
++        return;
++    }
++
++    for (var i = 0; i < document.form.selected_comments.length; i++)
++    {
++        document.form.selected_comments[i].checked = false;
++    }    
++}
++
+ // -->
+ </SCRIPT>
+ 
+@@ -45,7 +93,7 @@
+ <P>
+ <A HREF="[% view_comments_url %]">View all updated comments</A> |
+ <A HREF="[% view_topic_url %]">View topic</A> |
+-<A HREF="[% doc_url %]/x499.html">Help</A>
++<A HREF="[% doc_url %]/x503.html">Help</A>
+ <HR>
+ <P>
+ 
+@@ -91,8 +139,13 @@
+   </SELECT>
+ .
+ 
+-<TABLE CELLPADDING="3%" CELLSPACING="3%" BORDER="0" WIDTH="100%">
++<TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
+ 
++    <TR>
++        <TD COLSPAN="3">
++            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
++        </TD>
++    </TR>
+ [% last_fileline = -1 %]
+ [% last_filenumber = -1 %]
+ [% FOREACH comment = comments %]
+@@ -101,12 +154,12 @@
+     [% IF comment.fileline != last_fileline ||
+           comment.filenumber != last_filenumber %]
+     <TR CLASS="comments">
+-        <TD width="1%">
++        <TD WIDTH="1%">
+             <INPUT TYPE="checkbox" NAME="selected_comments" 
+ 	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
+         </TD>
+-	<TD width="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+-	<TD>
++	<TD WIDTH="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
++        <TD>
+ 	    [% IF comment.filename != '' %]
+ 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
+ 	       <A HREF="[% comment.view_parallel %]">Parallel</A> |
+@@ -119,7 +172,7 @@
+     </TR>
+     [% IF comment.context != '' %]
+     <TR CLASS="commentc">
+-        <TD></TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
++        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
+     </TR>
+     [% END %]
+     [% last_fileline = comment.fileline %]
+@@ -129,15 +182,21 @@
+ 
+     <TR CLASS="commenth">
+         <TD CLASS="commentb">&nbsp;</TD>
+-        <TD COLSPAN="2">[% comment.author %]&nbsp;[% comment.date %]</TD>
++        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
+     </TR>
+     <TR CLASS="commentb">
+-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data %]</PRE></TD>
++        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+     </TR>
+ 
+ [% END %]
+ 
+     <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
++
++    <TR>
++        <TD COLSPAN="3">
++            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
++        </TD>
++    </TR>
+ 
+ </TABLE>
+ 
+diff -ur codestriker-1.7.7/template/en/default/editproject.html.tmpl codestriker/template/en/default/editproject.html.tmpl
+--- codestriker-1.7.7/template/en/default/editproject.html.tmpl	Fri Oct 10 07:30:55 2003
++++ codestriker/template/en/default/editproject.html.tmpl	Mon Jan  5 23:53:40 2004
+@@ -6,7 +6,7 @@
+ <p>
+     <a href="[% list_projects_url %]">Project list</a> | 
+     <a href="[% search_url %]">Search</a> |
+-    <a href="[% doc_url %]/x314.html">Help</a>
++    <a href="[% doc_url %]/x318.html">Help</a>
+ </p>
+ 
+ [%# Display any "feedback" to the user if necessary. #%]
+@@ -29,13 +29,14 @@
+ [%# The project name input field #%]
+ Project name:
+ <BR>
+-<INPUT TYPE="text" NAME="project_name" VALUE="[% project.name %]" SIZE=70 MAXLENGTH=70>
++<INPUT TYPE="text" NAME="project_name" VALUE="[% project.name | html_entity %]" SIZE=70 MAXLENGTH=70>
+ <P>
+ 
+ [%# The project description input field #%]
+ Project description: 
+ <BR>
+-<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[% project.description %]</TEXTAREA>
++<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[%
++project.description | html_entity %]</TEXTAREA>
+ <P>
+ 
+ <P>
+diff -ur codestriker-1.7.7/template/en/default/edittopic.html.tmpl codestriker/template/en/default/edittopic.html.tmpl
+--- codestriker-1.7.7/template/en/default/edittopic.html.tmpl	Wed Oct  8 06:12:47 2003
++++ codestriker/template/en/default/edittopic.html.tmpl	Mon Jan  5 23:54:01 2004
+@@ -5,23 +5,23 @@
+ <P>
+ <A HREF="[% view_topic_url %]">View topic</A> |
+ <A HREF="[% view_comments_url %]">View all comments</A> |
+-<A HREF="[% doc_url %]/x385.html#ADD-COMMENT">Help</A>
++<A HREF="[% doc_url %]/x390.html#ADD-COMMENT">Help</A>
+ <HR>
+ 
+-<H2>[% topic_title %]</H2>
++<H2>[% topic_title | html_entity %]</H2>
+ <TABLE>
+ <TR>
+  <TD>Author: </TD>
+- <TD>[% author %]</TD>
++ <TD>[% author | html_entity %]</TD>
+ </TR>
+ <TR>
+  <TD>Reviewers: </TD> 
+- <TD>[% reviewers %]</TD>
++ <TD>[% reviewers | html_entity %]</TD>
+ </TR>
+ [% IF cc != '' %]
+ <TR>
+  <TD>Cc: </TD> 
+- <TD>[% cc %]</TD>
++ <TD>[% cc | html_entity %]</TD>
+ </TR>
+ [% END %]
+ </TABLE>
+@@ -59,7 +59,7 @@
+  <TABLE>
+  <TR>
+   <TD>Your email address: </TD>
+-  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=100></TD>
++  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=100></TD>
+  </TR>
+  <TR>
+   <TD>Cc: </TD>
+diff -ur codestriker-1.7.7/template/en/default/listcomments.html.tmpl codestriker/template/en/default/listcomments.html.tmpl
+--- codestriker-1.7.7/template/en/default/listcomments.html.tmpl	Sun Feb  2 05:44:59 2003
++++ codestriker/template/en/default/listcomments.html.tmpl	Sun Jan  4 00:52:01 2004
+@@ -1,5 +1,7 @@
+ [%# Display a list of comments #%]
+ 
++[% USE AutomagicLinks %]
++
+ <TABLE CELLPADDING="1" CELLSPACING="1" BORDER="0">
+ [% FOREACH comment = comments %]
+ [% FLUSH IF loop.count() % 10 == 1 %]
+@@ -16,12 +18,12 @@
+ [% comment.line %]</A>
+ [% END %]
+ 
+-[% comment.author %]&nbsp;[% comment.date %]
++[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]
+ </TD>
+ </TR>
+ <TR CLASS="commentb">
+ <TD>
+-<PRE>[% comment.data %]</PRE></TD>
++<PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+ </TR>
+ <TR CLASS="commentb"><TD>&nbsp;</TD></TR>
+ [% END %]
+diff -ur codestriker-1.7.7/template/en/default/listprojects.html.tmpl codestriker/template/en/default/listprojects.html.tmpl
+--- codestriker-1.7.7/template/en/default/listprojects.html.tmpl	Fri Oct 10 07:31:21 2003
++++ codestriker/template/en/default/listprojects.html.tmpl	Mon Jan  5 23:54:37 2004
+@@ -6,7 +6,7 @@
+ <p>
+     <a href="[% create_topic_url %]">Create new topic</a> | 
+     <a href="[% search_url %]">Search</a> |
+-    <a href="[% doc_url %]/x314.html">Help</a>
++    <a href="[% doc_url %]/x318.html">Help</a>
+ </p>
+ 
+ [%# Display any "feedback" to the user if necessary. #%]
+@@ -31,9 +31,9 @@
+ 
+ <TR CLASS="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+ <TD>
+-<A HREF="[% project.edit_url %]">[% project.name %]</A>
++<A HREF="[% project.edit_url %]">[% project.name | html_entity %]</A>
+ </TD>
+-<TD>[% project.description %]</TD>
++<TD>[% project.description | html_entity %]</TD>
+ </TR>
+ [% END %]
+ 
+diff -ur codestriker-1.7.7/template/en/default/listtopics.html.tmpl codestriker/template/en/default/listtopics.html.tmpl
+--- codestriker-1.7.7/template/en/default/listtopics.html.tmpl	Fri Oct 10 07:31:39 2003
++++ codestriker/template/en/default/listtopics.html.tmpl	Tue Jan  6 17:40:48 2004
+@@ -9,7 +9,7 @@
+     | <a href="[% list_projects_url %]">List projects</a>
+ [% END %]
+     | <a href="[% search_url %]">Search</a>
+-    | <a href="[% doc_url %]/x287.html">Help</a>
++    | <a href="[% doc_url %]/x291.html">Help</a>
+ </p>
+ 
+ [%# Display any "feedback" to the user if necessary. #%]
+@@ -24,17 +24,17 @@
+ <INPUT TYPE="hidden" NAME="action" VALUE="change_topics">
+ 
+ [%# Store the search parameters as hidden variables #%]
+-<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
+-<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer %]">
+-<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc %]">
++<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor | html_entity %]">
++<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer | html_entity %]">
++<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc | html_entity %]">
+ <INPUT TYPE="hidden" NAME="sbugid" VALUE="[% sbugid %]">
+-<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext %]">
++<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext | html_entity %]">
+ <INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
+-<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle %]">
+-<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription %]">
+-<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments %]">
+-<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody %]">
+-<INPUT TYPE="hidden" NAME="sfilename" VALUE="[% sfilename %]">
++<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle | html_entity %]">
++<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription | html_entity %]">
++<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments | html_entity %]">
++<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody | html_entity %]">
++<INPUT TYPE="hidden" NAME="sfilename" VALUE="[% sfilename | html_entity %]">
+ 
+ <table width="100%">
+ 
+@@ -57,13 +57,13 @@
+ 
+     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
+         <td><INPUT TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]"></td>
+-        <td><a href="[% topic.view_topic_url %]">[% topic.title %]</a></td>
+-        <td>[% topic.author %]</td>
+-        <td>[% topic.reviewer %]</td>
+-        <td>[% topic.cc %]</td>
+-        <td>[% topic.created %]</td>
++        <td><a href="[% topic.view_topic_url %]">[% topic.title | html_entity %]</a></td>
++        <td>[% topic.author | html_entity %]</td>
++        <td>[% topic.reviewer | html_entity %]</td>
++        <td>[% IF topic.cc == "" %]&nbsp;[% ELSE %][% topic.cc | html_entity %][% END %]</td>
++        <td>[% topic.created | html_entity %]</td>
+ 	[% IF bugdb_enabled != 0 %]
+-        <td>[% topic.bugids %]</td>
++        <td>[% IF topic.bugids == "" %]&nbsp;[% ELSE %][% topic.bugids %][% END %]</td>
+ 	[% END %]
+         <td>[% topic.state %]</td>
+     </tr>
+diff -ur codestriker-1.7.7/template/en/default/search.html.tmpl codestriker/template/en/default/search.html.tmpl
+--- codestriker-1.7.7/template/en/default/search.html.tmpl	Fri Oct 10 07:31:51 2003
++++ codestriker/template/en/default/search.html.tmpl	Mon Jan  5 23:55:03 2004
+@@ -5,7 +5,7 @@
+ [%# Show the top-level links for "Create new topic" and "Help" #%]
+ <p>
+     <a href="[% create_topic_url %]">Create new topic</a> |
+-    <a href="[% doc_url %]/x533.html">Help</a>
++    <a href="[% doc_url %]/x537.html">Help</a>
+ </p>
+ 
+ <H1>Topic search</H1>
+@@ -65,9 +65,9 @@
+  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
+        [% FOREACH project = projects %]
+            [% IF project.name == 'Any' %]
+-               <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
++               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
+            [% ELSE %]           
+-               <OPTION VALUE="[% project.id %]">[% project.name %]
++               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
+            [% END %]
+        [% END %]
+      </SELECT>
+diff -ur codestriker-1.7.7/template/en/default/submitcomment.html.tmpl codestriker/template/en/default/submitcomment.html.tmpl
+--- codestriker-1.7.7/template/en/default/submitcomment.html.tmpl	Thu Apr  3 05:13:53 2003
++++ codestriker/template/en/default/submitcomment.html.tmpl	Sat Jan  3 03:41:33 2004
+@@ -9,7 +9,7 @@
+ 
+ <H2>Comment submitted</H2>
+ <P>
+-<PRE>[% comment %]
++<PRE>[% comment | html_entity %]
+ </PRE><P>
+ 
+ [%# Display a simple form for closing the comment popup window #%]
+diff -ur codestriker-1.7.7/template/en/default/submittopic.html.tmpl codestriker/template/en/default/submittopic.html.tmpl
+--- codestriker-1.7.7/template/en/default/submittopic.html.tmpl	Thu Apr  3 05:13:53 2003
++++ codestriker/template/en/default/submittopic.html.tmpl	Sat Jan  3 02:51:05 2004
+@@ -3,11 +3,11 @@
+ [% PROCESS header.html.tmpl version = version %]
+ 
+ <H2>Topic created</H2>
+-Topic title: [% topic_title %]<BR>
+-Author: [% email %]<BR>
++Topic title: [% topic_title | html_entity %]<BR>
++Author: [% email | html_entity %]<BR>
+ Topic URL: <A HREF="[% topic_url %]">[% topic_url %]</A>
+ <P>
+-Email has been sent to: [% email %], [% reviewers %][% IF cc != '' %], [% cc %][% END %]
++Email has been sent to: [% email | html_entity %], [% reviewers | html_entity %][% IF cc != '' %], [% cc | html_entity %][% END %]
+ 
+ [% PROCESS trailer.html.tmpl %]
+ 
+diff -ur codestriker-1.7.7/template/en/default/viewtopic.html.tmpl codestriker/template/en/default/viewtopic.html.tmpl
+--- codestriker-1.7.7/template/en/default/viewtopic.html.tmpl	Fri Oct 10 07:32:24 2003
++++ codestriker/template/en/default/viewtopic.html.tmpl	Mon Jan  5 23:55:34 2004
+@@ -3,6 +3,8 @@
+     script, as it is complex HTML that doesn't need to be
+     customised. #%]
+ 
++[% USE AutomagicLinks %]
++
+ [% PROCESS header.html.tmpl version = version %]
+ 
+ <script language="JavaScript">
+@@ -45,7 +47,7 @@
+     | <a href="[% list_projects_url %]">List projects</a>
+ [% END %]
+     | <a href="[% view_comments_url %]">View all comments</a>
+-    | <a href="[% doc_url %]/x386.html#VIEW-TOPIC">Help</a>
++    | <a href="[% doc_url %]/x390.html#VIEW-TOPIC">Help</a>
+ <HR>
+ 
+ <p>
+@@ -62,7 +64,7 @@
+ 
+ <tr class="tth">
+  <td><b>Title:</b></td>
+- <td><b>[% escaped_title %]</b></td>
++ <td><b>[% document_title | html_entity %]</b></td>
+ </th>
+ 
+ [% SET type = 0 %]
+@@ -70,13 +72,13 @@
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Author:</td>
+- <td>[% document_author %]</td>
++ <td>[% document_author | html_entity %]</td>
+ </tr>
+ 
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Created:</td>
+- <td>[% document_creation_time %]</td>
++ <td>[% document_creation_time | html_entity %]</td>
+ </tr>
+ 
+ [% IF bug_string != '' %]
+@@ -90,7 +92,7 @@
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Reviewers:</td>
+- <td>[% document_reviewers %]</td>
++ <td>[% document_reviewers | html_entity %]</td>
+ </tr>
+ 
+ <tr class="tt[% type mod 2 %]">
+@@ -117,14 +119,14 @@
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td>Project:</td>
+- <td>[% project_name %]</td>
++ <td>[% project_name | html_entity %]</td>
+ </tr>
+ [% END %]
+ 
+ <tr class="tt[% type mod 2 %]">
+  [% type = type + 1 %]
+  <td valign="top">Description:</td>
+- <td><pre>[% description %]</pre></td>
++ <td><pre>[% description | html_entity | $AutomagicLinks %]</pre></td>
+ </tr>
+ 
+ [%# Display the form for changing the topic state #%]

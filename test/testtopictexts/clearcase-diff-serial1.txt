@@ -1,0 +1,28 @@
+********************************
+<<< file 1: c:\my_stuff\view_name\vob_name\dir1\dir2\Test.txt@@\main\1
+>>> file 2: dir2/Test.txt
+********************************
+-----[after 2 inserted 3]-----
+>    - This bullet is new.
+-----[7-8 changed to 8-10]-----
+< This text will be replaced.
+< Yes it will.
+---
+> This is the replacement.
+> Do you like it?
+> Or not?
+-----[after 11 inserted 14-15]-----
+> Here's some new stuff.
+> 
+-----[deleted 14-17 after 17]-----
+< This stuff will be deleted
+<    - So will this
+<    - And this
+< 
+-----[20 changed to 20]-----
+< This line is going to be changed slightly, man.
+---
+> This line is going to be changed slightly, dude.
+-----[after 22 inserted 23-24]-----
+> 
+> Here's a brand new line.
