@@ -16,6 +16,7 @@ package Codestriker::FileParser::Parser;
 use strict;
 
 use FileHandle;
+use File::Temp qw/ tempfile /;
 use Codestriker::FileParser::CvsUnidiff;
 use Codestriker::FileParser::SubversionDiff;
 use Codestriker::FileParser::VssDiff;
@@ -35,25 +36,31 @@ sub parse ($$$$$) {
     # uses \r\n endings, rather than making each parser object take this
     # into account, create a temporary file here which removes them, and
     # that file handle is passed on to the parser objects, so they aren't
-    # the wiser.
-    my $tmp_filename = "tmpparse.$topicid";
-    open(TMP, ">$tmp_filename") ||
+    # the wiser.  Note the temporary file is automatically deleted
+    # once this function has finished.
+    my $tmpfh = tempfile();  
+    
+    if (!$tmpfh) {
 	die "Unable to create temporary parse file: $!";
+    }
+
     while (<$fh>) {
 	my $line = $_;
 	$line =~ s/\r\n/\n/go;
-	print TMP $line;
+	print $tmpfh $line;
     }
-    close TMP;
-    my $tmpfh = new FileHandle "$tmp_filename", "r";
-    die "Unable to open temporary parse file: $!" if (! defined $tmpfh);
+
+    # Rewind the file, then let the parsers have at it.
+    seek($tmpfh,0,0) ||
+	die "Unable to seek to the start of the temporary file: $!";
 
     # If the file is plain/text, try all of the text parsers.
     if ($content_type eq "text/plain") {
 
 	# Check if it is a CVS unidiff file.
 	if ($#diffs == -1) {
-	    seek($tmpfh, 0, 0);
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs =
 		Codestriker::FileParser::CvsUnidiff->parse($tmpfh,
 							   $repository);
@@ -61,7 +68,8 @@ sub parse ($$$$$) {
 
 	# Check if it is a Subversion diff file.
 	if ($#diffs == -1) {
-	    seek($tmpfh, 0, 0);
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs =
 		Codestriker::FileParser::SubversionDiff->parse($tmpfh,
 							       $repository);
@@ -69,7 +77,8 @@ sub parse ($$$$$) {
 
 	# Check if it is a VSS diff file.
 	if ($#diffs == -1) {
-	    seek($tmpfh, 0, 0);
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs =
 		Codestriker::FileParser::VssDiff->parse($tmpfh,
 							$repository);
@@ -77,7 +86,8 @@ sub parse ($$$$$) {
 
 	# Check if it is a patch unidiff file.
 	if ($#diffs == -1) {
-	    seek($tmpfh, 0, 0);
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs =
 		Codestriker::FileParser::PatchUnidiff->parse($tmpfh,
 							     $repository);
@@ -86,7 +96,8 @@ sub parse ($$$$$) {
 	# Last stop-gap - the file format is unknown, treat it as a
 	# single file with filename "unknown".
 	if ($#diffs == -1) {
-	    seek($tmpfh, 0, 0);
+	    seek($tmpfh, 0, 0) ||
+		die "Unable to seek to the start of the temporary file: $!";
 	    @diffs = Codestriker::FileParser::UnknownFormat->
 		parse($tmpfh, $uploaded_filename);
 	}
@@ -100,10 +111,8 @@ sub parse ($$$$$) {
     }
 
     # Restore the offset back to the start of the file again.
-    seek($fh, 0, 0);
-
-    # Remove the temporary file.
-    unlink $tmp_filename;
+    seek($fh, 0, 0) ||
+	die "Unable to seek to the start of the temporary file. $!";
 
     # Return the diffs found, if any.
     return @diffs;

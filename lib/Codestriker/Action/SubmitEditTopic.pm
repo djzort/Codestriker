@@ -52,7 +52,7 @@ sub process($$$) {
 
     for( my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex)
     {
-	my @usermetrics = @{$http_input->{"reviewer_metric, $userindex"}};
+	my @usermetrics = @{$http_input->{"reviewer_metric,$userindex"}};
 
 	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex], @usermetrics);
 	$metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);

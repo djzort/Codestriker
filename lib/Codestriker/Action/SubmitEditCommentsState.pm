@@ -27,7 +27,7 @@ sub process($$$) {
     my $comment_state = $http_input->get('comment_state');
     my $topicid = $http_input->get('topic');
     
-    if ( Codestriker::Model::Topic::exists($topicid) == 0) {    
+    if (Codestriker::Model::Topic::exists($topicid) == 0) {    
 	# Topic no longer exists, most likely its been deleted.
 	$http_response->error("Topic no longer exists.");
         return;
