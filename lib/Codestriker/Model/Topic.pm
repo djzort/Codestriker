@@ -864,7 +864,7 @@ sub delete($) {
 
     my $delete_commentstate_metric =
 	$dbh->prepare_cached('DELETE FROM commentstatemetric ' .
-			     'WHERE commentstateid = ?');
+			     'WHERE id = ?');
 
     my $delete_commentstate =
 	$dbh->prepare_cached('DELETE FROM commentstate ' .
