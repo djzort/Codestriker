@@ -33,33 +33,29 @@ sub new {
 # the correct VSS repository.  We can't do this with $ENV since
 # apache2 doesn't allow us to do this.  We assume perl is in the
 # PATH.
-sub _wrap_vss_command {
-    my ($self, $cmd) = @_;
+sub _write_vss_command {
+    my ($self, $cmd, $tmpfile) = @_;
 
     my $ssdir = $self->{ssdir};
 
-    if (defined $ssdir) {
-	my $perl_cmd = $cmd;
-	$perl_cmd =~ s/\"/\\\"/g;
-	$perl_cmd = "perl -e \"" .
-	    (defined $ssdir ? "\$ENV{SSDIR}='$ssdir' ; " : "") .
-	    "system('$perl_cmd')\"";
-	print STDERR "Executing $perl_cmd\n" if $_DEBUG;
-	flush STDERR if $_DEBUG;
-	return $perl_cmd;
-    }
-    else {
-	# No need to change the command, as SSDIR does not need to be set.
-	print STDERR "Executing $cmd\n" if $_DEBUG;
-	flush STDERR if $_DEBUG;
-	return $cmd;
-    }
+    open (TMPFILE, ">$tmpfile") || die "Can't open $tmpfile: $!";
+    print TMPFILE "\@echo off\n";
+    print STDERR "\@echo off\n" if $_DEBUG;
+    print TMPFILE "set SSDIR=$ssdir\n" if defined $ssdir;
+    print STDERR "set SSDIR=$ssdir\n" if defined $ssdir && $_DEBUG;
+    print TMPFILE "$cmd\n";
+    print STDERR "$cmd\n" if $_DEBUG;
+    close TMPFILE;
 }
 
 # Retrieve the data corresponding to $filename and $revision.  Store each line
 # into $content_array_ref.
 sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
+
+    # VSS command to use.
+    my $vss = $Codestriker::vss;
+    $vss =~ s/\//\\/g;
 
     # Create a temporary directory where all of the temporary files
     # will be written to.
@@ -71,15 +67,19 @@ sub retrieve ($$$\$) {
 	$tempdir = tempdir(CLEANUP => 1);
     }
 
+    # Temporary Batch file for executing VSS commands.
+    my $tmp_batch_file = "$tempdir/tmp.bat";
+
     # Retrieve a read-only copy of the file into a temporary
     # directory.  Make sure the command output is put into
     # a temporary file, rather than stdout/stderr.
     my $varg = ($revision =~ /^\d+$/) ? "-V$revision" : "\"-VL$revision\"";
     my $command_output = "$tempdir\\___output.txt";
-    my $cmd = "\"$Codestriker::vss\" get \"$filename\"" .
+    my $cmd = "\"$vss\" get \"$filename\"" .
 	" -y" . $self->{username} . "," . $self->{password} .
 	" $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
-    system($self->_wrap_vss_command($cmd));
+    $self->_write_vss_command($cmd, $tmp_batch_file);
+    system($tmp_batch_file);
 
     $filename =~ /\/([^\/]+)$/o;
     my $basefilename = $1;
@@ -92,8 +92,10 @@ sub retrieve ($$$\$) {
 	unlink "$tempdir/$basefilename";
     }
 
-    # Remove the temporary directory.
-    rmdir $tempdir;
+    # Remove the temporary directory and batch file.
+    print STDERR "Dir is $tempdir\n";
+    #unlink $tmp_batch_file;
+    #rmdir $tempdir;
 }
 
 # Retrieve the "root" of this repository.
@@ -121,6 +123,10 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $fh, $error_fh) = @_;
 
+    # VSS command to use.
+    my $vss = $Codestriker::vss;
+    $vss =~ s/\//\\/g;
+
     # Currently we only support either start_tag or end_tag being set.
     my $tag = '';
     $tag = $start_tag if $start_tag ne '' && $end_tag eq '';
@@ -138,16 +144,20 @@ sub getDiff ($$$$$) {
 	$tempdir = tempdir(CLEANUP => 1);
     }
 
+    # Temporary Batch file for executing VSS commands.
+    my $tmp_batch_file = "$tempdir/tmp.bat";
+
     # Execute the VSS command to retrieve all of the entries in this label.
     # Note we can't set SSDIR in the environment, so we need to do that in
     # the command below.
 
     my $ssdir = $self->{ssdir};
-    my $cmd = "\"$Codestriker::vss\" dir \"$module_name\"" .
+    my $cmd = "\"$vss\" dir \"$module_name\"" .
 	" -y" . $self->{username} . "," . $self->{password} .
 	" -R \"-VL${tag}\" -I-Y";
+    $self->_write_vss_command($cmd, $tmp_batch_file);
 
-    open(VSS, $self->_wrap_vss_command($cmd) . " |")
+    open(VSS, "$tmp_batch_file |")
 	|| die "Can't open connection to VSS repository: $!";
 
     # Collect the list of filename and revision numbers into a list.
@@ -177,10 +187,11 @@ sub getDiff ($$$$$) {
     # files.
     for (my $i = 0; $i <= $#files; $i++) {
 	# Determine if the file is a text file, and if not, skip it.
-	$cmd = "\"$Codestriker::vss\" properties \"$files[$i]\"" .
+	$cmd = "\"$vss\" properties \"$files[$i]\"" .
 	    " -y" . $self->{username} . "," . $self->{password} .
 	    " -I-Y";
-	open(VSS, $self->_wrap_vss_command($cmd) . " |")
+	$self->_write_vss_command($cmd, $tmp_batch_file);
+	open(VSS, "$tmp_batch_file |")
 	    || die "Unable to run ss properties on $files[$i]\n";
 	my $text_type = 0;
 	while (<VSS>) {
@@ -194,11 +205,12 @@ sub getDiff ($$$$$) {
 
 	my $command_output = "$tempdir\\___output.txt";
 	if ($start_tag ne '' && $end_tag ne '') {
-	    $cmd = "\"$Codestriker::vss\" diff \"$files[$i]\"" .
+	    $cmd = "\"$vss\" diff \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
 		   " -I-Y -DU3000X5 \"-VL${start_tag}~L${end_tag}\"" .
 		   " -O\"$command_output\"";
-	    system($self->_wrap_vss_command($cmd));
+	    $self->_write_vss_command($cmd, $tmp_batch_file);
+	    system($tmp_batch_file);
 	    if (open(VSS, $command_output)) {
 		while (<VSS>) {
 		    print $fh $_;
@@ -209,10 +221,11 @@ sub getDiff ($$$$$) {
 	    # Retrieve a read-only copy of the file into a temporary
 	    # directory.  Make sure the command output is put into
 	    # a temporary file, rather than stdout/stderr.
-	    $cmd = "\"$Codestriker::vss\" get \"$files[$i]\"" .
+	    $cmd = "\"$vss\" get \"$files[$i]\"" .
 		   " -y" . $self->{username} . "," . $self->{password} .
 		   " \"-VL${tag}\" -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
-	    system($self->_wrap_vss_command($cmd));
+	    $self->_write_vss_command($cmd, $tmp_batch_file);
+	    system($tmp_batch_file);
 
 	    $files[$i] =~ /\/([^\/]+)$/o;
 	    my $basefilename = $1;
@@ -238,7 +251,8 @@ sub getDiff ($$$$$) {
 	print $fh "\n";
     }
 
-    # Remove the temporary directory.
+    # Remove the temporary directory and temporary batch file.
+    unlink $tmp_batch_file;
     rmdir $tempdir;
 
     return $Codestriker::OK;
