@@ -27,6 +27,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
 
     # Create the list of valid states that can be searched over.
     my @states = ("Any");

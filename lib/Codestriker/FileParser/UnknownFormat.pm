@@ -35,6 +35,7 @@ sub parse ($$) {
     $chunk->{binary} = 0;
     $chunk->{text} = $text;
     $chunk->{description} = "";
+    $chunk->{repmatch} = 0;
     push @result, $chunk;
 
     return @result;

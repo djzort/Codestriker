@@ -66,6 +66,7 @@ sub process($$$) {
     if ($feedback ne "") {
 	$feedback =~ s/\n/<BR>/g;
 	my $vars = {};
+	$vars->{'version'} = $Codestriker::VERSION;
 	$vars->{'feedback'} = $feedback;
 	$vars->{'email'} = $email;
 	$vars->{'reviewers'} = $reviewers;
@@ -175,6 +176,7 @@ sub process($$$) {
     # Indicate to the user that the topic has been created and an email has
     # been sent.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'topic_title'} = $topic_title;
     $vars->{'email'} = $email;
     $vars->{'topic_url'} = $topic_url;

@@ -75,9 +75,9 @@ sub edit_url ($$$$$$$) {
 
 # Create the URL for viewing a new file.
 sub view_file_url ($$$$$$$) {
-    my ($self, $topic, $filenumber, $new, $line, $prefix, $mode) = @_;
+    my ($self, $topic, $filenumber, $new, $line, $mode, $parallel) = @_;
     return $self->{url_prefix} . "?action=view_file&fn=$filenumber&" .
-	"topic=$topic&mode=$mode&new=$new#" . "$prefix$line";
+	"topic=$topic&new=$new&mode=$mode&parallel=$parallel#$filenumber|$line|$new";
 }
 
 # Create the URL for the search page.

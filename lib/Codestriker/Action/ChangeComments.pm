@@ -21,7 +21,6 @@ sub process($$$) {
     my $comments_ref = $http_input->get('selected_comments');
     my @comments = @$comments_ref;
     my $comment_state = $http_input->get('comment_state');
-    my $email = $http_input->get('email');
     my $topic = $http_input->get('topic');
 
     # Any feedback messages to the user.
@@ -45,14 +44,19 @@ sub process($$$) {
 	for (my $i = 0; $i <= $#comments; $i++) {
 	    # Extract the line number and version of the comment that is being
 	    # changed.
-	    $comments[$i] =~ /^(.*)\,(.*)$/;
-	    my $line = $1;
-	    my $version = $2;
+	    $comments[$i] =~ /^(.*)\,(.*)\,(.*)\,(.*)$/;
+	    my $filenumber = $1;
+	    my $fileline = $2;
+	    my $filenew = $3;
+	    my $version = $4;
 	    
 	    # Change the comment state.
 	    my $timestamp = Codestriker->get_timestamp(time);
 	    my $rc =
-		Codestriker::Model::Comment->change_state($topic, $line,
+		Codestriker::Model::Comment->change_state($topic,
+							  $fileline,
+							  $filenumber,
+							  $filenew,
 							  $stateid,
 							  $version);
 

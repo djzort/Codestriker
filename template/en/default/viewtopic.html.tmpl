@@ -3,7 +3,7 @@
     script, as it is complex HTML that doesn't need to be
     customised. #%]
 
-[% PROCESS header.html.tmpl %]
+[% PROCESS header.html.tmpl version = version %]
 
 [%# Show the top-level links for "Create new topic", "List open topics",
     "search", and "View all comments" #%]
@@ -106,7 +106,7 @@ retrieving lists of topics from the search page.
    <input type="hidden" name="action" value="change_topic_state">
    <input type="hidden" name="topic" value="[% topicid %]">
    <input type="hidden" name="mode" value="[% mode %]">
-   <input type="hidden" name="version" value="[% version %]">
+   <input type="hidden" name="version" value="[% topic_version %]">
 
    [%# Now display the option button for changing the topic state #%]
    <select name="topic_state">

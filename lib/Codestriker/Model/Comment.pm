@@ -80,13 +80,13 @@ sub create($$$$$$$$$) {
 	# Create the comment record.
 	my $insert_comment =
 	    $dbh->prepare_cached('INSERT INTO comment ' .
-				 '(topicid, commentstateid, '.
+				 '(commentstateid, '.
 				 'commentfield, author, creation_ts) ' .
-				 'VALUES (?, ?, ?, ?, ?)');
+				 'VALUES (?, ?, ?, ?)');
 	my $success = defined $insert_comment;
 
 	# Create the comment row.
-	$success &&= $insert_comment->execute($topicid, $commentstateid, $data,
+	$success &&= $insert_comment->execute($commentstateid, $data,
 					      $email, $timestamp);
 	$success &&= $insert_comment->finish();
 
@@ -157,8 +157,9 @@ sub read($$) {
 
 # Update the state of the specified commentstate.  The version parameter
 # indicates what version of the commentstate the user was operating on.
-sub change_state($$$$$$) {
-    my ($type, $topicid, $line, $filenumber, $stateid, $version) = @_;
+sub change_state($$$$$$$) {
+    my ($type, $topicid, $fileline, $filenumber, $filenew,
+	$stateid, $version) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -166,18 +167,19 @@ sub change_state($$$$$$) {
     # Check that the version reflects the current version in the DB.
     my $select_comments =
 	$dbh->prepare_cached('SELECT version, state FROM commentstate ' .
-			     'WHERE topicid = ? AND line = ? AND ' .
-			     'filenumber = ?');
+			     'WHERE topicid = ? AND fileline = ? AND ' .
+			     'filenumber = ? AND filenew = ?');
     my $update_comments =
 	$dbh->prepare_cached('UPDATE commentstate SET version = ?, ' .
-			     'state = ? WHERE topicid = ? AND line = ? ' .
-			     'filenumber = ?');
+			     'state = ? WHERE topicid = ? AND fileline = ? ' .
+			     'AND filenumber = ? AND filenew = ?');
 
     my $success = defined $select_comments && defined $update_comments;
     my $rc = $Codestriker::OK;
 
     # Retrieve the current comment data.
-    $success &&= $select_comments->execute($topicid, $line, $filenumber);
+    $success &&= $select_comments->execute($topicid, $fileline, $filenumber,
+					   $filenew);
 
     # Make sure that the topic still exists, and is therefore valid.
     my ($current_version, $current_stateid);
@@ -200,7 +202,8 @@ sub change_state($$$$$$) {
     # comments.
     if ($stateid != $current_stateid) {
 	$success &&= $update_comments->execute($version+1, $stateid,
-					       $topicid, $line, $filenumber);
+					       $topicid, $fileline,
+					       $filenumber, $filenew);
     }
     Codestriker::DB::DBI->release_connection($dbh, $success);
     return $rc;

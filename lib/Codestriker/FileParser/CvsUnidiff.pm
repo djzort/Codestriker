@@ -11,6 +11,7 @@
 package Codestriker::FileParser::CvsUnidiff;
 
 use strict;
+use Codestriker::FileParser::UnidiffUtils;
 
 # Return the array of filenames, revision number, linenumber, whether its
 # binary or not, and the diff text.
@@ -39,7 +40,8 @@ sub parse ($$$) {
 	my $old_linenumber = -1;
 	my $new_linenumber = -1;
 	my $binary = 0;
-	my $diff;
+	my $repmatch = 0;
+	my $diff = "";
 
 	# For CVS diffs, the start of the diff block is the Index line.
 	return () unless defined $line && $line =~ /^Index:/o;
@@ -54,6 +56,7 @@ sub parse ($$$) {
 	return () unless defined $line;
 	if (defined $repository_root &&
 	    $line =~ /^RCS file: $repository_root\/(.*),v$/) {
+	    $repmatch = 1;
 	    $filename = $1;
 	    $line = <$fh>;
 	    return () unless defined $line;
@@ -62,7 +65,7 @@ sub parse ($$$) {
 	    $line = <$fh>;
 	    return () unless defined $line;
 	}
-	
+
 	# Now we expect the retrieving revision line, unless it is a new or
 	# removed file.
 	if ($line =~ /^retrieving revision (.*)$/o) {
@@ -95,12 +98,17 @@ sub parse ($$$) {
 	if ($line =~ /^Binary files \/dev\/null and (.*) differ$/o) {
 	    # Binary file has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
+	    $filename = $1;
 	    $binary = 1;
-	} elsif ($line =~ /^Binary files .* and \/dev\/null differ$/o ||
-		 $line =~ /^Binary files .* and .* differ$/o) {
+	} elsif ($line =~ /^Binary files (.*) and \/dev\/null differ$/o) {
 	    # Binary file has been removed.
+	    $filename = $1;
 	    $revision = $Codestriker::REMOVED_REVISION;
 	    $binary = 1;
+	} elsif ($line =~ /^Binary files .* and (.*) differ$/o) {
+	    # Binary file has been modified.
+	    $binary = 1;
+	    $filename = $1;
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
@@ -108,44 +116,38 @@ sub parse ($$$) {
 	    return ();
 	}
 
-	# Now expect the +++ line.
-	$line = <$fh>;
-	return () unless (defined $line && $line =~ /^\+\+\+/o);
-	
-	# Check if it is a removed file.
-	if ($line =~ /^\+\+\+ \/dev\/null/o) {
-	    # File has been removed.
-	    $revision = $Codestriker::REMOVED_REVISION;
-	}
-
-	# Now read in the multiple chunks.
-	$line = <$fh>;
-	while (defined $line &&
-	       $line =~ /^\@\@ \-(\d+)\,\d+ \+(\d+)\,\d+ \@\@/) {
-	    $old_linenumber = $1;
-	    $new_linenumber = $2;
-
-
-	    # Now read in the diff text until finished.
-	    $line = <$fh>;
-	    $diff = "";
-	    while (defined $line && $line =~ /^[ \-\+]/o) {
-		$diff .= $line;
-		$line = <$fh>;
-	    }
-
+	# If its a binary file, add the delta to the list.
+	if ($binary) {
 	    my $chunk = {};
 	    $chunk->{filename} = $filename;
 	    $chunk->{revision} = $revision;
-	    $chunk->{old_linenumber} = $old_linenumber;
-	    $chunk->{new_linenumber} = $new_linenumber;
-	    $chunk->{binary} = $binary;
-	    $chunk->{text} = $diff;
+	    $chunk->{old_linenumber} = -1;
+	    $chunk->{new_linenumber} = -1;
+	    $chunk->{binary} = 1;
+	    $chunk->{text} = "";
 	    $chunk->{description} = "";
+	    $chunk->{repmatch} = $repmatch;
 	    push @result, $chunk;
-
-	    print STDERR "Got filename $filename rev $revision\n";
+	} else {
+	    # Now expect the +++ line.
+	    $line = <$fh>;
+	    return () unless (defined $line && $line =~ /^\+\+\+/o);
+	    
+	    # Check if it is a removed file.
+	    if ($line =~ /^\+\+\+ \/dev\/null/o) {
+		# File has been removed.
+		$revision = $Codestriker::REMOVED_REVISION;
+	    }
+	    
+	    # Now read in the multiple chunks.
+	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
+		read_unidiff_text($fh, $filename, $revision, $repmatch);
+	    
+	    push @result, @file_diffs;
 	}
+
+	# Read the next line.
+	$line = <$fh>;
     }
 
     # Return the found diff chunks.

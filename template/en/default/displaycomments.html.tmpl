@@ -1,6 +1,6 @@
 [%# Display a list of comments #%]
 
-[% PROCESS header.html.tmpl %]
+[% PROCESS header.html.tmpl version = '1.7.0' %]
 
 [%# Show the top-level link for "Refresh" and "View topic" #%]
 <P>
@@ -20,21 +20,22 @@
 <FORM METHOD="POST" ENCTYPE="multipart/form-data">
 <INPUT TYPE="hidden" NAME="action" VALUE="change_comments">
 <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
-<INPUT TYPE="hidden" NAME="email" VALUE="[% email %]">
 
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
-[% last_line = -1 %]
+[% last_fileline = -1 %]
+[% last_filenumber = -1 %]
 [% FOREACH comment = comments %]
 [% FLUSH IF loop.count() % 10 == 1 %]
 
-    [% IF comment.line != last_line %]
+    [% IF comment.fileline != last_fileline ||
+          comment.filenumber != last_filenumber %]
     <TR CLASS="comments">
         <TD>
             <INPUT TYPE="checkbox" NAME="selected_comments" 
-	           VALUE="[% comment.line %],[% comment.version %]">
+	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
         </TD>
-	<TD><A NAME="[% comment.line %]">[% comment.state %]</A></TD>
+	<TD><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
 	<TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
@@ -46,7 +47,9 @@
 	    [% END %]
 	</TD>
     </TR>
-    [% last_line = comment.line %]
+    [% last_fileline = comment.fileline %]
+    [% last_filenumber = comment.filenumber %]
+
     [% END %]
 
     <TR CLASS="commenth">

@@ -68,6 +68,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'topic_title'} = "Edit topic: $document_title";
     if ($Codestriker::antispam_email) {
 	$document_author = Codestriker->make_antispam_email($document_author);
@@ -143,8 +144,6 @@ sub process($$$) {
     $vars->{'email'} = $email;
     $vars->{'fn'} = $fn;
     $vars->{'new'} = $new;
-
-    print STDERR "ANCHOR IS $anchor\n";
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("edittopic");

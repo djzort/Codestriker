@@ -27,15 +27,7 @@ sub process($$$) {
     # Perform some error checking here on the parameters.
 
     # Retrieve the comment details for this topic.
-    my (@comments, %comment_exists);
-    my $rc = Codestriker::Model::Comment->read($topic,
-					       \@comments,
-					       \%comment_exists);
-
-    if ($rc == $Codestriker::INVALID_TOPIC) {
-	# Topic no longer exists, most likely its been deleted.
-	$http_response->error("Topic no longer exists.");
-    }
+    my @comments = Codestriker::Model::Comment->read($topic);
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header($topic, "Comment list", $email, "", "", "",
@@ -43,6 +35,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
     # Obtain a new URL builder object.
@@ -58,34 +51,38 @@ sub process($$$) {
 
     # Go through all the comments and make them into an appropriate form for
     # displaying.
-    my $last_line = -1;
+    my $last_filenumber = -1;
+    my $last_fileline = -1;
     my $index = 0;
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{line} != $last_line) {
+	my $comment = $comments[$i];
+	
+	if ($comment->{fileline} != $last_fileline ||
+	    $comment->{filenumber} != $last_filenumber) {
 	    my $new_file =
-		$url_builder->view_file_url($topic, $comments[$i]{filename},
-					    $UrlBuilder::NEW_FILE,
-					    $comments[$i]{fileline}, "",
-					    $mode);
-	    $comments[$i]{view_file} =
+		$url_builder->view_file_url($topic, $comment->{filenumber},
+					    $comment->{filenew},
+					    $comment->{fileline}, $mode, 0);
+					    
+	    $comment->{view_file} =
 		"javascript: myOpen('$new_file','CVS')";
 	    my $parallel = 
-		$url_builder->view_file_url($topic, $comments[$i]{filename},
-					    $UrlBuilder::BOTH_FILES,
-					    $comments[$i]{fileline}, "",
-					    $mode);
-	    $comments[$i]{view_parallel} =
+		$url_builder->view_file_url($topic, $comment->{filenumber},
+					    $comment->{filenew},
+					    $comment->{fileline}, $mode, 1);
+	    $comment->{view_parallel} =
 		"javascript: myOpen('$parallel','CVS')";
-	    my $edit_url =
-		$url_builder->edit_url($comments[$i]{line}, $topic, "",
-				       $comments[$i]{line}, "");
-	    $comments[$i]{edit_url} =
-		"javascript: myOpen('$edit_url','e')";
-	    $last_line = $comments[$i]{line};
+	    $comment->{edit_url} =
+		"javascript: eo('" . $comment->{filenumber} . "','" .
+		$comment->{fileline} . "','" . $comment->{filenew} . "')";
+	    $comment->{anchor} = $comment->{filenumber} . "|" .
+		$comment->{fileline} . "|" . $comment->{filenew};
+	    $last_fileline = $comment->{fileline};
+	    $last_filenumber = $comment->{filenumber};
 	}
 
-	my $state = $comments[$i]{state};
-	$comments[$i]{state} = $Codestriker::comment_states[$state];
+	my $state = $comment->{state};
+	$comment->{state} = $Codestriker::comment_states[$state];
     }
 
     # Indicate what states the comments can be transferred to.

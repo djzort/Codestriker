@@ -27,6 +27,7 @@ sub process($$$) {
     my $tabwidth = $http_input->get('tabwidth');
     my $fn = $http_input->get('fn');
     my $new = $http_input->get('new');
+    my $parallel = $http_input->get('parallel');
 
     # Check if this action is allowed.
     if ($Codestriker::allow_repositories == 0) {
@@ -90,16 +91,22 @@ sub process($$$) {
     }
 
     # Output the new file, with the deltas applied.
-    my $title = $new == $UrlBuilder::NEW_FILE ?
-	"New $filename" : "$filename v$revision";
+    my $title;
+    if ($parallel) {
+	$title = "Parallel view of $filename v$revision";
+    } else {
+	$title = $new ? "New $filename" : "$filename v$revision";
+    }
+
     $http_response->generate_header($topic, $title, "", "", "", $mode,
 				    $tabwidth, $repository_url, "", 0, 1);
 
     # Render the HTML header.
+    my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     my $header = Codestriker::Http::Template->new("header");
-    $header->process() || die $header->error();
+    $header->process($vars) || die $header->error();
 
-    my $parallel = ($new == $UrlBuilder::BOTH_FILES) ? 1 : 0;
     my $max_digit_width = length($#filedata);
 
     # Create a new render object to perform the line rendering.
@@ -115,7 +122,7 @@ sub process($$$) {
 				       \@toc_revisions, \@toc_binaries,
 				       $max_line_length);
     # Prepare the output.
-    if ($new == $UrlBuilder::BOTH_FILES) {
+    if ($parallel) {
 	$render->print_coloured_table();
     }
     else {
@@ -157,7 +164,7 @@ sub process($$$) {
 			$render->{new_linenumber}, $delta_text, 0, $new, 0);
     
     # Close off the rendering.    
-    if ($new == $UrlBuilder::BOTH_FILES) {
+    if ($parallel) {
 	print $query->end_table();
     }
     else {

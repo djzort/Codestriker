@@ -24,6 +24,7 @@ use Codestriker::DB::DBI;
 use Codestriker::Action::SubmitComment;
 use Codestriker::Repository::RepositoryFactory;
 use Codestriker::FileParser::Parser;
+use Codestriker::FileParser::UnknownFormat;
 
 # Initialise Codestriker, load up the configuration file.
 Codestriker->initialise();
@@ -156,6 +157,11 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
     $text_type = "mediumtext";
 }
 
+# The commentstate table needs a unique id.  For MySQL, use an auto
+# incrementor.  For PostgreSQL and other databases, use a sequence.
+my $auto_increment = ($Codestriker::db =~ /^DBI:mysql/i) ?
+    "auto_increment" : "default nextval('sequence')";
+
 $table{topic} =
     "id int NOT NULL,
      author varchar(255) NOT NULL,
@@ -172,16 +178,13 @@ $table{topic} =
 $index{topic} = "CREATE INDEX author_idx ON topic(author)";
 
 $table{comment} =
-    "topicid int NOT NULL,
-     commentstateid int NOT NULL,
+    "commentstateid int NOT NULL,
      commentfield text NOT NULL,
      author varchar(255) NOT NULL,
      creation_ts timestamp NOT NULL";
 
-$index{comment} = "CREATE INDEX comment_tid_idx ON comment(topicid)";
-
 $table{commentstate} =
-    "id int NOT NULL auto_increment,
+    "id int NOT NULL $auto_increment,
      topicid int NOT NULL,
      fileline int NOT NULL,
      filenumber int NOT NULL,
@@ -191,6 +194,9 @@ $table{commentstate} =
      creation_ts timestamp NOT NULL,
      modified_ts timestamp NOT NULL,
      PRIMARY KEY (id)";
+
+$index{commentstate} =
+    "CREATE INDEX commentstate_topicid_idx ON commentstate(topicid)";
 
 $table{participant} =
     "email varchar(255) NOT NULL,
@@ -231,6 +237,7 @@ $table{delta} =
      new_linenumber int NOT NULL,
      deltatext $text_type NOT NULL,
      description $text_type NOT NULL,
+     repmatch smallint NOT NULL,
      PRIMARY KEY (topicid, delta_sequence)";
 
 $index{delta} = "CREATE INDEX delta_fid_idx ON delta(topicid)";
@@ -267,11 +274,138 @@ sub get_field_def ($$)
     my ($table, $field) = @_;
     my $sth = $dbh->prepare("SHOW COLUMNS FROM $table");
     $sth->execute;
-
+    
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
         return $ref;
-   }
+    }
+}
+
+# Move a table into table_old, create the table with the new definitions,
+# and create the indexes.
+sub move_old_table ($$)
+{
+    my ($tablename, $pkey_column) = @_;
+    
+    $dbh->do("ALTER TABLE $tablename RENAME TO ${tablename}_old") ||
+	die "Could not rename table $tablename: " . $dbh->errstr;
+
+
+    # For PostgreSQL, need to drop and create the old primary key index
+    # with a different name, otherwise the create table command below
+    # will fail.
+    if (defined $pkey_column && $Codestriker::db =~ /^DBI:pg/i) {
+	$dbh->do("DROP INDEX ${tablename}_pkey") ||
+	    die "Could not drop pkey index: " . $dbh->errstr;
+	$dbh->do("CREATE UNIQUE INDEX ${tablename}_old_pkey ON " .
+		 "${tablename}_old($pkey_column)") ||
+		 die "Could not create pkey index for old table: " .
+		 $dbh->errstr;
+    }
+    
+    my $fields = $table{$tablename};
+    $dbh->do("CREATE TABLE $tablename (\n$fields\n)") ||
+	die "Could not create table $tablename: " . $dbh->errstr;
+    
+    if (defined $index{$tablename}) {
+	$dbh->do($index{$tablename}) ||
+	    die "Could not create indexes for table $tablename: " .
+	    $dbh->errstr;
+    
+    }
+}
+
+# Check if the specified column exists in the specified table.
+sub column_exists ($$)
+{
+    my ($tablename, $columnname) = @_;
+
+    my $local_dbh = Codestriker::DB::DBI->get_connection();
+    $local_dbh->{RaiseError} = 0;
+    $local_dbh->{PrintError} = 0;
+
+    my $stmt =
+	$local_dbh->prepare_cached("SELECT COUNT($columnname) " .
+				   "FROM $tablename");
+
+    my $rc = defined $stmt && $stmt->execute() ? 1 : 0;
+
+    if (defined $stmt) {
+	$stmt->finish();
+    }
+
+    Codestriker::DB::DBI->release_connection($local_dbh, 1);
+
+    return $rc;
+}
+
+# Create a new commentstate record with the specified data values.  Return
+# the id of the commentstate record created.
+sub create_commentstate ($$$$)
+{
+    my ($topicid, $line, $state, $version) = @_;
+
+    print " Updating commentstate topicid $topicid offset $line\n";
+
+    # Determine what filenumber, fileline and filenew the old "offset"
+    # number refers to.  If it points to an actual diff/block, just
+    # return 
+    my ($filenumber, $filename, $fileline, $filenew, $accurate);
+    my $rc = Codestriker::Action::SubmitComment->
+	_get_file_linenumber($topicid, $line, \$filenumber, \$filename,
+			     \$fileline, \$accurate, \$filenew);
+    print " Got rc of $rc from get_file_linenumber\n";
+    if ($rc == 0) {
+	# Review is not a diff, just a single file.
+	$filenumber = 1;
+	$fileline = $line;
+	$filenew = 1;
+    } elsif ($filenumber == -1) {
+	# Comment was made against a diff header.
+	$filenumber = 1;
+	$fileline = 1;
+	$filenew = 1;
+    }
+	    
+    my $insert = $dbh->prepare_cached(
+		"INSERT INTO commentstate (topicid, fileline, filenumber, " .
+		"filenew, state, version, creation_ts, modified_ts) VALUES " .
+	        "(?, ?, ?, ?, ?, ?, ?, ?)");
+    my $timestamp = Codestriker->get_timestamp(time);
+    $insert->execute($topicid, $fileline, $filenumber, $filenew,
+		     $state, $version, $timestamp, $timestamp);
+    $insert->finish();
+    print "Create commentstate\n";
+    
+    # Find out what the commentstateid is, and update the
+    # topicoffset_map.
+    my $check = $dbh->prepare_cached("SELECT id FROM commentstate " .
+				     "WHERE topicid = ? AND " .
+				     "fileline = ? AND " .
+				     "filenumber = ? AND " .
+				     "filenew = ?");
+    $check->execute($topicid, $fileline, $filenumber, $filenew);
+    my ($id) = $check->fetchrow_array();
+    $check->finish();
+
+    print "Got id of $id\n";
+
+    return $id;
+}
+    
+# If we aren't using MySQL, create the sequence if required.
+if ($Codestriker::db !~ /^DBI:mysql/i) {
+    # Perform this operation in a separate connection, so any errors won't
+    # affect the outer transaction.
+    my $local_dbh = Codestriker::DB::DBI->get_connection();
+    $local_dbh->{RaiseError} = 0;
+    $local_dbh->{PrintError} = 0;
+    if (! $local_dbh->do("CREATE SEQUENCE sequence")) {
+	# Most likely, the sequence already exists, silently continue.
+    } else {
+	print "Created sequence\n";
+    }
+    Codestriker::DB::DBI->release_connection($local_dbh, 1);
 }
 
 # Create any missing tables.
@@ -320,79 +454,81 @@ $dbh = Codestriker::DB::DBI->get_connection();
 
 add_field('topic', 'repository', 'text');
 
-my $stmt;
+# Determine if the comment and/or commentstate tables are old.
+my $old_comment_table = column_exists("comment", "line");
+my $old_commentstate_table = column_exists("commentstate", "line");
 
-# Ensure all comments are accounted for in the commentstate table.  Note,
-# since MySQL doesn't have nested statements, this has to be done the hard
-# way.
-my $added_comment_fileline = 0;
-my $added_commentstate_filenumber = 0;
-if ($added_comment_fileline) {
-    $stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line FROM comment');
-    $stmt->execute();
-    while (my ($topicid, $line) = $stmt->fetchrow_array()) {
+if ($old_comment_table) {
+    my %topicoffset_map;
+    print "Detected old version of comment table, migrating...\n";
 
-	# Check if there is an associated record in the commentstate
-	# table, and if not, create it.
-	my $check = $dbh->prepare_cached('SELECT COUNT(*) FROM commentstate ' .
-					 'WHERE topicid = ? AND line = ?');
-	$check->execute($topicid, $line);
-	my ($count) = $check->fetchrow_array();
-	$check->finish();
-	next if ($count != 0);
+    # Need to migrate the data to the new style of the table data.
+    move_old_table("comment", undef);
+    move_old_table("commentstate", "topicid, line") if $old_commentstate_table;
+
+    my $stmt;
+    if ($old_commentstate_table) {
+	print "Detected old version of commentstate table, migrating...\n";
+	# Update the commentstate table.
+	$stmt =
+	    $dbh->prepare_cached("SELECT topicid, state, line, version " .
+				 "FROM commentstate_old");
+	$stmt->execute();
+	while (my ($topicid, $state, $line, $version) =
+	       $stmt->fetchrow_array()) {
+	    $topicoffset_map{"$topicid|$line"} =
+		create_commentstate($topicid, $line, $state, $version);
+	}
+	$stmt->finish();
+	$dbh->do('DROP TABLE commentstate_old');
+    } else {
+	# Version of codestriker which didn't have a commentstate table.
+	# Need to create new commentstate rows for each distinct comment
+	# first, then update each individual comment row appropriately.
+	move_old_table("comment", undef);
 	
-	# Associated commentstate record doesn't exist, create it.
-	# All the column values will be filled in the next block of code.
-	print "Creating commentstate row for topicid $topicid line $line\n";
-	my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
-					  '(topicid, line, state, filename, ' .
-					  'filenumber, fileline, version) ' .
-					  'VALUES (?, ?, ?, ?, ?, ?)');
-	$insert->execute($topicid, $line, $Codestriker::COMMENT_SUBMITTED,
-			 "", 0, 0, 0);
+	$stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line ' .
+					'FROM comment_old');
+	$stmt->execute();
+	while (my ($topicid, $line) = $stmt->fetchrow_array()) {
+	    print " Migrating comment for topic $topicid offset $line...\n";
+
+	    # Create a commentstate row for this comment.
+	    my $id = create_commentstate($topicid, $line,
+					 $Codestriker::COMMENT_SUBMITTED, 0);
+	    $topicoffset_map{"$topicid|$line"} = $id;
+	}
+	$stmt->finish();
+    }
+    
+    # Now update each comment row to refer to the appropriate commentstate
+    # row.
+    $stmt = $dbh->prepare_cached('SELECT topicid, commentfield, author, ' .
+				 'line, creation_ts FROM comment_old');
+    $stmt->execute();
+    while (my ($topicid, $commentfield, $author, $line, $creation_ts) =
+	   $stmt->fetchrow_array()) {
+	
+	# Update the associated row in the new comment table.
+	my $insert = $dbh->prepare_cached('INSERT INTO comment ' .
+					  '(commentstateid, commentfield, ' .
+					  'author, creation_ts) VALUES ' .
+					  '(?, ?, ?, ?)');
+	print " Updating comment topicid $topicid offset $line...\n";
+	$insert->execute($topicoffset_map{"$topicid|$line"},
+			 $commentfield, $author, $creation_ts);
 	$insert->finish();
     }
     $stmt->finish();
+
+    # Drop the old comment table.
+    $dbh->do('DROP TABLE comment_old');
+    print "Done\n";
 }
-
-# If the "fileline" column was added to the comment table, need to migrate
-# all comment offsets to filenumber/fileline reporting.
-if ($added_comment_fileline) {
-    $stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line FROM comment');
-    $stmt->execute();
-    while (my ($topicid, $line) = $stmt->fetchrow_array()) {
-	my ($filenumber, $fileline, $filename, $accurate);
-	Codestriker::Action::SubmitComment->
-	    _get_file_linenumber($topicid, $line, \$filenumber, \$filename,
-				 \$fileline, \$accurate);
-
-	# Check if this topic doesn't have a filetable defined.
-	if ($filenumber == -1) {
-	    $fileline = 0;
-	    $filename = "unknown";
-	}
 	
-	print "Updating comment and commentstate row for topicid $topicid\n";
-	print " filenumber $filenumber fileline $fileline\n";
-	my $update = $dbh->prepare_cached('UPDATE commentstate SET ' .
-					  'filenumber = ?, filename = ? AND ' .
-					  'fileline = ? ' .
-					  'WHERE topicid = ? AND line = ?');
-	$update->execute($filenumber, $filename, $fileline, $topicid, $line);
-	$update->finish();
-
-	$update = $dbh->prepare_cached('UPDATE comment SET ' .
-				       'filenumber = ? and fileline = ? ' .
-				       'WHERE topicid = ? AND line = ?');
-	$update->execute($filenumber, $fileline, $topicid, $line);
-	$update->finish();
-    }
-    $stmt->finish();
-}
-
 # Create the appropriate file and delta rows for each topic, if they don't
 # already exist.
-$stmt = $dbh->prepare_cached('SELECT id FROM topic');
+my $stmt = $dbh->prepare_cached('SELECT id FROM topic');
 $stmt->execute();
 while (my ($topicid) = $stmt->fetchrow_array()) {
     # Check if there is an associated delta record, and if not create it.
@@ -403,18 +539,22 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
     $check->finish();
     next if ($count != 0);
 
-    print "Creating delta rows for topic $topicid\n";
-
-    # This topic doesn't have associated delta records.  Create them
-    # now.  Note, it may have associated file records, these should be
-    # removed and replaced, but first the associated repository URL
-    # should be read.
+    # Check if there is a file record for this topic.  If not, just create
+    # a simple 1 file, 1 delta record, so that the old comment offsets are
+    # preserved.
+    $check = $dbh->prepare_cached('SELECT COUNT(*) FROM file ' .
+				  'WHERE topicid = ?');
+    $check->execute($topicid);
+    my ($filecount) = $check->fetchrow_array();
+    $check->finish();
+    
+    # Determine what repository and document is associated with this topic.
     my $rep_stmt = $dbh->prepare_cached('SELECT repository, document '.
 					'FROM topic WHERE id = ?');
     $rep_stmt->execute($topicid);
     my ($repository_url, $document) = $rep_stmt->fetchrow_array();
     $rep_stmt->finish();
-
+    
     # Determine the appropriate repository object (if any) for this topic.
     my $repository = undef;
     if (defined $repository_url && $repository_url ne "") {
@@ -428,13 +568,7 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
 	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
     }
-
-    # Determine the repository root.
-    my $repository_root = "";
-    if (defined $repository) {
-	$repository_root = $repository->getRoot();
-    }
-
+    
     # Create a temporary file containing the document, so that the
     # standard parsing routines can be used.
     my $tmpfile = "tmptopic.txt";
@@ -445,66 +579,34 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
     open(TEMP_FILE, "$tmpfile") ||
 	die "Failed to open temporary file \"$tmpfile\": $!";
 
-    # Parse the document, and extract the diffs out of it.
-    my @deltas =
-	Codestriker::FileParser::Parser->parse(\*TEMP_FILE, "text/plain",
-					       $repository_root);
-    close TEMP_FILE;
-    unlink($tmpfile);
+    my @deltas = ();
+    if ($filecount == 0) {
+	# Parse the document as a single file, for backward compatibility,
+	# so that the comment offsets are preserved.
+	print "Creating 1 delta object for topic $topicid\n";
+	@deltas =
+	    Codestriker::FileParser::UnknownFormat->parse(\*TEMP_FILE);
 
-    my $deletefile_stmt =
-	$dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
-    $deletefile_stmt->execute($topicid);
+    } else {
+	# Parse the document, and extract the diffs out of it.
+	@deltas =
+	    Codestriker::FileParser::Parser->parse(\*TEMP_FILE, "text/plain",
+						   $repository);
+	print "Creating $#deltas deltas for topic $topicid\n";
+	my $deletefile_stmt =
+	    $dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
+	$deletefile_stmt->execute($topicid);
+    }
+
+    print "Creating delta rows for topic $topicid\n";
     Codestriker::Model::File->create($dbh, $topicid, \@deltas,
 				     $repository);
+
+    # Delete the temporary file.
+    close TEMP_FILE;
+    unlink($tmpfile);
 }
 $stmt->finish();
-
-# If the commentstate.filenumber column was added, since the primary key
-# of this table has changed, move the current table to a temporary table,
-# create the new commentstate table, and migrate the data across.  Note,
-# nested queries can't be used for MySQL.
-if ($added_commentstate_filenumber) {
-    
-    print "Creating new commentstate table and migrating data...\n";
-    $dbh->do('RENAME TABLE commentstate TO commentstatebak') ||
-	die "Could not rename table commentstate: " . $dbh->errstr;
-
-    my $fields = $table{commentstate};
-    $dbh->do("CREATE TABLE commentstate (\n$fields\n)") ||
-	die "Could not create table commentstate: " . $dbh->errstr;
-
-    if (defined $index{commentstate}) {
-	$dbh->do($index{commentstate}) ||
-	    die "Could not create indexes for table commentstate: " .
-	    $dbh->errstr;
-    }
-
-    # Now read the data from the old table, and populate the new table.
-    my $select =
-	$dbh->prepare_cached('SELECT topicid, line, state, filename, ' .
-			     'fileline, filenumber, version ' .
-			     'FROM commentstatebak');
-    $select->execute();
-    while (my ($topicid, $line, $state, $filename, $fileline, $filenumber,
-	       $version) = $select->fetchrow_array()) {
-	print "Handling topic $topicid\n";
-	my $insert =
-	    $dbh->prepare_cached('INSERT INTO commentstate ' .
-				 '(topicid, line, state, filename, ' .
-				 'fileline, filenumber, version) ' .
-				 'VALUES (?, ?, ?, ?, ?, ?, ?)');
-	$insert->execute($topicid, $line, $state, $filename, $fileline,
-			 $filenumber, $version);
-	$insert->finish();
-    }
-    $select->finish();
-
-    # Finally, drop the old commentstateback table.
-    $dbh->do('DROP TABLE commentstatebak') ||
-	die "Could not drop table commentstatebak: " . $dbh->errstr;
-    print "Done\n";
-}    
 
 # Insert the version number into the table, if required.
 $stmt = $dbh->prepare_cached('SELECT id, sequence FROM version');

@@ -22,6 +22,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'error_message'} = "";
     $vars->{'topic_text'} = "";
     $vars->{'topic_file'} = "";

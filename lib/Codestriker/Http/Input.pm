@@ -86,6 +86,7 @@ sub process($) {
     $self->{a} = $query->param('a');
     $self->{updated} = $query->param('updated');
     $self->{repository} = $query->param('repository');
+    $self->{parallel} = $query->param('parallel');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');

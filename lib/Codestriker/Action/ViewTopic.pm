@@ -53,12 +53,6 @@ sub process($$$) {
     Codestriker::Model::File->get_filetable($topic, \@filenames,
 					    \@revisions, \@offsets, \@binary);
 
-    # If there are no files associated with this topic, there is no point
-    # showing a coloured mode - drop back to the text view.
-    if ($#filenames == -1) {
-	$mode = $Codestriker::NORMAL_MODE;
-    }
-
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $description;
     my @document = split /\n/, $topic_data;
@@ -84,6 +78,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
     $vars->{'topicid'} = $topic;
 
@@ -149,8 +144,12 @@ sub process($$$) {
     $vars->{'number_of_lines'} = $#document + 1;
 
     # Prepare the data for displaying the state update option.
+    # Make sure the old mode setting is no longer used.
+    if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
+	$mode = $Codestriker::COLOURED_MODE;
+    }
     $vars->{'mode'} = $mode;
-    $vars->{'version'} = $version;
+    $vars->{'topic_version'} = $version;
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic_state;
 
@@ -187,31 +186,20 @@ sub process($$$) {
     # Give the user the option of swapping between diff view modes.
     # If there are no files associated with the review, remove this
     # option.
-    if ($#filenames != -1) {
-	my $normal_url = $url_builder->view_url($topic, -1,
-						$Codestriker::NORMAL_MODE);
-	my $coloured_url =
-	    $url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE);
-	my $coloured_mono_url =
-	    $url_builder->view_url($topic, -1,
-				   $Codestriker::COLOURED_MONO_MODE);
+    my $coloured_url =
+	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE);
+    my $coloured_mono_url =
+	$url_builder->view_url($topic, -1,
+			       $Codestriker::COLOURED_MONO_MODE);
 	
-	if ($mode == $Codestriker::COLOURED_MODE) {
-	    print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
-	    $query->a({href=>$coloured_mono_url}, "coloured monospace"),
-	    ") diff.\n";
-	} elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
-	    print "View as (", $query->a({href=>$normal_url}, "plain"), " | ",
-	    $query->a({href=>$coloured_url}, "coloured variable-width"),
-	    ") diff.\n";
-	} else {
-	    print "View as (", $query->a({href=>$coloured_url},
-					 "coloured variable-width"), " | ",
-	    $query->a({href=>$coloured_mono_url}, "coloured monospace"),
-	    ") diff.\n";
-	}
-	print $query->br;
+    if ($mode == $Codestriker::COLOURED_MODE) {
+	print "View as " .
+	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff.");
+    } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
+	print "View as " .
+	    $query->a({href=>$coloured_url}, "coloured variable-width diff.");
     }
+    print $query->br;
 
     # Display the option to change the tab width.
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
@@ -230,7 +218,7 @@ sub process($$$) {
     my $max_digit_width = length($#document+1);
 
     # Build the render which will be used to build this page.
-    my $render = Codestriker::Http::Render->new($query, $url_builder, 0,
+    my $render = Codestriker::Http::Render->new($query, $url_builder, 1,
 						$max_digit_width, $topic,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
@@ -247,11 +235,11 @@ sub process($$$) {
     for (my $i = 0; $i <= $#deltas; $i++) {
 	my $delta =  $deltas[$i];
 
-	print STDERR "Got!! filenumber: " . $delta->{filenumber} . "\n";
 	$render->delta($delta->{filename}, $delta->{filenumber},
 		       $delta->{revision}, $delta->{old_linenumber},
 		       $delta->{new_linenumber}, $delta->{text},
-		       $delta->{description}, $UrlBuilder::BOTH_FILES);
+		       $delta->{description}, $delta->{binary},
+		       $delta->{repmatch});
     }
 
     $render->finish();

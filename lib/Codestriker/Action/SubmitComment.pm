@@ -165,8 +165,8 @@ sub process($$$) {
 				    "", "", "", $repository, $anchor,
 				    $reload, 0);
 
-    print STDERR "ANCHOR IS $anchor\n";
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'comment'} = $comments;
@@ -176,21 +176,24 @@ sub process($$$) {
 
 # Given a topic and topic line number, try to determine the line
 # number of the new file it corresponds to.  For topic lines which
-# were made against '+' lines or unchanged lins, this will give an
+# were made against '+' lines or unchanged lines, this will give an
 # accurate result.  For other situations, the number returned will be
 # approximate.  The results are returned in $filename_ref,
 # $linenumber_ref and $accurate_ref references.  This is a deprecated method
 # which is only used for data migration purposes (within checksetup.pl and
 # import.pl).
-sub _get_file_linenumber ($$$$$$$)
+sub _get_file_linenumber ($$$$$$$$)
 {
     my ($type, $topic, $topic_linenumber, $filenumber_ref,
-	$filename_ref, $linenumber_ref, $accurate_ref) = @_;
+	$filename_ref, $linenumber_ref, $accurate_ref, $new_ref) = @_;
     
     # Find the appropriate file that $topic_linenumber refers to.
-    my (@filename, @revision, @offset);
+    my (@filename, @revision, @offset, @binary);
     Codestriker::Model::File->get_filetable($topic, \@filename, \@revision,
-					    \@offset);
+					    \@offset, \@binary);
+    # No filetable.
+    return 0 if ($#filename == -1);
+
     my $diff_limit = -1;
     my $index;
     for ($index = 0; $index <= $#filename; $index++) {
@@ -221,7 +224,8 @@ sub _get_file_linenumber ($$$$$$$)
 	    $$filename_ref = $filename[$index];
 	    $$linenumber_ref = 1;
 	    $$accurate_ref = 0;
-	    return;
+	    $$new_ref = 0;
+	    return 1;
 	}
     }
     $index--;
@@ -230,17 +234,19 @@ sub _get_file_linenumber ($$$$$$$)
     if ($index < 0 || $index > $#filename) {
 	$$filenumber_ref = -1;
 	$$filename_ref = "";
-	return;
+	return 1;
     }
 
     # Retrieve the diff text corresponding to this file.
     my ($tmp_offset, $tmp_revision, $diff_text);
-    Codestriker::Model::File->get($topic, $filename[$index], \$tmp_offset,
+    Codestriker::Model::File->get($topic, $index, \$tmp_offset,
 				  \$tmp_revision, \$diff_text);
 
     # Go through the patch file until we reach the topic linenumber of
     # interest.
+    my $new = 0;
     my $accurate_line = 0;
+    my $oldfile_linenumber = 0;
     my $newfile_linenumber = 0;
     my $current_topic_linenumber;
     my @lines = split /\n/, $diff_text;
@@ -248,25 +254,32 @@ sub _get_file_linenumber ($$$$$$$)
 	 $i <= $#lines && $current_topic_linenumber <= $topic_linenumber;
 	 $i++, $current_topic_linenumber++) {
 	$_ = $lines[$i];
-	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@.*$/o) {
+	if (/^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@.*$/o) {
 	    # Matching diff header, record what the current linenumber is now
 	    # in the new file.
-	    $newfile_linenumber = $1 - 1;
+	    $oldfile_linenumber = $1 - 1;
+	    $newfile_linenumber = $2 - 1;
 	    $accurate_line = 0;
+	    $new = 0;
 	}
 	elsif (/^\s.*$/o) {
 	    # A line with no change.
+	    $oldfile_linenumber++;
 	    $newfile_linenumber++;
 	    $accurate_line = 1;
+	    $new = 1;
 	}
 	elsif (/^\+.*$/o) {
 	    # A line corresponding to the new file.
 	    $newfile_linenumber++;
 	    $accurate_line = 1;
+	    $new = 1;
 	}
 	elsif (/^\-.*$/o) {
 	    # A line corresponding to the old file.
+	    $oldfile_linenumber++;
 	    $accurate_line = 0;
+	    $new = 0;
 	}
     }
 
@@ -274,15 +287,16 @@ sub _get_file_linenumber ($$$$$$$)
 	# The topic linenumber was found.
 	$$filenumber_ref = $index;
 	$$filename_ref = $filename[$index];
-	$$linenumber_ref = $newfile_linenumber;
+	$$linenumber_ref = $new ? $newfile_linenumber : $oldfile_linenumber;
 	$$accurate_ref = $accurate_line;
+	$$new_ref = $new;
     }
     else {
 	# The topic linenumber was not found.
 	$$filenumber_ref = -1;
 	$$filename_ref = "";
     }
-    return;
+    return 1;
 }
 
 1;

@@ -21,7 +21,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
 	      $allow_delete $allow_searchlist $allow_repositories
-              $antispam_email
+              $antispam_email $VERSION
 	      );
 
 # Version of Codestriker.

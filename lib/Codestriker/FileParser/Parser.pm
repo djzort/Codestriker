@@ -37,7 +37,7 @@ sub parse ($$$$) {
 		Codestriker::FileParser::CvsUnidiff->parse($fh,
 							   $repository);
 	}
-	
+
 	# Check if it is a patch unidiff file.
 	if ($#diffs == -1) {
 	    seek($fh, 0, 0);

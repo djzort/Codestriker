@@ -55,6 +55,7 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'version'} = $Codestriker::VERSION;
     $vars->{'feedback'} = $feedback;
 
     # Indicate if deletes are enabled in the system.

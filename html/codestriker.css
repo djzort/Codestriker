@@ -117,4 +117,7 @@ TR.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
 /* Topic title row type 1 */
 TR.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
+/* Codestriker heading */
+TD.heading {background-color: #000000; color: #ffffff; font-family: Helvetica, Arial; font-size: x-large}
+
 

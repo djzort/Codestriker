@@ -26,8 +26,9 @@ sub create($$$$$) {
     my $insert_delta =
 	$dbh->prepare_cached('INSERT INTO delta (topicid, file_sequence, ' .
 			     'delta_sequence, old_linenumber, ' .
-			     'new_linenumber, deltatext, description) ' .
-			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
+			     'new_linenumber, deltatext, ' .
+			     'description, repmatch) ' .
+			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     $success &&= defined $insert_delta;
 
     my @deltas = @$deltas_ref;
@@ -51,7 +52,8 @@ sub create($$$$$) {
 					    $delta->{old_linenumber},
 					    $delta->{new_linenumber},
 					    $delta->{text},
-					    $delta->{description});
+					    $delta->{description},
+					    $delta->{repmatch});
     }
 
     die $dbh->errstr unless $success;
@@ -135,8 +137,8 @@ sub get_deltas($$$) {
     my $select_deltas =
 	$dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
 			     'binaryfile, old_linenumber, new_linenumber, ' .
-			     'deltatext, description, file.sequence ' .
-			     'FROM file, delta ' .
+			     'deltatext, description, file.sequence, ' .
+			     'repmatch FROM file, delta ' .
 			     'WHERE delta.topicid = ? AND ' .
 			     'delta.topicid = file.topicid AND ' .
 			     'delta.file_sequence = file.sequence ' .
@@ -165,6 +167,7 @@ sub get_deltas($$$) {
 	    $delta->{text} = $data[6];
 	    $delta->{description} = $data[7];
 	    $delta->{filenumber} = $data[8];
+	    $delta->{repmatch} = $data[9];
 	    push @results, $delta;
 	}
     }
@@ -198,144 +201,6 @@ sub get_delta($$$) {
 	
     # Return the matching delta found, if any.
     return $found_delta;
-}
-
-# DEPRECATED - used only for data migration purposes.
-# Read from $fh, and return true if we have read a diff header, with all of
-# the appropriate values set to the reference variables passed in.
-sub _read_diff_header($$$$$$$) {
-    my ($doc_array_ref, $offset, $filename, $revision, $binary,
-	$repository_root) = @_;
-
-    # Files are text by default.
-    $$binary = 0;
-
-    # Note we only iterate while handling empty diff blocks.
-    my @document = @$doc_array_ref;
-    my $size = $#document;
-
-    while ($$offset <= $size) {
-	my $line = $$doc_array_ref[$$offset++];
-
-	# Read any ? lines, denoting unknown files to CVS.
-	# Also remove any blank lines.
-	while ($line =~ /^\?/o || $line =~ /^\s*$/) {
-	    $line = $$doc_array_ref[$$offset++];
-	}
-	return 0 unless defined $line;
-	
-	# For CVS diffs, the Index line is next.
-	if ($line =~ /^Index:/o) {
-	    $line = $$doc_array_ref[$$offset++];
-	    return 0 unless defined $line;
-	}
-	
-	# Then we expect the separator line, for CVS diffs.
-	if ($line =~ /^===================================================================$/) {
-	    $line = $$doc_array_ref[$$offset++];
-	    return 0 unless defined $line;
-	}
-	
-	# Now we expect the RCS line, whose filename should include the CVS
-	# repository, and if not, it is probably a new file.  if there is no
-	# such line, we could still be dealing with an ordinary patch file.
-	my $cvs_diff = 0;
-	if ($line =~ /^RCS file: $repository_root\/(.*),v$/) {
-	    $$filename = $1;
-	    $line = $$doc_array_ref[$$offset++];
-	    return 0 unless defined $line;
-	    $cvs_diff = 1;
-	} elsif ($line =~ /^RCS file: (.*)$/o) {
-	    $$filename = $1;
-	    $line = $$doc_array_ref[$$offset++];
-	    return 0 unless defined $line;
-	    $cvs_diff = 1;
-	}
-	
-	# Now we expect the retrieving revision line, unless it is a new or
-	# removed file.
-	if ($line =~ /^retrieving revision (.*)$/o) {
-	    $$revision = $1;
-	    $line = $$doc_array_ref[$$offset++];
-	    return 0 unless defined $line;
-	}
-
-	# If we are doing a diff between two revisions, a second revision
-	# line will appear.  Don't care what the value of the second
-	# revision is.
-	if ($line =~ /^retrieving revision (.*)$/o) {
-	    $line = $$doc_array_ref[$$offset++];
-	}
-	
-	# Need to check for binary file differences for patch files.
-	# Unfortunately, when you provide the "-N" argument to diff, then
-	# it doesn't indicate new files or removed files properly.  Without
-	# the -N argument, it then indicates "Only in ...".
-	if ($line =~ /^Binary files (.*) and .* differ$/) {
-	    $$filename = $1;
-	    $$revision = $Codestriker::PATCH_REVISION;
-	    $$binary = 1;
-	    return 1;
-	} elsif ($line =~ /^Only in (.*): (.*)$/) {
-	    $$filename = "$1/$2";
-	    $$revision = $Codestriker::PATCH_REVISION;
-	    $$binary = 1;
-	    return 1;
-	}    
-
-	# Now read in the diff line, followed by the legend lines.  If this is
-	# not present, then we know we aren't dealing with a diff file of any
-	# kind.
-	return 0 unless $line =~ /^diff/o;
-	$line = $$doc_array_ref[$$offset++];
-	return 0 unless defined $line;
-
-	# If the diff is empty (since we may have used the -b flag), continue
-	# processing the next diff header back around this loop.  Note this is
-	# only an issue with cvs diffs.  Ordinary diffs just don't include
-	# a diff section if it is blank.
-	next if ($line =~ /^Index:/o);
-
-	# Check for binary files being added, changed or removed.
-	if ($line =~ /^Binary files \/dev\/null and (.*) differ$/o) {
-	    # Binary file has been added.
-	    $$revision = $Codestriker::ADDED_REVISION;
-	    $$binary = 1;
-	    return 1;
-	} elsif ($line =~ /^Binary files .* and \/dev\/null differ$/o) {
-	    # Binary file has been removed.
-	    $$revision = $Codestriker::REMOVED_REVISION;
-	    $$binary = 1;
-	    return 1;
-	} elsif ($line =~ /^Binary files .* and .* differ$/o) {
-	    # Binary file has been modified.
-	    $$revision = $$revision;
-	    $$binary = 1;
-	    return 1;
-	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
-	    # File has been added.
-	    $$revision = $Codestriker::ADDED_REVISION;
-	} elsif ($cvs_diff == 0 &&
-		 $line =~ /^\-\-\- (.+?)\t.*$/o) {
-	    $$filename = $1;
-	    $$revision = $Codestriker::PATCH_REVISION;
-	} elsif (! $line =~ /^\-\-\-/o) {
-	    return 0;
-	}
-	
-	$line = $$doc_array_ref[$$offset++];
-	return 0 unless defined $line;
-	if ($line =~ /^\+\+\+ \/dev\/null/o) {
-	    # File has been removed.
-	    $$revision = $Codestriker::REMOVED_REVISION;
-	} elsif (! $line =~ /^\+\+\+/o) {
-	    return 0;
-	}
-	
-	# Now up to the line chunks, so the diff header has been successfully
-	# read.
-	return 1;
-    }
 }
 
 1;

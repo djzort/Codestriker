@@ -190,40 +190,16 @@ sub lxr_data($$) {
     return $newdata;
 }
 
-# Display a line for non-coloured data.
-sub display_data ($$$$$$$$$$$) {
-    my ($self, $line, $data, $current_file, $current_file_revision,
-	$current_old_file_linenumber, $current_new_file_linenumber,
-	$reading_diff_block, $diff_linenumbers_found, $cvsmatch,
-	$block_description) = @_;
-    
-    # Escape the data and add LXR links to it.
-    $data = $self->lxr_data(CGI::escapeHTML($data));
-
-    # Add the appropriate amount of spaces for alignment before rendering
-    # the line number.
-    my $digit_width = length($line);
-    for (my $j = 0; $j < ($self->{max_digit_width} - $digit_width); $j++) {
-	print " ";
-    }
-    print $self->render_linenumber($line, $line, 0, "", 0, 1);
-
-    # Now render the data.
-    print " $data\n";
-}
-
 # Render a delta.  If the filename has changed since the last delta, output the
 # appropriate file headers.
-sub delta ($$$$$$$$) {
+sub delta ($$$$$$$$$$) {
     my ($self, $filename, $filenumber, $revision, $old_linenumber,
-	$new_linenumber, $text, $description) = @_;
+	$new_linenumber, $text, $description, $binary, $repmatch) = @_;
+
+    # Don't do anything for binary files.
+    return if $binary;
 
     my $query = $self->{query};
-
-    # Determine if the filename matches the repository root.
-    my $repository = defined $self->{repository} ?
-	$self->{repository}->getRoot() : undef;
-    my $repmatch = defined $repository;
 
     # Check if the file heading needs to be output.
     if ($self->{diff_current_filename} ne $filename) {
@@ -231,13 +207,12 @@ sub delta ($$$$$$$$) {
     }
 
     # Display the delta heading.
-    $self->delta_heading($filenumber, $old_linenumber, $new_linenumber,
-			 $description, $repmatch);
-
+    $self->delta_heading($filenumber, $revision, $old_linenumber,
+			 $new_linenumber, $description, $repmatch);
+    
     # Now render the actual diff text itself.
     $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
-		      $new_linenumber, $text, $repmatch,
-		      $UrlBuilder::BOTH_FILES, 1);
+		      $new_linenumber, $text, $repmatch, 1, 1);
 }
 
 # Output the header for a series of deltas for a specific file.
@@ -256,7 +231,8 @@ sub delta_file_header ($$$$) {
 	$self->{url_builder}->view_url($self->{topic}, -1,
 				       $self->{mode}) .	"#contents";
 
-    if ($repmatch) {
+    if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
+	$revision ne $Codestriker::PATCH_REVISION) {
 	# File matches something in the repository.  Link it to
 	# the repository viewer if it is defined.
 	my $cell = "";
@@ -302,8 +278,8 @@ sub delta_file_header ($$$$) {
 
 # Output the delta heading, which consists of links to view the old and new
 # file in its entirety.
-sub delta_heading ($$$$$$) {
-    my ($self, $filenumber, $old_linenumber, $new_linenumber,
+sub delta_heading ($$$$$$$) {
+    my ($self, $filenumber, $revision, $old_linenumber, $new_linenumber,
 	$description, $repmatch) = @_;
 
     my $query = $self->{query};
@@ -322,35 +298,32 @@ sub delta_heading ($$$$$$) {
     print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
 		     $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
 
-    if ($repmatch) {
+    if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
+	$revision ne $Codestriker::PATCH_REVISION) {
 	# Display the line numbers corresponding to the patch, with links
 	# to the entire file.
 	my $url_builder = $self->{url_builder};
 	my $topic = $self->{topic};
 	my $mode = $self->{mode};
 	my $url_old_full =
-	    $url_builder->view_file_url($topic, $filenumber,
-					$UrlBuilder::OLD_FILE,
-					$old_linenumber, "", $mode);
+	    $url_builder->view_file_url($topic, $filenumber, 0,
+					$old_linenumber, $mode, 0);
 	my $url_old = "javascript: myOpen('$url_old_full','CVS')";
 	
 	my $url_old_both_full =
-	    $url_builder->view_file_url($topic, $filenumber,
-					$UrlBuilder::BOTH_FILES,
-					$old_linenumber, "L", $mode);
+	    $url_builder->view_file_url($topic, $filenumber, 0,
+					$old_linenumber, $mode, 1);
 	my $url_old_both =
 	    "javascript: myOpen('$url_old_both_full','CVS')";
 	
 	my $url_new_full =
-	    $url_builder->view_file_url($topic, $filenumber,
-					$UrlBuilder::NEW_FILE,
-					$new_linenumber, "", $mode);
+	    $url_builder->view_file_url($topic, $filenumber, 1,
+					$new_linenumber, $mode, 0);
 	my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 	
 	my $url_new_both_full =
-	    $url_builder->view_file_url($topic, $filenumber,
-					$UrlBuilder::BOTH_FILES,
-					$new_linenumber, "R", $mode);
+	    $url_builder->view_file_url($topic, $filenumber, 1,
+					$new_linenumber, $mode, 1);
 	my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
 	
 	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
@@ -390,7 +363,7 @@ sub delta_text ($$$$$$$$$$$) {
     $self->{new_linenumber} = $new_linenumber;
     for (my $i = 0; $i <= $#lines; $i++) {
 	my $line = $lines[$i];
-	if ($new == $UrlBuilder::BOTH_FILES) {
+	if ($self->{parallel}) {
 	    $self->display_coloured_data($filenumber, $line, $link);
 	} else {
 	    $self->display_single_filedata($filenumber, $line, $new, $link);
@@ -398,7 +371,7 @@ sub delta_text ($$$$$$$$$$$) {
     }
 
     # Render the diff blocks.
-    if ($new == $UrlBuilder::BOTH_FILES) {
+    if ($self->{parallel}) {
 	$self->render_changes($filenumber, $link);
     } else {
 	$self->flush_monospaced_lines($filenumber, $self->{max_line_length},
@@ -438,21 +411,17 @@ sub display_coloured_data ($$$$) {
 
 	# Render the current line for both cells.
 	my $celldata = $self->render_coloured_cell($data);
-	my $left_prefix = $self->{parallel} ? "L" : "";
-	my $right_prefix = $self->{parallel} ? "R" : "";
 	
 	# Determine the appropriate classes to render.
 	my $cell_class =
 	    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
 	
 	my $rendered_left_linenumber =
-	    $self->render_linenumber($leftline, $filenumber, 0, $left_prefix,
-				     $link);
+	    $self->render_linenumber($leftline, $filenumber, 0, $link);
 	my $rendered_right_linenumber =
 	    ($leftline == $rightline && !$self->{parallel}) ?
 	    $rendered_left_linenumber :
-	    $self->render_linenumber($rightline, $filenumber, 1, $right_prefix,
-				     $link);
+	    $self->render_linenumber($rightline, $filenumber, 1, $link);
 	
 	print $query->Tr($query->td($rendered_left_linenumber),
 			 $query->td({-class=>$cell_class}, $celldata),
@@ -586,22 +555,16 @@ sub render_inplace_changes($$$$$$$)
 	}
 
 	my $parallel = $self->{parallel};
-	my $old_prefix = $parallel ? "L" : "";
-	my $new_prefix = $parallel ? "R" : "";
 
 	my $query = $self->{query};
 	print $query->Tr($query->td($self->render_linenumber($old_data_line,
 							     $filenumber,
-							     0,
-							     $old_prefix,
-							     $link)),
+							     0, $link)),
 			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
 			 $query->td($self->render_linenumber($new_data_line,
 							     $filenumber,
-							     1,
-							     $new_prefix,
-							     $link)),
+							     1, $link)),
 			 $query->td({-class=>"$render_new_colour"},
 				    $render_new_data), "\n");
     }
@@ -612,8 +575,8 @@ sub render_inplace_changes($$$$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$$$$) {
-    my ($self, $line, $filenumber, $new, $prefix, $link) = @_;
+sub render_linenumber($$$$$) {
+    my ($self, $line, $filenumber, $new, $link) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
