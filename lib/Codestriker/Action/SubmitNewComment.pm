@@ -77,7 +77,7 @@ sub process($$$) {
     # up will ensure the next editing topic will be handled quickly, as the
     # overhead of bringing up a new window is removed.
     my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
-    $http_response->generate_header(topic=>$topicid,
+    $http_response->generate_header(topic=>$topic,
 				    topic_title=>"Comment Submitted: $topic->{title}",
 				    email=>$email, 
                                     repository=>$topic->{repository},

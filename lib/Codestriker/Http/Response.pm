@@ -38,7 +38,7 @@ sub generate_header {
     
     my ($self, %params) = @_;
 
-    my $topic = "";
+    my $topic = undef;
     my $topic_title = "";
     my $email = "";
     my $reviewers = "";
@@ -49,6 +49,7 @@ sub generate_header {
     my $projectid = "";
     my $load_anchor = "";
     my $topicsort = "";
+    my $fview = -1;
 
     my $reload = $params{reload};
     my $cache = $params{cache};
@@ -65,8 +66,8 @@ sub generate_header {
     $topic = $params{topic};
     $topic_title = $params{topic_title};
 
-    # Some screens don't have $topic set, if so, set it to a blank value.
-    $topic = "" if ! defined($topic);
+    # Set the fview parameter if defined.
+    $fview = $params{fview} if defined $params{fview};
 
     # Set the cookie in the HTTP header for the $email, $cc, $reviewers and
     # $tabwidth parameters.
@@ -239,7 +240,7 @@ sub generate_header {
     print "<script type=\"text/javascript\">\n";
     print "    var cs_load_anchor = '$load_anchor';\n";
     print "    var cs_reload = $reload;\n";
-    print "    var cs_topicid = $topic;\n" if defined $topic && $topic ne "";
+    print "    var cs_topicid = $topic->{topicid};\n" if defined $topic;
     print "    var cs_email = '$email';\n" if defined $email;
 
     # Now output all of the comment metric information.
@@ -261,15 +262,166 @@ sub generate_header {
 	}
 	$i++;
     }
-    
-
     print "</script>\n";
+
+    # Output the comment declarations if the $comments array is defined.
+    my $comments = $params{comments};
+    if (defined $comments) {
+	print generate_comment_declarations($topic, $comments, $query,
+					    $fview, $tabwidth);
+    }
 
     # Write an HTML comment indicating if response was sent compressed or not.
     $self->{output_compressed} = $output_compressed;
     print "\n<!-- Source was" . (!$output_compressed ? " not" : "") .
 	" sent compressed. -->\n";
 }
+
+# Return the javascript code necessary to support viewing/modification of
+# comments.
+sub generate_comment_declarations
+{
+    my ($topic, $comments, $query, $fview, $tabwidth) = @_;
+
+    # The output html to return.
+    my $html = "";
+
+    # Build a hash from filenumber|fileline|new -> comment array, to record
+    # what comments are associated with what locations.  Also record the
+    # order of comment_locations found.
+    my %comment_hash = ();
+    my @comment_locations = ();
+    for (my $i = 0; $i <= $#$comments; $i++) {
+	my $comment = $$comments[$i];
+	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+	    $comment->{filenew};
+	if (! exists $comment_hash{$key}) {
+	    push @comment_locations, $key;
+	}
+        push @{ $comment_hash{$key} }, $comment;
+    }
+
+    # Precompute the overlib HTML for each comment location.
+    $html .= "\n<script language=\"JavaScript\" type=\"text/javascript\">\n";
+
+    # Add the reviewers for the review here.
+    $html .= "    var topic_reviewers = '" . $topic->{reviewers} . "';\n";
+
+    # Now record all the comments made so far in the topic.
+    $html .= "    var comment_text = new Array();\n";
+    $html .= "    var comment_hash = new Array();\n";
+    $html .= "    var comment_metrics = new Array();\n";
+    my $index;
+    for ($index = 0; $index <= $#comment_locations; $index++) {
+
+	# Contains the overlib HTML text.
+	my $overlib_html = "";
+
+	# Determine what the previous and next comment locations are.
+	my $previous = undef;
+	my $next = undef;
+	if ($index > 0) {
+	    $previous = $comment_locations[$index-1];
+	}
+	if ($index < $#comment_locations) {
+	    $next = $comment_locations[$index+1];
+	}
+
+	# Compute the previous link if required.
+	my $current_url = $query->self_url();
+	if (defined $previous && $previous =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
+	    my $previous_fview = $1;
+	    my $previous_index = $index - 1;
+	    my $previous_url = $current_url;
+	    $previous_url =~ s/fview=\d+/fview=$previous_fview/o if $fview != -1;
+	    $previous_url .= '#' . $previous;
+	    $overlib_html .= "<a href=\"javascript:window.location=\\'$previous_url\\'; ";
+	    if ($fview == -1 || $fview == $previous_fview) {
+		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
+}
+	    $overlib_html .= "void(0);\">Previous</a>";
+	}
+
+	# Compute the next link if required.
+	if (defined $next && $next =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
+	    my $next_fview = $1;
+	    $overlib_html .= " | " if defined $previous;
+	    my $next_index = $index + 1;
+	    my $next_url = $current_url;
+	    $next_url =~ s/fview=\d+/fview=$next_fview/o if $fview != -1;
+	    $next_url .= '#' . $next;
+	    $overlib_html .= "<a href=\"javascript:window.location=\\'$next_url\\'; ";
+	    if ($fview == -1 || $fview == $next_fview) {
+		$overlib_html .= "overlib(comment_text[$next_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
+	    }
+	    $overlib_html .= "void(0);\">Next</a>";
+	}
+	if (defined $previous || defined $next) {
+	    $overlib_html .= " | ";
+	}
+
+	# Add an add comment link.
+	my $key = $comment_locations[$index];
+	$key =~ /^(\-?\d+)\|(\-?\d+)\|(\d+)$/o;
+        $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
+	    "; void(0);\">Add Comment</a> | ";
+
+	# Add a close link.
+	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close</a><p>";
+
+	# Create the actual comment text.
+	my @comments = @{ $comment_hash{$key} };
+
+	for (my $i = 0; $i <= $#comments; $i++) {
+	    my $comment = $comments[$i];
+
+	    # Need to format the data appropriately for HTML display.
+	    my $data = HTML::Entities::encode($comment->{data});
+	    $data =~ s/\'/\\\'/mg;
+	    $data =~ s/\n/<br>/mg;
+	    $data =~ s/ /&nbsp;/mg;
+	    $data = Codestriker::Http::Render::tabadjust($tabwidth, $data, 1);
+
+	    # Show each comment with the author and date in bold.
+	    $overlib_html .= "<b>Comment from $comment->{author} ";
+	    $overlib_html .= "on $comment->{date}</b><br>";
+	    $overlib_html .= "$data";
+
+	    # Add a newline at the end if required.
+	    if ($i < $#comments &&
+		substr($overlib_html, length($overlib_html)-4, 4) ne '<br>') {
+		$overlib_html .= '<br>';
+	    }
+	}
+
+	$html .= "    comment_text[$index] = '$overlib_html';\n";
+        $html .= "    comment_hash['" . $comment_locations[$index] .
+	    "'] = $index;\n";
+
+	# Store the current metric values for this comment.
+	$html .= "    comment_metrics[$index] = new Array();\n";
+	my $comment_metrics = $comments[0]->{metrics};
+	foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	    my $value = $comment_metrics->{$metric_config->{name}};
+	    $value = "" unless defined $value;
+	    $html .= "    comment_metrics[${index}]['" .
+		$metric_config->{name} . "'] = '" . $value . "';\n";
+	}
+
+    }
+    $html .= "</script>\n";
+
+    # Now declare the CSS positional elements for each comment location.
+    $html .= "<style type=\"text/css\">\n";
+    for (my $i = 0; $i <= $#$comments; $i++) {
+	$html .= '#c' . $i . ' { position: absolute; }' . "\n";
+    }
+    $html .= "</style>\n";
+
+    # Return the generated HTML.
+    return $html;
+}
+
 
 # Close the response, which only requires work if we are dealing with
 # compressed streams.

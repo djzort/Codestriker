@@ -94,9 +94,12 @@ sub process($$$) {
 	    "View File: $filename v$revision";
     }
 
-    $http_response->generate_header(topic=>$topicid, topic_title=>$title,
+    $http_response->generate_header(topic=>$topic,
+				    comments=>\@comments,
+				    topic_title=>$title,
 				    mode=>$mode,
 				    tabwidth=>$tabwidth,
+				    fview=>$fview,
 				    repository=>$topic->{repository}, 
                                     reload=>0, cache=>1);
 
@@ -198,7 +201,7 @@ sub _read_repository_file ($$$$$$) {
     $$maxline_length_ref = 0;
     for (my $i = 1; $i <= $#$data_array_ref; $i++) {
 	$$data_array_ref[$i] =
-	    Codestriker::Http::Render->tabadjust($tabwidth,
+	    Codestriker::Http::Render::tabadjust($tabwidth,
 						 $$data_array_ref[$i], 0);
 	my $line_length = length($$data_array_ref[$i]);
 	if ($line_length > $$maxline_length_ref) {

@@ -40,7 +40,7 @@ sub process($$$) {
     # Retrieve the comment details for this topic.
     my @topic_comments = $topic->read_comments();
 
-    $http_response->generate_header(topic=>$topic->{topicid},
+    $http_response->generate_header(topic=>$topic,
 				    topic_title=>"Topic Properties: $topic->{title}",
 				    mode=>$mode, tabwidth=>$tabwidth,
 				    reload=>0, cache=>1);

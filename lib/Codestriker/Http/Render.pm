@@ -151,114 +151,6 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	$self->{idhashref} = undef;
     }
 
-    # Precompute the overlib HTML for each comment location.
-    print "\n<script language=\"JavaScript\" type=\"text/javascript\">\n";
-
-    # Add the reviewers for the review here.
-    print "    var topic_reviewers = '" . $topic_obj->{reviewers} . "';\n";
-
-    # Now record all the comments made so far in the topic.
-    print "    var comment_text = new Array();\n";
-    print "    var comment_hash = new Array();\n";
-    print "    var comment_metrics = new Array();\n";
-    my $index;
-    for ($index = 0; $index <= $#comment_locations; $index++) {
-
-	# Contains the overlib HTML text.
-	my $overlib_html = "";
-
-	# Determine what the previous and next comment locations are.
-	my $previous = undef;
-	my $next = undef;
-	if ($index > 0) {
-	    $previous = $comment_locations[$index-1];
-	}
-	if ($index < $#comment_locations) {
-	    $next = $comment_locations[$index+1];
-	}
-
-	# Compute the previous link if required.
-	my $current_url = $self->{query}->self_url();
-	if (defined $previous && $previous =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
-	    my $previous_fview = $1;
-	    my $previous_index = $index - 1;
-	    my $previous_url = $current_url;
-	    $previous_url =~ s/fview=\d+/fview=$previous_fview/o if $self->{fview} != -1;
-	    $previous_url .= '#' . $previous;
-	    $overlib_html .= "<a href=\"javascript:window.location=\\'$previous_url\\'; ";
-	    if ($self->{fview} == -1 || $self->{fview} == $previous_fview) {
-		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
-}
-	    $overlib_html .= "void(0);\">Previous</a>";
-	}
-
-	# Compute the next link if required.
-	if (defined $next && $next =~ /^(\-?\d+)|\-?\d+|\d+$/o) {
-	    my $next_fview = $1;
-	    $overlib_html .= " | " if defined $previous;
-	    my $next_index = $index + 1;
-	    my $next_url = $current_url;
-	    $next_url =~ s/fview=\d+/fview=$next_fview/o if $self->{fview} != -1;
-	    $next_url .= '#' . $next;
-	    $overlib_html .= "<a href=\"javascript:window.location=\\'$next_url\\'; ";
-	    if ($self->{fview} == -1 || $self->{fview} == $next_fview) {
-		$overlib_html .= "overlib(comment_text[$next_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
-	    }
-	    $overlib_html .= "void(0);\">Next</a>";
-	}
-	if (defined $previous || defined $next) {
-	    $overlib_html .= " | ";
-	}
-
-	# Add an add comment link.
-	my $key = $comment_locations[$index];
-	$key =~ /^(\-?\d+)\|(\-?\d+)\|(\d+)$/o;
-        $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
-	    "; void(0);\">Add Comment</a> | ";
-
-	# Add a close link.
-	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close</a><p>";
-
-	# Create the actual comment text.
-	my @comments = @{ $comment_hash{$key} };
-
-	for (my $i = 0; $i <= $#comments; $i++) {
-	    my $comment = $comments[$i];
-
-	    # Need to format the data appropriately for HTML display.
-	    my $data = HTML::Entities::encode($comment->{data});
-	    $data =~ s/\'/\\\'/mg;
-	    $data =~ s/\n/<br>/mg;
-	    $data =~ s/ /&nbsp;/mg;
-	    $data = tabadjust($self, $self->{tabwidth}, $data, 1);
-
-	    # Show each comment with the author and date in bold.
-	    $overlib_html .= "<b>Comment from $comment->{author} ";
-	    $overlib_html .= "on $comment->{date}</b><br>";
-	    $overlib_html .= "$data";
-
-	    # Add a newline at the end if required.
-	    if ($i < $#comments &&
-		substr($overlib_html, length($overlib_html)-4, 4) ne '<br>') {
-		$overlib_html .= '<br>';
-	    }
-	}
-
-	print "    comment_text[$index] = '$overlib_html';\n";
-        print "    comment_hash['" . $comment_locations[$index] . "'] = $index;\n";
-
-	# Store the current metric values for this comment.
-	print "    comment_metrics[$index] = new Array();\n";
-	my $comment_metrics = $comments[0]->{metrics};
-	foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
-	    my $value = $comment_metrics->{$metric_config->{name}};
-	    $value = "" unless defined $value;
-	    print "    comment_metrics[${index}]['" .
-		$metric_config->{name} . "'] = '" . $value . "';\n";
-	}
-
-    }
-    print "</script>\n";
 
     bless $self, $type;
 }
@@ -718,7 +610,7 @@ sub render_coloured_cell($$)
     }
 
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
-    $data = tabadjust($self, $self->{tabwidth}, $data, 1);
+    $data = tabadjust($self->{tabwidth}, $data, 1);
     if ($self->{brmode} == $Codestriker::LINE_BREAK_ASSIST_MODE) {
 	$data =~ s/^(\s+)/my $sp='';for(my $i=0;$i<length($1);$i++){$sp.='&nbsp;'}$sp;/ge;
     }
@@ -947,7 +839,7 @@ sub get_comment_digest($$$$) {
 	    my $data = HTML::Entities::encode($comment->{data});
 	    $data =~ s/\n/<br>/mg;
 	    $data =~ s/ /&nbsp;/mg;
-	    $data = tabadjust($self, $self->{tabwidth}, $data, 1);
+	    $data = tabadjust($self->{tabwidth}, $data, 1);
 
 	    # Show each comment with the author and date in bold.
 	    $digest .= "<b>Comment from $comment->{author} ";
@@ -1247,7 +1139,7 @@ sub render_monospaced_line ($$$$$$$$) {
     my $query = $self->{query};
 
     # Replace the line data with spaces.
-    my $newdata = tabadjust($self, $self->{tabwidth}, $data, 0);
+    my $newdata = tabadjust($self->{tabwidth}, $data, 0);
 
     if ($class ne "") {
 	# Add the appropriate number of spaces to justify the data to a length
@@ -1324,8 +1216,8 @@ sub flush_monospaced_lines ($$$$$) {
 
 # Replace the passed in string with the correct number of spaces, for
 # alignment purposes.
-sub tabadjust ($$$$) {
-    my ($type, $tabwidth, $input, $htmlmode) = @_;
+sub tabadjust ($$$) {
+    my ($tabwidth, $input, $htmlmode) = @_;
 
     $_ = $input;
     if ($htmlmode) {

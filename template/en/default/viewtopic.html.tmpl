@@ -1,13 +1,3 @@
-[%# Output the style elements for the comments which exist #%]
-
-<style type="text/css">
-[% SET index = 0 %]
-[% WHILE index < number_comments %]
-#c[% index %] { position: absolute; }
-[% index = index + 1 %]
-[% END %]
-</style>
-
 </head>
 <body charset="ISO-8859-1" vlink="purple" onload="view_topic_on_load_handler();"
       bgcolor="#eeeeee" link="blue">

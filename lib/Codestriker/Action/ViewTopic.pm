@@ -66,9 +66,11 @@ sub process($$$) {
     # Retrieve line-by-line versions of the data and description.
     my @document_description = split /\n/, $topic->{description};
 
-    $http_response->generate_header(topic=>$topic->{topicid},
+    $http_response->generate_header(topic=>$topic,
+				    comments=>\@comments,
 				    topic_title=>"Topic Text: $topic->{title}",
 				    mode=>$mode, tabwidth=>$tabwidth,
+				    fview=>$fview,
 				    reload=>0, cache=>1);
 
     # Retrieve the repository object, if repository functionality is enabled.
@@ -214,7 +216,6 @@ sub process($$$) {
     my @document = split /\n/, $topic->{document};
     my $max_digit_width = length($#document+1);
 
-
     # Build the render which will be used to build this page.
     my $render = Codestriker::Http::Render->new($query, $url_builder, 1,
 						$max_digit_width, $topicid,
@@ -262,49 +263,51 @@ sub process($$$) {
     Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
-# This function is used by all of the three topic pages to fill out the
-# common template items that are required by all three.
-sub ProcessTopicHeader($$$) {
+# This function is used by all of the view topic tabs to fill out the
+# common template items that are required by all, in addition to the view
+# topic file action.
+sub ProcessTopicHeader
+{
     my ($vars, $topic, $url_builder) = @_;
 
     # Handle the links in the three topic tabs.
     $vars->{'view_topicinfo_url'} =
 	$url_builder->view_topicinfo_url($topic->{topicid});
     $vars->{'view_topic_url'} =
-         ## XX mode, last param
+	## XX mode, last param
 	$url_builder->view_url($topic->{topicid}, -1, 0);
-
+    
     $vars->{'view_comments_url'} =
 	$url_builder->view_comments_url($topic->{topicid});
-
+    
     $vars->{'view_topic_properties_url'} =
 	$url_builder->view_topic_properties_url($topic->{topicid});
-
+    
     my @project_ids = ($topic->{project_id});
     $vars->{'list_open_topics_in_project_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "", "", "",
 				      "", [ 0 ], \@project_ids);
-
+    
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();
-
+    
     # Obtains how many comments there are, and the internal link to them.
     $vars->{'number_comments'} = $#comments + 1;
-
+    
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
     $vars->{'title'} = $topic->{title};
-
+    
     $vars->{'author'} = Codestriker->filter_email($topic->{author});
     
     $vars->{'document_creation_time'} = 
-    	Codestriker->format_timestamp($topic->{creation_ts});
-
+	Codestriker->format_timestamp($topic->{creation_ts});
+    
     $vars->{'topic'} = $topic->{topicid};
-
+    
     $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
     $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
-
+    
     # Get the list of obsoleted topics.
     my @obsoleted_topics = ();
     foreach my $id (@{ $topic->{obsoleted_topics} }) {
@@ -315,7 +318,7 @@ sub ProcessTopicHeader($$$) {
 	push @obsoleted_topics, $entry;
     }
     $vars->{'obsoleted_topics'} = \@obsoleted_topics;
-
+    
     # Get the list of topics this has been obsoleted by.
     my @obsoleted_by = ();
     foreach my $id (@{ $topic->{obsoleted_by} }) {
@@ -327,5 +330,6 @@ sub ProcessTopicHeader($$$) {
     }
     $vars->{'obsoleted_by'} = \@obsoleted_by;
 }
+
 
 1;

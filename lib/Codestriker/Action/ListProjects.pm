@@ -30,7 +30,7 @@ sub process($$$) {
     my @projects = Codestriker::Model::Project->list();
 
     # Display the data, with each prject title linked to edit project page.
-    $http_response->generate_header(topic => -1, topic_title=>"Project List",
+    $http_response->generate_header(topic_title=>"Project List",
 				    reload=>0, cache=>0);
 
     # Create the hash for the template variables.

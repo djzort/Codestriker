@@ -25,6 +25,8 @@ sub process($$$) {
     my $topicid = $http_input->get('topic');
     my $email = $http_input->get('email');
     my $mode = $http_input->get('mode');
+    my $fview = $http_input->get('fview');
+    my $tabwidth = $http_input->get('tabwidth');
     my $feedback = $http_input->get('feedback');
     my $show_context = $http_input->get('scontext');
     my $show_comments_from_user = $http_input->get('sauthor');
@@ -49,9 +51,11 @@ sub process($$$) {
     my $topic = Codestriker::Model::Topic->new($topicid);     
 
     # Display the data, with each topic title linked to the view topic screen.
-    $http_response->generate_header(topic=>$topicid,
+    $http_response->generate_header(topic=>$topic,
+				    comments=>\@comments,
 				    topic_title=>"Topic Comments: $topic->{title}",
-				    email=>$email, 
+				    email=>$email, fview=>$fview,
+				    tabwidth=>$tabwidth,
                                     reload=>0, cache=>0);
 
     # Create the hash for the template variables.

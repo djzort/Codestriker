@@ -31,6 +31,7 @@ sub process($$$) {
     my $mode = $http_input->get('mode');
     my $tabwidth = $http_input->get('tabwidth');
     my $anchor = $http_input->get('a');
+    my $fview = $http_input->get('fview');
 
     # Retrieve the appropriate topic details.
     my $topic = Codestriker::Model::Topic->new($topicid);
@@ -42,7 +43,7 @@ sub process($$$) {
     my @document_description = split /\n/, $topic->{description};
 
     # Display the header of this page.
-    $http_response->generate_header(topic=>$topicid,
+    $http_response->generate_header(topic=>$topic,
 				    topic_title=>"Edit Comment: $topic->{title}",
 				    email=>$email, 
     				    mode=>$mode,
@@ -55,7 +56,8 @@ sub process($$$) {
     $vars->{'topic_title'} = $topic->{title};
 
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
-						       $url_builder);
+						       $url_builder, $fview,
+						       $tabwidth, 1, 0);
 
     my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
     my $view_comments_url = $url_builder->view_comments_url($topicid);
