@@ -760,6 +760,7 @@ sub get_comment_digest($) {
 		# Need to remove the newlines for the data.
 		my $data = $comment_data[$i];
 		$data =~ s/\n/ /mg; # Remove newline characters
+		$data = CGI::escapeHTML($data);
 		$digest .= "$data ------- ";
 	    }
 	}
@@ -1518,8 +1519,8 @@ sub render_linenumber($$$$$) {
     if ($link_title ne "") {
 	return $query->a(
 			 {name=>"$prefix$line",
-			  href=>"$edit_url",
-			  title=>"$link_title",
+			  href=>$edit_url,
+			  title=>$link_title,
 			  onmouseover=>"window.status='$js_title'; " .
 			      "return true;"}, "$linedata");
     } else {
@@ -2065,7 +2066,7 @@ sub render_monospaced_line ($$$$$$$) {
 	    $line_cell = "$prefix" .
 		$query->a({name=>"$linenumber",
 			   href=>"javascript:fetch('$edit_url')",
-			   title=>"$js_title",
+			   title=>$js_title,
 			   onmouseover=> "window.status='$js_title'; " .
 			       "return true;" },
 			  $query->span({-class=>'mscom'},
