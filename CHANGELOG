@@ -34,6 +34,14 @@ The following changes below were from Jason Remillard
 * The default page shown by Codestriker is the list of open topics,
   rather than all topics in the system.
 
+* Introduced the notion of soft and hard topic text length limits,
+  specified in the configuration file.  By default, the limits are not
+  set, and therefore not enforced.  The rationale is code inspections
+  become less effective as the size of the review increases.  If a
+  review is longer than the hard limit, the topic will not be created.
+  If the topic text length is greater than the soft limit, a warning
+  message is displayed in the view topic page.
+
 Version 1.7.4
 
 * Major documentation rewrite.  All documentation (installation/user

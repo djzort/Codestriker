@@ -158,6 +158,9 @@ sub process($$$) {
     $vars->{'project_name'} = $project_name;
     $vars->{'number_of_lines'} = $#document + 1;
 
+    $vars->{'suggested_topic_size_lines'} =
+	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
+	$Codestriker::suggested_topic_size_lines;    
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);

@@ -96,7 +96,13 @@ function DeleteTopicConfirm()
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Number of lines:</td>
- <td>[% number_of_lines %]</td>
+ <td>[% number_of_lines %]
+  [%# Give them a nudge, that the topic is too large. #%] 
+  [% IF number_of_lines > suggested_topic_size_lines && suggested_topic_size_lines > 0 %]
+    <FONT color=red>-- over suggested topic size limit of [% suggested_topic_size_lines %] lines.</FONT>
+  [% END %]
+  
+ </td>
 </tr>
 
 [% IF repository != '' %]

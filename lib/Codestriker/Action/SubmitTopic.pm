@@ -76,6 +76,7 @@ sub process($$$) {
     if ($feedback ne "" && defined $fh) {
 	$feedback .= "For security reasons, please re-enter the file name to upload.\n";
     }
+    
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
 				    $cc, "", "", $repository_url, $projectid,
 				    "", 0, 0);
@@ -98,6 +99,13 @@ sub process($$$) {
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
+    $error_vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::maximum_topic_size_lines;
+                                          
+    $error_vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::suggested_topic_size_lines;
 
     # If there is a problem with the input, redirect to the create screen
     # with the message.
@@ -202,6 +210,25 @@ sub process($$$) {
     # Remove \r from the topic text.
     $topic_text =~ s/\r//g;
 
+    # Make sure the topic is not too large, count the number of \n
+    # in the topic content text.
+    my $new_topic_length = 0;
+    ++$new_topic_length while ($topic_text =~ /\n/g);
+     
+    if (defined($Codestriker::maximum_topic_size_lines) && 
+        $Codestriker::maximum_topic_size_lines ne "" &&
+        $Codestriker::maximum_topic_size_lines < $new_topic_length)
+    {        
+	$feedback .= "The topic length of $new_topic_length lines is too long. " . 
+                     "Topics cannot exceed $Codestriker::maximum_topic_size_lines " . 
+                     "lines long. Plesae remove content from topic, or break the topic " .
+                     "into several independent topics.\n";
+                     
+        _forward_create_topic($error_vars, $feedback);
+        $http_response->generate_footer();
+        return;
+    }
+    
     # Create the topic in the model.
     my $timestamp = Codestriker->get_timestamp(time);
     Codestriker::Model::Topic->create($topicid, $email, $topic_title,

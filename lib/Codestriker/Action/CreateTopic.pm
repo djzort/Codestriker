@@ -84,6 +84,15 @@ sub process($$$) {
     my @projects = Codestriker::Model::Project->list();
     $vars->{'projects'} = \@projects;
 
+    # Display the topic size limit if any.
+    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::maximum_topic_size_lines;
+                                          
+    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
+                                          0 : 
+                                          $Codestriker::suggested_topic_size_lines;
+                                          
     my $template = Codestriker::Http::Template->new("createtopic");
     $template->process($vars);
 

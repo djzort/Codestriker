@@ -46,7 +46,16 @@ notification email to all reviewers.
 <P>
 
 <TABLE>
-
+[% IF maximum_topic_size_lines != 0 || suggested_topic_size_lines != 0 %]
+  <TR><TD COLSPAN="3">
+  [% IF maximum_topic_size_lines != 0 %]
+    <EM>Topics cannot be larger than [% maximum_topic_size_lines %] lines.</EM>
+  [% END %]
+  [% IF suggested_topic_size_lines != 0 %]
+    <EM>The suggested topic size limit is [% suggested_topic_size_lines %] lines.</EM>
+  [% END %]
+  </TD></TR>
+[% END %]
 [%# The topic text upload button #%]
 <TR>
  <TD>Topic text upload:
