@@ -1,5 +1,8 @@
 Version 1.4.5:
 
+* Fixed minor bug where adding a CC to a comment with more than one
+  person on that line failed.
+
 * Support for the handling of binary files in diffs.
 
 * Fix bug in popup parallel coloured-diff mode where the anchor names
