@@ -34,8 +34,8 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
-    open(CVS, "\"$Codestriker::cvs\" -q -d " . $self->{url} .
-	 " co -p -r $revision \"$filename\" |")
+    open(CVS, "\"$Codestriker::cvs\" -q -d \"" . $self->{url} .
+	 "\" co -p -r $revision \"$filename\" |")
 	|| die "Can't open connection to pserver CVS repository: $!";
 
     # Read the data.
