@@ -89,7 +89,10 @@ sub parse ($$$) {
 	    # Make sure the +++ line is present next.
 	    $line = <$fh>;
 	    return () unless defined $line;
-	    return () unless $line =~ /^\+\+\+ .*\s\(working copy\)/;
+	    if ($line !~ /^\+\+\+ .*\s\(working copy\)/ &&
+		$line !~ /^\+\+\+ .*\s\(revision \d+\)/) {
+		return ();
+	    }
 
 	    # Now parse the unidiff chunks.
 	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->

@@ -25,7 +25,7 @@ sub new ($$) {
 sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
-    # Open a pipe to the local CVS repository.
+    # Open a pipe to the local Subversion repository.
     open(SVN, "svn cat --revision $revision " . $self->{repository_url} .
 	 "/$filename 2>/dev/null |")
 	|| die "Can't retrieve information from Subversion repository: $!";
