@@ -45,10 +45,12 @@ sub create($$$$$$$$$$) {
 
     # Create all of the necessary rows.  It is assumed sate 0 is the initial
     # state.
+    my $repository_string = "";
+    $repository_string = $repository->toString() if defined $repository;
     $success &&= $insert_topic->execute($topicid, $author, $title,
 					$description, $document, 0,
 					$timestamp, $timestamp, 0,
-					$repository->toString());
+					$repository_string);
 					
     for (my $i = 0; $i <= $#bug_ids; $i++) {
 	$success &&= $insert_bugs->execute($topicid, $bug_ids[$i]);
@@ -69,8 +71,10 @@ sub create($$$$$$$$$$) {
     }
 
     # Create the appropriate file rows, if we diff file is being reviewed.
+    my $repository_root = "";
+    $repository_root = $repository->getRoot() if defined $repository;
     $success &&= Codestriker::Model::File->create($dbh, $topicid, $document,
-						  $repository->getRoot());
+						  $repository_root);
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

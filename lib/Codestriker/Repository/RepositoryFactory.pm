@@ -19,6 +19,10 @@ use Codestriker::Repository::CvsWeb;
 sub get ($$) {
     my ($type, $repository) = @_;
 
+    if ($repository eq "") {
+	return undef;
+    }
+
     if ($repository =~ /^\s*(\/.*?)\/*\s*$/) {
 	# CVS repository on the local machine.
 	return Codestriker::Repository::CvsLocal->new($1);
@@ -30,7 +34,7 @@ sub get ($$) {
 	return Codestriker::Repository::CvsWeb->new($1, $2);
     } else {
 	# Unknown repository type.
-	print STDERR "Couldn't match repository: \"$repository\"\n";
+	print STDERR "Codestriker: Couldn't match repository: \"$repository\"\n";
 	return undef;
     }
 }

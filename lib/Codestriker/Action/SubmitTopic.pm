@@ -61,10 +61,6 @@ sub process($$$) {
     # Check if the repository argument is valid.
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
-    if (! defined $repository) {
-	$http_response->error("Unable to handle repository: " .
-			      "\"$repository_url\"");
-    }
 
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
 				    $cc, "", "", $repository_url, "", 0, 0);
@@ -90,14 +86,14 @@ sub process($$$) {
     do {
 	$topicid = int rand(10000000);
     } while (Codestriker::Model::Topic->exists($topicid));
-    
+
     # Create the topic in the model.
     my $timestamp = Codestriker->get_timestamp(time);
     Codestriker::Model::Topic->create($topicid, $email, $topic_title,
 				      $bug_ids, $reviewers, $cc,
 				      $topic_description, $topic_text,
 				      $timestamp, $repository);
-    
+
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
