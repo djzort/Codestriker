@@ -55,5 +55,23 @@ sub _get_autoincrement_type {
     return "IDENTITY";
 }
 
+# Method for retrieving the list of current tables attached to the database.
+# For ODBC for SQL SERVER, $dbh->tables doesn't work, need to retrieve data
+# from the sysobjects table.
+sub get_tables() {
+    my $self = shift;
+
+    my @tables = ();
+    my $table_select =
+	$self->{dbh}->prepare_cached("SELECT name from sysobjects where type='U'");
+    $table_select->execute();
+    while (my ($table_name) = $table_select->fetchrow_array()) {
+	push @tables, $table_name;
+    }
+    $table_select->finish();
+
+    return @tables;
+}
+
 1;
 
