@@ -793,10 +793,10 @@ if ($project_count == 0) {
     my $timestamp = Codestriker->get_timestamp(time);
     my $create = $dbh->prepare_cached('INSERT INTO project ' .
 				      '(name, description, creation_ts, ' .
-				      'modified_ts, version ) ' .
-				      'VALUES (?, ?, ?, ?, ?) ');
+				      'modified_ts, version, state) ' .
+				      'VALUES (?, ?, ?, ?, ?, ?) ');
     $create->execute('Default project', 'Default project description',
-		     $timestamp, $timestamp, 0);
+		     $timestamp, $timestamp, 0, 0);
 
     # Get the id of this project entry.
     my $select = $dbh->prepare_cached('SELECT MIN(id) FROM project');
