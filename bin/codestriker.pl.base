@@ -57,9 +57,6 @@ use Codestriker::Action::ViewTopicProperties;
 use Codestriker::Action::ViewTopicComments;
 use Codestriker::Template::Plugin::AutomagicLinks;
 
-# Set the PATH to something sane.
-$ENV{'PATH'} = "/bin:/usr/bin";
-
 # Prototypes of subroutines used in this module.
 sub main();
 
