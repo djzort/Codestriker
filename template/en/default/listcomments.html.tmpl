@@ -1,10 +1,14 @@
 [%# Display a list of comments #%]
 
 <TABLE CELLPADDING="1" CELLSPACING="1" BORDER="0">
-<TR CLASS="comments"><TD><B>Comments:</B></TD></TR>
-<TR CLASS="commentb"><TD>&nbsp;</TD></TR>
 [% FOREACH comment = comments %]
 [% FLUSH IF loop.count() % 10 == 1 %]
+
+[% IF loop.count() == 1 %]
+<TR CLASS="comments"><TD><B>Comments:</B></TD></TR>
+<TR CLASS="commentb"><TD>&nbsp;</TD></TR>
+[% END %]
+
 <TR CLASS="commenth">
 <TD>
 [% IF comment.line != "" %]
