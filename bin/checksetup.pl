@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!c:/perl/bin/perl -w
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -569,10 +569,19 @@ if ($old_comment_table) {
 }
 	
 # Create the appropriate file and delta rows for each topic, if they don't
-# already exist.
+# already exist.  Apparently SQL Server doesn't allow multiple statements
+# to be active at any given time (gack!) so store the topic list into an
+# array first.  The things we do... what a bloody pain and potential
+# memory hog.
 my $stmt = $dbh->prepare_cached('SELECT id FROM topic');
 $stmt->execute();
+my @topic_list = ();
 while (my ($topicid) = $stmt->fetchrow_array()) {
+    push @topic_list, $topicid;
+}
+$stmt->finish();
+
+foreach my $topicid (@topic_list) {
     # Check if there is an associated delta record, and if not create it.
     my $check = $dbh->prepare_cached('SELECT COUNT(*) FROM delta ' .
 				     'WHERE topicid = ?');
@@ -648,7 +657,6 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
     close TEMP_FILE;
     unlink($tmpfile);
 }
-$stmt->finish();
 $database->commit();
 
 # Check if the version to be upgraded has any project rows or not, and if
