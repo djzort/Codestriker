@@ -125,6 +125,11 @@ Change state: &nbsp;
 
     <a href="[% view_metrics_url | uri | html %]">Metrics Report</a>
 
+[% IF rss_enabled %]
+
+| <a href="[% list_sort_url_rss | uri | html %]">RSS</a>
+  <link rel="alternate" type="application/rdf+xml" title="RSS" href="[% list_sort_url_rss | uri | html %]">
+[% END %]
 
 </p>
 

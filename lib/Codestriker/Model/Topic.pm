@@ -368,6 +368,46 @@ sub read_comments {
     return @{$self->{comments}};
 }
 
+# returns a count of the comments that have the given comment
+# metric (commentmetrictype) set to value. Used 
+# on the search page.
+sub get_comment_metric_count {
+    my ($self,$commentmetrictype,$value) = @_;
+
+    my $count = 0;
+
+    if (scalar(@{$self->{comments}}) == 0) {
+
+        # Obtain a database connection.
+        my $dbh = Codestriker::DB::DBI->get_connection();
+
+        # the comments have not been read into memory yet.
+        $count = $dbh->selectrow_array('
+            SELECT COUNT(commentstatemetric.value) 
+            FROM commentstatemetric, commentstate 
+            WHERE  commentstate.topicid = ? AND
+                   commentstate.id = commentstatemetric.id AND
+                   commentstatemetric.name = ? AND
+                   commentstatemetric.value = ?',
+                   {}, $self->{topicid},
+                   $commentmetrictype, $value);
+
+        Codestriker::DB::DBI->release_connection($dbh, 1);
+
+    } else {
+        # already read into memory, don't hit the database.
+
+        foreach my $comment (@{$self->{comments}}) {
+            if ( exists( $comment->{$commentmetrictype} ) && 
+                 $comment->{$commentmetrictype} eq $value ) {
+                ++$count;
+            }
+        }
+    }
+
+    return $count;
+}
+
 
 # Retrieve the changed files which are a part of this review. It will only pull them
 # from the database once.
@@ -669,8 +709,7 @@ sub update($$$$$$$$$$) {
 # Return back the list of topics which match the specified parameters.
 sub query($$$$$$$$$$$$$$\@\@\@) {
     my ($type, $sauthor, $sreviewer, $scc, $sbugid, $sstate, $sproject, $stext,
-	$stitle, $sdescription, $scomments, $sbody, $sfilename, $sort_order,
-        $topic_query_results_ref) = @_;
+	$stitle, $sdescription, $scomments, $sbody, $sfilename, $sort_order) = @_;
 
     # Obtain a database connection.
     my $database = Codestriker::DB::Database->get_database();
@@ -872,6 +911,8 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
     my $select_topic = $dbh->prepare_cached($query);
     my $success = defined $select_topic;
     $success &&= $select_topic->execute();
+    my $lastid;
+    my @topic_list;
     if ($success) {
 	my ($id, $title, $author, $description, $creation_ts, $state, $bugid,
 	    $email, $type, $version);
@@ -880,79 +921,29 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
 		$bugid, $email, $type, $version) =
 	       $select_topic->fetchrow_array()) {
             
-            my $topic_query_row = {
-                id => $id,
-                title => $title,
-                description => $description,
-                author => $author,
-                ts => $creation_ts,
-                state => $state,
-                bugid => $bugid,
-                email => $email,
-                type => $type,
-                version => $version,
-            };
+            # This is a bit heavy, but the search screen does need much 
+            # of the information in the topic object, it is much cleaner
+            # to just return a fully formed topic object, rathe than a 
+            # array tunned. If performace is an issue, then the topic
+            # object should use lazy instatation to don't pull data from
+            # the database unless it is needed.
+            if ( !defined($lastid) || $id ne $lastid ) {
 
-            push @$topic_query_results_ref, $topic_query_row;
-	}
+                my $new_topic = Codestriker::Model::Topic->new($id);
+
+                push @topic_list,$new_topic;
+            }
+
+            $lastid = $id;
+
+    }
 	$select_topic->finish();
     }
 
-    # get the visited flag and the comment state metric.
-    my $comment_metric_counts = [];
-    my $lastid;
-
-    foreach my $topicrow (@$topic_query_results_ref) {
-        # If they configured the comment metrics to be on the main
-        # page then do the queries here. Because we have a row per
-        # topic per reviewer, it will make the page load faster if the
-        # query is only done once per topic.
-        if ( !defined($lastid) || $topicrow->{id} ne $lastid ) {
-            $comment_metric_counts = [];
-            $lastid = $topicrow->{id};
-
-            foreach my $comment_state_metric
-		(@{$Codestriker::comment_state_metrics}) {
-                if ( exists($comment_state_metric->{show_on_mainpage}) ) {
-                    foreach my $value
-			(@{$comment_state_metric->{show_on_mainpage}}) {
-                    
-			    my $count = $dbh->selectrow_array('
-                            SELECT count(commentstatemetric.value) 
-                            FROM commentstatemetric, commentstate 
-                            WHERE  commentstate.topicid = ? and
-                                   commentstate.id = commentstatemetric.id and
-                                   commentstatemetric.name = ? and
-                                   commentstatemetric.value = ?',
-                                   {}, $topicrow->{id},
-				   $comment_state_metric->{name}, $value);
-
-                        push @$comment_metric_counts,
-			     { name => $comment_state_metric->{name},
-			       value => $value,
-			       count => $count };
-                    }
-                }
-            }
-        }
-
-        $topicrow->{commentmetrics} = $comment_metric_counts;
-
-        # See if the specified user has hit the topic yet.
-	# TODO: This should be in the HistoryRecorder module, called
-	# From ListTopics.pm, not from here.
-        my $visited = $dbh->selectrow_array('
-            SELECT count(creation_ts) FROM topicviewhistory 
-            WHERE  topicid = ? and
-                   email = ?',
-                   {}, $topicrow->{id}, $topicrow->{email});
-
-        $topicrow->{visitedtopic} = $visited;
-    }
-
-
     $database->release_connection();
     die $dbh->errstr unless $success;
+
+    return @topic_list;
 }
 
 # Add the condition to the specified query string, returning the new query.

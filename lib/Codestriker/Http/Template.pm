@@ -84,6 +84,8 @@ sub process($$) {
 
     $vars->{'main_title'} = $Codestriker::title;
 
+    $vars->{'rss_enabled'} = $Codestriker::rss_enabled;
+
     # Indicate if the repository field should be displayed.
     $vars->{'allow_repositories'} = scalar(@Codestriker::valid_repositories) ? 1 : 0;
 

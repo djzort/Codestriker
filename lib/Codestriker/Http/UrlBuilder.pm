@@ -115,16 +115,36 @@ sub doc_url ($) {
     return $self->{htmldir};
 }
 
-# Create the URL for listing the topics.
+# Create the URL for listing the topics (and topic search). See
+# _list_topics_url for true param list.
 sub list_topics_url ($$$$$$$$$$$\@\@$) {
-    my ($self, $sauthor, $sreviewer, $scc, $sbugid, $stext,
+    my ($self) = @_;
+
+    shift @_; # peal off self.
+
+    return $self->_list_topics_url("list_topics",@_);
+}
+
+# Create the URL for listing the topics (and topic search) via RSS. See
+# _list_topics_url for true param list.
+sub list_topics_url_rss ($$$$$$$$$$$\@\@$) {
+    my ($self) = @_;
+
+    shift @_; # peal off self.
+
+    return $self->_list_topics_url("list_topics_rss",@_);
+}
+
+# Create the URL for listing the topics.
+sub _list_topics_url ($$$$$$$$$$$$\@\@$) {
+    my ($self, $action,$sauthor, $sreviewer, $scc, $sbugid, $stext,
 	$stitle, $sdescription, $scomments, $sbody, $sfilename,
 	$state_array_ref, $project_array_ref, $content) = @_;
 
     my $sstate = defined $state_array_ref ? (join ',', @$state_array_ref) : "";
     my $sproject = defined $project_array_ref ?
 	(join ',', @$project_array_ref) : "";
-    return $self->{query}->url() . "?action=list_topics" .
+    return $self->{query}->url() . "?action=$action" .
 	($sauthor ne "" ? "&sauthor=$sauthor" : "") .
 	($sreviewer ne "" ? "&sreviewer=$sreviewer" : "") .
 	($scc ne "" ? "&scc=$scc" : "") .
@@ -139,6 +159,7 @@ sub list_topics_url ($$$$$$$$$$$\@\@$) {
 	($sproject ne "" ? "&sproject=$sproject" : "") .
 	(defined $content && $content ne "" ? "&content=$content" : "");
 }
+
 
 # Construct a URL for editing a specific project.
 sub edit_project_url ($$) {

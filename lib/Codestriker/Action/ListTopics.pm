@@ -27,46 +27,22 @@ sub process($$$) {
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-    # Check that the appropriate fields have been filled in.
     my $mode = $http_input->get('mode');
-    my $sauthor = $http_input->get('sauthor') || "";
-    my $sreviewer = $http_input->get('sreviewer') || "";
-    my $scc = $http_input->get('scc') || "";
-    my $sbugid = $http_input->get('sbugid') || "";
-    my $stext = $http_input->get('stext') || "";
-    my $sstate = $http_input->get('sstate');
-    my $sproject = $http_input->get('sproject');
-    my $stitle = $http_input->get('stitle') || 0;
-    my $sdescription = $http_input->get('sdescription') || 0;
-    my $scomments = $http_input->get('scomments') || 0;
-    my $sbody = $http_input->get('sbody') || 0;
-    my $sfilename = $http_input->get('sfilename') || 0;
     my $feedback = $http_input->get('feedback');
     my $projectid = $http_input->get('projectid');
 
-    # If $sproject has been set to -1, then retrieve the value of the projectid
-    # from the cookie as the project search value.  This is done to facilate
-    # integration with other systems, which jump straight to this URL, and
-    # set the cookie explicitly.
-    if ($sproject eq "-1") {
-	$sproject = (defined $projectid) ? $projectid : "";
-    }
-    
-    # Only show open topics if codestriker.pl was run without parameters.
-    if (defined($http_input->{query}->param) == 0 || !defined($sstate)) {
-    	$sstate = 0; 
-    }
-
-    # handle the sort order of the topics.
-    my @sort_order = _get_topic_sort_order($http_input);
+    my ( $sauthor, $sreviewer, $scc, $sbugid,
+         $sstate, $sproject, $stext,
+         $stitle, $sdescription,
+	 $scomments, $sbody, $sfilename,
+         $sort_order) = get_topic_list_query_params($http_input);
 
     # Query the model for the specified data.
-    my @topic_query_results;
-    Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
+    my @topics = Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
 				     $sstate, $sproject, $stext,
 				     $stitle, $sdescription,
 				     $scomments, $sbody, $sfilename,
-                                     \@sort_order, \@topic_query_results);
+                                     $sort_order);
 
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
@@ -79,7 +55,7 @@ sub process($$$) {
 
     $http_response->generate_header(topic_title=>"Topic List", 
 				    projectid=>$projectid_cookie, 
-				    topicsort=>join(',',@sort_order),
+				    topicsort=>join(',',@$sort_order),
 				    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
@@ -124,95 +100,121 @@ sub process($$$) {
 				      $sbody, $sfilename,
 				      [ split ',', $sstate] , \@project_ids);
 
-    # The list of topics.
-    my @topics;
+    $vars->{'list_sort_url_rss'} = 
+	$url_builder->list_topics_url_rss($sauthor, $sreviewer, $scc, $sbugid,
+				      $stext, $stitle,
+				      $sdescription, $scomments,
+				      $sbody, $sfilename,
+				      [ split ',', $sstate] , \@project_ids);
+
+    # The list of topics in the template toolkit.
+    my @template_topics;
 
     # For each topic, collect all the reviewers, CC, and bugs, and display it
-    # as a row in the table.  Each bug should be linked appropriately. The 
-    # query function will return a row per topic, per reviewer so this loop
-    # needs to combine rows that are from the same topic.
-    for (my $index = 0; $index < scalar(@topic_query_results); ++$index) {
-        my $topic_row = $topic_query_results[$index];
+    # as a row in the table.  Each bug should be linked appropriately. 
+    foreach my $topic (@topics) {
 
-	my @accum_bugs = ();
-	my @accum_reviewers = ();
-        my @accum_reviewers_not_visited = ();
-	my @accum_cc = ();
-	my $accum_id = $topic_row->{id};
+        # do the easy stuff first, 1 to 1 mapping into the template.
+   
+	my $template_topic = {};
 
-	# Onl include the username part of the email address to save space.
-        $topic_row->{author} =~ s/\@.*$//o;
-	my $accum_author = $topic_row->{author};
+	$template_topic->{'view_topic_url'} = 
+	    $url_builder->view_url($topic->{topicid}, -1, $mode,
+				   $Codestriker::default_topic_br_mode);
+        
+	$template_topic->{'description'} = $topic->{description};
 
-	# Accumulate the bug ids, reviewers and cc here for the same topic.
-	# Note these will be only a few elements long, if that.
-	for (; $index < scalar(@topic_query_results) &&
-	       $accum_id == $topic_row->{id}; 
-	     $index++, $topic_row = $topic_query_results[$index]) {
+	$template_topic->{'created'} =
+	    Codestriker->format_short_timestamp($topic->{creation_ts});
 
-	    if (defined $topic_row->{bugid}) {
-		_insert_nonduplicate(\@accum_bugs, $topic_row->{bugid});
+	$template_topic->{'id'}      = $topic->{topicid};
+	$template_topic->{'title'}   = $topic->{title};
+
+	$template_topic->{'version'} = $topic->{version};
+
+	$template_topic->{'state'}   = $Codestriker::topic_states[$topic->{topic_state_id}];
+
+	# Only include the username part of the email address to save space.
+	my $accum_author = $topic->{author};
+        $accum_author =~ s/\@.*$//o;
+	$template_topic->{'author'} = $accum_author;
+
+        # cc
+	my $cc = $topic->{cc};
+        $cc =~ s/\@.*$//o;
+	$template_topic->{'cc'}     = $cc;
+
+        # bug ids
+	my @accum_bugs = split /, /, $topic->{bug_ids};
+	for ( my $index = 0; $index < scalar(@accum_bugs); ++$index) {
+	    $accum_bugs[$index] =
+		$query->a({href=>"$Codestriker::bugtracker$accum_bugs[$index]"},
+                    $accum_bugs[$index]);
+	}
+	$template_topic->{'bugids'} = join ', ', @accum_bugs;
+
+        # do the reviewers
+        my @reviewers_vistited = 
+            $topic->get_metrics()->get_list_of_actual_topic_participants();
+
+	my @reviewers = split /, /, $topic->{reviewers};
+	for ( my $index = 0; $index < scalar(@reviewers); ++$index) {
+
+            my $reviewer = $reviewers[$index];
+
+            my $is_visted = 0;
+            foreach my $visted (@reviewers_vistited) {
+                if ($visted eq $reviewer) {
+                    $is_visted = 1;
+                    last;
+                }
 	    }
 
 	    # Output the accumulated information into the row.  Only
 	    # include the username part of an email address for now to
 	    # save some space.  This should be made a dynamic option
 	    # in the future.
-            $topic_row->{email} =~ s/\@.*$//o;
+            $reviewer =~ s/\@.*$//o;
 
-	    if (defined $topic_row->{email}) {
-		if ($topic_row->{type} == $Codestriker::PARTICIPANT_REVIEWER) {
+            if ( $is_visted == 0) {
+                $reviewer = "(" . $reviewer . ")";
+            }           
                     
-                    if (!$topic_row->{visitedtopic}) {
-                        $topic_row->{email} = "(" . $topic_row->{email} . ")";
+            $reviewers[$index] = $reviewer;      
                     }
 
-		    _insert_nonduplicate(\@accum_reviewers,
-					 $topic_row->{email});
-		} else {
-		    _insert_nonduplicate(\@accum_cc, $topic_row->{email});
+	$template_topic->{'reviewer'} = join(", ",@reviewers);
+
+        my @main_page_comment_metrics = ();
+        foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
+        
+            if ( exists($comment_state_metric->{show_on_mainpage})) {
+                foreach my $value (@{$comment_state_metric->{show_on_mainpage}}) {
+
+                    my $count = $topic->get_comment_metric_count($comment_state_metric->{name},$value);
+
+                    my $template_comment_metric = 
+                    {
+                        name  => $comment_state_metric->{name},
+                        value => $value,
+                        count => $count
+                    };
+
+                    push @main_page_comment_metrics,$template_comment_metric;
 		}
 	    }
 	}
 
-        --$index;
-        $topic_row = $topic_query_results[$index];
+        $template_topic->{'commentmetrics'} = \@main_page_comment_metrics;
 
-	my $reviewer_text = join ', ', @accum_reviewers;
-	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "";
-
-	for (my $i = 0; $i <= $#accum_bugs; $i++) {
-	    $accum_bugs[$i] =
-		$query->a({href=>"$Codestriker::bugtracker$accum_bugs[$i]"},
-			  $accum_bugs[$i]);
-	}
-	my $bugid_text = join ', ', @accum_bugs;
-
-	# Add this row to the list of topics.
-	my $topic = {};
-	$topic->{'view_topic_url'} =
-	    $url_builder->view_url($accum_id, -1, $mode,
-				   $Codestriker::default_topic_br_mode);
-	$topic->{'id'} = $accum_id;
-	$topic->{'title'} = $topic_row->{title};
-	$topic->{'description'} = $topic_row->{description};
-	$topic->{'author'} = $accum_author;
-	$topic->{'reviewer'} = $reviewer_text;
-	$topic->{'cc'} = $cc_text;
-	$topic->{'created'} =
-	    Codestriker->format_short_timestamp($topic_row->{ts});
-	$topic->{'bugids'} = $bugid_text;
-	$topic->{'state'} = $Codestriker::topic_states[$topic_row->{state}];
-	$topic->{'version'} = $topic_row->{version};
-        $topic->{'commentmetrics'} = $topic_row->{commentmetrics};
-	push @topics, $topic;
+	push @template_topics, $template_topic;
     }
-    $vars->{'topics'} = \@topics;
+
+    $vars->{'topics'} = \@template_topics;
     $vars->{'states'} = \@Codestriker::topic_states;
 
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'view_metrics_url'} = $url_builder->metric_report_url();
-
 
     my $template = Codestriker::Http::Template->new("listtopics");
     $template->process($vars);
@@ -220,12 +222,56 @@ sub process($$$) {
     $http_response->generate_footer();
 }
 
+# Process the input and return the parts that will feed into the topic
+# list query. Returns in the same order that the topic query function
+# takes them.
+sub get_topic_list_query_params {
+    my ($http_input) = @_;
+
+    # Check that the appropriate fields have been filled in.
+    my $sauthor = $http_input->get('sauthor') || "";
+    my $sreviewer = $http_input->get('sreviewer') || "";
+    my $scc = $http_input->get('scc') || "";
+    my $sbugid = $http_input->get('sbugid') || "";
+    my $stext = $http_input->get('stext') || "";
+    my $sstate = $http_input->get('sstate');
+    my $sproject = $http_input->get('sproject');
+    my $stitle = $http_input->get('stitle') || 0;
+    my $sdescription = $http_input->get('sdescription') || 0;
+    my $scomments = $http_input->get('scomments') || 0;
+    my $sbody = $http_input->get('sbody') || 0;
+    my $sfilename = $http_input->get('sfilename') || 0;
+    my $projectid = $http_input->get('projectid');
+
+    # If $sproject has been set to -1, then retrieve the value of the projectid
+    # from the cookie as the project search value.  This is done to facilate
+    # integration with other systems, which jump straight to this URL, and
+    # set the cookie explicitly.
+    if ($sproject eq "-1") {
+	$sproject = (defined $projectid) ? $projectid : "";
+    }
+    
+    # Only show open topics if codestriker.pl was run without parameters.
+    if (defined($http_input->{query}->param) == 0 || !defined($sstate)) {
+    	$sstate = 0; 
+    }
+
+    # handle the sort order of the topics.
+    my @sort_order = get_topic_sort_order($http_input);
+
+    return ( $sauthor, $sreviewer, $scc, $sbugid,
+				     $sstate, $sproject, $stext,
+				     $stitle, $sdescription,
+				     $scomments, $sbody, $sfilename,
+                                     \@sort_order);
+}
+
 # Process the topic_sort_change input request (if any), and the current sort 
 # cookie (topicsort), and returns a list that defines the topic sort order
 # that should be used for this request. The function will ensure that 
 # column types are not repeated, and will sort in the opposite direction
 # if the user clicks on the same column twice.
-sub _get_topic_sort_order {
+sub get_topic_sort_order {
     my ($http_input) = @_;
 
     my $topic_sort_change = $http_input->get('topic_sort_change');
@@ -274,7 +320,6 @@ sub _get_topic_sort_order {
         }
     }
 
-
     # Pull out any elements that are not valid (from a bad cookie or from a bad
     # input.
 
@@ -291,18 +336,6 @@ sub _get_topic_sort_order {
     }
 
     return @sort_order;
-}
-
-# Append an element into an array if it doesn't exist already.  Note this is
-# only called for arrays of very small sizes (ie typically 1-2 elements).
-sub _insert_nonduplicate(\@$) {
-    my ($array_ref, $value) = @_;
-    my @array = @$array_ref;
-    my $i;
-    for ($i = 0; $i <= $#array; $i++) {
-	last if ($array[$i] eq $value);
-    }
-    push @$array_ref, $value if ($i > $#array);
 }
 
 1;

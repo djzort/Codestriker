@@ -330,7 +330,7 @@ sub get_raw_metric_data {
     # Get the list of users for this review.
     my @users = $metrics->get_complete_list_of_topic_participants();
     
-    my @user_metrics = $metrics->get_user_metrics_totals( @users );
+    my @user_metrics = $metrics->get_user_metrics_totals(@users);
     
     for (my $index = 0; $index < scalar(@{$headers->{user}}); ++$index) {
 	my $count = "";

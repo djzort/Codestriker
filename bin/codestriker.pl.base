@@ -1,4 +1,6 @@
-# -*-perl-*-
+[% hash_ex_line %] 
+
+[% scary_warning %]
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -21,7 +23,7 @@ require 5.000;
 # effectively "pre-load" all of the Codestriker modules in the system, as the
 # modules below load all of their supporting modules.  That is why the
 # template plugins are "pre-loaded" here.
-@CODESTRIKER_LIB_DECLARATION@
+[% codestriker_lib %]
 
 use strict;
 
@@ -55,6 +57,8 @@ use Codestriker::Action::ViewTopicInfo;
 use Codestriker::Action::ViewTopic;
 use Codestriker::Action::ViewTopicProperties;
 use Codestriker::Action::ViewTopicComments;
+[% IF has_rss %]use Codestriker::Action::ListTopicsRSS; [% END %]
+
 use Codestriker::Template::Plugin::AutomagicLinks;
 
 # Set the temp file location, if one has been specified.
@@ -80,8 +84,15 @@ main;
 
 sub main() {
     # Initialise Codestriker, load up the configuration file.
-    $0 =~ /^(.*)cgi-bin/;
-    Codestriker->initialise($1);
+    Codestriker->initialise([% codestriker_conf %]);
+
+[% IF has_rss %]
+    # only generated if checksetup.pl found a good version of XML::RSS.
+    $Codestriker::rss_enabled = 1;
+[% ELSE %]
+    # valid XML::RSS not found
+    $Codestriker::rss_enabled = 0;
+[% END %]
 
     # If allow_delete is defined, but topic state 'Delete' is not, add it
     # in.  This accounts for older configuration files.
@@ -170,6 +181,13 @@ sub main() {
     } elsif ($action eq "metrics_download") {
 	Codestriker::Action::MetricsReport->process_download($http_input,
 							     $http_response);
+[% IF has_rss %]
+    # only generated if checksetup.pl found a good version of XML::RSS.
+    } elsif ($action eq "list_topics_rss") {
+	Codestriker::Action::ListTopicsRSS->process($http_input,
+					            $http_response);
+[% END %]
+
     } else {
 	# Default action is to list topics that are in state open if the
 	# list functionality is enabled, otherwise go to the create topic

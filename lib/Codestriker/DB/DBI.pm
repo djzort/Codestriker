@@ -14,12 +14,22 @@ use strict;
 use Codestriker;
 use Codestriker::DB::Database;
 
+# DBI connections are expensive to make, only have one per process, and when 
+# the code asks for a connection, just keep returning the same one.
+our $connection;
+
 # Retrieve a connection to the codestriker database for the specified
 sub get_connection($) {
     my ($type) = @_;
 
+    # makeing a connection is expensive, cache it,
+    if ( !defined($connection) ) {
     my $database = Codestriker::DB::Database->get_database();
-    return $database->get_connection();
+
+        $connection = $database->get_connection();
+    }
+
+    return $connection;
 }
 
 # Release a connection, and if $success is true and this is a transaction
@@ -32,8 +42,6 @@ sub release_connection($$$) {
     if ($connection->{AutoCommit} == 0) {
 	$success ? $connection->commit : $connection->rollback;
     }
-
-    $connection->disconnect;
 }
 
 1;

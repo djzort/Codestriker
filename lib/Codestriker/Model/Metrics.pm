@@ -169,6 +169,29 @@ sub get_topic_metrics {
     return @topic_metrics;
 }
 
+# Get just the list of users that have actually looked at the review. This is
+# used on the main page to out users that are not doing the reviews when invited.
+sub get_list_of_actual_topic_participants {
+    my ($self) = @_;
+
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $actual_user_list_ref = 
+         $dbh->selectall_arrayref(
+	        'SELECT DISTINCT email FROM topicviewhistory ' .
+	        'WHERE topicid = ?',{}, $self->{topicid});
+
+    my @actual_user_list = ();
+    foreach my $user ( @$actual_user_list_ref ) {
+        push @actual_user_list,$user->[0] if $user->[0] ne "";
+    }
+
+    # Close the connection, and check for any database errors.
+    Codestriker::DB::DBI->release_connection($dbh, 1);
+
+    return @actual_user_list;
+}
+
 # Get a list of users that have metric data for this topic. People can 
 # look at the topic even if they were not invited, so if somebody touches the 
 # topic, they will appear in this list. Using this function rather than the 
@@ -433,7 +456,7 @@ sub get_user_metrics_totals {
 	}
 	else {
 	    # Add them up!
-	    for (my $index = 0; $index < scalar( @total_metrics) ; ++$index) {
+	    for (my $index = 0; $index < scalar(@total_metrics) ; ++$index) {
 		if ($metrics[$index]->{value} ne '') {
 		    if ($total_metrics[$index]->{value} eq '') {
 			$total_metrics[$index]->{value} = 0;
@@ -690,7 +713,7 @@ sub _get_built_in_user_metrics {
 
     $select_topic->execute($self->{topicid}, $username);
 
-    my $total_time = $self->calculate_topic_view_time( $select_topic);
+    my $total_time = $self->calculate_topic_view_time($select_topic);
 
     Codestriker::DB::DBI->release_connection($dbh);
 

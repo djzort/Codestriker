@@ -11,6 +11,9 @@ Version 1.8.6
   is changed.  This is all controlled by the $email_send_options
   configuration item.  From Jason Remillard.
 
+* Added RSS support, so that the topic list screen now has an
+  equivalent RSS view.  From Jason Remillard.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS
