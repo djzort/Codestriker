@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.8.0</subtitle>
+    <subtitle>Version 1.7.8</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -107,12 +107,14 @@
     <sect1>
       <title>We Want to Hear from You!</title>
       <para>
-        Please send feedback, good or bad, to us.  We are continually
-        striving to improve Codestriker, and all feedback is useful.
-        The best place to send feedback is either to the Codestriker
-        mailing list
-        <email>codestriker-user@lists.sourceforge.net</email> or to me
-        personally at <email>sits@users.sourceforge.net</email>.
+        We would like to hear about your experiences with
+        Codestriker. Feedback good and bad is welcome. If you are
+        using Codestriker please drop us an email at either
+	<email>sits@users.sourceforge.net</email> or to the
+	Codestriker mailing list at
+	<email>codestriker-user@lists.sourceforge.net</email>. We
+	would like to know who is using Codestriker, and are eager to
+	hear about your experiences with Codestriker.
       </para>
     </sect1>
   </chapter>
@@ -2146,46 +2148,6 @@ PerlSwitches -T
 	</variablelist>
       </para>
     </sect1>
-    <sect1>
-      <title>Code Style Guide</title>
-      <para>
-        <itemizedlist>
-          <listitem>
-	    <para>
-	      All comments must be complete sentances. Start with
-	      a capital letter, and end with a fullstop.
-            </para>
-          </listitem>
-          <listitem>
-	    <para>
-	      Function calls should have no extra spaces around the
-	      <function>()</function>, so <function>function( x
-	      )</function>, should be written
-	      <function>function(x)</function>.
-	    </para>
-	  </listitem>
-          <listitem>
-	    <para>
-	      Functions calls with more than one parameter should have
-	      spaces after the argument, so
-	      <function>function(x,y,z)</function>, should be
-	      <function>function(x, y, z)</function>.
-	    </para>
-	  </listitem>
-          <listitem>
-	    <para>
-	      Limit line length where possible to 80 characters.
-	    </para>
-	  </listitem>
-          <listitem>
-	    <para>
-	      All SQL statements should use uppercase for SQL
-	      keywords, and lowercase for everything else.
-	    </para>
-	  </listitem>
-        </itemizedlist>             
-      </para>
-    </sect1>
   </chapter>
 
   <chapter>
@@ -2223,7 +2185,7 @@ PerlSwitches -T
     <para>
       The Codestriker 1.8 release should contain a major new piece of
       functionality, which is user-customisable metrics, at a
-      per-topic level.
+      per-topic and per-author/per-reviewer level.
     </para>
   </chapter>
 

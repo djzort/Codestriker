@@ -1,6 +1,12 @@
 [%# Screen for the create topic form. #%]
 
-[% PROCESS header.html.tmpl version = version help = "x342.html" %]
+[% PROCESS header.html.tmpl version = version %]
+
+[%# Show the top-level links for "Search" and "Help" #%]
+<p>
+    <a href="[% search_url %]">Search</a> |
+    <a href="[% doc_url %]/x343.html">Help</a>
+</p>
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -14,7 +20,7 @@
 <P>
 
 <FORM METHOD="POST" ENCTYPE="multipart/form-data">
-<INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic">
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_topic">
 
 [%# The topic title input field #%]
 Topic title:
@@ -36,7 +42,8 @@ achieves. This information is sent with the new topic\n
 notification email to all reviewers.
 ')">(What's this?)</A></FONT>
 <BR>
-<TEXTAREA NAME="topic_description" ROWS=12 COLS=70 WRAP="hard">[% topic_description | html_entity %]</TEXTAREA>
+<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[%
+topic_description | html_entity %]</TEXTAREA>
 <P>
 
 <TABLE>
@@ -161,6 +168,11 @@ used as filtering criteria in the search screen.
       </SELECT>
  </TD>
 </TR>
+
+[% ELSE %]
+
+[%# Set the projectid to the default projectid. #%]
+<INPUT TYPE="hidden" NAME="projectid" VALUE="[% projects.0.id %]">
 
 [% END %]
 

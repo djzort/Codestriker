@@ -1,6 +1,13 @@
 [%# Screen for the edit project form. #%]
 
-[% PROCESS header.html.tmpl version = version help = "x318.html" %]
+[% PROCESS header.html.tmpl version = version %]
+
+[%# Show the top-level links for "List projects" and "Search" #%]
+<p>
+    <a href="[% list_projects_url %]">Project list</a> | 
+    <a href="[% search_url %]">Search</a> |
+    <a href="[% doc_url %]/x319.html">Help</a>
+</p>
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -28,16 +35,14 @@ Project name:
 [%# The project description input field #%]
 Project description: 
 <BR>
-<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[% project.description | html_entity %]</TEXTAREA>
+<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[%
+project.description | html_entity %]</TEXTAREA>
 <P>
 
 <P>
 <INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
 
 </FORM>
-
-<a href="[% list_projects_url %]">Project list</a>
-
 
 [% PROCESS trailer.html.tmpl %]
 
