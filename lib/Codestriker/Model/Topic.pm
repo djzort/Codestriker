@@ -535,7 +535,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my $text_title_part = "lower(topic.title) LIKE ?";
     my $text_description_part = "lower(topic.description) LIKE ?";
     my $text_body_part = "lower(topic.document) LIKE ?";
-    my $text_filename_part = "lower(file.filename) LIKE ?";
+    my $text_filename_part = "lower(topicfile.filename) LIKE ?";
     my $text_comment_part = "lower(comment.commentfield) LIKE ?";
 
     # Build up the base query.
@@ -555,7 +555,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
 
     # Join with the file table if required.
     if ($stext ne "" && $sfilename) {
-	$query .= 'LEFT OUTER JOIN file ON file.topicid = topic.id ';
+	$query .= 'LEFT OUTER JOIN topicfile ON topicfile.topicid = topic.id ';
     }
 
     # Combine the "AND" conditions together.
@@ -677,7 +677,7 @@ sub delete($) {
 	$dbh->prepare_cached('DELETE FROM commentstate ' .
 			     'WHERE topicid = ?');
     my $delete_file =
-	$dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
+	$dbh->prepare_cached('DELETE FROM topicfile WHERE topicid = ?');
 
     my $delete_delta =
 	$dbh->prepare_cached('DELETE FROM delta WHERE topicid = ?');
@@ -688,10 +688,17 @@ sub delete($) {
     my $user_metrics =
 	$dbh->prepare_cached('DELETE FROM topicusermetric WHERE topicid = ?');
 
+    my $topic_history =
+	$dbh->prepare_cached('DELETE FROM topichistory WHERE topicid = ?');
+
+    my $topic_view_history =
+	$dbh->prepare_cached('DELETE FROM topicviewhistory WHERE topicid = ?');
+
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&
 	defined $delete_file && defined $delete_delta && 
-	defined $topic_metrics && defined $user_metrics;
+	defined $topic_metrics && defined $user_metrics &&
+	defined $topic_history && defined $topic_view_history;
 
     # Now do the deed.
     $success &&= $select->execute($self->{topicid});
@@ -713,6 +720,8 @@ sub delete($) {
 	$self->_delete_participants($dbh, $Codestriker::PARTICIPANT_REVIEWER);
     $success &&=
 	$self->_delete_participants($dbh, $Codestriker::PARTICIPANT_CC);
+    $success &&= $topic_history->execute($self->{topicid});
+    $success &&= $topic_view_history->execute($self->{topicid});
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 

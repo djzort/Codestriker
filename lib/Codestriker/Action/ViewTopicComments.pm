@@ -52,15 +52,17 @@ sub process($$$) {
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
-
-    Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic, $url_builder);
+    Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
+						       $url_builder);
 
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
 
-    # Get the list of users that have put comments in against the comment, and filter if needed.
-    my @usersThatHaveComments = Codestriker::Model::Comment->read_authors($topicid);
+    # Get the list of users that have put comments in against the
+    # comment, and filter if needed.
+    my @usersThatHaveComments =
+	Codestriker::Model::Comment->read_authors($topicid);
     @usersThatHaveComments = map 
             { Codestriker->filter_email($_) } 
             @usersThatHaveComments;        
@@ -85,8 +87,7 @@ sub process($$$) {
 					    $comment->{filenew},
 					    $comment->{fileline}, $mode, 0);
 					    
-	    $comment->{view_file} =
-		"javascript: myOpen('$new_file','CVS')";
+	    $comment->{view_file} = "javascript: myOpen('$new_file','CVS')";
 	    my $parallel = 
 		$url_builder->view_file_url($topicid, $comment->{filenumber},
 					    $comment->{filenew},

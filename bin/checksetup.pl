@@ -177,10 +177,22 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
     $text_type = "mediumtext";
 }
 
+# The database type for a timestamp.  For MySQL and PostgreSQL, this is
+# "timestamp", for ODBC, this is "datetime".
+my $timestamp_type = "timestamp";
+if ($Codestriker::db =~ /^DBI:odbc/i) {
+    $timestamp_type = "datetime";
+}
+
 # The commentstate table needs a unique id.  For MySQL, use an auto
-# incrementor.  For PostgreSQL and other databases, use a sequence.
-my $auto_increment = ($Codestriker::db =~ /^DBI:mysql/i) ?
-    "auto_increment" : "default nextval('sequence')";
+# incrementor, for PostgreSQL and other databases, use a sequence, and
+# for ODBC, use "IDENTITY".
+my $auto_increment = "default nextval('sequence')";
+if ($Codestriker::db =~ /^DBI:mysql/i) {
+    $auto_increment = "auto_increment";
+} elsif ($Codestriker::db =~ /^DBI:odbc/i) {
+    $auto_increment = "IDENTITY";
+}
 
 $table{topic} =
     "id int NOT NULL,
@@ -189,33 +201,41 @@ $table{topic} =
      description text NOT NULL,
      document $text_type NOT NULL,
      state smallint NOT NULL,
-     creation_ts timestamp NOT NULL,
-     modified_ts timestamp NOT NULL,
+     creation_ts $timestamp_type NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      version int NOT NULL,
      repository text,
      projectid int NOT NULL,
      PRIMARY KEY (id)";
 
+$index{topic} = "CREATE INDEX author_idx ON topic(author)";
+
 # Holds information relating to how a topic has changed over time.  Only
 # changeable topic attributes are recorded in this table.
 $table{topichistory} =
-    "id int NOT NULL,
+    "topicid int NOT NULL,
      author varchar(255) NOT NULL,
      title varchar(255) NOT NULL,
      description text NOT NULL,
      state smallint NOT NULL,
-     modified_ts timestamp NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      version int NOT NULL,
      repository text,
      projectid int NOT NULL,
      modified_by_user varchar(255) NOT NULL,
-     PRIMARY KEY (id, version)";
+     PRIMARY KEY (topicid, version)";
+
+$index{topichistory} =
+    "CREATE INDEX th_idx ON topichistory(topicid)";
 
 # Holds information as to when a user viewed a topic.
 $table{topicviewhistory} =
     "topicid int NOT NULL,
      email varchar(255) NOT NULL,
-     creation_ts timestamp NOT NULL";
+     creation_ts $timestamp_type NOT NULL";
+
+$index{topicviewhistory} =
+    "CREATE INDEX tvh_idx ON topicviewhistory(topicid)";
 
 # Holds all of the metric data that is owned by a specific user on a specific 
 # topic. One row per metric. Metric data that is left empty does not get a row.
@@ -226,6 +246,8 @@ $table{topicusermetric} =
      value float NOT NULL,
      PRIMARY KEY (topicid,email,metric_name)";
 
+$index{topicusermetric} = "CREATE INDEX tum_idx ON topicusermetric(topicid)";
+
 # Holds all of the metric data that is owned by a specific topic. One row per 
 # metric. Metric data that is empty does not get a row.
 $table{topicmetric} =
@@ -234,13 +256,15 @@ $table{topicmetric} =
      value float NOT NULL,
      PRIMARY KEY (topicid,metric_name)";
 
-$index{topic} = "CREATE INDEX author_idx ON topic(author)";
+$index{topicmetric} = "CREATE INDEX tm_idx ON topicmetric(topicid)";
 
 $table{comment} =
     "commentstateid int NOT NULL,
      commentfield text NOT NULL,
      author varchar(255) NOT NULL,
-     creation_ts timestamp NOT NULL";
+     creation_ts $timestamp_type NOT NULL";
+
+$index{comment} = "CREATE INDEX comment_idx ON comment(commentstateid)";
 
 $table{commentstate} =
     "id int NOT NULL $auto_increment,
@@ -250,8 +274,8 @@ $table{commentstate} =
      filenew smallint NOT NULL,
      state smallint NOT NULL,
      version int NOT NULL,
-     creation_ts timestamp NOT NULL,
-     modified_ts timestamp NOT NULL,
+     creation_ts $timestamp_type NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      PRIMARY KEY (id)";
 
 $index{commentstate} =
@@ -263,7 +287,7 @@ $table{commentstatehistory} =
     "id int NOT NULL,
      state smallint NOT NULL,
      version int NOT NULL,
-     modified_ts timestamp NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      modified_by_user varchar(255) NOT NULL,
      PRIMARY KEY (id, version)";
 
@@ -272,7 +296,7 @@ $table{participant} =
      topicid int NOT NULL,
      type smallint NOT NULL,
      state smallint NOT NULL,
-     modified_ts timestamp NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      version int NOT NULL,
      PRIMARY KEY (topicid, email, type)";
 
@@ -286,7 +310,7 @@ $table{topicbug} =
 
 $index{topicbug} = "CREATE INDEX topicbug_tid_idx ON topicbug(topicid)";
 
-$table{file} =
+$table{topicfile} =
     "topicid int NOT NULL,
      sequence smallint NOT NULL,
      filename text NOT NULL,
@@ -296,7 +320,7 @@ $table{file} =
      diff $text_type,
      PRIMARY KEY (topicid, sequence)";
 
-$index{file} = "CREATE INDEX file_tid_idx ON file(topicid)";
+$index{topicfile} = "CREATE INDEX topicfile_tid_idx ON topicfile(topicid)";
 
 $table{delta} =
     "topicid int NOT NULL,
@@ -315,8 +339,8 @@ $table{project} =
     "id int NOT NULL $auto_increment,
      name varchar(255) NOT NULL,
      description $text_type NOT NULL,
-     creation_ts timestamp NOT NULL,
-     modified_ts timestamp NOT NULL,
+     creation_ts $timestamp_type NOT NULL,
+     modified_ts $timestamp_type NOT NULL,
      version int NOT NULL,
      PRIMARY KEY (id)";
 
@@ -524,9 +548,42 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
     }
 }
 
-# Add appropriate fields to the database tables as things have evolved.
 # Make sure the database is committed before proceeding.
 Codestriker::DB::DBI->release_connection($dbh, 1);
+
+# Migrate the "file" table to "topicfile", to avoid keyword issues with ODBC.
+# Make sure the error values of the database connection are correctly set,
+# to handle the most likely case where the "file" table doesn't even exist.
+$dbh = Codestriker::DB::DBI->get_connection();
+$dbh->{RaiseError} = 0;
+$dbh->{PrintError} = 0;
+my $file_select = $dbh->prepare_cached("SELECT topicid, sequence, filename, " .
+				       "topicoffset, revision, binaryfile, " .
+				       "diff FROM file");
+if (defined $file_select && $file_select->execute()) {
+    print "Migrating \"file\" table to \"topicfile\"...\n";
+    my $file_insert = $dbh->prepare_cached("INSERT INTO topicfile " .
+					   "(topicid, sequence, filename, " .
+					   "topicoffset, revision, " .
+					   "binaryfile, diff) " .
+					   "VALUES (?, ?, ?, ?, ?, ?, ?)");
+    while (my ($topicid, $sequence, $filename, $topicoffset, $revision,
+	       $binaryfile, $diff) = $file_select->fetchrow_array()) {
+	if (! $file_insert->execute($topicid, $sequence, $filename,
+				    $topicoffset, $revision, $binaryfile,
+				    $diff)) {
+	    print "Problem migrating file table: $dbh->errstr\n";
+	    exit 1;
+	}
+    }
+    $file_select->finish();
+
+    # Now drop the old file table.
+    $dbh->do('DROP TABLE file');
+}
+Codestriker::DB::DBI->release_connection($dbh, 1);
+
+# Add appropriate fields to the database tables as things have evolved.
 $dbh = Codestriker::DB::DBI->get_connection();
 
 add_field('topic', 'repository', 'text');
@@ -566,7 +623,7 @@ if ($old_comment_table) {
 	move_old_table("comment", undef);
 	
 	$stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line ' .
-					'FROM comment_old');
+				     'FROM comment_old');
 	$stmt->execute();
 	while (my ($topicid, $line) = $stmt->fetchrow_array()) {
 	    print " Migrating comment for topic $topicid offset $line...\n";
@@ -621,7 +678,7 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
     # Check if there is a file record for this topic.  If not, just create
     # a simple 1 file, 1 delta record, so that the old comment offsets are
     # preserved.
-    $check = $dbh->prepare_cached('SELECT COUNT(*) FROM file ' .
+    $check = $dbh->prepare_cached('SELECT COUNT(*) FROM topicfile ' .
 				  'WHERE topicid = ?');
     $check->execute($topicid);
     my ($filecount) = $check->fetchrow_array();
@@ -673,7 +730,7 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
 						   $repository, $topicid);
 	print "Creating $#deltas deltas for topic $topicid\n";
 	my $deletefile_stmt =
-	    $dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
+	    $dbh->prepare_cached('DELETE FROM topicfile WHERE topicid = ?');
 	$deletefile_stmt->execute($topicid);
     }
 

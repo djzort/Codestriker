@@ -45,13 +45,13 @@ sub get_deltas($$) {
     my $select_deltas =
 	$dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
 			     'binaryfile, old_linenumber, new_linenumber, ' .
-			     'deltatext, description, file.sequence, ' .
-			     'repmatch FROM file, delta ' .
+			     'deltatext, description, topicfile.sequence, ' .
+			     'repmatch FROM topicfile, delta ' .
 			     'WHERE delta.topicid = ? AND ' .
-			     'delta.topicid = file.topicid AND ' .
-			     'delta.file_sequence = file.sequence ' .
+			     'delta.topicid = topicfile.topicid AND ' .
+			     'delta.file_sequence = topicfile.sequence ' .
 			     (($filenumber != -1) ?
-			      'AND file.sequence = ? ' : '').
+			      'AND topicfile.sequence = ? ' : '').
 			     'ORDER BY delta_sequence ASC');
     
     my $success = defined $select_deltas;

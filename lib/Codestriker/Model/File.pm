@@ -20,7 +20,8 @@ sub create($$$$) {
 
     # Create the appropriate prepared statements.
     my $insert_file =
-	$dbh->prepare_cached('INSERT INTO file (topicid, sequence, filename,' .
+	$dbh->prepare_cached('INSERT INTO topicfile ' .
+			     '(topicid, sequence, filename,' .
 			     ' topicoffset, revision, diff, binaryfile) ' .
 			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert_file;
@@ -72,8 +73,9 @@ sub get($$$$$$) {
 
     # Retrieve the file information.
     my $select_file =
-	$dbh->prepare_cached('SELECT topicoffset, revision, diff FROM file' .
-			     ' WHERE topicid = ? AND sequence = ?');
+	$dbh->prepare_cached('SELECT topicoffset, revision, diff ' .
+			     'FROM topicfile ' .
+			     'WHERE topicid = ? AND sequence = ?');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid, $filenumber);
     
@@ -103,7 +105,7 @@ sub get_filetable($$$$$$) {
     # Setup the appropriate statement and execute it.
     my $select_file =
 	$dbh->prepare_cached('SELECT filename, revision, topicoffset, ' .
-			     'binaryfile FROM file WHERE topicid = ? ' .
+			     'binaryfile FROM topicfile WHERE topicid = ? ' .
 			     'ORDER BY sequence');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid);
@@ -148,8 +150,7 @@ sub get_deltas($$$) {
         }
     }
 
-     return @results;
-
+    return @results;
 }
 
 # Retrieve the delta for the specific filename and linenumber.

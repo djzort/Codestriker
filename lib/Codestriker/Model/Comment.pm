@@ -134,7 +134,7 @@ sub create($$$$$$$$$) {
         
     # get the filename, for the new comment.
     my $get_filename = $dbh->prepare_cached('SELECT filename ' .
-					    'FROM file ' .
+					    'FROM topicfile ' .
 					    'WHERE topicid = ? AND ' .
 					    'sequence = ?');
     $success &&= defined $get_filename;
@@ -207,16 +207,16 @@ sub read_all_comments_for_topic($$) {
 			     'commentstate.filenew, ' .
 			     'comment.creation_ts, ' .
 			     'commentstate.state, ' .
-			     'file.filename, ' .
+			     'topicfile.filename, ' .
 			     'commentstate.version, ' .
 			     'commentstate.id, ' .
 			     'commentstate.creation_ts, ' .
 			     'commentstate.modified_ts ' .
-			     'FROM comment, commentstate, file ' .
+			     'FROM comment, commentstate, topicfile ' .
 			     'WHERE commentstate.topicid = ? ' .
 			     'AND commentstate.id = comment.commentstateid ' .
-			     'AND file.topicid = commentstate.topicid AND ' .
-			     'file.sequence = commentstate.filenumber ' .
+			     'AND topicfile.topicid = commentstate.topicid ' .
+			     'AND topicfile.sequence = commentstate.filenumber ' .
 			     'ORDER BY ' .
 			     'commentstate.filenumber, ' .
 			     'commentstate.fileline, ' .

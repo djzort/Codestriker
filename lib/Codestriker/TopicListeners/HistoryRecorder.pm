@@ -34,7 +34,8 @@ sub _insert_topichistory_entry($$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my $insert =
-	$dbh->prepare_cached('INSERT INTO topichistory (id, author, title, ' .
+	$dbh->prepare_cached('INSERT INTO topichistory ' .
+			     '(topicid, author, title, ' .
 			     'description, state, modified_ts, version, ' .
 			     'repository, projectid, modified_by_user) ' .
 			     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
