@@ -13,8 +13,8 @@ use strict;
 
 # Create the appropriate delta rows for this review.  Note this gets called
 # from Topic::create(), which controls the transaction commit/rollback.
-sub create($$$$$) {
-    my ($type, $dbh, $topicid, $deltas_ref, $repository_root) = @_;
+sub create($$$$) {
+    my ($type, $dbh, $topicid, $deltas_ref) = @_;
 
     # Create the appropriate prepared statements.
     my $insert_file =

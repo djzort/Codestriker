@@ -15,7 +15,7 @@ use Codestriker::FileParser::UnidiffUtils;
 
 # Return the array of filenames, revision number, linenumber, whether its
 # binary or not, and the diff text.
-# Return undef if the file can't be parsed, meaning it is in another format.
+# Return () if the file can't be parsed, meaning it is in another format.
 sub parse ($$$) {
     my ($type, $fh, $repository) = @_;
 
@@ -90,6 +90,7 @@ sub parse ($$$) {
 	return () unless $line =~ /^diff/o;
 	$line = <$fh>;
 	return () unless defined $line;
+
 
 	# If the diff is empty (since we may have used the -b flag), continue
 	# processing the next diff header back around this loop.  Note this is

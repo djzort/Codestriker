@@ -31,30 +31,6 @@ sub process($$$) {
     my $tabwidth = $http_input->get('tabwidth');
     my $anchor = $http_input->get('a');
 
-    # Check if the URL provided was old style, and if so, try to convert
-    # it to the new line numbering scheme.
-    if (! defined $fn && ! defined $new && defined $line) {
-	my ($accurate, $filename, $fileline);
-	my $rc = Codestriker::Action::SubmitComment->
-	    _get_file_linenumber($topic, $line, \$fn, \$filename,
-				 \$fileline, \$accurate, \$new);
-	if ($rc == 0) {
-	    # Review is not a diff, just a single file.  Preserve the line
-	    # parameter.
-	    $fn = 1;
-	    $new = 1;
-	} elsif ($filenumber == -1) {
-	    # Comment was made against a diff header.  The comment would have
-	    # been upgraded as follows.
-	    $fn = 1;
-	    $line = 1;
-	    $new = 1;
-	} else {
-	    # Update the line number.
-	    $line = $fileline;
-	}
-    }
-
     # Retrieve the appropriate topic details.
     my ($document_author, $document_title, $document_bug_ids,
 	$document_reviewers, $document_cc, $description,

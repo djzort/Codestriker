@@ -14,11 +14,9 @@ use strict;
 use Codestriker::FileParser::UnidiffUtils;
 
 # Return the array of filenames, revision number, linenumber and the diff text.
-# Return undef if the file can't be parsed, meaning it is in another format.
+# Return () if the file can't be parsed, meaning it is in another format.
 sub parse ($$) {
     my ($type, $fh) = @_;
-
-    print "CALLED PATCH UNIDIFF\n";
 
     # Array of results found.
     my @result = ();
@@ -64,6 +62,8 @@ sub parse ($$) {
 	    $revision = $Codestriker::ADDED_REVISION;
 	} elsif ($line =~ /^\-\-\- (.*)\t/o) {
 	    $filename = $1;
+	} else {
+	    return ();
 	}
 	
 	if ($binary == 0) {
@@ -77,6 +77,8 @@ sub parse ($$) {
 		$revision = $Codestriker::REMOVED_REVISION;
 	    } elsif ($line =~ /^\+\+\+ (.*)\t/o) {
 		$filename = $1;
+	    } else {
+		return ();
 	    }
 
 	    # Extract the diff chunks for this file.

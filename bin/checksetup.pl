@@ -354,7 +354,6 @@ sub create_commentstate ($$$$)
     my $rc = Codestriker::Action::SubmitComment->
 	_get_file_linenumber($topicid, $line, \$filenumber, \$filename,
 			     \$fileline, \$accurate, \$filenew);
-    print " Got rc of $rc from get_file_linenumber\n";
     if ($rc == 0) {
 	# Review is not a diff, just a single file.
 	$filenumber = 1;
@@ -387,8 +386,6 @@ sub create_commentstate ($$$$)
     $check->execute($topicid, $fileline, $filenumber, $filenew);
     my ($id) = $check->fetchrow_array();
     $check->finish();
-
-    print "Got id of $id\n";
 
     return $id;
 }

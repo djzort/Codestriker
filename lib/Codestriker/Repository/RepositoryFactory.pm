@@ -14,6 +14,7 @@ use strict;
 use Codestriker::Repository::CvsLocal;
 use Codestriker::Repository::ViewCvs;
 use Codestriker::Repository::CvsWeb;
+use Codestriker::Repository::Subversion;
 
 # Factory method for retrieving a Repository object, given a descriptor.
 sub get ($$) {
@@ -32,6 +33,8 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*(https?:\/\/.*cvsweb\.cgi)\/*\s+(.*?)\/*\s*$/i) {
 	# CVS web repository.
 	return Codestriker::Repository::CvsWeb->new($1, $2);
+    } elsif ($repository =~ /^\s*svn:(https?:\/\/.*)\s*$/i) {
+	return Codestriker::Repository::Subversion->new($1);
     } else {
 	# Unknown repository type.
 	print STDERR "Codestriker: Couldn't match repository: \"$repository\"\n";
@@ -40,7 +43,3 @@ sub get ($$) {
 }
 
 1;
-
-    
-
-

@@ -43,7 +43,7 @@ sub create($$$$$$$$$$$) {
     my $success = defined $insert_topic && defined $insert_bugs &&
 	defined $insert_participant;
 
-    # Create all of the necessary rows.  It is assumed sate 0 is the initial
+    # Create all of the necessary rows.  It is assumed state 0 is the initial
     # state.
     my $repository_string = "";
     $repository_string = $repository->toString() if defined $repository;
@@ -71,10 +71,7 @@ sub create($$$$$$$$$$$) {
     }
 
     # Create the appropriate delta rows.
-    my $repository_root = "";
-    $repository_root = $repository->getRoot() if defined $repository;
-    $success &&= Codestriker::Model::File->create($dbh, $topicid, $deltas_ref,
-						  $repository_root);
+    $success &&= Codestriker::Model::File->create($dbh, $topicid, $deltas_ref);
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
@@ -406,8 +403,14 @@ sub delete($$) {
 
     # Create the prepared statements.
     my $delete_topic = $dbh->prepare_cached('DELETE FROM topic WHERE id = ?');
+    my $select = $dbh->prepare_cached('SELECT id FROM commentstate ' .
+				      'WHERE topicid = ?');
     my $delete_comments =
-	$dbh->prepare_cached('DELETE FROM comment WHERE topicid = ?');
+	$dbh->prepare_cached('DELETE FROM comment ' .
+			     'WHERE commentstateid = ?');
+    my $delete_commentstate =
+	$dbh->prepare_cached('DELETE FROM commentstate ' .
+			     'WHERE topicid = ?');
     my $delete_file =
 	$dbh->prepare_cached('DELETE FROM file WHERE topicid = ?');
     my $delete_participant =
@@ -416,10 +419,19 @@ sub delete($$) {
 	$dbh->prepare_cached('DELETE FROM topicbug WHERE topicid = ?');
 
     my $success = defined $delete_topic && defined $delete_comments &&
+	defined $delete_commentstate && defined $select &&
 	defined $delete_file && defined $delete_participant &&
 	defined $delete_topicbug;
     
     # Now do the deed.
+    $success &&= $select->execute($topicid);
+    if ($success) {
+	while (my ($commentstateid) = $select->fetchrow_array()) {
+	    $success &&= $delete_comments->execute($commentstateid);
+	}
+	$success &&= $select->finish();
+    }
+    $success &&= $delete_commentstate->execute($topicid);
     $success &&= $delete_topic->execute($topicid);
     $success &&= $delete_comments->execute($topicid);
     $success &&= $delete_file->execute($topicid);

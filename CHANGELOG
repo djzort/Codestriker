@@ -1,7 +1,16 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
-*** Also, it is advisable to make a backup of your data before upgrading ***
+*** Also, it is _highly_ advisable to backup your data before upgrading ***
 
 Version 1.7.0
+
+* Massive refactor so that the diff parsing and rendering code is
+  broken up into clean modules, which will allow for the easier
+  adoption of different SCM systems in the future.
+
+* In addition to CVS and PATCH modules, which existed in previous
+  version of codestriker but have now been ported into the new
+  structure, a Subversion (http://subversion.tigris.org) repository
+  and diff parsing module has been written.
 
 * Modified HTML generation so topic view output is smaller, by using
   javascript functions to reduce the HREF size for each filenumber.

@@ -66,11 +66,9 @@ sub process($$$) {
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;
-    my $repository_root = "";
     if ($Codestriker::allow_repositories) {
 	$repository =
 	    Codestriker::Repository::RepositoryFactory->get($repository_url);
-	$repository_root = defined $repository ? $repository->getRoot() : "";
     } else {
 	# Indicate not to activate any repository-related links.
 	$repository_url = "";
