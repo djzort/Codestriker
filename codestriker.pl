@@ -22,33 +22,33 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-use CGI;
-use CGI::Carp 'fatalsToBrowser';
-
-use FileHandle;
-use IPC::Open2;
-
-#use diagnostics -verbose;
+# BEGIN CONFIGURATION OPTIONS --------------------
 
 # Location of where to store the code review data.  Make sure the
 # permissions are set appropriately.  If running apache, make sure the
 # following directory is writable to the user running httpd (usually
 # "nobody" or "apache").  Each topic is stored in its own sub-directory,
 # whose name is just a random bunch of digits.
-$datadir="/var/www/codestriker";
+$datadir= "/var/www/codestriker";
 
 # Location of sendmail.
 $sendmail = "/usr/lib/sendmail";
 
-# The method of access to the reposition, ie ":ext:".
-$cvsaccess = "";
+# Indicate whether or not the script can interface to CVS.
+$cvsenabled = 1;
 
 # The -d specification of the location of the CVS repository.
-$cvsrep = "/home/sits/cvs";
+$cvsrep = ":ext:sits@cvs.cvsplot.sourceforge.net:/cvsroot/codestriker";
 
 # The CVS command to execute in order to retrieve file data.  The revision
 # argument and filename is appended to the end of this string.
-$cvscmd = "/usr/bin/cvs -d ${cvsaccess}${cvsrep} co -p";
+$cvscmd = "/usr/bin/cvs -d ${cvsrep} co -p";
+
+# Set the CVS_RSH environment variable appropriately.  The indentity.pub
+# file refers to a user which has ssh access to the above CVS repository.
+# If the repository is local, this setting won't be required, as $cvsrep will
+# just be the local pathname.  Make sure this is in a secure location.
+$ENV{'CVS_RSH'} = "ssh -i /var/www/codestriker/identity";
 
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
@@ -56,19 +56,15 @@ $ENV{'PATH'} = "/bin:/usr/bin";
 # Don't allow posts larger than 500K.
 $CGI::POST_MAX=1024 * 500;
 
-# Need to call this: codestriker.  have nice graphic with:
-# if (a = b) {
-#    write_data();
-# }
-# with a big cross in red - all in the background with Codestriker in the
-# foreground.
+# END OF CONFIGURATION OPTIONS --------------------
 
-# TODO
-# * Be good to trim leading and trailing newlines.
-# * Get things working with "use strict".
-# * Put simple small jpg logo on the top of each page.
-# * If increase/decrease context, don't lose data already typed.
-# * Show number of comments for a specific line number as well.
+use CGI;
+use CGI::Carp 'fatalsToBrowser';
+
+use FileHandle;
+use IPC::Open2;
+
+#use diagnostics -verbose;
 
 # Day strings
 @days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
@@ -718,23 +714,25 @@ sub view_topic ($$) {
     print "<PRE>\n";
     for (my $i = 0; $i <= $#document; $i++) {
 
-	# Check for uni-diff information.
-	if ($document[$i] =~ /^===================================================================$/) {
-	    # The start of a diff block, reset all the variables.
-	    $current_file = "";
-	    $current_file_revision = "";
-	    $current_file_linenumber = "";
-	} elsif ($document[$i] =~ /^RCS file: ${cvsrep}\/(.*),v$/) {
-	    # The part identifying the file.
-	    $current_file = $1;
-	    $current_file_revision = "";
-	    $current_file_linenumber = "";
-	} elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
-	    # The part identifying the revision.
-	    $current_file_revision = $1;
-	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+\d+,\d+ \@\@$/) {
-	    # The part identifying the line number.
-	    $current_file_linenumber = $1;
+	# Check for uni-diff information if $cvsenabled is set.
+	if ($cvsenabled) {
+	    if ($document[$i] =~ /^===================================================================$/) {
+		# The start of a diff block, reset all the variables.
+		$current_file = "";
+		$current_file_revision = "";
+		$current_file_linenumber = "";
+	    } elsif ($document[$i] =~ /^RCS file: ${cvsrep}\/(.*),v$/) {
+		# The part identifying the file.
+		$current_file = $1;
+		$current_file_revision = "";
+		$current_file_linenumber = "";
+	    } elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
+		# The part identifying the revision.
+		$current_file_revision = $1;
+	    } elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+\d+,\d+ \@\@$/) {
+		# The part identifying the line number.
+		$current_file_linenumber = $1;
+	    }
 	}
 
 	my $digit_width = length($i);
@@ -764,7 +762,9 @@ sub view_topic ($$) {
 	    print $query->a({name=>"$i", href=>"$url"},"$linenumber");
 	}
 
-	if ($current_file ne "" && $current_file_revision ne "" &&
+	if ($cvsenabled &&
+	    $current_file ne "" &&
+	    $current_file_revision ne "" &&
 	    $current_file_linenumber ne "")
 	{
 	    my $view_line = $current_file_linenumber - $diff_context;
@@ -1142,6 +1142,10 @@ sub submit_topic ($$$$$$$) {
 # within a new window, so there is no navigation within it.
 sub view_cvs_file ($$$) {
     my ($filename, $revision, $line) = @_;
+
+    if (! $cvsenabled) {
+	error_return("cvs viewing is not enabled - edit configuration");
+    }
 
     if (! defined $filename || $filename eq "") {
 	error_return("No filename was entered");
