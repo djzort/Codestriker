@@ -96,9 +96,9 @@ sub toString ($) {
 # Given a start tag, end tag and a module name, store the text into
 # the specified file handle.  If the size of the diff goes beyond the
 # limit, then return the appropriate error code.
-sub getDiff ($$$$$) {
+sub getDiff ($$$$$$) {
     my ($self, $start_tag, $end_tag, $module_name,
-	$stdout_fh, $stderr_fh) = @_;
+	$stdout_fh, $stderr_fh, $default_to_head) = @_;
 
     # If $end_tag is empty, but the $start_tag has a value, or
     # $start_tag is empty, but $end_tag has a value, simply 
@@ -111,14 +111,17 @@ sub getDiff ($$$$$) {
 	$start_tag = "1.0";
     }
 
+    # Cheat - having two '-u's changes nothing.
+    my $extra_options = $default_to_head ? '-u' : '-f';
+
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 		    $Codestriker::cvs, '-q', '-d', $self->{url},
-		    'rdiff', '-u', '-r', $start_tag, '-r', $end_tag,
-		    $module_name);
+		    'rdiff', '-u', $extra_options,
+		    '-r', $start_tag, '-r', $end_tag, $module_name);
 
     # Ideally, we should use IO::Select, but that is broken on Win32.
     # With CVS, read first from stdout.  If that is empty, then an

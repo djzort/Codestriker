@@ -21,6 +21,14 @@ Version 1.8.5
   extensions which are binary, or of not any interest.  Contributed by
   Dave Clendenan <dave.clendenan@polycom.com>.
 
+* Added a checkbox "Default to HEAD" on the create topic screen which
+  is used for topics based off tags.  If this checkbox is enabled, the
+  '-f' flag is passed to CVS repositories when executing the 'cvs
+  rdiff' command.  This has the effect of retrieving a file's contents
+  from revision HEAD if it is not present for the specified tag value.
+  This option currently has no effect for other repository types at
+  this stage.  Contributed by Dave Clendenan.
+
 * Minor fix for handing CVS rdiff text which end in a binary entry.
   Problem found by Dave Clendenan.
 

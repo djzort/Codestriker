@@ -108,6 +108,7 @@ sub process($) {
     $self->{selected_topics} = \@selected_topics;
     my @selected_comments = $query->param('selected_comments');
     $self->{selected_comments} = \@selected_comments;
+    $self->{default_to_head} = $query->param('default_to_head');
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
@@ -125,6 +126,7 @@ sub process($) {
     $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
     $self->{content} = "html" if ! defined $self->{content};
     $self->{obsoletes} = "" if ! defined $self->{obsoletes};
+    $self->{default_to_head} = 0 if ! defined $self->{default_to_head};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;

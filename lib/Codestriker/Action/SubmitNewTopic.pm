@@ -43,6 +43,7 @@ sub process($$$) {
     my $end_tag = $http_input->get('end_tag');
     my $module = $http_input->get('module');
     my $obsoletes = $http_input->get('obsoletes');
+    my $default_to_head = $http_input->get('default_to_head');
 
     my $feedback = "";
     my $topic_text = "";
@@ -106,6 +107,7 @@ sub process($$$) {
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
     $error_vars->{'obsoletes'} = $obsoletes;
+    $error_vars->{'default_to_head'} = $default_to_head;
 
     my $repository = undef;
     if (scalar(@Codestriker::valid_repositories)) {
@@ -172,7 +174,8 @@ sub process($$$) {
 	}
 	
 	my $rc = $repository->getDiff($start_tag, $end_tag, $module,
-				      $temp_topic_fh, $temp_error_fh);
+				      $temp_topic_fh, $temp_error_fh,
+				      $default_to_head);
 
 	# Make sure the data has been flushed to disk.
 	$temp_topic_fh->flush;

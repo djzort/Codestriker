@@ -131,6 +131,20 @@ is uploaded.
 <INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
 </TR>
+
+<TR>
+ <TD>&nbsp;</TD><TD>&nbsp;</TD>
+[%# The default_to_head input field #%]
+ <TD>Default to HEAD:
+<FONT SIZE="-2"><A HREF="javascript:alert('
+Fall back to HEAD revision if a file does not exist on either tag.\n
+This will allow diffs between a branch and the HEAD revision, without\n 
+showing files not on the branch as deleted.\n
+This option affects only CVS topics currently.
+')">(?)</A></FONT>
+</TD>
+ <TD COLSPAN="3"><INPUT TYPE="checkbox" NAME="default_to_head" [% IF default_to_head %]CHECKED[% END %]></TD>
+</TR>
 [% END %]
 
 [%# The repository the review is made against #%]

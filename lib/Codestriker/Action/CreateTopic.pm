@@ -34,6 +34,7 @@ sub process($$$) {
     $vars->{'topic_title'} = "";
     $vars->{'bug_ids'} = "";
     $vars->{'feedback'} = $http_input->get('feedback');
+    $vars->{'default_to_head'} = "";
     
     # Indicate where the documentation directory and generate the search
     # url.
