@@ -102,8 +102,8 @@ sub process($$$) {
 	"$topic_description\n";
 
     # Send the email notification out.
-    if (!Codestriker::Smtp::SendEmail->doit($from, $to, $cc, $bcc, $subject,
-					    $body)) {
+    if (!Codestriker::Smtp::SendEmail->doit(1, $topicid, $from, $to, $cc, $bcc,
+					    $subject, $body)) {
 	$http_response->error("Failed to send topic creation email");
     }
 

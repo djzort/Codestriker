@@ -2,6 +2,10 @@ Version 1.5.2:
 
 * Fixed minor rendering bug in view single file mode.
 
+* Added Message-Id, In-Reply-To and References headers, so emails
+  relating to the same topic will be displayed in the same thread, for
+  those email clients which supported threaded views.
+
 Version 1.5.1:
 
 * Fixed bug where viewing a file in a popup didn't work for those diffs
