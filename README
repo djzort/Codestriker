@@ -1,8 +1,9 @@
 Codestriker v1.7.0
 Copyright (c) 2001, 2002, 2003 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
-(see the CHANGELOG file for details on changes).
-------------------------------------------------
+
+*** Please read the CHANGELOG file for details on changes ***
+-------------------------------------------------------------
 
 Codestriker is a perl CGI script which is used for performing code
 reviews in a collaborative fashion as opposed to sending patches and
@@ -20,20 +21,19 @@ Once all reviewers have finished, the author has all
 review comments available in a structured fashion, as
 opposed to a pile of unstructured emails.
 
-Special support is provided for integration with CVS
-repositories, for the display of coloured diffs and for the
-ability to view original and new files in their entirety
-to assist in the review process.  Codestriker can be
-optionally linked with a bug tracking system, such as
-bugzilla, and a CVS web viewing system, such as CVS web to
-obtain further information necessary to complete a review.
+Special support is provided for integration with CVS and Subversion
+repositories, for the display of coloured diffs and for the ability to
+view original and new files in their entirety to assist in the review
+process.  Codestriker can be optionally linked with a bug tracking
+system, such as bugzilla.  Other SCM systems, such as ClearCase will
+be added in future releases, given help from the developer community.
 
 The Template Toolkit is used for generating HTML output, so the
 appearance of Codestriker can be modified without changing any Perl
 code.
 
-A tutorial on how to use codestriker can be seen at
-http://codestriker.sourceforge.net
+A tutorial (albeit somewhat dated) on how to use codestriker can be
+seen at http://codestriker.sourceforge.net
 
 Installation
 ------------
@@ -57,9 +57,9 @@ The templates live in template/en/default.
 
 ----------------------------------------------------------------------
 
-For MySQL, it is necessary to download the mysql, mysql-devel and
-mysql-server packages (or equivalent for non-RedHat distros), install
-them, and to then obtain the DBD::mysql package from
+For MySQL installations, it is necessary to download the mysql,
+mysql-devel and mysql-server packages (or equivalent for non-RedHat
+distros), install them, and to then obtain the DBD::mysql package from
 http://www.cpan.org for the Perl MySQL DBI interface.  Start your
 database with something like:
 
@@ -172,6 +172,22 @@ PerlTaintCheck On
 Restart apache (for upgrades) with something like
 "/etc/rc.d/init.d/httpd restart" and you should be away.
 
+Using Apache2
+-------------
+
+I have only used Codestriker with Apache 1.x with mod_perl, but have
+used it as an ordinary CGI script with Apache2.  A user has reported a
+successful deployment of Codestriker under mod_perl Apache2:
+
+Using Windows
+-------------
+
+I've had report of a Windows user being able to successfully install
+Codestriker under Windows XP, with the following software components.
+Unfortunately, there is no simple installation process, so you need to
+be experienced with installing Perl web applications with Apache,
+before embarking on this task.
+
 Migrating old data
 ------------------
 
@@ -224,9 +240,9 @@ codestriker.conf to ensure all the settings are correct for your site.
 It is intended that codestriker.conf will remain fairly static, so
 upgrades should be fairly painless.  Among other things, the settings
 include the location of your CVS repository, the base URL to your bug
-tracking system, and the base URL to your CVS viewing system.  Note
-these settings can be left blank, they aren't required in order to use
-Codestriker.
+tracking system, and the base URL to your CVS (or other SCM) viewing
+system.  Note these settings can be left blank, they aren't required
+in order to use Codestriker.
 
 For deployments outside an intranet, I would suggest using apache's
 ".htaccess" mechanism to limit access as to who can execute the
@@ -295,5 +311,8 @@ Future plans
 Please mail me any other suggestions you have to
 codestriker-user@lists.sourceforge.net or to me personally at
 sits@users.sourceforge.net.  Contributions are most welcome!
+
+Immediate work includes support for other source control management
+systems, such as clearcase, and even possibly VSS if its possible.
 
 Codestriker project page: http://sourceforge.net/projects/codestriker.

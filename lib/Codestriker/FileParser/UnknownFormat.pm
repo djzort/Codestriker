@@ -18,8 +18,6 @@ use strict;
 sub parse ($$) {
     my ($type, $fh) = @_;
 
-    print "UNKNOWN format\n";
-
     # Array of results found.
     my @result = ();
 
