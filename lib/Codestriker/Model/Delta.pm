@@ -104,16 +104,27 @@ sub get_deltas($$$) {
     
     # The delta object needs to know if there are only delta objects
     # in this file so it can figure out if the delta is a new file.
-    foreach my $delta (@results) {
-	if (scalar(@results) == 1) {
-        	$delta->{only_delta_in_file} = 1;
+
+    # Set the 'only_delta_in_file' field for each delta.
+    if (scalar(@results) > 0) {
+        # Assume the first delta is the only delta unless proven otherwise.
+        $results[0]->{only_delta_in_file} = 1;
+        for (my $i = 1; $i < scalar(@results); $i++) {
+            if ($results[$i-1]->{filenumber} == $results[$i]->{filenumber}) {
+                # If the previous file has the same filenumber, then we know that
+                # neither the current file nor the previous file are the only
+                # deltas for the file.
+                $results[$i]->{only_delta_in_file} = 0;
+                $results[$i-1]->{only_delta_in_file} = 0;
+            } else {
+                # This is the first delta of a file.  We'll assume it's the
+                # only delta for this file.  If there are more deltas, the next
+                # loop will correct the assumption.
+                $results[$i]->{only_delta_in_file} = 1;
         }
-        else {
-        	$delta->{only_delta_in_file} = 0;
         }
     }
 
-    
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
     
@@ -135,7 +146,7 @@ sub is_delta_new_file
     # - delta must start at line 1 (0ld, and new)
     my $is_new_file = 0;
     if ($self->{only_delta_in_file} &&
-	$self->{old_linenumber} == 1 &&
+	$self->{old_linenumber} == 0 &&
 	$self->{new_linenumber} == 1) {
 	# All of the delta text lines must start with +.
 	my @lines = split '\n', $self->{text};

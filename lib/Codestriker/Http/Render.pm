@@ -280,7 +280,7 @@ sub delta ($$$$$$$$$$) {
 	    
 	    # Removed the delta text, where + is added to the start of each
 	    # line.  Also make sure the line is suitably escaped.
-	    $line =~ s/^\+ //;
+	    $line =~ s/^\+//;
 	    $line = HTML::Entities::encode($line);
 
 	    my $cell = $self->render_coloured_cell($line);

@@ -57,7 +57,7 @@ sub topic_create($$) {
         "The topic was created with the following files:\n\n" .
         join("\n",@filenames);
 
-    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc,$notes);
+    $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc, $bcc,$notes);
 
     return '';
 }
@@ -254,8 +254,8 @@ sub send_topic_changed_email {
         my $cc = "";
 
         # Send off the email to the revelant parties.
-        $self->_send_topic_email($topic, "Modified", 1, $from, 
-                $to, $cc, $bcc,$changes);
+        $self->_send_topic_email($topic, 0, "Modified", 1, $from, 
+				 $to, $cc, $bcc,$changes);
     }
 }
 
@@ -349,7 +349,7 @@ sub comment_create($$$) {
 # This is a private helper function that is used to send topic emails. Topic 
 # emails include topic creation, state changes, and deletes.
 sub _send_topic_email {
-    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc, $notes) = @_;
+    my ($self, $topic, $new, $event_name, $include_url, $from, $to, $cc, $bcc, $notes) = @_;
   
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -368,7 +368,7 @@ sub _send_topic_email {
         $notes;
 
     # Send the email notification out.
-    $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
+    $self->doit($new, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
 }
 
 # Send an email with the specified data.  Return false if the mail can't be

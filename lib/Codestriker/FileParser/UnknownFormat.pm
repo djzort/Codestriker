@@ -24,14 +24,14 @@ sub parse ($$) {
     # Read in all of the data as a single chunk.
     my $text = "";
     while (defined(my $line = <$fh>)) {
-	$text .= "+ $line";
+	$text .= "+$line";
     }
 
     my $chunk = {};
 
     $chunk->{filename} = $uploaded_filename;
     $chunk->{revision} = $Codestriker::ADDED_REVISION;
-    $chunk->{old_linenumber} = 1;
+    $chunk->{old_linenumber} = 0;
     $chunk->{new_linenumber} = 1;
     $chunk->{binary} = 0;
     $chunk->{text} = $text;

@@ -1,6 +1,19 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.8.2
+
+* Topic property change emails didn't have the "References" and
+  "In-Reply-To" mail headers set correctly, so that those emails
+  weren't grouped into the same "topic" email thread.
+
+* The view topic display has been improved for diffs which contain new
+  files.  Now the entire width of the screen is used when displaying
+  new files.  Fix from Jason Remilliard and Kannan Goundan.
+
+* The email taint/input checking code has been tightened, from Jason
+  Remilliard.
+
 Version 1.8.1
 
 * Modified the filename field in the topicfile table back to 255

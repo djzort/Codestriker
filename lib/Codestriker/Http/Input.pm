@@ -232,7 +232,12 @@ sub make_canonical_email_list($$) {
     my ($type, $emails) = @_;
 
     if (defined $emails && $emails ne "") {
-	return join ', ', split /[\s\n\t,;]+/, $emails;
+
+        # Chew off white space that is around the emails addresses.
+        $emails =~ s/^[\s]*//;
+        $emails =~ s/[\s]*$//;
+
+	return join ', ', split /[\s,;]+/, $emails;
     } else {
 	return $emails;
     }
@@ -244,7 +249,7 @@ sub make_canonical_bug_list($$) {
     my ($type, $bugs) = @_;
 
     if (defined $bugs && $bugs ne "") {
-	return join ', ', split /[\s\n\t,;]+/, $bugs;
+	return join ', ', split /[\s,;]+/, $bugs;
     } else {
 	return "";
     }
@@ -320,21 +325,21 @@ sub _untaint_comma_digits($$) {
 sub _untaint_email($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[-_\@\w\.]+');
+    $self->_untaint($name, '[\s]*[-_\w\.]{1,255}\@[-_\w\.]{1,255}[\s]*');
 }
 
 # Untaint a list of email addresses.
 sub _untaint_emails($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[-_@\w,;\.\s]+');
+    $self->_untaint($name, '[\s]*([-_\w\.]{1,255}\@[-_\w\.]{1,255}[\s,;]*){1,100}[\s]*');
 }
 
 # Untaint a list of bug ids.
 sub _untaint_bug_ids($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[0-9A-Za-z_;,\s\n\t]+');
+    $self->_untaint($name, '([0-9]+[\s,;]*){1,100}');
 }
 
 1;
