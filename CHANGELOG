@@ -65,6 +65,9 @@ Version 1.8.3
   -----[after 135 inserted/moved 152 (was at 40)]-----
   -----[after 135 inserted/moved 154-155 (was at 42-43)]-----
 
+* Perforce integration has been improved to work with older versions
+  of p4.
+
 Version 1.8.2
 
 * Codestriker now has the ability to view a specific file at a time in

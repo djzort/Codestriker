@@ -30,9 +30,9 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
-    open(P4, "\"$Codestriker::p4\" -H " . $self->{hostname} .
-	 " -p " . $self->{port} . " -u " . $self->{user} .
-	 " -c " . $self->{client} .
+    open(P4, "\"$Codestriker::p4\"" .
+	 " -p " . $self->{hostname} . ':' . $self->{port} .
+	 " -u " . $self->{user} . " -c " . $self->{client} .
 	 " print -q \"$filename\"" . "#" . "$revision |")
 	|| die "Can't retrieve data using p4: $!";
 
