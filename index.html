@@ -50,10 +50,11 @@
 	    Special support is provided for integration with a CVS
 	    repository, for the display of coloured diffs and for the
 	    ability to view original and new files in their entirety
-	    to assist in the review process.  Codestriker can be
-	    optionally linked with a bug tracking system, such as
-	    bugzilla, and a CVS web viewing system, such as CVS web to
-	    obtain further information necessary to complete a review.
+	    (and side-by-side) to assist in the review process.
+	    Codestriker can be optionally linked with a bug tracking
+	    system, such as bugzilla, and a CVS web viewing system,
+	    such as CVS web to obtain further information necessary to
+	    complete a review.
         </p>
 
 	<h2>Example usage</h2>
@@ -77,7 +78,11 @@
 	    the new topic.  The "Topic description"
 	    provides a description as to what the code changes are,
 	    which needs to be informative, as this is the text that
-	    is sent with the topic creation email.
+	    is sent with the topic creation email.  URLs will be
+	    rendered as hyperlinks, and strings in the form of "Bug
+	    <ID>" will be linked to your bug tracking system, if it is
+	    defined, when the description is displayed on the view
+	    topic screen.
 	</p>
 	<p>
 	    The actual code itself is entered either pasted inline
@@ -88,7 +93,7 @@
 	    the proposed code differences.
 	</p>
         <p>
-	    The "Bug ids" field is optional, and is used to link the
+	    The "Bug" field is optional, and is used to link the
 	    review to bugs present in your bug tracking system, such
 	    as Bugzilla.  If bug ids are entered, links to each bug
 	    will be present in the view topic screen.
@@ -181,8 +186,8 @@
 	   are also supported in the display.  Although not shown
 	   above, the topic view screen has a link at the top, to
 	   alternate between coloured diff and the textual view.  An
-	   example of a coloured diff can be seen below, which some
-	   developers find easier to read than an ordinary diff.
+	   example of a coloured diff display can be seen below, which
+	   some developers find easier to read than an ordinary diff.
 	</p>
 	<p>
 	   <a href="view3.jpg">
@@ -222,14 +227,21 @@
 
 	<p>
  	   Next to the "Line" links, the latest versions of
- 	   Codestriker also contain "Parallel" links, which will bring
- 	   up a new popup window that will show both the original and
- 	   new file contents side-by-side, centered on the selected
- 	   line number.  While this viewing mode is more bandwidth
- 	   intensive, for some files, this can greatly aid in the
- 	   reviewing process.
+ 	   Codestriker also contain a "Parallel" link, which will
+ 	   bring up a new popup window that will show both the
+ 	   original and new file contents side-by-side, centered on
+ 	   the selected line number.  While this viewing mode is more
+ 	   bandwidth intensive, for some files, this can greatly aid
+ 	   in the reviewing process.  An example can be seen on the
+ 	   image below.  The line numbers in this window refer to line
+ 	   numbers.  The original file is presented on the left, the
+ 	   new file on the right.
         </p>	
-
+	<p>
+	    <a href="view4.jpg">
+	       <img src="view4_thumb.jpg" width="150" height="94"
+	            alt="View review 4"></a>
+	</p>
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
