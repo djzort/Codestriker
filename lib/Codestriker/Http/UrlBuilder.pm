@@ -52,7 +52,7 @@ sub view_url_extended ($$$$$$$$) {
 	$updated, $brmode) = @_;
     if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
     if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
-    return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
+    return ($prefix ne "" ? $prefix : $self->{query}->url()) .
 	"?topic=$topic&action=view" .
 	($updated ? "&updated=$updated" : "") .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .

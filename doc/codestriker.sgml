@@ -1,7 +1,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
 
 <!-- Note the /usr/share/sgml/docbook/sgml-dtd-3.1/dbnotn.mod file had
-  to be accept PNG images (simple change).  Should migrate to
+  to be modified to accept PNG images (simple change).  Should migrate to
   Docbook 4 eventually. -->
 
 <book>
@@ -105,14 +105,14 @@
       </para>
     </sect1>
     <sect1>
-      <title>Codestriker Usage</title>
+      <title>We Want to Hear from You!</title>
       <para>
-        We are assembling a list of companies which are using
-        Codestriker, which we would like to publish onto the
-        Codestriker webpage, as an indication of its widespread use.
-        We would appreciate it if you could assist us, by sending an
-        email to <email>sits@users.sourceforge.net</email> with your
-        company name.  Thank you.
+        Please send feedback, good or bad, to us.  We are continually
+        striving to improve Codestriker, and all feedback is useful.
+        The best place to send feedback is either to the Codestriker
+        mailing list
+        <email>codestriker-user@lists.sourceforge.net</email> or to me
+        personally at <email>sits@users.sourceforge.net</email>.
       </para>
     </sect1>
   </chapter>
@@ -2197,14 +2197,6 @@ PerlSwitches -T
       URL: <ulink
       url="http://lists.sourceforge.net/lists/listinfo/codestriker-user">http://lists.sourceforge.net/lists/listinfo/codestriker-user</ulink>.
       Contributions are most welcome!
-    </para>
-    <para>
-      In addition, we are assembling a list of companies which are
-      using Codestriker, which we would like to publish onto the
-      Codestriker webpage, as an indication of its widespread use.  We
-      would appreciate it if you could assist us, by sending an email
-      to <email>sits@users.sourceforge.net</email> with your company
-      name.  Thank you.
     </para>
   </chapter>
       
