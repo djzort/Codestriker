@@ -1,6 +1,6 @@
 [%# Screen for the create topic form. #%]
 
-[% PROCESS header.html.tmpl version = '1.7.0' %]
+[% PROCESS header.html.tmpl version = version %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -36,27 +36,7 @@ achieves. This information is sent with the new topic\n
 notification email to all reviewers.
 ')">(What's this?)</A></FONT>
 <BR>
-<TEXTAREA NAME="topic_description" ROWS=5 COLS=70 WRAP="hard">[% topic_description %]</TEXTAREA>
-<P>
-
-[%# The topic text input field #%]
-Topic text:
-<FONT SIZE="-2"><A HREF="javascript:alert('
-The topic text contains the actual text of the review.\n
-It can either be pasted into the \'Topic text\' text area\n
-or uploaded from a file in the \'Topic text upload\' box.\n
-\n
-Typically, the text is the output of a command such as:\n
-cvs diff -uN &gt; output.txt\n
-or\n
-diff -urN ../old-version/ . &gt; output.txt\n
-\n
-Non unidiff files can be reviewed, but can\'t be displayed\n
-as a coloured-diff, and can\'t be linked to a CVS repository.\n
-Ordinary source files can also be uploaded.
-')">(What's this?)</A></FONT>
-<BR>
-<TEXTAREA NAME="topic_text" ROWS=15 COLS=70>[% topic_text %]</TEXTAREA>
+<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[% topic_description %]</TEXTAREA>
 <P>
 
 <TABLE>

@@ -27,17 +27,16 @@ sub process($$$) {
     # Check that the appropriate fields have been filled in.
     my $topic_title = $http_input->get('topic_title');
     my $topic_description = $http_input->get('topic_description');
-    my $topic_text = $http_input->get('topic_text');
     my $reviewers = $http_input->get('reviewers');
     my $email = $http_input->get('email');
     my $cc = $http_input->get('cc');
     my $fh = $http_input->get('fh');
-    my $mimetype = $http_input->get('fh_mimetype');
     my $topic_file = $http_input->get('fh_filename');
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
 
     my $feedback = "";
+    my $topic_text = "";
 
     if ($topic_title eq "") {
 	$feedback .= "No topic title was entered.\n";
@@ -48,11 +47,8 @@ sub process($$$) {
     if ($email eq "") {
 	$feedback .= "No email address was entered.\n";
     }	
-    if ($topic_text eq "" && !defined $fh) {
-	$feedback .= "No topic text or filename was entered.\n";
-    }
-    if (defined $fh && $topic_text ne "") {
-	$feedback .= "Topic text and uploaded file were entered.\n";
+    if (!defined $fh) {
+	$feedback .= "No filename was entered.\n";
     }
     if ($reviewers eq "") {
 	$feedback .= "No reviewers were entered.\n";
@@ -72,7 +68,6 @@ sub process($$$) {
 	$vars->{'reviewers'} = $reviewers;
 	$vars->{'cc'} = $cc;
 	$vars->{'allow_repositories'} = $Codestriker::allow_repositories;
-	$vars->{'topic_text'} = $topic_text;
 	$vars->{'topic_file'} = $topic_file;
 	$vars->{'topic_description'} = $topic_description;
 	$vars->{'topic_title'} = $topic_title;
@@ -94,8 +89,7 @@ sub process($$$) {
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
 
-    # Try to parse the topic text into its diff chunks.  Create the mimetype
-    # from the filename extension.
+    # Try to parse the topic text into its diff chunks.
     my @deltas =
 	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository);
 

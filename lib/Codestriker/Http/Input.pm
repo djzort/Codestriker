@@ -116,10 +116,6 @@ sub process($) {
 
     # Record the file handler for a topic text upload, if any.
     $self->{fh_filename} = $query->param('topic_file');
-    if (defined $self->{fh_filename}) {
-	$self->{fh_mimetype} =
-	    $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
-    }
     $self->{fh} = $query->upload('topic_file');
 
     # Set parameter values from the cookie if they are not set.

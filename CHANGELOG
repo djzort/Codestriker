@@ -1,6 +1,19 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.0.2
+
+* Remove the topic textarea in the create topic screen.  Now the only
+  way to generated reviews is to upload a file.  The main motiviation
+  is in practice, the textarea was no longer used, and to get some
+  more real-estate for some newer features on this page in future
+  versions.
+
+Version 1.7.0.1
+
+* Fixed silly bug which prevented repository-linked reviews from
+  working correctly.
+
 Version 1.7.0
 
 * Massive refactor so that the diff parsing and rendering code is
