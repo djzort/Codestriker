@@ -119,6 +119,11 @@ sub main() {
 	    }
 	    close DOCUMENT;
 
+	    if ($document_text eq "") {
+		print " skipping empty topic\n";
+		next;
+	    }
+
 	    # Now read the comments file.
 
             # Indexed by comment number.  Contains the line number the
