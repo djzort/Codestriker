@@ -66,7 +66,7 @@ sub create_topic {
     # Indicate if the operation was successful.
     my $response_content = $response->content;
     my $rc = $response_content =~ /Topic URL: \<A HREF=\"(.*)\"/i;
-    print STDERR "Failed to create topic, response: $content\n" if $rc == 0;
+    print STDERR "Failed to create topic, response: $response_content\n" if $rc == 0;
     return $rc ? $1 : undef;
 }
 
