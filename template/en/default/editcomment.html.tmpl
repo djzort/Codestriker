@@ -91,14 +91,37 @@ function verify() {
   return true;
 }
 
+// Check if a specific reviewer can be added to the cc field, assuming
+// it isn't present already.
+function add_other_reviewer(reviewer) {
+    if (document.add_comment.comment_cc.value != "") {
+        var addresses = new Array();
+        if (document.add_comment.comment_cc.value.split) {
+            addresses = document.add_comment.comment_cc.value.split(/[\s,]+/);
+        }
+	var found = 0;
+	for (var i = 0; i < addresses.length; i++) {
+	  if (addresses[i] == reviewer) {
+	    found = 1;
+	    break;
+	  }
+	}
+	if (reviewer == document.add_comment.email.value) {
+          found = 1;
+        }
+	if (found == 0) {
+            document.add_comment.comment_cc.value += ", " + reviewer;
+        }
+    } else {
+        document.add_comment.comment_cc.value = reviewer;
+    }
+}
+
 // Called when the "add other reviewers" link is pressed, which adds all
 // reviewers to the Cc: field.
 function add_other_reviewers() {
   [% FOREACH reviewer = reviewers %]
-    if (document.add_comment.comment_cc.value != '') {
-        document.add_comment.comment_cc.value += ', ';
-    }
-    document.add_comment.comment_cc.value += "[% reviewer %]";
+    add_other_reviewer("[% reviewer %]");
   [% END %]
 }
 </Script>
