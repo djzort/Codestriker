@@ -984,15 +984,19 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
 	  Apache.  For installing <command>mod_perl</command> under
 	  Windows, <ulink
 	  url="http://www.webmatrix.net/log/modperl-win32">http://www.webmatrix.net/log/modperl-win32</ulink>
-	  contains installation information.  One point to note
-	  however, I found I could not run ppm as <command>ppm
-	  --location=...</command> as shown on this site, but had to
-	  run ppm interactively, and issue commands like:
+	  contains installation information.  For PPM3 users, you
+	  should be able to install it by typing:
 <programlisting>
-ppm
-set location http://theoryx5.uwinnipeg.ca/ppmpackages
-set save
-install mod_perl
+C:\> ppm
+PPM> rep add theory http://theoryx5.uwinnipeg.ca/ppmpackages
+PPM> install mod_perl
+</programlisting>
+          For PPM2:
+<programlisting>
+C:\> ppm
+PPM> set location http://theoryx5.uwinnipeg.ca/ppmpackages
+PPM> set save
+PPM> install mod_perl
 </programlisting>
 	</para>
 	<para>

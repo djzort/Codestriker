@@ -180,32 +180,33 @@ sub get_complete_list_of_topic_participants {
 
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    my @metric_user_list = $dbh->selectrow_array('
+
+    my @metric_user_list = @{ $dbh->selectall_arrayref('
 	    SELECT distinct email 
-	    from participant where topicid = ?',{}, $self->{topicid});
+	    from participant where topicid = ?',{}, $self->{topicid})};
 
-    push @metric_user_list, $dbh->selectrow_array('
-	    SELECT author from topic where id = ?',{}, $self->{topicid});
+    push @metric_user_list, @{ $dbh->selectall_arrayref('
+	    SELECT author from topic where id = ?',{}, $self->{topicid})};
 
-    push @metric_user_list, $dbh->selectrow_array('
+    push @metric_user_list, @{ $dbh->selectall_arrayref('
 	    SELECT distinct email from topicusermetric 
-	    where topicid = ?',{}, $self->{topicid});
+	    where topicid = ?',{}, $self->{topicid})};
     
-    push @metric_user_list, $dbh->selectrow_array(
+    push @metric_user_list, @{ $dbh->selectall_arrayref(
 	    'SELECT distinct author from commentdata, commentstate ' .
 	    'where commentstate.topicid = ? and 
 		   commentstate.id = commentdata.commentstateid ',
-		   {}, $self->{topicid});
+		   {}, $self->{topicid})};
 
-    push @metric_user_list, $dbh->selectrow_array(
+    push @metric_user_list, @{ $dbh->selectall_arrayref(
 	    'SELECT distinct email from topicviewhistory ' .
-	    'where topicid = ? and email is not null',{}, $self->{topicid});
+	    'where topicid = ? and email is not null',{}, $self->{topicid})};
 
     # remove the duplicates.
 
     my %metric_user_hash;
     foreach my $user (@metric_user_list) {
-	$metric_user_hash{$user} = 1;
+	$metric_user_hash{$user->[0]} = 1;
     }
 
     @metric_user_list = sort keys %metric_user_hash;
@@ -360,6 +361,12 @@ sub get_user_metrics {
 		}
 
 		if ($metric_schema->{enabled} || $metric->{in_database}) {
+                    
+                    if ($username eq "") {
+                        # don't let any metrics be set into the db for unknown users.
+                        $metric->{enabled} = 0;
+                    }
+
 		    push @user_metrics, $metric;
 		}
 	    }
@@ -537,40 +544,12 @@ sub get_topic_history {
 		my %new_event = %event;
 
 		# Figure out who was removed, and who was added to the list.
-		my @reviewers = sort split /,/,$current_history_row->{reviewers};
-		my @l_reviewers = sort split /,/,$last_history_row->{reviewers};
+		my @reviewers = split /,/,$current_history_row->{reviewers};
+		my @l_reviewers = split /,/,$last_history_row->{reviewers};
 		my @new;
 		my @removed;
 
-		my $new_index = 0;
-		my $old_index = 0;
-		while ( $new_index < @reviewers || $old_index < @l_reviewers) {
-		    my $r = 0;
-
-		    if ($new_index < @reviewers && $old_index < @l_reviewers) {
-			$r = $reviewers[$new_index] cmp $l_reviewers[$old_index];
-		    }
-		    elsif ($new_index < @reviewers) {
-			$r = -1;
-		    }
-		    else {
-			$r = 1;
-		    }
-
-		    if ($r == 0) {
-			++$new_index;
-			++$old_index;
-
-		    }
-		    elsif ($r < 0) {
-			push( @new, $reviewers[$new_index]);
-			++$new_index;
-		    }
-		    else {
-			push( @removed, $l_reviewers[$old_index]);
-			++$old_index;
-		    }
-		}
+                Codestriker::set_differences(\@reviewers, \@l_reviewers, \@new, \@removed);
 
 		if (@new == 0) {
     		    $new_event{description} = 

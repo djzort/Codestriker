@@ -4,7 +4,19 @@
 Version 1.8.1
 
 * Added some missing imports which caused compilation errors for
-  some deployments when checksetup.pl was run.
+  Perl 5.8.3 on Solaris when checksetup.pl was run.
+
+* Made checksetup.pl more graceful when DBI.pm is not installed, and
+  it is checking what other database modules are required.
+
+The following changes were from Jason Remillard:
+
+* A bug in the metric support has been fixed, which prevented the
+  metric data from being usable if more than one reviewer was present.
+
+* Emails sent from topic property changes now include more information
+  such as what specific properties were changes.  Topic creation
+  emails also include the list of files which have been changed.
 
 Version 1.8.0
 

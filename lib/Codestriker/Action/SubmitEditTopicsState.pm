@@ -43,13 +43,20 @@ sub process($$$) {
     # Apply the change to each topic.
     for (my $i = 0; $i <= $#topics; $i++) {
 	# Extract the topic id and the version.
-	$topics[$i] =~ /^(.*)\,(.*)$/;
+	$topics[$i] =~ /^([0-9]+)\,([0-9]+)$/;
+
+        # Dump the request if the param does not look right.
+        next if (!defined($1) || !defined($2));
+
 	my $topicid = $1;
 	my $version = $2;
 
 	# Original topic object which won't be changed in the
 	# change_state operation.
 	my $topic_orig = Codestriker::Model::Topic->new($topicid);
+
+        # Don't do anything if the topic is already at the given state.
+        next if ($topic_state eq $topic_orig->{topic_state});
 
 	# Topic object to operate on.
 	my $topic = Codestriker::Model::Topic->new($topicid);

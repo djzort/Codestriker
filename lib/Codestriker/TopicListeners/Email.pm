@@ -42,66 +42,221 @@ sub topic_create($$) {
     my $cc = $topic->{cc};
     my $bcc = $topic->{author};
 
-    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc);
+    # Send out the list of files changes when creating a new topic.
+    my (@filenames, @revisions, @offsets, @binary);
+    $topic->get_filestable(
+    		\@filenames,
+                \@revisions,
+                \@offsets,
+                \@binary);
+
+    my $notes = 
+        "Description: \n" .  
+	"$topic->{description}\n\n" .
+	"$EMAIL_HR\n\n" .
+        "The topic was created, the following files were modified.\n" .
+        join("\n",@filenames);
+
+    $self->_send_topic_email($topic, "Created", 1, $from, $to, $cc, $bcc,$notes);
 
     return '';
 }
 
 sub topic_changed($$$$) {
-    my ($self, $user, $topic_orig, $topic) = @_;
+    my ($self, $user_that_made_the_change, $topic_orig, $topic) = @_;
 
-    # Any topic property changes need to be sent to all parties involved
-    # for now, including parties which have been removed from the topic.
-    # Eventually, email sending can be controlled by per-user preferences,
-    # but in any case, in real practice, topic properties should not be
-    # changed that often.
+    # Not all changes in the topic changes needs to be sent out to everybody
+    # who is working on the topic. The policy of this function is that 
+    # the following changes will cause an email to be sent. Otherwise,
+    # no email will be sent.
+    #
+    # change in author - sent to the new author, old author, and the person who
+    #   made the change.
+    # removed reviewer,cc - sent to the removed reviewer, and author if != user.
+    # added reviwer,cc - send to the new cc, and author if != user.
+    # any change not made by the author, sent to the author.
 
     # Record the list of email addresses already handled.
     my %handled_addresses = ();
 
-    # The from (and bcc) is always the current author.
-    my $from = $topic->{author};
-    my $bcc = $from;
-    $handled_addresses{$from} = 1;
-
-    # The to are the current reviewers.
-    my $to = $topic->{reviewers};
-    foreach my $email (split /, /, $to) {
-	$handled_addresses{$email} = 1;
+    # First rule, if the author is not one making the change, then the author
+    # gets an email no matter what changed.
+    if ( $user_that_made_the_change ne $topic->{author} ||
+         $user_that_made_the_change ne $topic_orig->{author} ) {
+        $handled_addresses{ $topic_orig->{author} } = 1;
+        $handled_addresses{ $topic->{author} } = 1;
     }
 
-    # The CC consist of the current CC, plus "removed" email addresses handled
-    # below.
-    my $cc = $topic->{cc};
-    foreach my $email (split /, /, $cc) {
-	$handled_addresses{$email} = 1;
+    # If the author was changed, then the old and new author gets an email.
+    if ( $topic->{author} ne $topic_orig->{author}) {
+        $handled_addresses{ $topic_orig->{author} } = 1;
+        $handled_addresses{ $topic->{author} } = 1;
     }
 
-    # Now add any removed email addresses, and add them to the email's CC.
-    my @other_emails = ();
-    if (! exists $handled_addresses{$topic_orig->{author}}) {
-	push @other_emails, $topic_orig->{author};
+    # If a reviewer gets removed or added, then they get an email.
+    my @new;
+    my @removed;
+
+    Codestriker::set_differences( [ split /, /, $topic->{reviewers} ],
+                                  [ split /, /, $topic_orig->{reviewers} ],
+                                  \@new,\@removed);
+
+    foreach my $user (@removed) {
+        $handled_addresses{ $user } = 1;
     }
-    foreach my $email (split /, /, $topic_orig->{reviewers}) {
-	if (! exists $handled_addresses{$email}) {
-	    push @other_emails, $email;
+
+    foreach my $user (@new) {
+        $handled_addresses{ $user } = 1;
+    }
+
+    # If a CC gets removed or added, then they get an email.
+    @new = ();
+    @removed = ();
+
+    Codestriker::set_differences( [ split /, /, $topic->{cc} ], 
+                                  [ split /, /, $topic_orig->{cc} ],
+                                  \@new,\@removed);
+
+    foreach my $user (@removed) {
+        $handled_addresses{ $user } = 1;
 	}
-    }
-    foreach my $email (split /, /, $topic_orig->{cc}) {
-	if (! exists $handled_addresses{$email}) {
-	    push @other_emails, $email;
-	}
-    }
-    my $other_emails = join ', ', @other_emails;
-    if (defined $other_emails && $other_emails ne "") {
-	$cc .= ", " if $cc ne "";
-	$cc .= $other_emails;
+
+    foreach my $user (@new) {
+        $handled_addresses{ $user } = 1;
     }
 
-    # Send off the email to the revelant parties.
-    $self->_send_topic_email($topic, "Modified", 1, $from, $to, $cc, $bcc);
+    my @to_list = keys( %handled_addresses );
+
+    if ( @to_list ) {
+        $self->send_topic_changed_email($user_that_made_the_change, 
+                    $topic_orig, $topic,@to_list);
+	}
 
     return '';
+}
+
+# This function is like topic_changed, except it expects a list of people
+# to send the email to as the last set of parameters. It diff's the two topics
+# and lists the changes made to the topic in the email. The caller is responsible
+# for figuring out if an email is worth sending out, this function is responsible
+# for the content of the email only.
+sub send_topic_changed_email {
+    my ($self, $user_that_made_the_change, $topic_orig, $topic,@to_list) = @_;
+
+    my $changes;
+
+    # First line is naming names on who made the change to the topic.
+    if ($user_that_made_the_change ne "") {
+        $changes .= "The following changes were made by $user_that_made_the_change.\n";
+    }
+    else {
+        my $host = $ENV{'REMOTE_HOST'};
+	my $addr = $ENV{'REMOTE_ADDR'};
+
+        $host = "(unknown)" if !defined($host);
+	$addr = "(unknown)" if !defined($addr);
+
+        $changes .= "The following changes were made by an unknown user from " . 
+                    "host $host and address $addr\n";
+    }
+
+    # Check for author change.
+    if ($topic->{author} ne $topic_orig->{author}) {
+        $changes .= "Author changed from " . 
+            $topic_orig->{author} . " to " . $topic->{author} . "\n";
+    }
+
+    # Check for changes in the reviewer list.
+    my @new;
+    my @removed;
+
+    Codestriker::set_differences( [ split /, /, $topic->{reviewers} ],
+                                  [ split /, /, $topic_orig->{reviewers} ],
+                                  \@new,\@removed);
+    foreach my $user (@removed) {
+        $changes .= "The reviewer $user was removed.\n";
+    }
+
+    foreach my $user (@new) {
+        $changes .= "The reviewer $user was added.\n";
+    }
+
+    # Check for changes in the cc list.
+    @new = ();
+    @removed = ();
+
+    Codestriker::set_differences( [ split /, /, $topic->{cc} ], 
+                                  [ split /, /, $topic_orig->{cc} ],
+                                  \@new,\@removed);
+
+    foreach my $user (@removed) {
+        $changes .= "The cc $user was removed.\n";
+    }
+
+    foreach my $user (@new) {
+        $changes .= "The cc $user was added.\n";
+    }
+
+    # Check for title change.
+    if ($topic->{title} ne $topic_orig->{title} ) {
+        $changes .= "The title was changed to $topic->{title}.\n";
+    }
+
+    # Check for repository change.
+    if ($topic->{repository} ne $topic_orig->{repository}) {
+        $changes .= "The repository was changed to $topic->{repository}.\n";
+    }
+
+    # Check for description change.
+    if ($topic->{description} ne $topic_orig->{description} ) {
+        $changes .= "The description was changed.\n";
+    }
+
+    # Check for state changes
+    if ($topic->{topic_state} ne $topic_orig->{topic_state} ) {
+        $changes .= "The state was changed to $topic->{topic_state}.\n";
+    }
+
+    if ($topic->{project_name} ne $topic_orig->{project_name}) {
+        $changes .= "The project was changed to $topic->{project_name}.\n";
+    }
+
+    if ($topic->{bug_ids} ne $topic_orig->{bug_ids}) {
+        $changes .= "The bug list was changed to $topic->{bug_ids}.\n";
+    }
+
+    # See if anybody needs an mail, if so then send it out.
+    if (@to_list) {
+        my $from = $user_that_made_the_change;
+        my $bcc = "";
+
+        if ($user_that_made_the_change eq "") {
+            $from = $topic->{author};
+        }
+        else {
+            $bcc = $user_that_made_the_change;
+        }
+
+        # Remove the $user_that_made_the_change, they are bcc'ed, don't want to
+        # send the email out twice.
+        my @final_to_list;
+
+        foreach my $user (@to_list) {
+            push (@final_to_list,$user) if $user ne $user_that_made_the_change;
+        }
+        
+        if (@to_list > 0 && @final_to_list == 0) {
+            push(@final_to_list, $user_that_made_the_change);
+            $bcc = "";
+        }
+
+        my $to = join ', ', sort @final_to_list;
+        my $cc = "";
+
+        # Send off the email to the revelant parties.
+        $self->_send_topic_email($topic, "Modified", 1, $from, 
+                $to, $cc, $bcc,$changes);
+    }
 }
 
 sub comment_create($$$) {
@@ -194,7 +349,7 @@ sub comment_create($$$) {
 # This is a private helper function that is used to send topic emails. Topic 
 # emails include topic creation, state changes, and deletes.
 sub _send_topic_email {
-    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc) = @_;
+    my ($self, $topic, $event_name, $include_url, $from, $to, $cc, $bcc, $notes) = @_;
   
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -202,16 +357,15 @@ sub _send_topic_email {
 						    "", "", "",
 						    $query->url(), 0);
     
-    my $subject = "[REVIEW] Topic \"" . $topic->{title} . "\" $event_name\n";
+    my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\" \n";
     my $body =
-	"Topic \"$topic->{title}\" $event_name\n" .
+	"Topic \"$topic->{title}\"\n" .
 	"Author: $topic->{author}\n" .
 	(($topic->{bug_ids} ne "") ? "Bug IDs: $topic->{bug_ids}\n" : "") .
 	"Reviewers: $topic->{reviewers}\n" .
         (($include_url) ? "URL: $topic_url\n\n" : "") .
-	"Description:\n" .
-	"$EMAIL_HR\n\n" .
-	"$topic->{description}\n";
+	"$EMAIL_HR\n" .
+        $notes;
 
     # Send the email notification out.
     $self->doit(1, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);

@@ -76,9 +76,14 @@ my $modules = [
     } 
 ];
 
-# Retrieve the database module dependency.
-my $database = Codestriker::DB::Database->get_database();
-push @{$modules}, $database->get_module_dependencies();
+# Retrieve the database module dependencies.  Put this in an eval block to
+# handle the case where the user hasn't installed the DBI module yet,
+# which prevents the following code from running.
+my $database = undef;
+eval {
+    $database = Codestriker::DB::Database->get_database();
+    push @{$modules}, $database->get_module_dependencies();
+};
 
 my %missing = ();
 foreach my $module (@{$modules}) {
@@ -204,6 +209,7 @@ EOF
 	    }
 	}
 	print "\n";
+	print "Modules can also be downloaded from http://www.cpan.org.\n\n";
     }
     exit;
 }

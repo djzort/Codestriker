@@ -26,7 +26,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $p4 $vss $bugtracker
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.8.0";
+$Codestriker::VERSION = "1.8.1";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";
@@ -400,6 +400,47 @@ sub filter_email {
     }
     
     return $email;
+}
+
+# Pass in two collections of string, it will return the elements in the string
+# that were added and where removed. All 4 params are references to lists. Mainly 
+# used to compare lists of reviewers and cc.
+sub set_differences($$$$)
+{
+    my ($list1_r, $list2_r, $added, $removed) = @_;
+
+    my @list1 = sort @$list1_r;
+    my @list2 = sort @$list2_r;
+
+    my $new_index = 0;
+    my $old_index = 0;
+    while ($new_index < @list1 || $old_index < @list2) {
+        my $r = 0;
+
+        if ($new_index < @list1 && $old_index < @list2) {
+	    $r = $list1[$new_index] cmp $list2[$old_index];
+        }
+        elsif ($new_index < @list1) {
+	    $r = -1;
+        }
+        else {
+	    $r = 1;
+        }
+
+        if ($r == 0) {
+	    ++$new_index;
+	    ++$old_index;
+
+        }
+        elsif ($r < 0) {
+	    push(@$added, $list1[$new_index]);
+	    ++$new_index;
+        }
+        else {
+	    push(@$removed, $list2[$old_index]);
+	    ++$old_index;
+        }
+    }
 }
 
     
