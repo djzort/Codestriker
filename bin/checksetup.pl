@@ -63,7 +63,7 @@ my $modules = [
     }, 
     { 
         name => 'Template', 
-        version => '2.06' 
+        version => '2.07' 
     },
     { 
         name => 'HTML::Entities', 
@@ -486,6 +486,19 @@ sub create_commentstate ($$$$)
     return $id;
 }
     
+# Migrate the "file" table to "topicfile", to avoid keyword issues with ODBC
+# and Oracle.  Make sure the error values of the database connection are
+# correctly set, to handle the most likely case where the "file" table doesn't
+# even exist.  
+$database->move_table("file", "topicfile");
+
+
+# Migrate the "comment" table to "commentdata", to avoid keyword issues with
+# ODBC and Oracle.  Make sure the error values of the database connection are
+# correctly set, to handle the most likely case where the "file" table doesn't
+# even exist.
+$database->move_table("comment", "commentdata");
+
 # Retrieve the tables which currently exist in the database, to determine
 # which databases are missing.
 my @existing_tables = $database->get_tables();
@@ -504,19 +517,6 @@ $database->commit();
 # Add new fields to the topic field when upgrading old databases.
 $database->add_field('topic', 'repository', 'text');
 $database->add_field('topic', 'projectid', 'int');
-
-# Migrate the "file" table to "topicfile", to avoid keyword issues with ODBC
-# and Oracle.  Make sure the error values of the database connection are
-# correctly set, to handle the most likely case where the "file" table doesn't
-# even exist.  
-$database->move_table("file", "topicfile");
-
-
-# Migrate the "comment" table to "commentdata", to avoid keyword issues with
-# ODBC and Oracle.  Make sure the error values of the database connection are
-# correctly set, to handle the most likely case where the "file" table doesn't
-# even exist.
-$database->move_table("comment", "commentdata");
 
 # If we are using MySQL, and we are upgrading from a version of the database
 # which used "text" instead of "mediumtext" for certain fields, update the
