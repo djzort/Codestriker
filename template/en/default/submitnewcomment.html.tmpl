@@ -1,20 +1,7 @@
 [%# Screen for the submit comment confirmation screen. #%]
 
-[% PROCESS header.html.tmpl version = version displaymenu = 1 
-                            closehead = 1 help="" %]
-
-<H2>Comment submitted</H2>
-<P>
-<PRE>[% comment | html_entity %]
-</PRE><P>
-
-[%# Display a simple form for closing the comment popup window #%]
-<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
-<INPUT TYPE="submit" NAME=".submit" VALUE="Close"
-       ONCLICK="window.close()">
-</FORM>
-
-[% PROCESS trailer.html.tmpl %]
-
-</BODY>
-</HTML>
+</head>
+<body bgcolor="#eeeeee">
+<h2>Comment submitted</h2>
+</body>
+</html>

@@ -240,6 +240,29 @@ sub generate_header {
     print "    var cs_load_anchor = '$load_anchor';\n";
     print "    var cs_reload = $reload;\n";
     print "    var cs_topicid = $topic;\n" if defined $topic && $topic ne "";
+    print "    var cs_email = '$email';\n" if defined $email;
+
+    # Now output all of the comment metric information.
+    print "    var cs_metric_data = new Array();\n";
+    my $i = 0;
+    foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	print "    cs_metric_data[$i] = new Object();\n";
+	print "    cs_metric_data[$i].name = '" .
+	    $metric_config->{name} . "';\n";
+	print "    cs_metric_data[$i].values = new Array();\n";
+	my $j = 0;
+	foreach my $value (@{ $metric_config->{values} }) {
+	    print "    cs_metric_data[$i].values[$j] = '$value';\n";
+	    $j++;
+	}
+	if (defined $metric_config->{default_value}) {
+	    print "    cs_metric_data[$i].default_value = '" .
+		$metric_config->{default_value} . "';\n";
+	}
+	$i++;
+    }
+    
+
     print "</script>\n";
 
     # Write an HTML comment indicating if response was sent compressed or not.

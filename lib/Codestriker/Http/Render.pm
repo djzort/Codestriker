@@ -154,9 +154,13 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     # Precompute the overlib HTML for each comment location.
     print "\n<script language=\"JavaScript\" type=\"text/javascript\">\n";
 
+    # Add the reviewers for the review here.
+    print "    var topic_reviewers = '" . $topic_obj->{reviewers} . "';\n";
+
     # Now record all the comments made so far in the topic.
     print "    var comment_text = new Array();\n";
     print "    var comment_hash = new Array();\n";
+    print "    var comment_metrics = new Array();\n";
     my $index;
     for ($index = 0; $index <= $#comment_locations; $index++) {
 
@@ -242,6 +246,17 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 
 	print "    comment_text[$index] = '$overlib_html';\n";
         print "    comment_hash['" . $comment_locations[$index] . "'] = $index;\n";
+
+	# Store the current metric values for this comment.
+	print "    comment_metrics[$index] = new Array();\n";
+	my $comment_metrics = $comments[0]->{metrics};
+	foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	    my $value = $comment_metrics->{$metric_config->{name}};
+	    $value = "" unless defined $value;
+	    print "    comment_metrics[${index}]['" .
+		$metric_config->{name} . "'] = '" . $value . "';\n";
+	}
+
     }
     print "</script>\n";
 
