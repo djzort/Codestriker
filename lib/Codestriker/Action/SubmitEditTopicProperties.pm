@@ -36,9 +36,11 @@ sub process($$$) {
     my $repository_url = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
 
-    # Check if this action is allowed.
+    # Check if this action is allowed, and that the state is valid.
     if ($Codestriker::allow_delete == 0 && $topic_state eq "Delete") {
 	$http_response->error("This function has been disabled");
+    } elsif (! grep /^$topic_state$/, @Codestriker::topic_states) {
+	$http_response->error("Topic state $topic_state unrecognised");
     }
 
     # Retrieve the current state of the topic.
@@ -88,6 +90,15 @@ sub process($$$) {
 	    } elsif ($rc == $Codestriker::OK) {
 		$feedback = "Topic has been deleted.";
 	    }
+	}
+	elsif ($topic_state eq "Obsoleted") {
+	    # Redirect to the create topic screen with this topic being
+	    # the one to obsolete.
+	    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+	    my $create_topic_url =
+		$url_builder->create_topic_url("$topicid,$version");
+	    print $query->redirect(-URI=>$create_topic_url);
+	    return;
 	}
 	else {
 	    # The input looks good, update the database.

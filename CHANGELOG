@@ -34,6 +34,10 @@ Version 1.8.5
 
 * Shorten the URLs sent in the email messages.
 
+* Minor fix where " characters would not render correctly in the
+  status bar or in a tool-tip when hovering over a commented line in
+  the view topic window.
+
 Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and

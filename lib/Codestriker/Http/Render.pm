@@ -771,7 +771,6 @@ sub render_linenumber($$$$$) {
     }
 
     my $link_title = $self->get_comment_digest($line, $filenumber, $new);
-    $link_title =~ s/\"/&quot;/mg;
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
     my $anchor = $key;
