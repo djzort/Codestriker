@@ -199,7 +199,7 @@ $table{topic} =
 
 # Holds all of the metric data that is owned by a specific user on a specific 
 # topic. One row per metric. Metric data that is left empty does not get a row.
-$table{topic_user_metric} =
+$table{topicusermetric} =
     "topicid int NOT NULL,
      email varchar(255) NOT NULL,
      metric_name varchar(80) NOT NULL,
@@ -208,7 +208,7 @@ $table{topic_user_metric} =
 
 # Holds all of the metric data that is owned by a specific topic. One row per 
 # metric. Metric data that is empty does not get a row.
-$table{topic_metric} =
+$table{topicmetric} =
     "topicid int NOT NULL,
      metric_name varchar(80) NOT NULL,
      value float NOT NULL,

@@ -157,7 +157,7 @@ sub get_download_headers {
     # Topic metrics counts
     my $topic_metrics = $dbh->selectall_arrayref(
 	    'SELECT DISTINCT metric_name 
-	     FROM topic_metric
+	     FROM topicmetric
 	     ORDER by metric_name
 	    ');
 
@@ -170,7 +170,7 @@ sub get_download_headers {
     # User topic metrics counts.
     my $user_topic_metrics  = $dbh->selectall_arrayref(
 	    'SELECT DISTINCT metric_name 
-	     FROM topic_user_metric
+	     FROM topicusermetric
 	     ORDER by metric_name
 	    ');
 
@@ -239,7 +239,7 @@ sub get_raw_metric_data {
     # Get the topic metrics.
     my $topic_metrics = $dbh->selectall_arrayref(
 	    'SELECT metric_name, sum(value)
-	     FROM topic_metric 
+	     FROM topicmetric 
 	     WHERE topicid = ?
 	     GROUP BY metric_name
 	    ',{}, $topicid);
@@ -257,7 +257,7 @@ sub get_raw_metric_data {
     # Get the user metrics.
     my $user_metrics = $dbh->selectall_arrayref(
 	    'SELECT metric_name, sum(value)
-	     FROM topic_user_metric 
+	     FROM topicusermetric 
 	     WHERE topicid = ?
 	     GROUP BY metric_name
 	    ',{}, $topicid);
@@ -334,25 +334,25 @@ sub get_topic_metrics {
 
     # Get totals for the topic metrics.
     @total = _get_monthly_metrics(12,
-	'SELECT topic_metric.metric_name, SUM(topic_metric.value) 
-	FROM topic_metric,topic
+	'SELECT topicmetric.metric_name, SUM(topicmetric.value) 
+	FROM topicmetric,topic
 	WHERE topic.creation_ts >  ? AND
 	      topic.creation_ts <= ? AND 
-	      topic_metric.topicid = topic.id
-	      GROUP BY topic_metric.metric_name
-	      ORDER BY topic_metric.metric_name');
+	      topicmetric.topicid = topic.id
+	      GROUP BY topicmetric.metric_name
+	      ORDER BY topicmetric.metric_name');
 
     push @metrics, @total;
 
     # Get totals for the topic metrics.
     @total = _get_monthly_metrics(12,
-	'SELECT topic_user_metric.metric_name, SUM(topic_user_metric.value) 
-	FROM topic_user_metric,topic
+	'SELECT topicusermetric.metric_name, SUM(topicusermetric.value) 
+	FROM topicusermetric,topic
 	WHERE topic.creation_ts >  ? AND
 	      topic.creation_ts <= ? AND 
-	      topic_user_metric.topicid = topic.id
-	      GROUP BY topic_user_metric.metric_name
-	      ORDER BY topic_user_metric.metric_name');
+	      topicusermetric.topicid = topic.id
+	      GROUP BY topicusermetric.metric_name
+	      ORDER BY topicusermetric.metric_name');
 
     push @metrics, @total;
 

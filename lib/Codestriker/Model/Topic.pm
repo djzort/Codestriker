@@ -584,10 +584,10 @@ sub delete($) {
 	$dbh->prepare_cached('DELETE FROM delta WHERE topicid = ?');
 
     my $topic_metrics =
-	$dbh->prepare_cached('DELETE FROM topic_metric WHERE topicid = ?');
+	$dbh->prepare_cached('DELETE FROM topicmetric WHERE topicid = ?');
 
     my $user_metrics =
-	$dbh->prepare_cached('DELETE FROM topic_user_metric WHERE topicid = ?');
+	$dbh->prepare_cached('DELETE FROM topicusermetric WHERE topicid = ?');
 
     my $success = defined $delete_topic && defined $delete_comments &&
 	defined $delete_commentstate && defined $select &&

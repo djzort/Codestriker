@@ -95,10 +95,10 @@ sub get_topic_metrics {
 	    my $dbh = Codestriker::DB::DBI->get_connection();
 
 	    my $select_topic_metrics = 
-		$dbh->prepare_cached('SELECT topic_metric.metric_name, 
-					     topic_metric.value ' .
-				     'FROM topic_metric ' .
-		                     'WHERE topic_metric.topicid = ?');
+		$dbh->prepare_cached('SELECT topicmetric.metric_name, 
+					     topicmetric.value ' .
+				     'FROM topicmetric ' .
+		                     'WHERE topicmetric.topicid = ?');
 						    
 	    $select_topic_metrics->execute($self->{topicid}); 
 
@@ -240,7 +240,7 @@ sub get_user_metrics {
 	    # Get all of the user outputs for this topic regardless of the user.
 	    my $selected_all_user_metrics = 
 		$dbh->prepare_cached('SELECT DISTINCT metric_name ' .
-				     'FROM topic_user_metric ' .
+				     'FROM topicusermetric ' .
 				     'WHERE topicid = ? ' .
 				     'ORDER BY metric_name');
 	    $selected_all_user_metrics->execute($self->{topicid}); 
@@ -250,7 +250,7 @@ sub get_user_metrics {
 	    # Get the outputs for this user.
 	    my $select_user_metrics = 
 		$dbh->prepare_cached('SELECT metric_name, value ' .
-				     'FROM topic_user_metric ' .
+				     'FROM topicusermetric ' .
 				     'WHERE topicid = ? and email = ? ' .
 				     'ORDER BY metric_name');
 						    
@@ -445,13 +445,13 @@ sub _store_user_metrics {
 
     # flush out the user metrics from the topic,
     my $delete_alluser_metric =
-	$dbh->prepare_cached('DELETE FROM topic_user_metric ' .
+	$dbh->prepare_cached('DELETE FROM topicusermetric ' .
 			     'WHERE topicid = ?');
 
     $delete_alluser_metric->execute($self->{topicid});
 
     my $insert_user_metric =
-	$dbh->prepare_cached('INSERT INTO topic_user_metric (topicid, 
+	$dbh->prepare_cached('INSERT INTO topicusermetric (topicid, 
 						    email, 
 						    metric_name, 
 						    value) ' .
@@ -483,16 +483,16 @@ sub _store_topic_metrics {
     my @topic_metrics = $self->get_topic_metrics();
 
     my $insert_topic_metric =
-	$dbh->prepare_cached('INSERT INTO topic_metric (topicid, 
+	$dbh->prepare_cached('INSERT INTO topicmetric (topicid, 
 						        metric_name, 
 							value) ' .
 			     'VALUES (?, ?, ? )');
     my $update_topic_metric =
-	$dbh->prepare_cached('UPDATE topic_metric SET value = ? ' .
+	$dbh->prepare_cached('UPDATE topicmetric SET value = ? ' .
 			     'WHERE topicid = ? and metric_name = ?');
 
     my $delete_topic_metric =
-	$dbh->prepare_cached('DELETE FROM topic_metric ' .
+	$dbh->prepare_cached('DELETE FROM topicmetric ' .
 			     'WHERE topicid = ? and metric_name = ?');
 
     foreach my $metric (@topic_metrics) {
