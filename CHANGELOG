@@ -10,6 +10,10 @@ Version 1.7.4
 * Now have simple "Help" links on all screens, which link to the
   appropriate HTML segment of the Codestriker User's guide.
 
+* The Bugzilla database name can be explicitly specified in the
+  Codestriker configuration, to cater for non-standard Bugzilla
+  deployments.
+
 The following changes below were from Jason Remillard
 <jremillardshop@yahoo.com>:
 
