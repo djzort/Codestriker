@@ -1,9 +1,9 @@
 #!/usr/bin/perl -wT
 
 ###############################################################################
-# Codestriker: Copyright (c) 2001 David Sitsky.  All rights reserved.
+# Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.0
+# Version 1.1
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -40,13 +40,23 @@ $datadir="/var/www/codestriker";
 # Location of sendmail.
 $sendmail = "/usr/lib/sendmail";
 
+# The method of access to the reposition, ie ":ext:".
+$cvsaccess = "";
+
+# The -d specification of the location of the CVS repository.
+$cvsrep = "/home/sits/cvs";
+
+# The CVS command to execute in order to retrieve file data.  The revision
+# argument and filename is appended to the end of this string.
+$cvscmd = "/usr/bin/cvs -d ${cvsaccess}${cvsrep} co -p";
+
 # Set the PATH to something sane.
 $ENV{'PATH'} = "/bin:/usr/bin";
 
-# Don't allow post large than 500K.
+# Don't allow posts larger than 500K.
 $CGI::POST_MAX=1024 * 500;
 
-# Need to call this: slashcode.  have nice graphic with:
+# Need to call this: codestriker.  have nice graphic with:
 # if (a = b) {
 #    write_data();
 # }
@@ -73,6 +83,9 @@ $context = 2;
 
 # Default context width for email display.
 $email_context = 8;
+
+# Default context width when viewing cvs files.
+$diff_context = 14;
 
 # Separator to use in email.
 $email_hr = "--------------------------------------------------------------";
@@ -131,9 +144,10 @@ $header_generated_record = 0;
 # Subroutine prototypes.
 sub edit_topic($$$$);
 sub view_topic($$);
-sub submit_comments($$$$);
+sub submit_comments($$$$$);
 sub create_topic();
 sub submit_topic($$$$$$$);
+sub view_cvs_file($$$);
 sub error_return($);
 sub display_context($$$);
 sub read_document_file($);
@@ -145,15 +159,18 @@ sub get_reviewers();
 sub get_cc();
 sub build_edit_url($$$);
 sub build_view_url($$$);
+sub build_view_cvs_file_url($$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$);
 sub header_generated();
 sub get_comment_digest($);
 sub get_context($$$$);
 sub untaint_topic($);
+sub untaint_filename($);
+sub untaint_revision($);
 sub untaint_email($);
 sub untaint_emails($);
-sub make_canoncial_email_list($);
+sub make_canonical_email_list($);
 sub main();
 
 # Call main to kick things off.
@@ -174,12 +191,17 @@ sub main() {
     my $reviewers = $query->param('reviewers');
     my $cc = $query->param('cc');
     my $topic_text_fh = $query->upload('topic_file');
+    my $revision = $query->param('revision');
+    my $filename = $query->param('filename');
+    my $linenumber = $query->param('linenumber');
 
     # Untaint the required input.
     $topic = untaint_topic($topic);
     $email = untaint_email($email);
     $reviewers = untaint_emails($reviewers);
     $cc = untaint_emails($cc);
+    $filename = untaint_filename($filename);
+    $revision = untaint_revision($revision);
 
     # Perform the action specified in the "action" parameter.
     # If the action is not specified, assume a new topic is to be created.
@@ -193,7 +215,7 @@ sub main() {
 	view_topic($topic, $email);
     }
     elsif ($action eq "submit_comment") {
-	submit_comments($line, $topic, $comments, $email);
+	submit_comments($line, $topic, $comments, $email, $cc);
     }
     elsif ($action eq "create") {
 	create_topic();
@@ -201,6 +223,9 @@ sub main() {
     elsif ($action eq "submit_topic") {
 	submit_topic($topic_title, $email, $topic_text, $topic_description,
 		     $reviewers, $cc, $topic_text_fh);
+    }
+    elsif ($action eq "view_cvs_file") {
+	view_cvs_file($filename, $revision, $linenumber);
     }
     else {
 	create_topic();
@@ -225,6 +250,37 @@ sub untaint_topic($) {
     }
 }
 
+# Untaint $filename, which should consist of a bunch of alphanumeric characters
+# and some other innocent characters.
+sub untaint_filename($) {
+    my ($filename) = @_;
+
+    if (defined $filename && $filename ne "") {
+	if ($filename =~ /^([-_\/\@\w\.\s]+)$/) {
+	    return $1;
+	} else {
+	    error_return("Invalid filename \"$filename\" - you naughty boy.");
+	}
+    } else {
+	return $filename;
+    }
+}
+
+# ntain revision, which should be a bunch of numbers separated by periods.
+sub untaint_revision($) {
+    my ($revision) = @_;
+
+    if (defined $revision && $revision ne "") {
+	if ($revision =~ /^([\d\.]+)$/) {
+	    return $1;
+	} else {
+	    error_return("Invalid revision \"$revision\" - you naught boy.");
+	}
+    } else {
+	return $revision;
+    }
+}
+	    
 # Untaint a single email address, which should be a regular email address.
 sub untaint_email($) {
     my ($email) = @_;
@@ -297,6 +353,18 @@ sub generate_header($$$$$) {
 			     -bgcolor=>'white',
 			     -link=>'blue',
 			     -vlink=>'purple');
+
+    # Write the simple open window javascript method.
+    print <<EOF;
+<SCRIPT LANGUAGE="JavaScript"><!--
+ var windowHandle = '';
+
+ function myOpen(url,name,attributes) {
+     windowHandle = window.open(url,name,attributes);
+ }
+ //-->
+</SCRIPT>
+EOF
 }
 
 # Simple file locking routines.
@@ -474,6 +542,13 @@ sub build_edit_url ($$$) {
     return "?line=$line&topic=$topic&action=edit&context=$context";
 }
 
+# Create the URL for viewing a CVS file.
+sub build_view_cvs_file_url ($$$$) {
+    my ($file, $rev, $line, $viewline) = @_;
+    return "?action=view_cvs_file&filename=$file&revision=$rev" .
+	"&linenumber=$line#${viewline}";
+}
+
 # Generate a string which represents a digest of all the comments made for a
 # particular line number.  Used for "tool-tip" windows for line number links
 # and/or setting the status bar.
@@ -562,15 +637,19 @@ sub edit_topic ($$$$) {
 			   -columns=>75,
 			   -wrap=>'hard');
 
-    print $query->p, "Your email address: ";
-
     my $default_email = get_email();
-    print $query->textfield(-name=>'email',
-			    -size=>50,
-			    -default=>"$default_email",
-			    -override=>1,
-			    -maxlength=>80);
-    print $query->p;
+    print $query->p, $query->start_table();
+    print $query->Tr($query->td("Your email address: "),
+		     $query->td($query->textfield(-name=>'email',
+						  -size=>50,
+						  -default=>"$default_email",
+						  -override=>1,
+						  -maxlength=>80)));
+    print $query->Tr($query->td("Cc: "),
+		     $query->td($query->textfield(-name=>'cc',
+						  -size=>50,
+						  -maxlength=>80)));
+    print $query->end_table(), $query->p;
     print $query->submit(-value=>'submit');
     print $query->end_form();
 }
@@ -601,6 +680,8 @@ sub view_topic ($$) {
 	print $query->Tr($query->td("Cc: "),
 			 $query->td($document_cc));
     }
+    print $query->Tr($query->td("Number of lines: "),
+		     $query->td($#document + 1));
     print $query->end_table();
 
     print "<PRE>\n";
@@ -627,9 +708,35 @@ sub view_topic ($$) {
     # Number of characters the line number should take.
     my $max_digit_width = length($#document+1);
 
+    # Record of the current CVS file being diffs (if the file is a
+    # unidiff diff file).
+    my $current_file = "";
+    my $current_file_revision = "";
+    my $current_file_linenumber = "";
+
     # Display the data that is being reviewed.
     print "<PRE>\n";
     for (my $i = 0; $i <= $#document; $i++) {
+
+	# Check for uni-diff information.
+	if ($document[$i] =~ /^===================================================================$/) {
+	    # The start of a diff block, reset all the variables.
+	    $current_file = "";
+	    $current_file_revision = "";
+	    $current_file_linenumber = "";
+	} elsif ($document[$i] =~ /^RCS file: ${cvsrep}\/(.*),v$/) {
+	    # The part identifying the file.
+	    $current_file = $1;
+	    $current_file_revision = "";
+	    $current_file_linenumber = "";
+	} elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
+	    # The part identifying the revision.
+	    $current_file_revision = $1;
+	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+\d+,\d+ \@\@$/) {
+	    # The part identifying the line number.
+	    $current_file_linenumber = $1;
+	}
+
 	my $digit_width = length($i);
 	my $data = CGI::escapeHTML($document[$i]);
 	my $url = $query->url() . build_edit_url($i, $topic, $context);
@@ -656,7 +763,32 @@ sub view_topic ($$) {
 	} else {
 	    print $query->a({name=>"$i", href=>"$url"},"$linenumber");
 	}
-	print " ", $data, $query->br;
+
+	if ($current_file ne "" && $current_file_revision ne "" &&
+	    $current_file_linenumber ne "")
+	{
+	    my $view_line = $current_file_linenumber - $diff_context;
+	    $view_line = 0 if $view_line < 0;
+	    my $cvs_url =
+		$query->url() .
+		build_view_cvs_file_url($current_file,
+					$current_file_revision,
+					$current_file_linenumber,
+					$view_line);
+	    $data =~ /^\@\@ \-([\d,]+) (.*)$/;
+
+	    my $js = "javascript: myOpen('$cvs_url','CVS','toolbar=no," .
+		"width=800,height=600,status=no,scrollbars=yes,resize=yes," .
+		"menubar=no')";
+
+	    print " @@ ", $query->a({href=>"$js"}, "-$1"), " $2", $query->br;
+
+	    # Reset the line number, in case there are other diff segments
+	    # within this file.
+	    $current_file_linenumber = "";
+	} else {
+	    print " ", $data, $query->br;
+	}
     }
     print "</PRE>\n", $query->p;
     
@@ -678,8 +810,8 @@ sub view_topic ($$) {
 }
 
 # Handle the submission of a comment.
-sub submit_comments ($$$$) {
-    my ($line, $topic, $comments, $email) = @_;
+sub submit_comments ($$$$$) {
+    my ($line, $topic, $comments, $email, $cc) = @_;
 
     # Check that the fields have been filled appropriately.
     if ($comments eq "" || !defined $comments) {
@@ -708,7 +840,7 @@ sub submit_comments ($$$$) {
     read_comment_file($topic);
     my %contributors = ();
     $contributors{$email} = 1;
-    my $cc_recipients = "$email, ";
+    my $cc_recipients = "";
     for (my $i = 0; $i <= $#comment_linenumber; $i++) {
 	if ($comment_linenumber[$i] == $line &&
 	    $comment_author[$i] ne $document_author &&
@@ -723,14 +855,34 @@ sub submit_comments ($$$$) {
 	substr($cc_recipients, -2) = "";
     }
 
+    # Add the $cc recipients if any were specified.
+    if (defined $cc)
+    {
+	if ($cc_recipients ne "")
+	{
+	    $cc_recipients .= make_canonical_email_list($cc);
+	}
+	else
+	{
+	    $cc_recipients = make_canonical_email_list($cc);
+	}
+    }
+
     # Send an email to the document author and all contributors with the
-    # relevant information.
+    # relevant information.  The person who wrote the comment is indicated
+    # in the "From" field, and is BCCed the email so they retain a copy.
     my $topic_url = $query->url() . build_edit_url($line, $topic, $context);
     my ($rdr, $MAIL) = (FileHandle->new, FileHandle->new);
     open2($rdr, $MAIL, "$sendmail -t") ||
 	error_return("Unable to send email: $!");
+    print $MAIL "From: $email\n";
     print $MAIL "To: $document_author\n";
-    print $MAIL "Cc: $cc_recipients\n";
+
+    if (defined $cc_recipients && $cc_recipients ne "")
+    {
+	print $MAIL "Cc: $cc_recipients\n";
+    }
+    print $MAIL "Bcc: $email\n";
     print $MAIL "Subject: [REVIEW] Topic \"$document_title\" comment added by $email\n\n";
     print $MAIL "$email added a comment to Topic \"$document_title\".\n";
     print $MAIL "URL: $topic_url\n\n";
@@ -799,22 +951,23 @@ sub create_topic () {
     print $query->hidden(-name=>'action', -default=>'submit_topic');
     print "Topic title: ", $query->br;
     print $query->textfield(-name=>'topic_title',
-			    -size=>90,
-			    -maxlength=>90);
+			    -size=>70,
+			    -maxlength=>70);
     print $query->p, "Topic description: ", $query->br;
     print $query->textarea(-name=>'topic_description',
 			   -rows=>5,
-			   -columns=>90,
+			   -columns=>70,
 			   -wrap=>'hard');
 
+    # Don't wrap the topic text, in case people are cutting and pasting code
+    # rather than using the file upload.
     print $query->p, "Topic text: ", $query->br;
     print $query->textarea(-name=>'topic_text',
 			   -rows=>15,
-			   -columns=>90,
-			   -wrap=>'hard');
+			   -columns=>70);
     print $query->p, "Topic text upload: ";
     print $query->filefield(-name=>'topic_file',
-			    -size=>50,
+			    -size=>40,
 			    -maxlength=>200);
 
     print $query->p, $query->start_table();
@@ -846,7 +999,7 @@ sub create_topic () {
 
 # Given a list of email addresses separated by commas and spaces, return
 # a canonical form, where they are separated by a comma and a space.
-sub make_canoncial_email_list($) {
+sub make_canonical_email_list($) {
     my ($emails) = @_;
 
     if (defined $emails && $emails ne "") {
@@ -868,7 +1021,7 @@ sub submit_topic ($$$$$$$) {
 	$reviewers, $cc, $fh) = @_;
 
     # Check that the fields have been filled appropriately.
-    if ( ! defined $topic_title || $topic_title eq "") {
+    if (! defined $topic_title || $topic_title eq "") {
 	error_return("No topic title was entered");
     }
     if (! defined $topic_description || $topic_description eq "") {
@@ -907,8 +1060,8 @@ sub submit_topic ($$$$$$$) {
 
     # Change the Cc and Reviewers to be in a canoncial comma separated
     # form.
-    $cc = make_canoncial_email_list($cc);
-    $reviewers = make_canoncial_email_list($reviewers);
+    $cc = make_canonical_email_list($cc);
+    $reviewers = make_canonical_email_list($reviewers);
 
     # Write out the topic metadata.
     print DOCUMENT "Author: $email\n";
@@ -950,8 +1103,10 @@ sub submit_topic ($$$$$$$) {
     # Send the author, reviewers and the cc an email with the same information.
     my $topic_url = $query->url() . build_view_url($dirname, -1, "");
     open (MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
-    print MAIL "To: $email, $reviewers\n";
+    print MAIL "From: $email\n";
+    print MAIL "To: $reviewers\n";
     print MAIL "Cc: $cc\n";
+    print MAIL "Bcc: $email\n";
     print MAIL "Subject: [REVIEW] Topic \"$topic_title\" created\n";
     print MAIL "Topic \"$topic_title\" created\n";
     print MAIL "Author: $email\n";
@@ -983,5 +1138,51 @@ sub submit_topic ($$$$$$$) {
     print ", $cc" if (defined $cc && $cc ne "");
 }
 
+# View the contents of a specific file from CVS.  This will normally by called
+# within a new window, so there is no navigation within it.
+sub view_cvs_file ($$$) {
+    my ($filename, $revision, $line) = @_;
 
+    if (! defined $filename || $filename eq "") {
+	error_return("No filename was entered");
+    }
+    if (! defined $revision || $revision eq "") {
+	error_return("No revision was entered");
+    }
 
+    print $query->header();
+    print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
+			     -title=>"$filename v ${revision}",
+			     -bgcolor=>'white');
+    $header_generated = 1;
+
+    my $get_cvs_file = "$cvscmd -r $revision $filename 2>/dev/null";
+    my $number_lines = `$get_cvs_file | wc -l`;
+    $number_lines =~ s/\s//g;
+    my $max_digit_width = length($number_lines);
+
+    if (! open (CVSFILE, "$get_cvs_file |")) {
+	error_return("Couldn't retrieve CVS information: $!");
+    }
+
+    print "<PRE>\n";
+    for (my $i = 1; <CVSFILE>; $i++) {
+	# Read a line of data, escape it an change spaces to tab for alignment.
+	my $data = CGI::escapeHTML($_);
+	$data =~ s/\t/        /g;
+
+	# Add the necessary number of spaces for alignment
+	my $digit_width = length($i);
+	for (my $j = 0; $j < ($max_digit_width - $digit_width); $j++) {
+	    print " ";
+	}
+
+	if ($i eq $line) {
+	    print $query->a({name=>"$i"}, "<FONT COLOR='red'>$i</FONT>");
+	} else {
+	    print $query->a({name=>"$i"}, $i);
+	}
+	print " ", $data;
+    }
+    print "</PRE>\n";
+}
