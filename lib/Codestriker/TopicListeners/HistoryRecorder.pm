@@ -142,14 +142,14 @@ sub _insert_commentstatehistory_entry($$$$$) {
 
     my $insert =
 	$dbh->prepare_cached('INSERT INTO commentstatehistory ' .
-			     '(id, version, metric_name, metric_value, ' .
+			     '(id, state, version, metric_name, metric_value, ' .
 			     'modified_ts, modified_by_user) '.
-			     'VALUES (?, ?, ?, ?, ?, ?)');
+			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert && defined $get_count;
     $success &&= $get_count->execute($comment->{id});
     my ($count) = $get_count->fetchrow_array() if $success;
     $success &&= $get_count->finish();
-    $success &&= $insert->execute($comment->{id}, $count+1,
+    $success &&= $insert->execute($comment->{id}, 0, $count+1,
 				  $metric_name, $metric_value,
 				  $comment->{db_modified_ts}, $user);
     

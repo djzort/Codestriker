@@ -70,12 +70,12 @@ sub create {
 	    my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
 					      '(topicid, fileline, ' .
 					      'filenumber, filenew, ' .
-					      'version, creation_ts, ' .
+					      'state, version, creation_ts, ' .
 					      'modified_ts) VALUES ' .
-					      '(?, ?, ?, ?, ?, ?, ?)');
+					      '(?, ?, ?, ?, ?, ?, ?, ?)');
 	    $success &&= defined $insert;
 	    $success &&= $insert->execute($topicid, $fileline, $filenumber,
-					  $filenew, 0,
+					  $filenew, 0, 0,
 					  $creation_ts, $creation_ts);
 	    $success &&= $insert->finish();
 	} else {

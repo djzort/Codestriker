@@ -316,7 +316,7 @@ my $commentstate_table =
 		    col(name=>"fileline", type=>$INT32),
 		    col(name=>"filenumber", type=>$INT32),
 		    col(name=>"filenew", type=>$INT16),
-		    col(name=>"state", type=>$INT16),
+		    col(name=>"state", type=>$INT16),  # Not used, old field.
 		    col(name=>"version", type=>$INT32),
 		    col(name=>"creation_ts", type=>$DATETIME),
 		    col(name=>"modified_ts", type=>$DATETIME)
@@ -338,6 +338,7 @@ my $commentstatemetric_table =
 my $commentstatehistory_table =
   table(name => "commentstatehistory",
 	columns => [col(name=>"id", type=>$INT32, pk=>1),
+                    col(name=>"state", type=>$INT16),  # Not used, old field.
 		    col(name=>"metric_name", type=>$VARCHAR, length=>80),
 		    col(name=>"metric_value", type=>$VARCHAR, length=>80),
 		    col(name=>"version", type=>$INT32, pk=>1),
@@ -806,6 +807,7 @@ eval {
     }
     print "Migrated $count records.\n" if $count > 0;
     $stmt->finish();
+    $database->commit();
 };
 if ($@) {
     print "Failed because of $@\n";
