@@ -214,13 +214,15 @@ sub generate_header {
     }
 
     my $overlib_js = $codestriker_css;
-    $overlib_js =~ s/codestriker.css/overlib.js/;
+    $overlib_js =~ s/codestriker.css/overlib.js/o;
+    my $overlib_centerpopup_js = $codestriker_css;
+    $overlib_centerpopup_js =~ s/codestriker.css/overlib_centerpopup.js/o;
     my $overlib_draggable_js = $codestriker_css;
-    $overlib_draggable_js =~ s/codestriker.css/overlib_draggable.js/;
+    $overlib_draggable_js =~ s/codestriker.css/overlib_draggable.js/o;
     my $xbdhtml_js = $codestriker_css;
-    $xbdhtml_js =~ s/codestriker.css/xbdhtml.js/;
+    $xbdhtml_js =~ s/codestriker.css/xbdhtml.js/o;
     my $codestriker_js = $codestriker_css;
-    $codestriker_js =~ s/codestriker.css/codestriker.js/;
+    $codestriker_js =~ s/codestriker.css/codestriker.js/o;
 
     # Print the basic HTML header header, with the inclusion of the scripts.
     print '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">';
@@ -228,15 +230,16 @@ sub generate_header {
     print '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">';
     print "\n";
     print "<head><title>$title</title>\n";
-    print "<base href=\"$query->url()\"/>\n";
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"$codestriker_css\" />\n";
     print "<script src=\"$overlib_js\" type=\"text/javascript\"></script>\n";
+    print "<script src=\"$overlib_centerpopup_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$overlib_draggable_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$xbdhtml_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$codestriker_js\" type=\"text/javascript\"></script>\n";
     print "<script type=\"text/javascript\">\n";
     print "    var cs_load_anchor = '$load_anchor';\n";
     print "    var cs_reload = $reload;\n";
+    print "    var cs_topicid = $topic;\n" if defined $topic && $topic ne "";
     print "</script>\n";
 
     # Write an HTML comment indicating if response was sent compressed or not.

@@ -154,9 +154,6 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     # Precompute the overlib HTML for each comment location.
     print "\n<script language=\"JavaScript\" type=\"text/javascript\">\n";
 
-    # Set the topicid.
-    print "    topicid = " . $self->{topic} . ";\n";
-    
     # Now record all the comments made so far in the topic.
     print "    var comment_text = new Array();\n";
     print "    var comment_hash = new Array();\n";
@@ -209,11 +206,16 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	    $overlib_html .= " | ";
 	}
 
+	# Add an add comment link.
+	my $key = $comment_locations[$index];
+	$key =~ /^(\-?\d+)\|(\-?\d+)\|(\d+)$/o;
+        $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
+	    "; void(0);\">Add Comment</a> | ";
+
 	# Add a close link.
 	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close</a><p>";
 
 	# Create the actual comment text.
-	my $key = $comment_locations[$index];
 	my @comments = @{ $comment_hash{$key} };
 
 	for (my $i = 0; $i <= $#comments; $i++) {

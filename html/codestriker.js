@@ -2,13 +2,11 @@
 ol_fgcolor = '#FFFFCC';
 ol_textsize = '2';
 
-// Records what topicid is being processed.
-var topicid = '';
-
 // Handle to the popup window.
 var windowHandle = '';
 
-function myOpen(url,name) {
+function myOpen(url,name)
+{
     windowHandle = window.open(url,name,
 	  		       'toolbar=no,width=800,height=600,status=yes,scrollbars=yes,resizable=yes,menubar=no');
     // Indicate who initiated this operation.
@@ -18,15 +16,13 @@ function myOpen(url,name) {
 }
 
 // Edit open function.  Name is kept short to reduce output size.
-function eo(fn,line,newfile) {
-    var location = window.location;
-    myOpen(location.protocol + '//' + location.host +
-           location.pathname + '?fn=' + fn + '&line=' + line +
-	   '&new=' + newfile + '&topic=' + topicid + '&action=edit&a=' +
-           fn + '|' + line + '|' + newfile, 'e');
+function eo(fn,line,newfile)
+{
+    add_comment_tooltip(fn,line,newfile);
 }
 
-function gotoAnchor(anchor, reload) {
+function gotoAnchor(anchor, reload)
+{
     if (anchor == "" || opener == null) return;
 
     var index = opener.location.href.lastIndexOf("#");
@@ -63,3 +59,18 @@ function view_topic_on_load_handler()
     }
 }
 
+// Create a new tooltip window which contains an iframe used for adding
+// a comment to the topic.
+function add_comment_tooltip(file, line, new_value)
+{
+    var l = window.location;
+    var url = l.protocol + '//' + l.host + l.pathname + '?' +
+              'fn=' + file + '&line=' + line + '&new=' + new_value +
+              '&topic=' + cs_topicid + '&action=edit';
+    var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
+               'Close</a><p>' +
+               '<iframe width="600" height="480" src="' + url + '">' +
+                'Can\'t view iframe</iframe>';
+    overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 600,
+            HEIGHT, 480);
+}
