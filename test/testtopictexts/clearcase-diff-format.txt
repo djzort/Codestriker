@@ -1,0 +1,24 @@
+2a3
+>    - This bullet is new.
+7,8c8,10
+< This text will be replaced.
+< Yes it will.
+---
+> This is the replacement.
+> Do you like it?
+> Or not?
+11a14,15
+> Here's some new stuff.
+> 
+14,17d17
+< This stuff will be deleted
+<    - So will this
+<    - And this
+< 
+20c20
+< This line is going to be changed slightly, man.
+---
+> This line is going to be changed slightly, dude.
+22a23,24
+> 
+> Here's a brand new line.
