@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.8.3</subtitle>
+    <subtitle>Version 1.8.4</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -827,10 +827,16 @@ $default_file_to_view = -1;
 # values.  For the "Status" metric below however, it is recording the
 # "state" of the thread, so an initial state of "Submitted" is reasonable.
 # For the other metrics below, an initial value makes no sense.
+# Metric items can have an optional show_on_main_page list that will
+# force the numbers of comments with the metric settings to be reported
+# on the main page of codestriker. 
 $comment_state_metrics =
     [ 
-      { name=>'Status', values=>['Submitted', 'Invalid', 'Completed'],
-	                default_value=>'Submitted' }
+      { name             => 'Status', 
+	values           => ['Submitted', 'Invalid', 'Completed'],
+	default_value    => 'Submitted',
+	show_on_mainpage => ['Submitted' ] 
+      }
     ];
 
 # Two metrics defined: Status and Type.
@@ -1575,6 +1581,58 @@ C:\Perl\bin\perl.exe "%s" %s
 % cvs rdiff -uN -r 1.0 -r TAG MODULE
 	  </programlisting>
 	</para>
+      </sect2>
+      <sect2>
+        <title>Creating CVS Diff Topics Automatically</title>
+	<para>
+	  Depending on your development process, it may be more
+	  convenient for CVS to automatically create a Codestriker
+	  topic <emphasis>automatically</emphasis> whenever a commit
+	  occurs.  The benefit with this approach is developers don't
+	  need to explicitly create code reviews.  A "code reviewer"
+	  can then monitor all commits to the repository, and has the
+	  opportunity to send comments to the authors if they spot any
+	  issues that need addressing.
+	</para>
+	<para>
+	  The standard <filename>commit_prep.pl</filename> and
+	  <filename>log_accum.pl</filename> scripts from CVS have been
+	  modified so that the email which is sent after each commit
+	  which contains the diff of the commit, also includes the URL
+	  of the associated Codestriker topic that was created.
+	</para>
+	<para>
+	  The <filename>commit_prep.pl</filename> and
+	  <filename>log_accum.pl</filename> files are located in the
+	  Codestriker <filename>bin</filename> directory, and need to
+	  be copied into your <filename>CVSROOT</filename> directory,
+	  with a line like the following in your
+	  <filename>commitinfo</filename> file (read the comment in
+	  this file to set this correctly for your site):
+	  <programlisting>
+DEFAULT $CVSROOT/CVSROOT/commit_prep.pl -r
+          </programlisting>
+	  and a line like the following in your
+	  <filename>loginfo</filename> file (read the comment in this
+	  file to set this correctly for your site):
+	  <programlisting>
+DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
+          </programlisting>
+	   The <filename>log_accum.pl</filename> file needs to have
+	   some configuration variables set at the start of the script
+	   to reflect your site.  You will also need to make sure you
+	   create a <filename>$CVSROOT/CVSROOT/commitlogs</filename>
+	   directory with the appropriate user-writable permissions,
+	   as commit information is written here as a result of these
+	   scripts running.
+	 </para>
+	 <para>
+	   Note the first line of the log message will be used as the
+	   topic title.  The entire log message is used as the topic
+	   description.  Any strings of the form "Bug nnn" in the log
+	   message will be taken as a reference to a bug id, and will
+	   be used in the topic's bugid field.
+	 </para> 
       </sect2>
       <sect2>
         <title>Creating Diff Topics</title>
