@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+    <head>
+	<title>Codestriker</title>
+    </head>
+    <body bgcolor="white">
+	<h1>Codestriker</h1>
+	<p>
+	    Codestriker: Copyright (c) 2001 David Sitsky.  All rights
+	    reserved.<br> <a
+	    href="mailto:sits@users.sourceforge.net">
+		sits@users.sourceforge.net</a>
+	</p>
+	<p>
+	    The latest version of codestriker can be obtained from:
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz</A>
+	</p>
+	<p>
+	    Codestriker sourceforge project information can be found from
+        <A HREF="http://sourceforge.net/projects/codestriker">
+           http://sourceforge.net/projects/codestriker</A>.
+	</p>
+	<p>
+	    Codestriker is a perl CGI script which is used for
+	    performing code reviews in a collaborative fashion as
+	    opposed to using unstructured emails.
+	</p>
+	<p>
+	    Authors create code review topics, where the nominated
+	    reviewers will be automatically notified by email.
+	    Reviewers then submit comments against the code on a
+	    per-line basis, and can also view comments submitted by
+	    the other reviewers as they are created.  Emails are sent
+	    to the appropriate parties when comments are created, as
+	    an alert mechanism.  The author is also free to submit
+	    comments against the review comments.
+	</p>
+	<p>
+	    Once all reviewers have finished, the author has all
+	    review comments available in a structured fashion, as
+	    opposed to a pile of unstructured emails.
+	</p>
+	<h2>Example usage</h2>
+	<p>
+	    This example will show how a new topic is created, how it
+	    is viewed, and how new comments can be submitted.
+	</p>
+	<h3>Creating a new topic</h3>
+	<p>
+	    A new code review topic is created by filling in the form
+	    in the create topic screen.
+	</p>
+	<p>
+	    <img src="create.jpg">
+	</p>
+	<p>
+	    The <code>Topic title</code> field provides a summary of
+	    the new topic.  The <code>Topic description</code>
+	    provides a description as to what the code changes are,
+	    which needs to be informative, as this is the text that
+	    is sent with the topic creation email.
+	</p>
+	<p>
+	    The actual code itself is entered either pasted inline
+	    into the <code>Topic text</code> form element, or uploaded
+	    from a file.  In practical use, often the text contains
+	    the output of the command <code>cvs diff -uN</code> or
+	    simply <code>diff -ruN</code>, which will effectively show
+	    the proposed code differences.  For the review of new
+	    files, the file itself could simply be uploaded.
+	</p>
+	<p>
+	    The following three email address fields are stored into a
+	    cookie, as they will often be used again for subsequent
+	    topic creations.  The <code>email address</code> is also
+	    used when submitting comments.  Once the submit button is
+	    pressed, an email is sent to all of the email addresses
+	    indicating that a new topic has been created, with the URL
+	    indicating how to access the topic.
+	</p>
+	<h3>Viewing the topic</h3>
+	<p>
+	    When viewing a topic, the title appears at the top,
+	    followed by the email addresses of the people involved,
+	    and what their respective roles are.  The topic
+	    description follows.  The number of comments made against
+	    this topic is then shown.  The code text is then shown in
+	    its entirety, followed by the submitted comments.
+	    Clicking on <code>comments</code> will take the browser to
+	    the start of the comments.
+	</p>
+	<p>
+	    A comment can be made against any line by simply clicking
+	    on the line number.  Lines which are coloured red indicate
+	    that comments have already been submitted against it.  By
+	    moving the mouse over these red lines, a digest of the
+	    comment will appear in the browser's status line.  For
+	    those browsers which support it, a tooltip will also popup
+	    containing the comment digest.
+	</p>
+	<p>
+	    In this example, the user scrolls to the bottom of the
+	    page, and clicks on line number 247.
+	</p>
+	<h3>Submitting a comment</h3>
+	<p>
+	    The user is then fills out the form as shown in the
+	    following diagram.
+	</p>
+	<p>
+	    <img src="edit.jpg">
+	</p>
+	<p>
+	    A few lines are shown indicating the code of interest.
+	    The line marked in red is the line the comment is being
+	    made against.  Clicking on <code>increase</code> or
+	    <code>dcrease</code> will increase or decrease the the
+	    number of surrounding lines respectively.  If cookies are
+	    enabled in your browser, the email address in the form
+	    will be remembered, so that you don't need to enter it in
+	    for all subsequent comments.
+	</p>
+	<p>
+	    The <code>comments</code> field is used for entered in
+	    your comments.  The submit button will lodge your comment,
+	    and take you back to the viewing page, centered on the
+	    line you just made your comment against, as shown in the
+	    following diagram.  Note how line 247 is now rendered red,
+	    and all comments are presented in reverse chronological
+	    order.
+	</p>
+	<p>
+	    <img src="view2.jpg">
+	</p>
+	<h2>Installation</h2>
+	<p>
+	    The latest version of codestriker can be obtained from:
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz</A>
+	</p>
+	<p>
+	    Codestriker sourceforge project information can be found from
+        <A HREF="http://sourceforge.net/projects/codestriker">
+           http://sourceforge.net/projects/codestriker</A>.
+	</p>
+	<p>
+	    I use codestriker as a tool behind our company's firewall
+	    for performing code reviews within our engineering team.
+	    For RedHat 7.1, the installation is simply the following
+	    as root on the internal web server:
+	    <pre>
+	    cd /var/www/cgi-bin
+	    cp /from/installed/location/codestriker.pl .
+	    mkdir /var/www/codestriker
+	    chown apache.apache /var/www/codestriker
+	    </pre>
+	</p>
+	<p>
+	    Codestriker stores all of its topic data and comments by
+	    default in <code>/var/www/codestriker</code>.  This
+	    location can be changed by the configuration variable at
+	    the start of the script.  This directory needs to be owned
+	    by the user which runs <code>httpd</code>, since the
+	    script creates files and directories under the
+	    <code>/var/www/codestriker</code> directory.  The username
+	    is typically either nobody or apache.  Use the <code>ps
+	    auxww | grep httpd</code> command to find out.
+	</p>
+	<p>
+	    For deployments outside an intranet, I would suggest using
+	    apache's <code>.htaccess</code> mechanism to limit access
+	    as to who can execute the script, as an extra security
+	    precaution.
+	</p>
+	<h2>Future plans</h2>
+	<p>
+	    Obviously there are many enhancements that can be made to
+	    this tool.  My initial goal was to build something
+	    quickly and it get it out there for real use, which will
+	    then hopefully provide further input to future
+	    enhancements.
+	</p>
+	<p>
+	    Please send me an email
+	    <a href="mailto:sits@users.sourceforge.net">
+		sits@users.sourceforge.net</a> for your comments or
+		submit them directly on the sourceforge projct page
+	    <a href="http://sourceforge.net/projects/codestriker">
+		http://sourceforge.net/projects/codestriker</a>.
+	</p>
+	<hr>
+	<a href="http://sourceforge.net">
+	    <img src="http://sourceforge.net/sflogo.php?group_id=26443"
+		 width="88"
+		 height="31" border="0" alt="SourceForge Logo"></a>
+    </body>
+</html>
