@@ -137,8 +137,13 @@ sub generate_header($$$$$$$$$$$) {
     }
 
     # Generate the URL to the codestriker CSS file.
-    my $codestriker_css = $query->url();
-    $codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
+    my $codestriker_css;
+    if ($Codestriker::codestriker_css ne "") {
+	$codestriker_css = $Codestriker::codestriker_css;
+    } else {
+	$codestriker_css = $query->url();
+	$codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
+    }
 
     # Write the simple open window javascript method for displaying popups.
     # Note gotoAnchor can't simply be:

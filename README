@@ -1,4 +1,4 @@
-Codestriker v1.6.0
+Codestriker v1.6.1
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 (see the CHANGELOG file for details on changes).
@@ -20,8 +20,8 @@ Once all reviewers have finished, the author has all
 review comments available in a structured fashion, as
 opposed to a pile of unstructured emails.
 
-Special support is provided for integration with a CVS
-repository, for the display of coloured diffs and for the
+Special support is provided for integration with CVS
+repositories, for the display of coloured diffs and for the
 ability to view original and new files in their entirety
 to assist in the review process.  Codestriker can be
 optionally linked with a bug tracking system, such as
@@ -139,7 +139,7 @@ To create all of the necessary database tables, do the following:
       cd /var/www/codestriker/codestriker.X.Y.Z/bin
       ./checksetup.pl
 
-Note checksetup.pl can be executed again and again.  It should be run
+Note checksetup.pl can be executed again and again.  It _must_ be run
 whenever codestriker is updated, as it will automatically adjust the
 database accordingly, check that the necessary tables exist, and that
 the prerequisite modules are installed on the system.

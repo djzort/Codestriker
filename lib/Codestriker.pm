@@ -16,7 +16,7 @@ use Time::Local;
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $use_compression $gzip $cvs $bugtracker
 	      $default_repository $default_topic_create_mode $default_tabwidth
-	      $file_reviewer $db $dbuser $dbpasswd
+	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
 	      $lxr_db $lxr_user $lxr_passwd $lxr_idlookup_base_url
