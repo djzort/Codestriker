@@ -624,13 +624,13 @@ if ($old_comment_table) {
     print "Detected old version of commentdata table, migrating...\n";
 
     # Need to migrate the data to the new style of the table data.
-    move_old_table("commentdata", undef);
-    move_old_table("commentstate", "topicid, line") if $old_commentstate_table;
 
     my $stmt;
     if ($old_commentstate_table) {
 	print "Detected old version of commentstate table, migrating...\n";
 	# Update the commentstate table.
+	move_old_table($commentstate_table, "topicid, line");
+	move_old_table($commentdata_table, undef);
 	$stmt =
 	    $dbh->prepare_cached("SELECT topicid, state, line, version " .
 				 "FROM commentstate_old");
@@ -642,11 +642,11 @@ if ($old_comment_table) {
 	}
 	$stmt->finish();
 	$dbh->do('DROP TABLE commentstate_old');
-    } else {
+    } else { 
 	# Version of codestriker which didn't have a commentstate table.
 	# Need to create new commentstate rows for each distinct comment
 	# first, then update each individual comment row appropriately.
-	move_old_table("commentdata", undef);
+	move_old_table($commentdata_table, undef);
 	
 	$stmt = $dbh->prepare_cached('SELECT DISTINCT topicid, line ' .
 				     'FROM commentdata_old');
@@ -932,7 +932,7 @@ open(CODESTRIKER_PL, ">../cgi-bin/codestriker.pl")
 if ($windows) {
     print CODESTRIKER_PL '#!perl.exe -w' . "\n";
 } else {
-    print CODESTRIKER_PL '#!/usr/bin/perl -w' . "\n";
+    print CODESTRIKER_PL '#!/usr/bin/perl -wT' . "\n";
 }
 my $codestriker_lib = 'use lib \'' . cwd() . '/../lib\';';
 for (my $i = 0; <CODESTRIKER_BASE>; $i++) {
