@@ -14,8 +14,7 @@ use Cwd;
 use File::Temp qw/ tmpnam tempdir /;
 use IO::Handle;
 
-# Switch for emitting debug information, which will output what VSS commands
-# have executed.
+# Switch for emitting debug information.
 my $_DEBUG = 1;
 
 # Constructor, which takes the username and password as parameters.
