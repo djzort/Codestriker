@@ -346,7 +346,7 @@ sub codestriker_create_topic
 	project_name => $CODESTRIKER_PROJECT,
 	repository => $CODESTRIKER_REPOSITORY,
 	bug_ids => join(", ", @bugs),
-	email => $user,
+	email => $MAIL_FROM,
 	reviewers => $CODESTRIKER_REVIEWERS,
 	cc => $CODESTRIKER_CC,
 	topic_text => join("\n", @diff)
