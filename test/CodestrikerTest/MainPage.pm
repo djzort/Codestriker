@@ -28,28 +28,28 @@ sub MakeAndNavigateToNewTopic
 {
     my ($self,%params) = @_;
 
-    unless ( exists( $params{topic_title}  ) )
+    unless ( exists($params{topic_title}) )
     {
         my $titleName = MakeNewTopicName();
         $params{topic_title} = $titleName;
     }
 
-    unless ( exists( $params{topic_description} ) )
+    unless ( exists($params{topic_description}) )
     {
         $params{topic_description} = "description";
     }
 
-    unless ( exists( $params{email} ) )
+    unless ( exists($params{email}) )
     {
         $params{email} = $CodestrikerTest::Config::email_adddress[0];
     }
 
-    unless ( exists( $params{reviewers} ) )
+    unless ( exists($params{reviewers}) )
     {
         $params{reviewers} = $CodestrikerTest::Config::email_adddress[1];
     }
      
-    unless ( exists( $params{topic_file} ) )
+    unless ( exists($params{topic_file}) )
     {
         $params{topic_file} = 'newtopic.t';
     }

@@ -10,6 +10,7 @@ use HTML::LinkExtractor;
 use CodestrikerTest::PageFactory;
 use HTML::Lint;
 use Test::More;
+use Compress::Zlib;
 
 sub new
 {
@@ -45,6 +46,9 @@ sub GetFromRequest
     delete $self->{links};
     delete $self->{forms};
 
+    # need to test the compression config.
+    $request->header('Accept-Encoding','gzip');
+
     my $ua = LWP::UserAgent->new;
 
     # tell LWP that it is ok to be redirected after a post command, as is done
@@ -53,8 +57,16 @@ sub GetFromRequest
 
     $self->{response} = $ua->request($request);
 
+    # uncompress it if it was sent compressed.
+    if ( defined($self->{response}) && $self->IsCompressed() )
+    {
+        $self->{response}->content(
+            Compress::Zlib::memGunzip($self->{response}->content));
+    }
+
     if ($self->{response}->is_success)
     {
+
         $self->_ParsePageHTML();
     }
     else
@@ -269,6 +281,22 @@ sub _ParsePageHTML
         }
     }
 
+}
+
+# returns true if the page was returned compressed.
+sub IsCompressed
+{
+    my ($self) = @_;
+
+    if ( !exists( $self->{response} ) )
+    {
+        ok( $self->Get(),"get page $self->{url} from IsCompressed");
+    }
+
+    my $encoding = $self->{response}->header( 'Content-Encoding');
+    
+    # uncompress it if it was sent compressed.
+    return defined($encoding) && $encoding eq 'x-gzip';
 }
 
 
