@@ -30,7 +30,7 @@ summary of the code change.  The title used in the\n
 subject of sent emails, and in the topic list screen.
 ')">(What's this?)</A></FONT>
 <BR>
-<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title %]" SIZE=70 MAXLENGTH=70>
+<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html %]" SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The topic description input field #%]
@@ -42,7 +42,8 @@ achieves. This information is sent with the new topic\n
 notification email to all reviewers.
 ')">(What's this?)</A></FONT>
 <BR>
-<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[% topic_description %]</TEXTAREA>
+<TEXTAREA NAME="topic_description" ROWS=6 COLS=70 WRAP="hard">[%
+topic_description | html %]</TEXTAREA>
 <P>
 
 <TABLE>
@@ -76,7 +77,7 @@ This should be left blank if you are reviewing files\n
 directly from a repository.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
+ <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
 
 [% IF allow_repositories != 0 %]
@@ -93,14 +94,14 @@ is uploaded.
 ')">(What's this?)</A></FONT>
 </TD>
 <TD>
-<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
 <TD>End tag: <FONT SIZE="-2"><A HREF="javascript:alert('
 This is the version number or tag that identifies the new\n
 version of the file that you want reviewed.
 ')">(What's this?)</A></FONT></TD>
 <TD>
-<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
 </TR>
 <TR>
@@ -114,7 +115,7 @@ is uploaded.
 ')">(What's this?)</A></FONT>
 </TD>
 <TD>
-<INPUT TYPE="text" NAME="module" VALUE="[% module %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
 </TD>
 </TR>
 [% END %]
@@ -159,9 +160,9 @@ used as filtering criteria in the search screen.
  <TD COLSPAN="3"><SELECT NAME="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == default_projectid %]
-	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
+	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
 	  [% ELSE %]
-	      <OPTION VALUE="[% project.id %]">[% project.name %]
+	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
 	  [% END %]
        [% END %]
       </SELECT>
@@ -199,7 +200,7 @@ it can be easily determined what code fixes have been applied\n
 to it.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
 [% END %]
 
@@ -212,7 +213,7 @@ will be sent to this address.  The new topic notification email\n
 will also be sent to this address.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=80></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80></TD>
 </TR>
 
 [%# The reviewers input field #%]
@@ -224,7 +225,7 @@ people who need to review this code.  When the topic is created,\n
 the new topic notification  email will be sent to these addresses.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 
 [%# The Cc input field #%]
@@ -236,7 +237,7 @@ not intended to be reviewers, but typically a mailing list\n
 to notify a number of people about the creation of a new topic.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
 </TR>
 </TABLE>
 

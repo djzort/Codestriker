@@ -1,6 +1,31 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.8
+
+* If a badly-formatted repository value from codestriker.conf is used
+  when creating a topic, report this in a user-friendly manner.
+
+* Report an error if a new topic to be created specifies both the
+  uploaded file and topic tag fields.
+
+* Fixed bug where selecting multiple states in the search screen
+  reported an input error.
+
+* HTML escaping for the topic title on the topic confirmation screen,
+  project information on the projects screens were not working
+  correctly.  Most HTML escaping are now performed within the
+  templates directly using the html_entity filter.
+
+* In some cases when displaying comment or topic description text,
+  hyperlinks were not automagically being created.  If the text
+  contains a URL such as http://zot.com, it needs to be rendered for
+  convenience as <A HREF="http://zot.com">http://zot.com</A>.  In
+  addition, if the text contains a pattern like [Bb]ug \d+ (ie Bug
+  122), this will be hyperlinked to the appropriate URL of the
+  bugtracking system, if one has been specified in the Codestriker
+  configuration.
+
 Version 1.7.7
 
 * The table of contents links on the view topic page didn't include

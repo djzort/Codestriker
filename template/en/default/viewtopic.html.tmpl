@@ -5,6 +5,8 @@
 
 [% PROCESS header.html.tmpl version = version %]
 
+[% USE AutomagicLinks %]
+
 <script language="JavaScript">
 <!-- script to hit user with are you sure if they are deleting a topic.
 
@@ -62,7 +64,7 @@ function DeleteTopicConfirm()
 
 <tr class="tth">
  <td><b>Title:</b></td>
- <td><b>[% escaped_title %]</b></td>
+ <td><b>[% document_title | html_entity %]</b></td>
 </th>
 
 [% SET type = 0 %]
@@ -70,13 +72,13 @@ function DeleteTopicConfirm()
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Author:</td>
- <td>[% document_author %]</td>
+ <td>[% document_author | html_entity %]</td>
 </tr>
 
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Created:</td>
- <td>[% document_creation_time %]</td>
+ <td>[% document_creation_time | html_entity %]</td>
 </tr>
 
 [% IF bug_string != '' %]
@@ -90,7 +92,7 @@ function DeleteTopicConfirm()
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Reviewers:</td>
- <td>[% document_reviewers %]</td>
+ <td>[% document_reviewers | html_entity %]</td>
 </tr>
 
 <tr class="tt[% type mod 2 %]">
@@ -117,14 +119,14 @@ function DeleteTopicConfirm()
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Project:</td>
- <td>[% project_name %]</td>
+ <td>[% project_name | html_entity %]</td>
 </tr>
 [% END %]
 
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td valign="top">Description:</td>
- <td><pre>[% description %]</pre></td>
+ <td><pre>[% description | html_entity | $AutomagicLinks %]</pre></td>
 </tr>
 
 [%# Display the form for changing the topic state #%]

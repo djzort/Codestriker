@@ -2,6 +2,8 @@
 
 [% PROCESS header.html.tmpl version = version %]
 
+[% USE AutomagicLinks %]
+
 <SCRIPT language="JavaScript">
 <!-- This function handles the three filter select boxes at the top of the table.
 function SelectFilter(post)
@@ -129,10 +131,10 @@ state and
 
     <TR CLASS="commenth">
         <TD CLASS="commentb">&nbsp;</TD>
-        <TD COLSPAN="2">[% comment.author %]&nbsp;[% comment.date %]</TD>
+        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
     </TR>
 
 [% END %]

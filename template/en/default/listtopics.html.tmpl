@@ -24,17 +24,17 @@
 <INPUT TYPE="hidden" NAME="action" VALUE="change_topics">
 
 [%# Store the search parameters as hidden variables #%]
-<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
-<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer %]">
-<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc %]">
+<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor | html_entity %]">
+<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer | html_entity %]">
+<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc | html_entity %]">
 <INPUT TYPE="hidden" NAME="sbugid" VALUE="[% sbugid %]">
-<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext %]">
+<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext | html_entity %]">
 <INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
-<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle %]">
-<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription %]">
-<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments %]">
-<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody %]">
-<INPUT TYPE="hidden" NAME="sfilename" VALUE="[% sfilename %]">
+<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle | html_entity %]">
+<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription | html_entity %]">
+<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments | html_entity %]">
+<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody | html_entity %]">
+<INPUT TYPE="hidden" NAME="sfilename" VALUE="[% sfilename | html_entity %]">
 
 <table width="100%">
 
@@ -57,11 +57,11 @@
 
     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
         <td><INPUT TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]"></td>
-        <td><a href="[% topic.view_topic_url %]">[% topic.title %]</a></td>
-        <td>[% topic.author %]</td>
-        <td>[% topic.reviewer %]</td>
-        <td>[% topic.cc %]</td>
-        <td>[% topic.created %]</td>
+        <td><a href="[% topic.view_topic_url %]">[% topic.title | html_entity %]</a></td>
+        <td>[% topic.author | html_entity %]</td>
+        <td>[% topic.reviewer | html_entity %]</td>
+        <td>[% topic.cc | html_entity %]</td>
+        <td>[% topic.created | html_entity %]</td>
 	[% IF bugdb_enabled != 0 %]
         <td>[% topic.bugids %]</td>
 	[% END %]

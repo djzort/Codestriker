@@ -134,8 +134,7 @@ sub process($$$) {
 	    $display_comment->{author} = $author;
 	}
 	$display_comment->{date} = $comments[$i]{date};
-	$display_comment->{data} =
-	    $http_response->escapeHTML($comments[$i]{data});
+	$display_comment->{data} = $comments[$i]{data};
 	$display_comment->{line} = "";
 	$display_comment->{lineurl} = "";
 	$display_comment->{linename} = "";

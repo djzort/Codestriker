@@ -26,13 +26,14 @@
 [%# The project name input field #%]
 Project name:
 <BR>
-<INPUT TYPE="text" NAME="project_name" VALUE="[% project_name %]" SIZE=70 MAXLENGTH=70>
+<INPUT TYPE="text" NAME="project_name" VALUE="[% project_name | html_entity %]" SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The project description input field #%]
 Project description: 
 <BR>
-<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[% project_description %]</TEXTAREA>
+<TEXTAREA NAME="project_description" ROWS=6 COLS=70 WRAP="virtual">[%
+project_description | html %]</TEXTAREA>
 <P>
 
 <P>

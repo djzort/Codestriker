@@ -107,7 +107,6 @@ sub change_state($$$$$$) {
 	$_document_bug_ids ne "" && $Codestriker::bug_db ne "") {
 	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
-	$bug_db_connection->get_connection();
 	my @ids = split /, /, $_document_bug_ids;
 	my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 	my $topic_url = $url_builder->view_url_extended($topic, -1, "", "",

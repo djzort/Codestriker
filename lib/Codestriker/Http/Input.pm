@@ -184,8 +184,8 @@ sub process($) {
 
     $self->_untaint_email('sauthor');
     $self->_untaint_digits('scontext');
-    
-    $self->_untaint_digits('sstate');
+    $self->_untaint_comma_digits('sstate');
+    $self->_untaint_comma_digits('sproject');
     
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
@@ -291,6 +291,13 @@ sub _untaint_revision($$) {
     my ($self, $name) = @_;
 
     $self->_untaint($name, '[\d\.]+');
+}
+
+# Untaint a parameter that should be a comma separated list of digits.
+sub _untaint_comma_digits($$) {
+    my ($self, $name) = @_;
+
+    $self->_untaint($name, '[\d\,]+');
 }
 	    
 # Untaint a single email address, which should be a regular email address.

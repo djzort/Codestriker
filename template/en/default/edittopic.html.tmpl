@@ -8,20 +8,20 @@
 <A HREF="[% doc_url %]/x385.html#ADD-COMMENT">Help</A>
 <HR>
 
-<H2>[% topic_title %]</H2>
+<H2>[% topic_title | html_entity %]</H2>
 <TABLE>
 <TR>
  <TD>Author: </TD>
- <TD>[% author %]</TD>
+ <TD>[% author | html_entity %]</TD>
 </TR>
 <TR>
  <TD>Reviewers: </TD> 
- <TD>[% reviewers %]</TD>
+ <TD>[% reviewers | html_entity %]</TD>
 </TR>
 [% IF cc != '' %]
 <TR>
  <TD>Cc: </TD> 
- <TD>[% cc %]</TD>
+ <TD>[% cc | html_entity %]</TD>
 </TR>
 [% END %]
 </TABLE>
@@ -59,7 +59,7 @@ Enter new comment:
  <TABLE>
  <TR>
   <TD>Your email address: </TD>
-  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email %]" SIZE=50 MAXLENGTH=100></TD>
+  <TD><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=100></TD>
  </TR>
  <TR>
   <TD>Cc: </TD>

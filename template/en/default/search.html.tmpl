@@ -65,9 +65,9 @@
  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
        [% FOREACH project = projects %]
            [% IF project.name == 'Any' %]
-               <OPTION SELECTED VALUE="[% project.id %]">[% project.name %]
+               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
            [% ELSE %]           
-               <OPTION VALUE="[% project.id %]">[% project.name %]
+               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
            [% END %]
        [% END %]
      </SELECT>

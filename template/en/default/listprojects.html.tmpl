@@ -31,9 +31,9 @@
 
 <TR CLASS="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
 <TD>
-<A HREF="[% project.edit_url %]">[% project.name %]</A>
+<A HREF="[% project.edit_url %]">[% project.name | html_entity %]</A>
 </TD>
-<TD>[% project.description %]</TD>
+<TD>[% project.description | html_entity %]</TD>
 </TR>
 [% END %]
 

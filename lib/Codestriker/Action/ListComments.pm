@@ -14,7 +14,6 @@ use Codestriker::Http::Template;
 use Codestriker::Http::Render;
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
-use HTML::Entities;
 
 # If the input is valid, list the appropriate comments for a topic.
 sub process($$$) {
@@ -114,9 +113,6 @@ sub process($$$) {
 	my $state = $comment->{state};
 	$comment->{state} = $Codestriker::comment_states[$state];
 
-	# Make sure the comment data is HTML escaped.
-	$comment->{data} = HTML::Entities::encode($comment->{data});
-        
         if ($show_context ne "" && $show_context > 0) {
                 my $delta = Codestriker::Model::File->get_delta($topic, 
                                 $comment->{filenumber}, 
@@ -162,7 +158,7 @@ sub process($$$) {
  
     $vars->{'sstate'} = $show_comments_by_state;     
     $vars->{'sauthor'} = $http_input->get('sauthor');
-
+    
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("displaycomments");
     $template->process($vars);

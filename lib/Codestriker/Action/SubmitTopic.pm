@@ -74,15 +74,16 @@ sub process($$$) {
     if ($reviewers eq "") {
 	$feedback .= "No reviewers were entered.\n";
     }
-    if ($feedback ne "" && defined $fh) {
-	$feedback .= "For security reasons, please re-enter the file name to upload.\n";
+    if ($retrieve_text_from_rep && defined $fh) {
+	$feedback .= "Topic text specified using tags and uploaded file.\n";
+	$feedback .= "Please choose one topic text method, and try again.\n";
     }
     
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
 				    $cc, "", "", $repository_url, $projectid,
 				    "", 0, 0);
 
-    # Set the error_vars in case of any errorsm that will require forwarding
+    # Set the error_vars in case of any errors that will require forwarding
     # to the create topic screen again.
     my $error_vars = {};
     $error_vars->{'version'} = $Codestriker::VERSION;
@@ -100,21 +101,13 @@ sub process($$$) {
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
-    $error_vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::maximum_topic_size_lines;
+    $error_vars->{'maximum_topic_size_lines'} =
+	$Codestriker::maximum_topic_size_lines eq "" ?
+	0 : $Codestriker::maximum_topic_size_lines;
                                           
-    $error_vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::suggested_topic_size_lines;
-
-    # If there is a problem with the input, redirect to the create screen
-    # with the message.
-    if ($feedback ne "") {
-	_forward_create_topic($error_vars, $feedback);
-	$http_response->generate_footer();
-	return;
-    }
+    $error_vars->{'suggested_topic_size_lines'} =
+	$Codestriker::suggested_topic_size_lines eq "" ?
+	0 : $Codestriker::suggested_topic_size_lines;
 
     # Set the repository to the default if it is not entered.
     if ($repository_url eq "") {
@@ -124,6 +117,23 @@ sub process($$$) {
     # Check if the repository argument is valid.
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
+    if (! defined $repository) {
+	$feedback .= "The repository value \"$repository_url\" is invalid.\n";
+	$feedback .= "Please correct this value in your codestriker.conf " .
+	    "file, and try again.\n";
+    }
+
+    # If there is a problem with the input, redirect to the create screen
+    # with the message.
+    if ($feedback ne "") {
+	if (defined $fh) {
+	    $feedback .= "For security reasons, please re-enter the " .
+		"file name to upload, if required.\n";
+	}
+	_forward_create_topic($error_vars, $feedback);
+	$http_response->generate_footer();
+	return;
+    }
 
     # For "hysterical" reasons, the topic id is randomly generated.  Seed the
     # generator based on the time and the pid.  Keep searching until we find
@@ -275,7 +285,6 @@ sub process($$$) {
     if ($bug_ids ne "" && $Codestriker::bug_db ne "") {
 	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
-	$bug_db_connection->get_connection();
 	my @ids = split /, /, $bug_ids;
 	my $text = "Codestriker topic: $topic_url created.\n" .
 	    "Author: $email\n" .

@@ -16,7 +16,6 @@ use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
-use HTML::Entities ();
 
 # If the input is valid, display the topic.
 sub process($$$) {
@@ -128,7 +127,7 @@ sub process($$$) {
 
     # Obtain the view topic summary information, the title, bugs it relates
     # to, and who the participants are.
-    $vars->{'escaped_title'} = HTML::Entities::encode($document_title);
+    $vars->{'document_title'} = $document_title;
 
     if ($Codestriker::antispam_email) {
 	$document_author = Codestriker->make_antispam_email($document_author);
@@ -181,18 +180,10 @@ sub process($$$) {
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic_state;
 
-    # Obtain the topic description, with "Bug \d\d\d" links rendered to links
-    # to the bug tracking system.
+    # Set the description of the topic.
     my $data = "";
     for (my $i = 0; $i <= $#document_description; $i++) {
 	$data .= $document_description[$i] . "\n";
-    }
-    
-    $data = HTML::Entities::encode($data);
-
-    # Replace occurances of bug strings with the appropriate links.
-    if ($Codestriker::bugtracker ne "") {
-	$data =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${Codestriker::bugtracker}$3">$1$2$4<\/A>/mg;
     }
     $vars->{'description'} = $data;
 

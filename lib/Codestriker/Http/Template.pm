@@ -35,7 +35,10 @@ sub new($$) {
 	    TRIM => 1, 
 	    
 	    # Where to compile the templates.
-	    COMPILE_DIR => $Codestriker::BASEDIR . 'cgi-bin/data/'
+	    COMPILE_DIR => $Codestriker::BASEDIR . 'cgi-bin/data/',
+
+	    # Codestriker-specific plugins.
+	    PLUGIN_BASE => 'Codestriker::Template::Plugin'
 	    })
 	|| die Template->error();
 
