@@ -51,7 +51,8 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Construct the view topic URL.
-    my $view_url = $url_builder->view_url($topic, -1, $mode);
+    my $view_url = $url_builder->view_url($topic, -1, $mode,
+					  $Codestriker::default_topic_br_mode);
     $vars->{'view_topic_url'} = $view_url;
 
     # Construct the view comments URL.

@@ -1,6 +1,12 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.7
+
+* The table of contents links on the view topic page didn't include
+  the brmode parameter, so clicking on a filename link reloaded the
+  whole topic page, which is inconvenient.  This has been fixed.
+
 Version 1.7.6
 
 * Fixed bug where created topics for deployments which had projects

@@ -240,7 +240,8 @@ sub process($$$) {
     # Obtain a URL builder object and determine the URL to the topic.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
-						    $query->url(), 0);
+						    $query->url(), 0,
+						    $Codestriker::default_topic_br_mode);
 
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated

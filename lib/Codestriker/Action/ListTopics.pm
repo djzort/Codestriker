@@ -173,7 +173,8 @@ sub process($$$) {
 	# Add this row to the list of topics.
 	my $topic = {};
 	$topic->{'view_topic_url'} =
-	    $url_builder->view_url($accum_id, -1, $mode);
+	    $url_builder->view_url($accum_id, -1, $mode,
+				   $Codestriker::default_topic_br_mode);
 	$topic->{'id'} = $accum_id;
 	$topic->{'title'} = $accum_title;
 	$topic->{'author'} = $accum_author;

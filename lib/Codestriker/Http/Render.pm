@@ -785,6 +785,7 @@ sub _coloured_mode_start($) {
     my $query = $self->{query};
     my $topic = $self->{topic};
     my $mode = $self->{mode};
+    my $brmode = $self->{brmode};
 
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'}), "\n";
@@ -816,7 +817,8 @@ sub _coloured_mode_start($) {
     for (my $i = 0; $i <= $#$filenames; $i++) {
 	my $filename = $$filenames[$i];
 	my $revision = $$revisions[$i];
-	my $href_filename = $url_builder->view_url($topic, -1, $mode) .
+	my $href_filename =
+	    $url_builder->view_url($topic, -1, $mode, $brmode) .
 	    "#" . "$filename";
 	my $tddata = $$binaries[$i] ? $filename :
 	    $query->a({href=>"$href_filename"}, "$filename");

@@ -92,7 +92,10 @@ sub process($$$) {
 	$vars->{'cc'} = "";
     }
 
-    my $view_topic_url = $url_builder->view_url($topic, $line, $mode);
+    my $view_topic_url =
+	$url_builder->view_url($topic, $line, $mode,
+			       $Codestriker::default_topic_br_mode);
+
     my $view_comments_url = $url_builder->view_comments_url($topic);
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;

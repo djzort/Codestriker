@@ -55,7 +55,9 @@ sub process($$$) {
     # in the "From" field, and is BCCed the email so they retain a copy.
     my $edit_url = $url_builder->edit_url($fn, $line, $new,
 					  $topic, "", "", $query->url());
-    my $view_topic_url = $url_builder->view_url($topic, $line, $mode);
+    my $view_topic_url =
+	$url_builder->view_url($topic, $line, $mode,
+			       $Codestriker::default_topic_br_mode);
     my $view_comments_url = $url_builder->view_comments_url($topic);
 
     # Retrieve the appropriate topic details.

@@ -63,7 +63,7 @@ sub view_url_extended ($$$$$$$$) {
 # Create the URL for viewing a topic.
 sub view_url ($$$$) {
     my ($self, $topic, $line, $mode, $brmode) = @_;
-    if (!(defined $brmode)) { $brmode = ""; }
+    if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
     return $self->view_url_extended($topic, $line, $mode, "", "", "",
 				    undef, $brmode);
 }
