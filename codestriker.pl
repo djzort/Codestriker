@@ -1249,6 +1249,8 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	} elsif ($data =~ /^\+(.*)/) {
 	    # Line corresponds to something which has been removed.
 	    add_new_change($1, $line);
+	} elsif ($data =~ /\\/) {
+	    # A diff comment such as "No newline at end of file" - ignore it.
 	} else {
 	    # Render the previous diff changes visually.
 	    render_changes($topic, $mode);
@@ -2126,6 +2128,11 @@ sub view_file ($$$) {
 	    } elsif (/^\+(.*)$/) {
 		# An added line.
 		add_plus_monospace_line($1, $offset);
+	    } elsif (/^\\/) {
+		# A line with a diff comment, such as:
+		# \ No newline at end of file.
+		# The easiest way to deal with these lines is to just ignore
+		# them.
 	    } elsif (/^@@/) {
 		# Start of next diff block, exit from loop and flush anything
 		# pending.
