@@ -475,6 +475,7 @@ sub generate_header($$$$$$) {
 
     function fetch(url) {
 	opener.location = url;
+	opener.focus();
     }
  //-->
 </SCRIPT>
