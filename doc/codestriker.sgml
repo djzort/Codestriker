@@ -8,6 +8,9 @@
   <bookinfo>
     <title>The Codestriker Guide</title>
     <subtitle>Version 1.7.4</subtitle>
+    <legalnotice>
+      <para>Copyright (c) 2001, 2002, 2003, 2004</para>
+    </legalnotice>
     <authorgroup>
       <author>
         <firstname>David</firstname>
