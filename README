@@ -1,4 +1,4 @@
-Codestriker v1.5.5
+Codestriker v1.5.6
 Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 sits@users.sourceforge.net
 (see the CHANGELOG file for details on changes).
@@ -249,11 +249,35 @@ against this bug, and what the review decisions were.
 
 It should be trivial to add support for other bug tracking systems.
 
+LXR integration
+---------------
+
+Codestriker has been integrated with LXR, so that when performing a
+review, those identifiers known to LXR will be automatically
+hyperlinked.  This is an enormous aid to the code reviewing process,
+as you can quickly determine where a variable/function/method/class is
+defined and where it is used quickly, while studying the proposed
+changes.
+
+The LXR home page is located at http://lxr.sourceforge.net.  The
+integration has been tested with versions 0.9.2.
+
+To enable LXR integration, you need to set the appropriate values in
+the codestriker.conf file.
+
+Also note, LXR at present doesn't seem to work with Taint checking.
+To avoid errors, you'll need to comment out the "PerlTaintCheck On"
+line in your httpd.conf file, and remove the -T switch from the
+cgi-bin/codestriker.pl file.
+
 Future plans
 ------------
 
 Please mail me any other suggestions you have to
 codestriker-user@lists.sourceforge.net or to me personally at
 sits@users.sourceforge.net.  Contributions are most welcome!
+
+Incorporating templates to simplify the customisation of the view is
+the next item on the deck.
 
 Codestriker project page: http://sourceforge.net/projects/codestriker.

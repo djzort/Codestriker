@@ -115,7 +115,10 @@ sub lxr_ident($$) {
 # Currently, this is very Java/C/C++ centric, but it will do for now.
 sub lxr_data($$) {
     my ($self, $data) = @_;
-    
+
+    # Don't do anything if LXR is not enabled.
+    return $data if $Codestriker::lxr_db eq "";
+
     # If the line is just a comment, don't do any processing.  Note this code
     # isn't bullet-proof, but its good enough most of the time.
     $_ = $data;

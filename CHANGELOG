@@ -1,6 +1,19 @@
 Version 1.5.6
 
-* Initial LXR integration support.
+* Codestriker has been integrated with LXR, so that when viewing a
+  code review, those identifiers known to LXR will be automatically
+  hyperlinked.  This is an enormous aid to the code reviewing process,
+  as you can quickly determine where a variable/function/method/class
+  is defined and where it is used quickly, while studying the proposed
+  changes.
+
+  See the README file for setting up LXR integration.
+
+  The LXR home page is located at http://lxr.sourceforge.net.  The
+  integration has been tested with version 0.9.2.
+
+  Note the codestriker.css file has been modified slightly to support
+  LXR.  Make sure you update this file if using LXR.
 
 Version 1.5.5 (if upgrading, make sure you run checksetup.pl, see below):
 
