@@ -69,8 +69,8 @@ function add_comment_tooltip(file, line, new_value)
               '&topic=' + cs_topicid + '&action=edit';
     var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
                'Close</a><p>' +
-               '<iframe width="600" height="480" src="' + url + '">' +
+               '<iframe width="660" height="520" src="' + url + '">' +
                 'Can\'t view iframe</iframe>';
-    overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 600,
-            HEIGHT, 480);
+    overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 660,
+            HEIGHT, 520);
 }
