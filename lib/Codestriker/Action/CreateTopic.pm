@@ -22,6 +22,12 @@ sub process($$$) {
 
     # Create the hash for the template variables.
     my $vars = {};
+    $vars->{'error_message'} = "";
+    $vars->{'topic_text'} = "";
+    $vars->{'topic_file'} = "";
+    $vars->{'topic_description'} = "";
+    $vars->{'topic_title'} = "";
+    $vars->{'bug_ids'} = "";
 
     # Retrieve the email, reviewers, cc and repository from the cookie.
     $vars->{'email'} =

@@ -2,6 +2,12 @@
 
 [% PROCESS header.html.tmpl %]
 
+[% IF error_message != '' %]
+<FONT COLOR="red">[% error_message %]</FONT>
+[% END %]
+
+<P>
+
 <H1>Create new topic</H1>
 
 <P>
@@ -17,7 +23,7 @@ summary of the code change.  The title used in the\n
 subject of sent emails, and in the topic list screen.
 ')">(What's this?)</A></FONT>
 <BR>
-<INPUT TYPE="text" NAME="topic_title"  SIZE=70 MAXLENGTH=70>
+<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title %]" SIZE=70 MAXLENGTH=70>
 <P>
 
 [%# The topic description input field #%]
@@ -29,7 +35,7 @@ achieves. This information is sent with the new topic\n
 notification email to all reviewers.
 ')">(What's this?)</A></FONT>
 <BR>
-<TEXTAREA NAME="topic_description" ROWS=5 COLS=70 WRAP="hard"></TEXTAREA>
+<TEXTAREA NAME="topic_description" ROWS=5 COLS=70 WRAP="hard">[% topic_description %]</TEXTAREA>
 <P>
 
 [%# The topic text input field #%]
@@ -49,7 +55,7 @@ as a coloured-diff, and can\'t be linked to a CVS repository.\n
 Ordinary source files can also be uploaded.
 ')">(What's this?)</A></FONT>
 <BR>
-<TEXTAREA NAME="topic_text" ROWS=15 COLS=70></TEXTAREA>
+<TEXTAREA NAME="topic_text" ROWS=15 COLS=70>[% topic_text %]</TEXTAREA>
 <P>
 
 <TABLE>
@@ -72,7 +78,7 @@ as a coloured-diff, and can\'t be linked to a CVS repository.\n
 Ordinary source files can also be uploaded.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="file" NAME="topic_file"  SIZE=40 MAXLENGTH=200></TD>
+ <TD><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file %]" SIZE=40 MAXLENGTH=200></TD>
 </TR>
 
 [%# The repository the review is made against #%]
@@ -124,7 +130,7 @@ it can be easily determined what code fixes have been applied\n
 to it.
 ')">(What's this?)</A></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="bug_ids"  SIZE=30 MAXLENGTH=50></TD>
+ <TD><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids %]" SIZE=30 MAXLENGTH=50></TD>
 </TR>
 
 [%# The email input field #%]

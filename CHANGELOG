@@ -1,5 +1,18 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 
+Version 1.6.2
+
+* Fixed warnings in checksetup.pl for MySQL databases, where "commits"
+  are ignored.
+
+* If there are form elements not properly filled in the "create topic"
+  screen, redirect to that page with the error messages displayed,
+  with the previous form elements remembered.  The only exception is
+  the filename in the file upload input box, since browsers usually
+  don't accept pre-defined for security reasons.
+
+* Fixed minor warnings for topic list screen when the cc field is empty.
+
 Version 1.6.1
 
 * Modified to use Net::SMTP to allow Codestriker to run under Windows,

@@ -31,27 +31,56 @@ sub process($$$) {
     my $email = $http_input->get('email');
     my $cc = $http_input->get('cc');
     my $fh = $http_input->get('fh');
+    my $topic_file = $http_input->get('fh_filename');
     my $bug_ids = $http_input->get('bug_ids');
     my $repository_url = $http_input->get('repository');
 
+    my $error_message = "";
+
     if ($topic_title eq "") {
-	$http_response->error("No topic title was entered");
+	$error_message .= "No topic title was entered.\n";
     }
     if ($topic_description eq "") {
-	$http_response->error("No topic description was entered");
+	$error_message .= "No topic description was entered.\n";
     }
     if ($email eq "") {
-	$http_response->error("No email address was entered");
+	$error_message .= "No email address was entered.\n";
     }	
     if ($topic_text eq "" && !defined $fh) {
-	$http_response->error("No topic text or filename was entered");
+	$error_message .= "No topic text or filename was entered.\n";
     }
     if (defined $fh && $topic_text ne "") {
-	$http_response->error("Topic text and uploaded file were entered");
+	$error_message .= "Topic text and uploaded file were entered.\n";
     }
     if ($reviewers eq "") {
-	$http_response->error("No reviewers were entered");
+	$error_message .= "No reviewers were entered.\n";
     }
+
+    $http_response->generate_header("", "Create new topic", $email, $reviewers,
+				    $cc, "", "", $repository_url, "", 0, 0);
+
+    # If there is a problem with the input, redirect to the create screen
+    # with the message.
+    if ($error_message ne "") {
+	$error_message =~ s/\n/<BR>/g;
+	my $vars = {};
+	$vars->{'error_message'} = $error_message;
+	$vars->{'email'} = $email;
+	$vars->{'reviewers'} = $reviewers;
+	$vars->{'cc'} = $cc;
+	$vars->{'repository'} = $repository_url;
+	$vars->{'allow_repositories'} = $Codestriker::allow_repositories;
+	$vars->{'topic_text'} = $topic_text;
+	$vars->{'topic_file'} = $topic_file;
+	$vars->{'topic_description'} = $topic_description;
+	$vars->{'topic_title'} = $topic_title;
+	$vars->{'bug_ids'} = $bug_ids;
+	
+	my $template = Codestriker::Http::Template->new("createtopic");
+	$template->process($vars) || die $template->error();
+	return;
+    }	
+
 
     # Set the repository to the default if it is not entered.
     if ($repository_url eq "") {
@@ -61,9 +90,6 @@ sub process($$$) {
     # Check if the repository argument is valid.
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
-
-    $http_response->generate_header("", "Create new topic", $email, $reviewers,
-				    $cc, "", "", $repository_url, "", 0, 0);
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {

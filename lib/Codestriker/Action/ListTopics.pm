@@ -81,11 +81,12 @@ sub process($$$) {
 	    if (defined $bugid[$index]) {
 		_insert_nonduplicate(\@accum_bugs, $bugid[$index]);
 	    }
-	    if (defined $email[$index] &&
-		$type[$index] == $Codestriker::PARTICIPANT_REVIEWER) {
-		_insert_nonduplicate(\@accum_reviewers, $email[$index]);
-	    } else {
-		_insert_nonduplicate(\@accum_cc, $email[$index]);
+	    if (defined $email[$index]) {
+		if ($type[$index] == $Codestriker::PARTICIPANT_REVIEWER) {
+		    _insert_nonduplicate(\@accum_reviewers, $email[$index]);
+		} else {
+		    _insert_nonduplicate(\@accum_cc, $email[$index]);
+		}
 	    }
 	}
 
@@ -102,8 +103,8 @@ sub process($$$) {
 	
 	my $reviewer_text = join ', ', @accum_reviewers;
 	$reviewer_text = "&nbsp;" if $reviewer_text eq "";
-	my $cc_text = join ', ', @accum_cc;
-	$cc_text = "&nbsp;" if $cc_text eq "";
+	my $cc_text = ($#accum_cc >= 0) ? (join ', ', @accum_cc) : "&nbsp;";
+
 	for (my $i = 0; $i <= $#accum_bugs; $i++) {
 	    $accum_bugs[$i] =
 		$query->a({href=>"$Codestriker::bugtracker$accum_bugs[$i]"},

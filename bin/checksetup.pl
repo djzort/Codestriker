@@ -226,10 +226,9 @@ sub add_field ($$$)
     if (! $local_dbh->do("ALTER TABLE $table ADD COLUMN $field $definition")) {
 	# Most likely, the column already exists, silently continue.
     } else {
-	$local_dbh->commit;
 	print "Added new field $field to table $table.\n";
     }
-    $local_dbh->disconnect;
+    Codestriker::DB::DBI->release_connection($local_dbh, 1);
 }
 
 # MySQL specific function adapted from Bugzilla.
@@ -286,7 +285,9 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
 
 # Add appropriate fields to the database tables as things have evolved.
 # Make sure the database is committed before proceeding.
-$dbh->commit;
+Codestriker::DB::DBI->release_connection($dbh, 1);
+$dbh = Codestriker::DB::DBI->get_connection();
+
 add_field('topic', 'repository', 'text');
     
 # Insert the version number into the table, if required.
@@ -312,7 +313,5 @@ if (!$found) {
     $insert->execute($Codestriker::VERSION, $max_sequence);
 }
 
-$dbh->commit;
-$dbh->disconnect;
-
+Codestriker::DB::DBI->release_connection($dbh, 1);
 
