@@ -40,7 +40,7 @@
 [% IF obsoleted_topics.size > 0 %]
 <font color="red"><strong>Topic obsoletes:</strong></font>
   [% FOREACH entry = obsoleted_topics %]
-    <a href="[% entry.view_url %]">[% entry.title %]</a>[% IF ! loop.last() %],[% END %]
+    <a href="[% entry.view_url %]">[% entry.title | html_entity %]</a>[% IF ! loop.last() %],[% END %]
   [% END %]
   <br>
 [% END %]
@@ -49,7 +49,7 @@
 [% IF obsoleted_by.size > 0 %]
 <font color="red"><strong>Obsoleted by:</strong></font>
   [% FOREACH entry = obsoleted_by %]
-    <a href="[% entry.view_url %]">[% entry.title %]</a>[% IF ! loop.last() %],[% END %]
+    <a href="[% entry.view_url %]">[% entry.title | html_entity %]</a>[% IF ! loop.last() %],[% END %]
   [% END %]
   <br>
 [% END %]

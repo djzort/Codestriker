@@ -1376,6 +1376,16 @@ C:\Perl\bin\perl.exe "%s" %s
 	      </para>
 	    </listitem>
 	  </varlistentry>
+
+	  <varlistentry>
+	    <term>Obsoleted</term>
+	    <listitem>
+	      <para>
+	        Obsoleted indicates that the topic has been superseeded
+                by another topic.
+	      </para>
+	    </listitem>
+	  </varlistentry>
 	</variablelist>
 	    
 	An example screen can be seen in <xref

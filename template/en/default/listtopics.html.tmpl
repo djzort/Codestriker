@@ -74,6 +74,7 @@
     </tr>
 </table>
 
+[% SET obsoleted_state_present = 0 %]
 <table>
 <tr>
 <td>
@@ -85,6 +86,11 @@ Change state: &nbsp;
      [% ELSE %]
      <option value="[% state %]">[% state %]</option>
      [% END %]
+
+     [% IF state == 'Obsoleted' %]
+         [% SET obsoleted_state_present = 1 %]
+     [% END %]
+
      [% END %]
   </select>
 </td>
@@ -92,12 +98,14 @@ Change state: &nbsp;
    <input type="submit" name="button" value="Update">
 </td>
 </tr>
+[% IF obsoleted_state_present == 1 %]
 <tr>
 <td>&nbsp;</td>
 <td>
    <input type="submit" name="button" value="Obsolete Topic(s)">
 </td>
 </tr>
+[% END %]
 </table>
 
    <table width="100%">

@@ -17,7 +17,7 @@
 [% IF obsoleted_topics.size > 0 %]
 <font color="red"><strong>Topics to obsolete:</strong></font>
 [% FOREACH topic = obsoleted_topics %]
-<a href="[% topic.view_url %]">[% topic.title %]</a>[% IF ! loop.last() %],[% END %]
+<a href="[% topic.view_url %]">[% topic.title | html_entity %]</a>[% IF ! loop.last() %],[% END %]
 
 [% END %]
 <p>

@@ -74,7 +74,7 @@ sub getDiff ($$$$$) {
 
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,$cmd);
 
-    # make sure the moduel does not end or start with a / 
+    # Make sure the module does not end or start with a / 
     $module_name =~ s/\\$//;
     $module_name =~ s/^\\//;
 
