@@ -40,6 +40,7 @@ sub process($$$) {
     $vars->{'feedback'} = $feedback;
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'search_url'} = $url_builder->search_url();
+    $vars->{'doc_url'} = $url_builder->doc_url();
 
     $vars->{'list_url'} =
  	$url_builder->list_topics_url("", "", "", "", "", "", "",

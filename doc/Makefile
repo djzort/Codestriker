@@ -1,7 +1,7 @@
-# Makefile template for building the Engineering standards document.
+# Makefile template for building the Codestriker documentation.
 
 # Don't remove .tex or .dvi intermediate files.
-.PRECIOUS: %.tex %.dvi
+.PRECIOUS: %.tex %.dvi %.eps
 
 SOURCES=codestriker.sgml
 DOCBOOK_DIR=.
@@ -10,8 +10,10 @@ DOCBOOK_DIR=.
 JADE=openjade
 JADETEX=jadetex
 DVIPDF=dvipdf
+DVIPS=dvips
 RM=/bin/rm -f
-SCP=/usr/bin/scp -q
+CP=/bin/cp
+PNG2EPS=png2eps
 
 # String output by $(JADETEX) when there are undefined references.
 UNDEFINED_REFERENCES=LaTeX Warning: There were undefined references
@@ -29,6 +31,11 @@ AUX_TARGETS=$(SOURCES:.sgml=.aux)
 LOG_TARGETS=$(SOURCES:.sgml=.log)
 DVI_TARGETS=$(SOURCES:.sgml=.dvi)
 PDF_TARGETS=$(SOURCES:.sgml=.pdf)
+PS_TARGETS=$(SOURCES:.sgml=.ps)
+
+# List of PNG image files.
+PNG_FILES=$(wildcard *.png)
+EPS_FILES=$(PNG_FILES:.png=.eps)
 
 # Build the html files from a docbook sgml file.
 %.html: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
@@ -38,12 +45,12 @@ PDF_TARGETS=$(SOURCES:.sgml=.pdf)
 	@if [ -f book1.html ]; then cp book1.html $@ ; fi
 
 # Build a tex file from a docbook sgml file.
-%.tex: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
+%.tex: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL) $(EPS_FILES)
 	$(JADE) -t tex -D $(DOCBOOK_DIR) -d $(DOCBOOK_DSL_PRINT) $<
 
 
 # Build a tex file from a docbook sgml file.
-%.rtf: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL)
+%.rtf: %.sgml $(DOCBOOK_DIR)/$(DOCBOOK_DSL) $(EPS_FILES)
 	$(JADE) -t rtf -D $(DOCBOOK_DIR) -d $(DOCBOOK_DSL_PRINT) $<
 
 # Build a dvi file from a tex file.  Note if there are undefined
@@ -61,10 +68,20 @@ PDF_TARGETS=$(SOURCES:.sgml=.pdf)
 %.pdf: %.dvi
 	$(DVIPDF) $<
 
-default: $(HTML_TARGETS) $(PDF_TARGETS) $(RTF_TARGETS)
+# Build a ps file from a dvi file.
+%.ps: %.dvi
+	$(DVIPS) -o $@ $<
+
+# Build a EPS file from a PNG file.
+%.eps: %.png
+	$(PNG2EPS) $< > $@
+
+install: $(HTML_TARGETS) $(PDF_TARGETS) $(RTF_TARGETS) $(PS_TARGETS)
+	$(CP) $(PDF_TARGETS) $(PS_TARGETS) $(RTF_TARGETS) *.html *.png ../html
 
 clean:
 	$(RM) $(PDF_TARGETS) $(HTML_TARGETS) $(TEX_TARGETS) $(DVI_TARGETS) \
-              $(AUX_TARGETS) $(LOG_TARGETS) $(RTF_TAREGTS) *.html
+              $(PS_TARGETS) $(AUX_TARGETS) $(LOG_TARGETS) $(RTF_TAREGTS) \
+              *.html $(EPS_FILES)
 
 

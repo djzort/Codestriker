@@ -28,8 +28,19 @@ sub new($$) {
     my $browser = $ENV{'HTTP_USER_AGENT'};
     $self->{url_prefix} = ($browser =~ m%^Mozilla/(\d)% && $1 <= 4) ?
 	$query->url(-relative=>1) : "";
-    my $htmlurl = $query->url();
-    $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
+
+    # Check if the HTML files are accessible vi another URL (required for
+    # sourceforge deployment).  Check $Codestriker::codestriker_css.
+    my $htmlurl;
+    if ($Codestriker::codestriker_css ne "") {
+	$htmlurl = $Codestriker::codestriker_css;
+	$htmlurl =~ s/\/codestriker\.css//;
+    }
+    else {
+	# Standard Codestriker deployment.
+	$htmlurl = $query->url();
+	$htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
+    }
     $self->{htmldir} = $htmlurl;
 
     return bless $self, $type;

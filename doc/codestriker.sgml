@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.7.3</subtitle>
+    <subtitle>Version 1.7.4</subtitle>
     <authorgroup>
       <author>
         <firstname>David</firstname>
@@ -36,8 +36,10 @@
         database, which Codestriker can search over.
       </para>
       <para>
-        Special support is provided for integration with CVS and
-	Subversion source control management systems, for the display
+        Special support is provided for integration with
+	<ulink url="http://cvshome.org">CVS</ulink> and
+	<ulink url="http://subversion.tigris.org">Subversion</ulink>
+	 source control management systems, for the display
 	of coloured diffs and for the ability to view original and new
 	files in their entirety to assist in the review process.
 	Codestriker can be optionally linked with a bug tracking
@@ -46,7 +48,8 @@
 	from the developer community.  Codestriker can also be linked
 	with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
-	for fast lookup of code, to assist in the review process.
+	for fast lookup of code entities, to assist in the review
+	process.
       </para>
       <para>
         Codestriker is written in Perl in a cross-platform style.  It
@@ -55,11 +58,31 @@
         The Codestriker home page is located at:
 	<ulink
 	url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>.
-	The SourceForge-specific page, which contains information on
-	file releases, defect lists, mailing lists and information on
-	the CVS repository is located at
+	The Codestriker SourceForge project page, which contains
+	information on file releases, defect lists, mailing lists and
+	information on the CVS repository is located at
 	<ulink
 	url="http://www.sourceforge.net/projects/codestriker">http://www.sourceforge.net/projects/codestriker</ulink>.
+      </para>
+      <para>
+        This document is available in the following printable formats:
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      PDF: <ulink url="codestriker.pdf">codestriker.pdf</ulink>
+	    </para>
+          </listitem>
+	  <listitem>
+	    <para>
+	      Postscript: <ulink url="codestriker.ps">codestriker.ps</ulink>
+	    </para>
+          </listitem>
+	  <listitem>
+	    <para>
+	      RTF: <ulink url="codestriker.rtf">codestriker.rtf</ulink>
+	    </para>
+          </listitem>
+	</itemizedlist>
       </para>
       <para>
         A screenshot of Codestriker is action can be seen in <xref
@@ -68,10 +91,10 @@
 	  <title>Codestriker Screenshot</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="screenshot.png" format="png">
+	      <imagedata fileref="screenshot.eps" format="eps" scale="25">
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="screenshot.eps" format="eps">
+	      <imagedata fileref="screenshot.png" format="png">
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -94,10 +117,10 @@
       This chapter is concerned with installing Codestriker on your
       system.  This requires the following steps:
       <itemizedlist>
-        <listitem><para>Creating the Codestriker database;</para></listitem>
-        <listitem><para>Configuring the webserver; and</para></listitem>
+        <listitem><para>creating the Codestriker database;</para></listitem>
+        <listitem><para>configuring the webserver; and</para></listitem>
         <listitem>
-	  <para>Unpacking and configuring Codestriker.</para>
+	  <para>unpacking and configuring Codestriker.</para>
 	</listitem>
       </itemizedlist>             
     </para>
@@ -106,7 +129,9 @@
       <title>Codestriker database creation</title>
       <para>
         Codestriker stores all code review topics and comments into a
-        relational database.  Currently, MySQL and PostgreSQL are
+        relational database.  Currently,
+	<ulink url="http://www.mysql.com">MySQL</ulink> and
+	<ulink url="http://www.postgresql.org">PostgreSQL</ulink> are
         supported, but any database system can be used provided it has
         an implementation of Perl's DBI interface.
       </para>
@@ -199,7 +224,7 @@ DROP DATABASE codestrikerdb;
 	</para>
 	<para>
 	  Make sure your <filename>pg_hba.conf</filename> file is
-	  suitable configurated, in particular for authentication.
+	  suitable configured, in particular for authentication.
 	  This file is often located in
 	  <filename>/etc/postgres</filename>.
 	</para>
@@ -224,7 +249,7 @@ DROP DATABASE codestrikerdb;
 	  Codestriker is written using the Perl DBI package, which
 	  makes it portable for use between different databases.
 	  Apart from the specifics of creating the database and
-	  starting it, Codestriekr should work without change for
+	  starting it, Codestriker should work without change for
 	  other databases.
 	</para>
       </sect2>
@@ -235,8 +260,8 @@ DROP DATABASE codestrikerdb;
       <para>
         This section is concerned with unpacking the Codestriker
         distribution into a suitable location, and then configuring
-        it.  For *NIX distribution, a command like the following may
-        be appropriate on your system:
+        it.  For *NIX distribution, the following commands may be
+        appropriate on your system:
 	<programlisting>
 % mkdir /var/www/codestriker
 % cd /var/www/codestriker
@@ -244,13 +269,15 @@ DROP DATABASE codestrikerdb;
 % chown -R apache.apache /var/www/codestriker/codestriker-X.Y.Z
 	</programlisting>
 	Here "apache" is the user which runs the Apache server.  It
-	could be "nobody" under different systems.  Check with the "ps
-	auxww" command, or check your Apache configuration files.
+	could be "nobody" under different systems.  Check with the
+	<command>ps auxww</command> command, or check your Apache
+	configuration files.  Under Windows, the Codestriker
+	distribution could be unzipped into a suitable location under
+	<filename>c:\program files</filename>, or just
+	<filename>c:\codestriker</filename>.
       </para>
       <para>
-        Under Windows, the Codestriker distribution could be unzipped
-        into a suitable location under c:\program files, or just
-        c:\codestriker.  The next task to to edit the
+        The next task is to edit the
         <filename>codestriker.conf</filename> configuration file to
         reflect the settings on your site.  The file is documented
         with examples to assist in setting appropriate values.  The
@@ -272,10 +299,10 @@ $db = 'DBI:Pg:dbname=codestrikerdb';
 <programlisting>
 $db = 'DBI:mysql:dbname=codestrikerdb';
 </programlisting>
-          If your database is suituated on a different host, for
+          If your database is situated on a different host, for
           example "dbhost", this could be modified to:
 <programlisting>
-$db = 'DBI:mysql:dbname=codestrikerdb;host=dhhost';
+$db = 'DBI:mysql:dbname=codestrikerdb;host=dbhost';
 </programlisting>
         The database user and password also need to be specified.  If
         your username was "codestriker", and the password was
@@ -368,19 +395,19 @@ $use_compression = 0;
 	  There is currently support for Subversion (<ulink
 	  url="http://subversion.tigris.org">http://subversion.tigris.org</ulink>),
 	  and in the future, VSS, ClearCase, and any other SCM system
-	  depending on demand and conrtibutions.  The third string
+	  depending on demand and contributions.  The third string
 	  <filename>svn:http://svn.collab.net/repos/svn/trunk</filename>
 	  is a Subversion repository URL prefixed by "svn:".
 	</para>
 	<para>
 	  The last value which is likely to be common for many
-	  deployment is a CVS pserver specification.  The string is
-	  actually in the same form as a CVS pserver URL.  For more
-	  information of setting up anonymous pserver access, please
-	  consult the CVS manual.
+	  deployments is an anonymous CVS pserver specification.  The
+	  string is actually in the same form as a CVS pserver URL.
+	  For more information of setting up anonymous pserver access,
+	  please consult the CVS manual.
 	</para>
 	<para>
-	  During a review, it is sometimes benefical to see the
+	  During a review, it is sometimes beneficial to see the
 	  revision history of a file, such as information provided by
 	  CVSweb or ViewCVS.  You can specify a mapping of repository
 	  names to URLs for this purpose, for example:
@@ -396,8 +423,8 @@ $file_viewer =
 	</para>
 	<para>
 	  Finally, if you are using CVS, please make sure the
-	  <varname>$cvs</varname> is set to the correct path.  For
-	  *NIX, this is likely to be something like:
+	  <varname>$cvs</varname> setting is set to the correct path.
+	  For *NIX, this is likely to be something like:
 	  <programlisting>
 # Location of the cvs binary.
 $cvs = '/usr/bin/cvs';
@@ -407,9 +434,10 @@ $cvs = '/usr/bin/cvs';
 # Location of the cvs binary.
 $cvs = 'c:/gnu/bin/cvs';
 	  </programlisting>
-	  <emphasis>Note the use of '/' characters, rather than '\'.
-	  Even under Windows, when setting filenames, you should
-	  always use forward slashes.</emphasis>
+	  <emphasis>Note the use of '/' (forwrd-slash) characters,
+	  rather than '\' (back-slash).  Even under Windows, when
+	  setting filenames, you should always use forward
+	  slashes.</emphasis>
 	</para>
       </sect2>
       <sect2>
@@ -421,9 +449,9 @@ $cvs = 'c:/gnu/bin/cvs';
 	  apart from reading the textual description as to how it has
 	  been resolved, Codestriker can add in a link to the code
 	  review topic, which shows the actual code which fixed the
-	  bug (and any important decisions).  Currently, there is only
-	  support for Bugzilla, but it is not difficult to add in
-	  support for other systems.
+	  bug (and any important decisions made in the Codestriker
+	  comments).  Currently, there is only support for Bugzilla,
+	  but it is not difficult to add in support for other systems.
 	</para>
 	<para>
 	  If you don't use Bugzilla (<ulink
@@ -439,21 +467,24 @@ $bug_db = 'bugzilla';
 $bug_db_host = 'localhost';
 $bug_db_name = 'bugs';
 $bug_db_password = 'bugs_password';
+$bug_db_dbname = 'bugs';
 
 # Bugzilla codestriker user id.
 $bug_db_user_id = '2';
 	  </programlisting>
-	  The <varname>$bug_db</varname> variable indicates to use
+	  The <varname>$bug_db</varname> setting indicates to use
 	  Bugzilla.  If this value is set to '', then no linkage to a
 	  bug tracking system is performed (the default).
 	</para>
 	<para>
-	  The <varname>$bug_db_host</varname> indicates the hostname
-	  that holds the bugzilla database, while
+	  The <varname>$bug_db_host</varname> setting indicates the
+	  hostname that holds the bugzilla database, while
 	  <varname>$bug_db_name</varname> and
 	  <varname>$bug_db_password</varname> contain the database
 	  username and password to connect to the Bugzilla database.
-	  You can verify these settings by using
+	  The <varname>$bug_db_dbname</varname> setting contains the
+	  Bugzilla database name, which by default is "bugs".  You can
+	  verify these settings by using
 	  <command>mysql</command> to connect to the Bugzilla
 	  database interactively.
 	</para>
@@ -472,7 +503,7 @@ SELECT userid FROM profiles WHERE
 login_name = 'codestriker@yourhost.yourdomain';
 	  </programlisting>
 	  This value should be set into the
-	  <varname>$bug_db_user_id</varname> variable.
+	  <varname>$bug_db_user_id</varname> setting.
 	  <programlisting>
 # Bugzilla codestriker user id.
 $bug_db_user_id = '2';
@@ -523,7 +554,8 @@ $lxr_map =
 	  <filename>/home/sits/cvs</filename> and
 	  <filename>'svn:http://svn.collab.net/repos/svn/trunk</filename>,
 	  which represent the source control repositories specified
-	  above with <varname>@valid_repositories</varname>.
+	  above within the <varname>@valid_repositories</varname>
+	  setting.
 	</para>
 	<para>
 	  Each key is mapped to an object containing four attributes.
@@ -544,8 +576,8 @@ $lxr_map =
 	</para>
 	<para>
 	  Also note, LXR at present doesn't seem to work with Taint
-	  checking.  To avoid errors, you'll need to comment out the
-	  "PerlTaintCheck On" line in your Apache
+	  checking.  To avoid warning messages, you'll need to comment
+	  out the "PerlTaintCheck On" line in your Apache
 	  <filename>httpd.conf</filename> file, and remove the -T
 	  switch at the top of the
 	  <filename>bin/codestriker.pl.base</filename> file.
@@ -564,7 +596,7 @@ $lxr_map =
 $allow_delete = 1;
 
 # Indicate if topics can be listed/searched.  Turning this to false can be
-# useful for "anonymous" installations of codestiker.
+# useful for "anonymous" installations of Codestriker.
 $allow_searchlist = 1;
 
 # Indicate if the repository attribute can be set to a topic.  If this
@@ -614,7 +646,7 @@ $antispam_email = 0;
       </para>
       <para>
         Perl is available by default for all *NIX systems.  For
-        Windows, you can download it from <ulink
+        Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
         Missing Perl modules can be downloaded with the
         <command>ppm</command> command typed at the command prompt,
@@ -758,15 +790,15 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
 	  benefits for Perl-based web applications.  For CGI
 	  deployments, as described in the previous section, each HTTP
 	  request will create a <emphasis>new</emphasis> Perl
-	  interpretor, which needs to initialise, and then parse the
-	  Codestriker source code.  This can add significant latency
+	  interpreter, which needs to initialise, and then parse the
+	  Codestriker source code.  This may add significant latency
 	  for each HTTP request.
 	</para>
 	<para>
 	  Using <command>mod_perl</command>, a pool of Perl
-	  intrepretors which have already parsed the Codestriker
+	  interpreters which have already parsed the Codestriker
 	  source code is maintained, so that whenever an HTTP request
-	  is issued, the time spent creating a new Perl interpretor
+	  is issued, the time spent creating a new Perl interpreter
 	  and the parsing of the Codestriker code is removed.
 	</para> 
 	<para>
@@ -884,7 +916,7 @@ PerlSwitches -T
     <sect1>
       <title>Upgrading</title>
       <para>
-        To upgrade, extract the distribution to another directory,
+        To upgrade, extract the distribution into another directory,
         check the <filename>CHANGELOG</filename> file to see if any
         configuration changes are required, since the last version you
         used, copy/modify your existing
@@ -916,7 +948,7 @@ PerlSwitches -T
         match your development process.  Once you have defined all of
         your initial projects, you can create a new code review topic
         by clicking on "Create new topic".  These screens are covered
-        in further detail below.
+        in the following sections.
       </para>
     </sect1>
     <sect1 id="topic-list">
@@ -926,11 +958,10 @@ PerlSwitches -T
         review topics, which contain the topic's title, author,
         reviewers, cc, creation date, links to the bugs it fixes, and
         its state.  The email address for the author, reviewers and cc
-        fields are shortened from brevity reasons.  The links from
-        the bug ids will take you to the bug tracking system
-        (currently, only Bugzilla is supported) for more information
-        on that specific bug.  A topic can be in one of the following
-        states:
+        fields are shortened for brevity reasons.  The links from the
+        bug ids will take you to the bug tracking system (currently,
+        only Bugzilla is supported) for more information on that
+        specific bug.  A topic can be in one of the following states:
 	<variablelist>
 	  <varlistentry>
 	    <term>Open</term>
@@ -972,10 +1003,10 @@ PerlSwitches -T
 	  <title>Topic List Screenshot</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="topiclist.png" format="png">
+	      <imagedata fileref="topiclist.eps" format="eps" scale="50">
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="topiclist.eps" format="eps">
+	      <imagedata fileref="topiclist.png" format="png">
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -1015,10 +1046,10 @@ PerlSwitches -T
 	  <title>Project List Screenshot</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="projectlist.png" format="png">
+	      <imagedata fileref="projectlist.eps" format="eps" scale="50">
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="projectlist.eps" format="eps">
+	      <imagedata fileref="projectlist.png" format="png">
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -1038,10 +1069,10 @@ PerlSwitches -T
 	  <title>Create Project Screenshot</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="createproject.png" format="png">
+	      <imagedata fileref="createproject.eps" format="eps" scale="50">
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="createproject.eps" format="eps">
+	      <imagedata fileref="createproject.png" format="png">
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -1063,10 +1094,10 @@ PerlSwitches -T
 	  <title>Create Topic Screenshot</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="createtopic.png" format="png">
+	      <imagedata fileref="createtopic.eps" format="eps" scale="50">
 	    </imageobject>
 	    <imageobject>
-	      <imagedata fileref="createtopic.eps" format="eps">
+	      <imagedata fileref="createtopic.png" format="png">
 	    </imageobject>
 	  </mediaobject>
 	</figure>
@@ -1078,7 +1109,7 @@ PerlSwitches -T
         linkend="topic-list">).  The topic description contains a more
         detailed description of the review itself, and show be enough
         for a reviewer to understand the purpose of the review.  If
-        Codestriker is linked to a bug tracin system, further down in
+        Codestriker is linked to a bug tracking system, further down in
         the form, the "Bug IDs" field gives the opportunity to enter
         in multiple bug ids (either space or comma separated), which
         will also give the reviewer an opportunity to see what bugs
@@ -1228,10 +1259,10 @@ PerlSwitches -T
 	   <title>View Topic Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="viewtopic.png" format="png">
+	       <imagedata fileref="viewtopic.eps" format="eps" scale="50">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="viewtopic.eps" format="eps">
+	       <imagedata fileref="viewtopic.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
@@ -1336,7 +1367,7 @@ PerlSwitches -T
 	  which was entered when the review was created.  This can be
 	  useful if the raw diff needs to be retrieved, so it can be
 	  used as a patch file.  There are some links which affect the
-	  display, such as whether a monospace font should be used to
+	  display, such as whether a mono-space font should be used to
 	  render the code changes (requires more screen real-estate)
 	  and what tab-width to use.
 	</para>
@@ -1355,10 +1386,11 @@ PerlSwitches -T
 	   <title>View Topic Detail Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="viewtopicdetail.png" format="png">
+	       <imagedata fileref="viewtopicdetail.eps" format="eps"
+	                  scale="35">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="viewtopicdetail.eps" format="eps">
+	       <imagedata fileref="viewtopicdetail.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
@@ -1386,7 +1418,7 @@ PerlSwitches -T
 	  Each file is broken up into a series of "deltas".  At the
 	  head of each delta block, for both the old and new versions
 	  of the file, there is an indication of what line number the
-	  delat started at.  In this situation, clicking on the "Line
+	  delta started at.  In this situation, clicking on the "Line
 	  24" link on the left hand side, will open a new browser
 	  window, which will contain the complete original contents of
 	  <filename>codestriker/codestriker.pl</filename>, anchored at
@@ -1394,7 +1426,7 @@ PerlSwitches -T
 	  side will contain the complete contents of
 	  <filename>codestriker/codestriker.pl</filename> will
 	  <emphasis>all</emphasis> of the proposed changes applied.
-	  Clicking on "Parallel" will do a similar job, bu will show
+	  Clicking on "Parallel" will do a similar job, but will show
 	  both the original and new version of the complete file
 	  side-by-side.  See <xref linkend="view-file"> for more
 	  details on what can be done with these complete file-based
@@ -1424,10 +1456,10 @@ PerlSwitches -T
 	   <title>Add Comment Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="edittopic.png" format="png">
+	       <imagedata fileref="edittopic.eps" format="eps" scale="50">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="edittopic.eps" format="eps">
+	       <imagedata fileref="edittopic.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
@@ -1468,7 +1500,7 @@ PerlSwitches -T
 	  original form, or in its proposed form, or side-by-side
 	  depending on which "Line" or "Parallel" link was selected.
 	  The review has to be linked to a SCM repository, so that it
-	  can fetch parts of the file which aren' a part of the review
+	  can fetch parts of the file which aren't a part of the review
 	  text.
 	</para>
 	<para>
@@ -1482,10 +1514,10 @@ PerlSwitches -T
 	   <title>View File Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="fileview.png" format="png">
+	       <imagedata fileref="fileview.eps" format="eps" scale="35">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="fileview.eps" format="eps">
+	       <imagedata fileref="fileview.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
@@ -1512,10 +1544,11 @@ PerlSwitches -T
 	   <title>Parallel View File Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="parallelfileview.png" format="png">
+	       <imagedata fileref="parallelfileview.eps" format="eps"
+	                  scale="35">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="parallelfileview.eps" format="eps">
+	       <imagedata fileref="parallelfileview.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
@@ -1541,10 +1574,10 @@ PerlSwitches -T
 	   <title>View Comments Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="viewcomments.png" format="png">
+	       <imagedata fileref="viewcomments.eps" format="eps" scale="50">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="viewcomments.eps" format="eps">
+	       <imagedata fileref="viewcomments.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	</figure>
@@ -1615,10 +1648,10 @@ PerlSwitches -T
 	   <title>Topic Search Screenshot</title>
 	   <mediaobject>
 	     <imageobject>
-	       <imagedata fileref="search.png" format="png">
+	       <imagedata fileref="search.eps" format="eps" scale="50">
 	     </imageobject>
 	     <imageobject>
-	       <imagedata fileref="search.eps" format="eps">
+	       <imagedata fileref="search.png" format="png">
 	     </imageobject>
 	   </mediaobject>
 	</figure>
