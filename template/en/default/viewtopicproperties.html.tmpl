@@ -54,7 +54,7 @@ function DeleteTopicConfirm()
     <input type="text" name="topic_title" 
            value="[% title | html_entity %]" size="70" maxlength="70">
   </td>
-</th>
+</tr>
 
 <tr class="tt1">
   <td>Author:</td>
@@ -102,9 +102,9 @@ function DeleteTopicConfirm()
     <select name="repository">
        [% FOREACH entry = repositories %]
           [% IF entry == topic_repository %]
-	      <option selected value="[% entry %]">[% entry %]
+	      <option selected value="[% entry %]">[% entry %]</OPTION>
 	  [% ELSE %]
-	      <option value="[% entry %]">[% entry %]
+	      <option value="[% entry %]">[% entry %]</OPTION>
 	  [% END %]
        [% END %]
     </select>
@@ -119,9 +119,9 @@ function DeleteTopicConfirm()
     <select name="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == topic_projectid %]
-	      <option selected value="[% project.id %]">[% project.name | html_entity %]
+	      <option selected value="[% project.id %]">[% project.name | html_entity %]</OPTION>
 	  [% ELSE %]
-	      <option value="[% project.id %]">[% project.name | html_entity %]
+	      <option value="[% project.id %]">[% project.name | html_entity %]</OPTION>
 	  [% END %]
        [% END %]
     </select>
@@ -160,14 +160,14 @@ retrieving lists of topics from the search page.
     <select name="topic_state">
     [% FOREACH state = states %]
        [% IF state == default_state %]
-           <option selected value="[% state %]">[% state %]
+           <option selected value="[% state %]">[% state %]</option>
        [% ELSE %]           
-           <option value="[% state %]">[% state %]
+           <option value="[% state %]">[% state %]</option>
        [% END %]
     [% END %]
     [%# Render a "delete" button, for deleting topics, if enabled #%]
     [% IF delete_enabled != 0 %]
-   	   <option value="Delete">Delete Topic ... 
+   	   <option value="Delete">Delete Topic ... </option>
     [% END %]
     </select>
  </td>

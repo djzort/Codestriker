@@ -1,6 +1,6 @@
 [%# Screen for search topics. #%]
 
-[% PROCESS header.html.tmpl version = version displaymenu = 1 help = "x590.html" %]
+[% PROCESS header.html.tmpl version = version displaymenu = 1 help = "x596.html" %]
 
 <H1>Topic search</H1>
 
@@ -62,9 +62,9 @@ returned topics can be in any state.
  <TD><SELECT NAME="state_group" SIZE=3 MULTIPLE>
        [% FOREACH state = states %]
            [% IF state == 'Open' %]
-               <OPTION SELECTED VALUE="[% state %]">[% state %]
+               <OPTION SELECTED VALUE="[% state %]">[% state %]</OPTION>
            [% ELSE %]           
-               <OPTION VALUE="[% state %]">[% state %]
+               <OPTION VALUE="[% state %]">[% state %]</OPTION>
            [% END %]
        [% END %]
      </SELECT>
@@ -82,9 +82,9 @@ returned topics can in any project.
  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
        [% FOREACH project = projects %]
            [% IF project.name == 'Any' %]
-               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
+               <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
            [% ELSE %]           
-               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
+               <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
            [% END %]
        [% END %]
      </SELECT>

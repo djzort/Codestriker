@@ -286,6 +286,8 @@ sub delta ($$$$$$$$$$) {
 			     $query->td({-class=>$cell_class}, $cell),
 			     "\n");
     	}
+
+        print $query->end_table(), "\n";
     }
 }
 

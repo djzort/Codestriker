@@ -47,7 +47,7 @@
 	files in their entirety to assist in the review process.
 	Codestriker can be optionally linked with a bug tracking
 	system, such as Bugzilla.  Other SCM systems, such as
-	ClearCase, Perfoce and VSS will be added in future releases, given help
+	ClearCase, Perforce and VSS will be added in future releases, given help
 	from the developer community.  Codestriker can also be linked
 	with
 	<ulink url="http://lxr.sourceforge.net">LXR</ulink> to allow
@@ -503,7 +503,7 @@ $cvs = '/usr/bin/cvs';
 # Location of the cvs binary.
 $cvs = 'c:/gnu/bin/cvs';
 	  </programlisting>
-	  <emphasis>Note the use of '/' (forwrd-slash) characters,
+	  <emphasis>Note the use of '/' (forward-slash) characters,
 	  rather than '\' (back-slash).  Even under Windows, when
 	  setting filenames, you should always use forward
 	  slashes.</emphasis>
@@ -704,8 +704,8 @@ $antispam_email = 0;
 #
 # The codestriker default of not enforcing any limits is specified by
 # settings either option to an empty string. If you are not sure 
-# what a resonable limit would be, start with a suggested_topic_size_lines
-# set to 350, and adjust with experence.
+# what a reasonable limit would be, start with a suggested_topic_size_lines
+# set to 350, and adjust with experience.
 $maximum_topic_size_lines = '';
 $suggested_topic_size_lines = '';
 	  </programlisting>
@@ -800,8 +800,8 @@ $default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
 # list. You can see all of the build in metrics in the
 # lib/Codestriker.pm file. For example, if you don't hold a kick off
 # meeting, and but do hold a logging meeting, the basic option will not
-# quit fit. You should set the $metric_confg = "checking time,logging
-# meeting duration".
+# quit fit. You should set the $metric_config as:
+# $metric_config = "checking time,logging meeting duration".
 #
 # If you don't like our choices of metrics, the names, descriptions,
 # etc feel free to edit the lib/Codestriker.pm. It contains
@@ -1091,7 +1091,7 @@ PerlSwitches -T
       <title>IIS configuration</title>
       <para>
         This section deals with deploying Codestriker under IIS, as
-        a CGI script.  These instructions were perfomed on a
+        a CGI script.  These instructions were performed on a
         Windows 2000 machine, so hopefully this provides an indication
         as to what needs to be performed for other Win32
         configurations.  Startup the IIS configuration application by
@@ -1934,7 +1934,7 @@ C:\Perl\bin\perl.exe "%s" %s
       <para>
         From the "View Topic" page (see <xref linkend="view-topic">),
         the "Topic Properties" tab can be clicked to view and edit
-        topic properties.  An example screenshot of rhis page can
+        topic properties.  An example screenshot of this page can
          be seen in <xref linkend="figure-topic-properties">.
         <figure id="figure-topic-properties" float="1">
 	   <title>Topic Properties Screenshot</title>
@@ -1979,11 +1979,41 @@ C:\Perl\bin\perl.exe "%s" %s
 	</figure>
       </para>
       <para>
-        This page provides the opportunity for users to modify any
+            This page provides the opportunity for users to modify any
 	    user-defined metrics associated with the topic.  The page
 	    will also display all Codestriker-derived metrics, as can
 	    be seen in the screenshot, as well as the topic history at
 	    the bottom of the page.
+      </para>
+      <para>
+         The Codestriker time metric is calculated by keeping
+	 timestamps of every refresh from the http server for the
+	 given topic. Now, just because you are not refreshing the
+	 topic does not mean that you are not looking at the topic.
+	 Codestriker will assume that you are looking at the topic for
+	 4 minutes after the last refresh. If you click on a topic,
+	 and close the browser, it is logged as 4 minutes. The
+	 situation is unavoidable unless you put a camera on the
+	 computer and keep track of how long people are sitting at
+	 their computer, awake, and looking at the browser window. If
+	 this is not acceptable, users of Codestriker have the option
+	 to ask the reviewers to directly log the time spent in the
+	 review. The direct logging can be enabled via
+	 <varname>$metrics_config</varname> variable in the
+	 <filename>codestriker.conf</filename> file. The Codestriker time
+	 metric is "free" metric, being that it does not require any
+	 extra interactions with the user to operate. The trade off is
+	 that the accuracy of the data may not be as good as the
+	 direct logging done by a disciplined team. However, if your
+	 team is not very disciplined and can't be trusted to put in
+	 100% accurate data, the Codestriker time metric will be
+	 better because it will not be biased by the reviewer's
+	 logging discipline.
+      </para>
+      <para>
+        The code that deals with all of the this is in
+	<filename>lib/Codestriker/Model/Metrics.pm</filename>, in
+        the <filename>calculate_topic_view_time</filename> method.
       </para>
     </sect1>
     <sect1 id="topic-search">
@@ -2465,7 +2495,7 @@ C:\Perl\bin\perl.exe "%s" %s
         <itemizedlist>
           <listitem>
 	    <para>
-	      All comments must be complete sentances. Start with
+	      All comments must be complete sentences. Start with
 	      a capital letter, and end with a fullstop.
             </para>
           </listitem>
@@ -2517,7 +2547,7 @@ C:\Perl\bin\perl.exe "%s" %s
     <para>
       If you see an error message like:
       <programlisting>
-[Tue Jan  6 08:41:49 2004] [error] Bizarre copy of HASH in aassign at
+[Tue Jan  6 08:41:49 2004] [error] Bizarre copy of HASH in assign at
 /usr/lib/perl5/5.6.0/Carp/Heavy.pm line 79      
       </programlisting>
       This is apparently due to a bug in Perl 5.6.0.  If you upgrade

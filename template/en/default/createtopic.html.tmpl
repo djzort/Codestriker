@@ -130,9 +130,9 @@ an aid in the reviewing process.
  <TD COLSPAN="3"><SELECT NAME="repository">
        [% FOREACH entry = repositories %]
           [% IF entry == default_repository %]
-	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]
+	      <OPTION SELECTED VALUE="[% entry %]">[% entry %]</OPTION>
 	  [% ELSE %]
-	      <OPTION VALUE="[% entry %]">[% entry %]
+	      <OPTION VALUE="[% entry %]">[% entry %]</OPTION>
 	  [% END %]
        [% END %]
       </SELECT>
@@ -153,9 +153,9 @@ used as filtering criteria in the search screen.
  <TD COLSPAN="3"><SELECT NAME="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == default_projectid %]
-	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]
+	      <OPTION SELECTED VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
 	  [% ELSE %]
-	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]
+	      <OPTION VALUE="[% project.id %]">[% project.name | html_entity %]</OPTION>
 	  [% END %]
        [% END %]
       </SELECT>

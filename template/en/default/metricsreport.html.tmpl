@@ -1,6 +1,6 @@
 [%# Screen for the metrics report. #%]
 
-[% PROCESS header.html.tmpl version = version displaymenu = 1 help ="x626.html"  %]
+[% PROCESS header.html.tmpl version = version displaymenu = 1 help ="x632.html"  %]
 
 <!-- "" -->
 
@@ -14,7 +14,7 @@
 
 
 <table cellpadding="5%" >
-    <tr class="tlh"><td>
+    <tr class="tlh"><td></td>
 	<td>last topic authored (days)</td>
 	<td>last topic reviewed (days)</td>
 	<td>total Codestriker time (hours)</td>
@@ -24,11 +24,11 @@
     [% FOREACH user_metrics %]
 
     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
-	<td>[% name | html %]
-	<td>[% date_last_authored %]
-	<td>[% date_last_participated %]
-	<td>[% total_codestriker_time %]
-	<td>[% total_topics %]
+	<td>[% name | html %]</td>
+	<td>[% date_last_authored %]</td>
+	<td>[% date_last_participated %]</td>
+	<td>[% total_codestriker_time %]</td>
+	<td>[% total_topics %]</td>
     </tr>
 
     [% END %]

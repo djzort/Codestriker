@@ -104,26 +104,26 @@ function ClearAll()
 
 Show comments authored by: &nbsp;
   <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
-     <OPTION value="1"> Everybody     
+     <OPTION value="1"> Everybody </OPTION>
      [% FOREACH user = users %]
-     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]
+     <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]</OPTION>
      [% END %]
   </SELECT>
      
 with: 
   <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
-     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any
+     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any </OPTION>
      [% FOREACH state = states %]
-     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %]
+     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %] </OPTION>
      [% END %]
   </SELECT>
   
 state and
 
   <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
-     <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context
-     <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines
-     <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines
+     <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context</OPTION>
+     <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines</OPTION>
+     <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines</OPTION>
   </SELECT>
 .
 
@@ -194,7 +194,7 @@ state and
 Change state: &nbsp;
   <SELECT name="comment_state">
      [% FOREACH state = states %]
-     <OPTION value="[% state %]">[% state %]
+     <OPTION value="[% state %]">[% state %]</OPTION>
      [% END %]
   </SELECT>
   <INPUT TYPE="submit" NAME="button" VALUE="Update">

@@ -72,9 +72,9 @@ Change state: &nbsp;
   <select name="topic_state">
      [% FOREACH state = states %]
      [% IF state == default_state %]
-     <option selected value="[% state %]">[% state %]
+     <option selected value="[% state %]">[% state %]</option>
      [% ELSE %]
-     <option value="[% state %]">[% state %]
+     <option value="[% state %]">[% state %]</option>
      [% END %]
      [% END %]
   </select>
