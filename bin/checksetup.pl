@@ -778,6 +778,7 @@ eval {
 				      '(id, name, value) VALUES (?, ?, ?) ');
     
     my $count = 0;
+    my @update_rows = ();
     while (my ($id, $state, $creation_ts, $modified_ts) =
 	   $stmt->fetchrow_array()) {
 	if ($count == 0) {
@@ -792,16 +793,26 @@ eval {
 		exit(1);
 	    }
 	}
-	# Update the state to its negative value, so the information isn't
-	# lost, but also to mark it as being migrated.
-	$update->execute(-$state - 1, $creation_ts, $modified_ts, $id);
+
+	# We can't update this now due to ^%@$# SQL server, we do that below.
 	my $value = $old_comment_states[$state];
 	$value = "Unknown $state" unless defined $value;
-	$insert->execute($id, "Status", $value);
+	push @update_rows, { state => -$state - 1,
+			     creation_ts => $creation_ts,
+			     modified_ts => $modified_ts,
+			     id => $id,
+			     value => $value };
 	$count++;
     }
-    print "Migrated $count records.\n" if $count > 0;
     $stmt->finish();
+
+    foreach my $row (@update_rows) {
+	# Update the state to its negative value, so the information isn't
+	# lost, but also to mark it as being migrated.
+	$update->execute($row->{state}, $row->{creation_ts}, $row->{modified_ts}, $row->{id});
+	$insert->execute($row->{id}, "Status", $row->{value});
+    }
+    print "Migrated $count records.\n" if $count > 0;
 
     # Now do the same for the commentstatehistory records.
     $stmt = $dbh->prepare_cached('SELECT id, state, version, modified_ts ' .
@@ -814,17 +825,26 @@ eval {
 				   ' state = ?, modified_ts = ? ' .
 				   'WHERE id = ? AND version = ?');
     $count = 0;
+    @update_rows = ();
     while (my ($id, $state, $version, $modified_ts) =
 	   $stmt->fetchrow_array()) {
 	print "Migrating old commentstatehistory records...\n" if $count == 0;
 	my $value = $old_comment_states[$state];
 	$value = "Unknown $state" unless defined $value;
-	$update->execute("Status", $value, -$state - 1, $modified_ts,
-			 $id, $version);
+
+	push @update_rows, { value=>$value, state=>-$state -1,
+			     modified_ts=>$modified_ts, id=>$id,
+			     version=>$version };
 	$count++;
     }
-    print "Migrated $count records.\n" if $count > 0;
     $stmt->finish();
+
+    foreach my $row (@update_rows) {
+	$update->execute("Status", $row->{value}, $row->{state},
+			 $row->{modified_ts}, $row->{id},
+			 $row->{version});
+    }
+    print "Migrated $count records.\n" if $count > 0;
     $database->commit();
 };
 if ($@) {
