@@ -18,8 +18,8 @@
 	</p>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.2.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.2.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -75,8 +75,8 @@
 	    The actual code itself is entered either pasted inline
 	    into the <code>Topic text</code> form element, or uploaded
 	    from a file.  In practical use, often the text contains
-	    the output of the command <code>cvs diff -uN</code> or
-	    simply <code>diff -ruN</code>, which will effectively shows
+	    the output of the command "cvs diff -uN" or
+	    simply "diff -ruN", which will effectively shows
 	    the proposed code differences.  For the review of new
 	    files, the file itself could simply be uploaded.
 	</p>
@@ -157,8 +157,8 @@
 	<h3>Coloured diff support</h3>
 	<p>
 	   Codestriker provides special support when the topic
-	   contents are in the form from the command <code>cvs diff
-	   -uN</code>.  Although not shown above, the topic view
+	   contents are in the form from the command "cvs diff
+	   -uN" or "diff -uN".  Although not shown above, the topic view
 	   screen has a link at the top, to alternate between coloured
 	   diff and the textual view.  An example of a coloured diff
 	   can be seen below, which some developers find easier to
@@ -173,7 +173,7 @@
 	<p>
 	   Typically, a CVS repository is used for managing a team's
 	   source codes.  Developers create reviews by issuing the
-	   command: <code>cvs diff -uN</code>, which contains all of
+	   command: "cvs diff -uN", which contains all of
 	   the changes the developer has made.
 	</p>	
 	<p>
@@ -202,8 +202,8 @@
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.2.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.2.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -218,10 +218,16 @@
 	    <pre>
 	    cd /var/www/cgi-bin
 	    cp /from/installed/location/codestriker.pl .
+	    cp /from/installed/location/codestriker.css ../html
 	    mkdir /var/www/codestriker
 	    chown apache.apache /var/www/codestriker
 	    </pre>
 	</p>
+	<p>
+	    The CSS file can be located elsewhere of course, but if it
+	    is stored in another location, be sure to update its
+	    location in codestriker.pl.
+        </p>
 	<p>
 	    Codestriker stores all of its topic data and comments by
 	    default in <code>/var/www/codestriker</code>.  This

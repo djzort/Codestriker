@@ -1,0 +1,34 @@
+/* CSS for codestriker */
+
+/* File heading */
+TD.file {background-color: #cccccc; font-family: Helvetica, Arial; font-size: large}
+
+/* Line heading */
+TD.line {background-color: #99cccc; font-family: Helvetica, Arial; font-size: large}
+
+/* Normal text */
+TD.n {font-family: Helvetica, Arial; font-size: smaller}
+
+/* Added text */
+TD.a {background-color: #aaffaa; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Added blank text */
+TD.ab {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Removed text */
+TD.r {background-color: #ff9999; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Removed blank text */
+TD.rb {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Changed text */
+TD.c {background-color: #ffff77; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Changed blank text */
+TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Line number with comment */
+SPAN.com {color: #ff0000; font-family: Helvetica, Arial; font-size: smaller}
+
+/* Line number with no comment */
+SPAN.ncom {font-family: Helvetica, Arial; font-size: smaller}

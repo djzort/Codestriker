@@ -32,8 +32,12 @@ server:
 
 	    cd /var/www/cgi-bin
 	    cp /from/installed/location/codestriker.pl .
+	    cp /from/installed/location/codestriker.css ../html
 	    mkdir /var/www/codestriker
 	    chown apache.apache /var/www/codestriker
+
+The CSS file can be located elsewhere of course, but if it is stored
+in another location, be sure to update its location in codestriker.pl.
 
 Codestriker stores all of its topic data and comments by default in
 "/var/www/codestriker".  This location can be changed by the

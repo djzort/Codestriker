@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.1
+# Version 1.2
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -22,6 +22,10 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
+# Constants for viewing modes.
+$NORMAL_MODE = 0;
+$COLOURED_MODE = 1;
+
 # BEGIN CONFIGURATION OPTIONS --------------------
 
 # Location of where to store the code review data.  Make sure the
@@ -34,9 +38,6 @@ $datadir= "/var/www/codestriker";
 # Location of sendmail.
 $sendmail = "/usr/lib/sendmail";
 
-# Indicate whether or not the script can interface to CVS.
-$cvsenabled = 1;
-
 # How the CVS repository is accessed.  For local access, this is set as the
 # empty string.
 #$cvsaccess = ":ext:sits\@cvs.cvsplot.sourceforge.net:";
@@ -44,7 +45,8 @@ $cvsaccess = "";
 
 # The path of the cvs repository";
 #$cvsrep = "/cvsroot/codestriker";
-$cvsrep = "/usr/local/cvsroot";
+#$cvsrep = "/home/sits/cvs";
+$cvsrep = "/set/this/if/you/want/to/link/to/cvs";
 
 # The CVS command to execute in order to retrieve file data.  The revision
 # argument and filename is appended to the end of this string.
@@ -63,24 +65,19 @@ $ENV{'PATH'} = "/bin:/usr/bin";
 # Don't allow posts larger than 500K.
 $CGI::POST_MAX=1024 * 500;
 
-# The colours to use when viewing coloured diffs.  For familiarity, try to use
-# the same colours as cvsweb/cvsview.
+# The location of the codestriker.css file on this site.
+$codestriker_css = "/codestriker.css";
+
+# The default mode to use in the URL when creating a topic.
+$default_topic_create_mode = $NORMAL_MODE;
+
+# Background colours for normal and diff modes.
 $background_col = "#ffffff";
 $diff_background_col = "#eeeeee";
-$diff_heading_col = '#99cccc';
-$diff_top_heading_col = "#cccccc";
-$diff_added_col = '#aaffaa';
-$diff_removed_col = '#ff9999';
-$diff_changed_col = '#ffff77';
-$diff_no_change_col = '#eeee77';
-$diff_blank_col = '#cccccc';
-$diff_font_size = '-1';
-
-$diff_font_face = "Helvetica,Arial";
 
 # END OF CONFIGURATION OPTIONS --------------------
 
-use CGI;
+use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
 use FileHandle;
@@ -159,17 +156,10 @@ $document_author = "";
 # Record if the HTML header has been generated yet or not.
 $header_generated_record = 0;
 
-# Constants for "mode".
-$NORMAL_MODE = 0;
-$COLOURED_MODE = 1;
-
 # State variables for display_coloured_data.
 
 # The current file being diffed.
 $diff_current_filename = "";
-
-# If it is the first time through.
-$diff_first_time = 1;
 
 # New lines within a diff block.
 @diff_new_lines = ();
@@ -215,7 +205,7 @@ sub untaint_emails($);
 sub make_canonical_email_list($);
 sub display_data ($$$$$$$$$$$$$);
 sub display_coloured_data ($$$$$$$$$$$$$);
-sub render_linenumber($$$$);
+sub render_linenumber($$$);
 sub add_old_change($$);
 sub add_new_change($$);
 sub render_changes($$);
@@ -225,6 +215,7 @@ sub normal_mode_start();
 sub normal_mode_finish($$);
 sub coloured_mode_start();
 sub coloured_mode_finish($$);
+sub print_coloured_table();
 sub main();
 
 # Call main to kick things off.
@@ -409,6 +400,7 @@ sub generate_header($$$$$$) {
     print $query->start_html(-dtd=>'-//W3C//DTD HTML 3.2 Final//EN',
 			     -title=>"$title",
 			     -bgcolor=>"$bg_colour",
+			     -style=>{src=>"$codestriker_css"},
 			     -link=>'blue',
 			     -vlink=>'purple');
 
@@ -683,7 +675,7 @@ sub edit_topic ($$$$$) {
     for (my $i = $#comment_linenumber; $i >= 0; $i--) {
 	if ($comment_linenumber[$i] == $line) {
 	    print $query->hr, "$comment_author[$i] $comment_date[$i]";
-	    print $query->br;
+	    print $query->br, "\n";
 	    print $query->pre(CGI::escapeHTML($comment_data[$i])), $query->p;
 	}
     }
@@ -766,7 +758,7 @@ sub view_topic ($$$) {
     } elsif ($number_comments > 1) {
 	print "$number_comments ", $query->a({href=>"${url}#comments"},
 					     "comments");
-	print " submitted", $query->p;
+	print " submitted\n", $query->p;
     }
 
     print $query->p, $query->hr, $query->p;
@@ -775,11 +767,11 @@ sub view_topic ($$$) {
     if ($mode == $COLOURED_MODE) {
 	my $url = $query->url() . build_view_url($topic, -1, $email,
 						 $NORMAL_MODE);
-	print "View as ", $query->a({href=>"$url"}, "plain"), " diff.";
+	print "View as ", $query->a({href=>"$url"}, "plain"), " diff.\n";
     } else {
 	my $url = $query->url() . build_view_url($topic, -1, $email,
 						 $COLOURED_MODE);
-	print "View as ", $query->a({href=>"$url"}, "coloured"), " diff.";
+	print "View as ", $query->a({href=>"$url"}, "coloured"), " diff.\n";
 	print $query->p;
     }
 
@@ -800,7 +792,6 @@ sub view_topic ($$$) {
     # Display the data that is being reviewed.
     coloured_mode_start() if ($mode == $COLOURED_MODE);
     normal_mode_start() if ($mode == $NORMAL_MODE);
-    print "<PRE>\n";
     for (my $i = 0; $i <= $#document; $i++) {
 
 	# Check for uni-diff information.
@@ -829,6 +820,14 @@ sub view_topic ($$$) {
 	} elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
 	    # The part identifying the revision.
 	    $current_file_revision = $1;
+	} elsif ($document[$i] =~ /^\-\-\- (.*)\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/ &&
+		 $current_file eq "") {
+	    # This is likely to be an ordinary patch file - not a CVS one, in
+	    # which case this is the start of the diff block.
+	    $current_file = $1;
+	    $index_filename = "";
+	    $cvsmatch = 0;
+	    $reading_diff_block = 1;
 	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@$/) {
 	    # The part identifying the line number.
 	    $current_old_file_linenumber = $1;
@@ -878,7 +877,7 @@ sub view_topic ($$$) {
 	}
 	print $query->a({href=>"$edit_url"},
 			"line $comment_linenumber[$i]"), ": ";
-	print "$comment_author[$i] $comment_date[$i]", $query->br;
+	print "$comment_author[$i] $comment_date[$i]", $query->br, "\n";
 	print $query->pre(CGI::escapeHTML($comment_data[$i])), $query->p;
     }
 }
@@ -894,23 +893,39 @@ sub normal_mode_finish ($$) {
 }
 
 # Start topic view display hook for coloured mode.  This displays a simple
-# legend.
+# legend, and opens up the initial table.
 sub coloured_mode_start () {
     print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
 			       -border=>'0'});
     print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"));
     print $query->Tr($query->td({-colspan=>'2'}, "Legend:"));
-    print $query->Tr($query->td({-bgcolor=>"$diff_removed_col"},
+    print $query->Tr($query->td({-class=>'r'},
 				"Removed from file"),
-		     $query->td({-bgcolor=>"$diff_blank_col"}, "&nbsp;"));
-    print $query->Tr($query->td({-bgcolor=>"$diff_changed_col",
+		     $query->td({-class=>'rb'}, "&nbsp;"));
+    print $query->Tr($query->td({-class=>'c',
 				 -align=>"center", -colspan=>'2'},
 				"changed lines"));
-    print $query->Tr($query->td({-bgcolor=>"$diff_blank_col"}, "&nbsp;"),
-		     $query->td({-bgcolor=>"$diff_added_col"},
+    print $query->Tr($query->td({-class=>'ab'}, "&nbsp;"),
+		     $query->td({-class=>'a'},
 				"Added to file"));
     print $query->end_table(), "\n";
+    print_coloured_table();
 }
+
+# Render the initial start of the coloured table, with an empty row setting
+# the widths.
+sub print_coloured_table()
+{
+    print $query->start_table({-width=>'100%',
+			       -border=>'0',
+			       -cellspacing=>'0',
+			       -cellpadding=>'0'}), "\n";
+    print $query->Tr($query->td({-width=>'2%'}, "&nbsp;"),
+		     $query->td({-width=>'48%'}, "&nbsp;"),
+		     $query->td({-width=>'2%'}, "&nbsp;"),
+		     $query->td({-width=>'48%'}, "&nbsp;"), "\n");
+}
+
 
 # Finish topic view display hook for coloured mode.
 sub coloured_mode_finish ($$) {
@@ -935,14 +950,13 @@ sub display_data ($$$$$$$$$$$$$) {
     for (my $j = 0; $j < ($max_digit_width - $digit_width); $j++) {
 	print " ";
     }
-    print render_linenumber($line, $topic, "", $mode);
+    print render_linenumber($line, $topic, $mode);
 
     # Now render the data.  If we are linked to a CVS repository, check if
     # a link need to be created for viewing the original file.  If the link
     # is pressed, open a new window, containing the contents of the original
     # file.
-    if ($cvsenabled &&
-	$current_file ne "" &&
+    if ($current_file ne "" &&
 	$current_file_revision ne "" &&
 	$current_old_file_linenumber ne "" &&
 	$current_new_file_linenumber ne "")
@@ -955,9 +969,9 @@ sub display_data ($$$$$$$$$$$$$) {
 	
 	my $js = "javascript: myOpen('$cvs_url','CVS')";
 	
-	print " @@ ", $query->a({href=>"$js"}, "-$1"), " $2", $query->br;
+	print " @@ ", $query->a({href=>"$js"}, "-$1"), " $2\n";
     } else {
-	print " ", $data, $query->br;
+	print " $data\n";
     }
 }
 
@@ -976,23 +990,13 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 
     if ($diff_linenumbers_found) {
 	if ($diff_current_filename ne $current_file) {
-	    # A new file is being handled, output the appropriate information,
-	    # including any diff information which has accumulated.
-	    if (! $diff_first_time) {
-		render_changes($topic, $mode);
-		print $query->end_table();
-	    }
-	    $diff_first_time = 0;
+	    # The filename has changed, render the current diff block (if any)
+	    # close the table, and open a new one.
+	    render_changes($topic, $mode);
+	    print $query->end_table();
 
 	    $diff_current_filename = $current_file;
-	    print $query->start_table({-width=>'100%',
-				       -border=>'0',
-				       -cellspacing=>'0',
-				       -cellpadding=>'0'});
-	    print $query->Tr($query->td({-width=>'2%'}, "&nbsp;"),
-			     $query->td({-width=>'48%'}, "&nbsp;"),
-			     $query->td({-width=>'2%'}, "&nbsp;"),
-			     $query->td({-width=>'48%'}, "&nbsp;"));
+	    print_coloured_table();
 
 	    if ($cvsmatch) {
 		# File matches something is CVS repository.
@@ -1001,22 +1005,20 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 					    $current_file_revision, 1);
 		my $url = "javascript: myOpen('$url_full','CVS')";
 					
-		print $query->Tr({-bgcolor=>"$diff_top_heading_col"},
-				 $query->td({-colspan=>'4'},
+		print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
 					    "Diff for ",
 					    $query->a({href=>"$url"},
 						      "$current_file"),
 					    "version $current_file_revision"));
 	    } else {
 		# No match in repository - or a new file.
-		print $query->Tr({-bgcolor=>"$diff_top_heading_col"},
-				 $query->td({-colspan=>'4'},
+		print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
 					    "Diff for $current_file"));
 	    }
 	}
 
 	print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
-			 $query->td("&nbsp;"), $query->td("&nbsp;"));
+			 $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
 	
 	if ($cvsmatch) {
 	    # Display the line numbers corresponding to the patch, with links
@@ -1032,21 +1034,20 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 					$current_new_file_linenumber);
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
 	    
-	    print $query->Tr({-bgcolor=>"$diff_heading_col"},
-			     $query->td({-colspan=>'2'},
+	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_old"}, "Line " .
 						  "$current_old_file_linenumber")),
-			     $query->td({-colspan=>'2'},
+			     $query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_new"}, "Line " .
-						  "$current_new_file_linenumber")));
+						  "$current_new_file_linenumber"))), "\n";
 	} else {
 	    # No match in the repository - or a new file.  Just display
 	    # the headings.
-	    print $query->Tr({-bgcolor=>"$diff_heading_col"},
-			     $query->td({-colspan=>'2'}, "Line " .
-					"$current_old_file_linenumber"),
-			     $query->td({-colspan=>'2'}, "Line " .
-					"$current_new_file_linenumber"));
+	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
+					"Line $current_old_file_linenumber"),
+			     $query->td({-class=>'line', -colspan=>'2'},
+					"Line $current_new_file_linenumber"),
+			     "\n");
 	}
     }
     else {
@@ -1063,11 +1064,11 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	    # Render the current line for both cells.
 	    my $celldata = render_coloured_cell($data);
 	    my $rendered_linenumber =
-		render_linenumber($line, $topic, $diff_font_face, $mode);
+		render_linenumber($line, $topic, $mode);
 	    print $query->Tr($query->td($rendered_linenumber),
-			     $query->td($celldata),
+			     $query->td({-class=>'n'}, $celldata),
 			     $query->td($rendered_linenumber),
-			     $query->td($celldata));
+			     $query->td({-class=>'n'}, $celldata), "\n");
 	}
     }
 }
@@ -1086,8 +1087,7 @@ sub render_coloured_cell($)
     $data =~ s/\t/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/g;
 
     # Unconditionally add a &nbsp; at the start for better alignment.
-    return "<FONT FACE=\"$diff_font_face\" SIZE=\"$diff_font_size\">" .
-	"&nbsp;$data</FONT>";
+    return "&nbsp;$data";
 }
 
 # Indicate a line of data which has been removed in the diff.
@@ -1112,19 +1112,13 @@ sub render_changes($$) {
 
     if ($#diff_new_lines != -1 && $#diff_old_lines != -1) {
 	# Lines have been added and removed.
-	render_inplace_changes($diff_changed_col, $diff_no_change_col,
-			       $diff_changed_col, $diff_no_change_col,
-			       $topic, $mode);
+	render_inplace_changes("c", "cb", "c", "cb", $topic, $mode);
     } elsif ($#diff_new_lines != -1 && $#diff_old_lines == -1) {
 	# New lines have been added.
-	render_inplace_changes($diff_added_col, $diff_blank_col,
-			       $diff_added_col, $diff_blank_col,
-			       $topic, $mode);
+	render_inplace_changes("a", "ab", "a", "ab", $topic, $mode);
     } else {
 	# Lines have been removed.
-	render_inplace_changes($diff_removed_col, $diff_blank_col,
-			       $diff_removed_col, $diff_blank_col,
-			       $topic, $mode);
+	render_inplace_changes("r", "rb", "r", "rb", $topic, $mode);
     }
 
     # Now that the diff changeset has been rendered, remove the state data.
@@ -1177,13 +1171,13 @@ sub render_inplace_changes($$$$$$)
 	}
 
 	print $query->Tr($query->td(render_linenumber($old_data_line, $topic,
-						      $diff_font_face, $mode)),
-			 $query->td({-bgcolor=>"$render_old_colour"},
+						      $mode)),
+			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
 			 $query->td(render_linenumber($new_data_line, $topic,
-						      $diff_font_face, $mode)),
-			 $query->td({-bgcolor=>"$render_new_colour"},
-				    $render_new_data));
+						      $mode)),
+			 $query->td({-class=>"$render_new_colour"},
+				    $render_new_data), "\n");
     }
 }
 	
@@ -1193,8 +1187,8 @@ sub render_inplace_changes($$$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$$) {
-    my ($line, $topic, $face, $mode) = @_;
+sub render_linenumber($$$) {
+    my ($line, $topic, $mode) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
@@ -1202,16 +1196,14 @@ sub render_linenumber($$$$) {
     
     my $linedata;
     if (defined $comment_exists{$line}) {
-	if (defined $face && $face ne "") {
-	    $linedata = "<FONT FACE=\"$face\" SIZE=\"$diff_font_size\" " .
-		"COLOR=\"$comment_line_colour\">$line</FONT>";
+	if ($mode == $COLOURED_MODE) {
+	    $linedata = $query->span({-class=>'com'}, $line);
 	} else {
 	    $linedata = "<FONT COLOR=\"$comment_line_colour\">$line</FONT>";
 	}
     } else {
-	if (defined $face && $face ne "") {
-	    $linedata = "<FONT SIZE=\"$diff_font_size\" " .
-		"FACE=\"$face\">$line</FONT>";
+	if ($mode == $COLOURED_MODE) {
+	    $linedata = $query->span({-class=>'ncom'}, $line);
 	} else {
 	    $linedata = $line;
 	}
@@ -1531,7 +1523,7 @@ sub submit_topic ($$$$$$$) {
 
     # Send the author, reviewers and the cc an email with the same information.
     my $topic_url = $query->url() . build_view_url($dirname, -1, "",
-						   $NORMAL_MODE);
+						   $default_topic_create_mode);
     open (MAIL, "| $sendmail -t") || error_return("Unable to send email: $!");
     print MAIL "From: $email\n";
     print MAIL "To: $reviewers\n";
@@ -1572,10 +1564,6 @@ sub submit_topic ($$$$$$$) {
 # within a new window, so there is no navigation within it.
 sub view_cvs_file ($$$) {
     my ($filename, $revision, $line) = @_;
-
-    if (! $cvsenabled) {
-	error_return("cvs viewing is not enabled - edit configuration");
-    }
 
     if (! defined $filename || $filename eq "") {
 	error_return("No filename was entered");
