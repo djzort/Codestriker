@@ -465,12 +465,12 @@ sub render_coloured_cell($$)
 	return "&nbsp;";
     }
 
+    # Add LXR links to the output.
+    $data = $self->lxr_data($data);
+
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
     $data = tabadjust($self, $self->{tabwidth}, $data, 1);
     $data =~ s/\s/&nbsp;/g;
-
-    # Add LXR links to the output.
-    $data = $self->lxr_data($data);
 
     # Unconditionally add a &nbsp; at the start for better alignment.
     return "&nbsp;$data";
