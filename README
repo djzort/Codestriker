@@ -5,6 +5,6 @@ sits@users.sourceforge.net
 *** Please read the CHANGELOG file for details on changes ***
 -------------------------------------------------------------
 
-All documentation is now in the Codestriker guide.  The HTML, PDF, PS
-and RTF versions of this guide are present in the html directory, and
-are available from the online help when Codestriker is deployed.
+All documentation is now in the Codestriker guide.  The HTML and PDF
+versions of this guide are present in the html directory, and are
+available from the online help when Codestriker is deployed.
