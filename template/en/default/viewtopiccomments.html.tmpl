@@ -115,10 +115,10 @@ with
         [%# Display the comment thread information #%]
 	<TD>
 	    [% IF comment.filename != '' %]
-	       <A HREF="[% comment.view_file %]">[% comment.filename %][% IF comment.fileline != -1 %]:[% comment.fileline %][% END %]</A>
+	       <A HREF="[% comment.view_file %]">[% comment.filename %][% IF comment.fileline != -1 %]:[% comment.fileline %]</A>[% ELSE %]</A> (File Level)[% END %]
 	       [% IF allow_repositories != 0 %] | <A HREF="[% comment.view_parallel %]">Parallel</A> [% END %]
 	    [% ELSIF comment.fileline == -1 && comment.filenumber == -1 %]
-	       Topic-level
+	       Topic Level
 	    [% ELSE %]
 	       Line: [% comment.line %]
 	    [% END %]

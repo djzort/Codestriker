@@ -253,9 +253,11 @@ function add_other_reviewers() {
 [% END %]
 </TABLE>
 
+[% IF context != '' %]
 <hr>
 <P>Context: (<A onClick="save_form_data()" HREF="[% inc_context_url %]">increase</A> | <A onClick="save_form_data()" HREF="[% dec_context_url %]">decrease)</A>
 [% context %]
+[% END %]
 
 <SCRIPT type="text/javascript">
   // Now that the form has loaded, set the form fields.

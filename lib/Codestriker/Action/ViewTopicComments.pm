@@ -109,7 +109,8 @@ sub process($$$) {
 	    $last_filenumber = $comment->{filenumber};
 	}
 
-        if ($show_context ne "" && $show_context > 0) {
+        if ($show_context ne "" && $show_context > 0 &&
+	    $comment->{filenumber} != -1 && $comment->{fileline} != -1) {
                 my $delta = Codestriker::Model::Delta->get_delta($topicid, 
                                 $comment->{filenumber}, 
                                 $comment->{fileline} , 
