@@ -9,7 +9,7 @@ diff -u -r /home/sits/bugzilla/bugzilla-2.18/template/en/default/attachment/list
 +    [%# *** Set the base codestriker URL here *** %]
 +    [% SET codestriker_url = "http://localhost.localdomain/codestriker/codestriker.pl" %]
 +    <td colspan="[% show_attachment_flags ? 5 : 4 %]">
-+      <a href="[% codestriker_url %]?action=create&amp;bug_ids=[% bugid %]&amp;topic_title=[% bugtitle | uri | html_entity %]">Create a New Codestriker Topic</a>
++      <a href="[% codestriker_url %]?action=create&amp;bug_ids=[% bugid %]&amp;topic_title=[% bugtitle | uri | replace('&,'%26') | html_entity %]">Create a New Codestriker Topic</a>
 +    </td>
 +    <td colspan="1">
 +      <a href="[% codestriker_url %]?action=list_topics&amp;sbugid=[% bugid %]">View All</a>
