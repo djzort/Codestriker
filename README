@@ -1,0 +1,62 @@
+Codestriker v1.0
+Copyright (c) 2001 David Sitsky.  All rights reserved.
+sits@users.sourceforge.net
+--------------------------
+
+Codestriker is a perl CGI script which is used for performing code
+reviews in a collaborative fashion as opposed to using unstructured
+emails.
+
+Authors create code review topics, where the nominated reviewers will
+be automatically notified by email.  Reviewers then submit comments
+against the code on a per-line basis, and can also view comments
+submitted by the other reviewers as they are created.  Emails are sent
+to the appropriate parties when comments are created, as an alert
+mechanism.  The author is also free to submit comments against the
+review comments.
+
+Once all reviewers have finished, the author has all
+review comments available in a structured fashion, as
+opposed to a pile of unstructured emails.
+
+A tutorial on how to use codestriker can be seen from
+http://codestriker.sourceforge.net
+
+Installation
+------------
+
+I use codestriker as a tool behind our company's firewall for
+performing code reviews within our engineering team.  For RedHat 7.1,
+the installation is simply the following as root on the internal web
+server:
+
+	    cd /var/www/cgi-bin
+	    cp /from/installed/location/codestriker.pl .
+	    mkdir /var/www/codestriker
+	    chown apache.apache /var/www/codestriker
+
+Codestriker stores all of its topic data and comments by default in
+"/var/www/codestriker".  This location can be changed by the
+configuration variable at the start of the script.  This directory
+needs to be owned by the user which runs httpd, since the script
+creates files and directories under the "/var/www/codestriker"
+directory.  The username is typically either nobody or apache.  Use
+the "ps auxww | grep httpd" command to find out.
+
+For deployments outside an intranet, I would suggest using apache's
+".htaccess" mechanism to limit access as to who can execute the
+script, as an extra security precaution.
+
+Future plans
+------------
+
+Obviously there are many enhancements that can be made to this tool.
+My initial goal was to build something quickly and it get it out there
+for real use, which will then hopefully provide further input to
+future enhancements.
+
+Please send your comments to sits@users.sourceforge.net.
+
+The latest version of codestriker can be obtained from:
+http://codestriker.sourceforge.net
+
