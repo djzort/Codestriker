@@ -13,13 +13,14 @@ use strict;
 
 # Constructor, which takes as a parameter the client, hostname and port.
 sub new ($$$$$) {
-    my ($type, $client, $hostname, $port) = @_;
+    my ($type, $user, $client, $hostname, $port) = @_;
 
     my $self = {};
+    $self->{user} = $user;
     $self->{client} = $client;
     $self->{hostname} = $hostname;
     $self->{port} = $port;
-    $self->{root} = "perforce:$client" . "@" . "${hostname}:${port}";
+    $self->{root} = "perforce:${user}:${client}" . "@" . "${hostname}:${port}";
     bless $self, $type;
 }
 
@@ -30,7 +31,8 @@ sub retrieve ($$$\$) {
 
     # Open a pipe to the local CVS repository.
     open(P4, "\"$Codestriker::p4\" -H " . $self->{hostname} .
-	 " -p " . $self->{port} . " -c " . $self->{client} .
+	 " -p " . $self->{port} . " -u " . $self->{user} .
+	 " -c " . $self->{client} .
 	 " print -q \"$filename\"" . "#" . "$revision |")
 	|| die "Can't retrieve data using p4: $!";
 
