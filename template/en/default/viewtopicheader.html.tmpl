@@ -25,14 +25,14 @@
    <td width="1" class="space">&nbsp;</td>
    <td width="1%" nowrap class=[% IF topicinfo == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
 	<a class="tab" href="[% view_topicinfo_url %]">Topic Information</a> </td>
-   <td colspan=2 bgcolor="#eeeeee" align=right><b>[% author %]</b></td>
+   <td colspan=2 bgcolor="#eeeeee" align=right><b>[% author | html_entity %]</b></td>
 </tr>
 </table>
 
 <table cellpadding="5" cellspacing="0" border="0" width="100%">
 <tr class="tab">
-    <td>Topic title: <b>[% title %]</b></td>
-    <td align=right>[% document_creation_time %]</td>
+    <td>Topic title: <b>[% title | html_entity %]</b></td>
+    <td align=right>[% document_creation_time | html_entity %]</td>
 </tr>
 </table>
 
