@@ -34,7 +34,7 @@ sub process($$$) {
 	Codestriker::Http::Cookie->get_property($query, 'repository');
 
     # Set the default repository.
-    if ($vars->{'repository'} eq "") {
+    if (! (defined $vars->{'repository'}) || $vars->{'repository'} eq "") {
 	$vars->{'repository'} = $Codestriker::default_repository;
     }
 

@@ -40,7 +40,6 @@ sub process($$$) {
 				    \$version, \$repository_url);
 
     # Retrieve the reposiory object.
-    print STDERR "Getting repository for: \"$repository_url\"\n";
     my $repository =
 	Codestriker::Repository::RepositoryFactory->get($repository_url);
     my $repository_root = defined $repository ? $repository->getRoot() : "";
