@@ -456,7 +456,11 @@ $use_compression = 0;
 	  deployments is an anonymous CVS pserver specification.  The
 	  string is actually in the same form as a CVS pserver URL.
 	  For more information of setting up anonymous pserver access,
-	  please consult the CVS manual.
+	  please consult the CVS manual.  Note if your anonymous account
+          does not have a password, the setting would be (note the colons):
+          <programlisting>
+     ':pserver:anonymous:@cvs.sourceforge.net:/cvsroot'
+          </programlisting>
 	</para>
 	<para>
 	  The final value is an example of a CVS repository located on
