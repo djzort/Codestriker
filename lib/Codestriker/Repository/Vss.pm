@@ -12,6 +12,7 @@ package Codestriker::Repository::Vss;
 use strict;
 use Cwd;
 use File::Temp qw/ tmpnam tempdir /;
+use IO::Handle;
 
 # Switch for emitting debug information.
 my $_DEBUG = 1;
@@ -44,11 +45,13 @@ sub _wrap_vss_command {
 	    (defined $ssdir ? "\$ENV{SSDIR}='$ssdir' ; " : "") .
 	    "system('$perl_cmd')\"";
 	print STDERR "Executing $perl_cmd\n" if $_DEBUG;
+	flush STDERR if $_DEBUG;
 	return $perl_cmd;
     }
     else {
 	# No need to change the command, as SSDIR does not need to be set.
 	print STDERR "Executing $cmd\n" if $_DEBUG;
+	flush STDERR if $_DEBUG;
 	return $cmd;
     }
 }
