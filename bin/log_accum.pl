@@ -73,8 +73,8 @@ $MAIL_FROM     = "$ENV{'USER'}\@localhost.localdomain";
 $SUBJECT_PRE   = 'CVS update:';
 
 # Codestriker-specific imports.
-use lib '/var/www/codestriker-1.8.4/lib';
-use Codestriker::Http::CreateTopic;
+use lib '/var/www/codestriker-1.8.4/bin';
+use CodestrikerClient;
 
 # Codestriker specific parameters for topic creation.
 $CODESTRIKER_URL = 'http://localhost/codestriker/codestriker.pl';
@@ -334,8 +334,8 @@ sub codestriker_create_topic
 	push @bugs, $1;
     }
 
-    return Codestriker::Http::CreateTopic->doit({
-	url => $CODESTRIKER_URL,
+    my $client = CodestrikerClient->new($CODESTRIKER_URL);
+    return $client->create_topic({
 	topic_title => $topic_title,
 	topic_description => $topic_description,
 	project_name => $CODESTRIKER_PROJECT,

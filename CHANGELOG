@@ -28,7 +28,7 @@ Version 1.8.4
 * When sending emails involving more than one CC recipient, the email
   sending may fail because a space wasn't put after each comma.
 
-* Created the Codestriker::Http::CreateTopic module which can create a
+* Created the CodestrikerClient module in bin which can create a
   new topic non-interactively.  The intention is for this module to be
   used from scripts that need to create new topics, for example, from
   a CVS post-commit script.

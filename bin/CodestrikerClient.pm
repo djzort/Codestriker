@@ -5,20 +5,12 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Code for creating a topic non-interactively via HTTP.
-
-package Codestriker::Http::CreateTopic;
-
-use strict;
-use LWP::UserAgent;
-use HTTP::Request;
-use HTTP::Request::Common;
-use File::Temp qw/ tempfile /;
-use IO::Handle;
-
-# Example usage.
-#Codestriker::Http::CreateTopic->
-#      doit({url => 'http://localhost.localdomain/codestriker/codestriker.pl',
+# Code for interacting with a Codestriker server via HTTP.
+#
+# Example usage for creating a new Codestriker topic.
+#
+# my $client = CodestrikerClient->new('http://localhost.localdomain/codestriker/codestriker.pl');
+# $client->create_topic({
 #      topic_title => 'Automatic Topic from script',
 #      topic_description => "Automatic Topic Description\nAnd more",
 #      project_name => 'Project2',
@@ -28,7 +20,25 @@ use IO::Handle;
 #      reviewers => 'root',
 #      topic_text => "Here is some text\nHere is some\n\nMore and more...\n"});
 
-sub doit {
+package CodestrikerClient;
+
+use strict;
+use LWP::UserAgent;
+use HTTP::Request;
+use HTTP::Request::Common;
+use File::Temp qw/ tempfile /;
+use IO::Handle;
+
+# Create a new CodestrikerClient object, which records the base URL of the server.
+sub new {
+    my ($type, $url) = @_;
+    my $self = {};
+    $self->{url} = $url;
+    return bless $self, $type;
+}
+
+# Create a new topic.
+sub create_topic {
     my ($self, $params) = @_;
 
     # Create a temporary file containing the topic text.
@@ -49,7 +59,7 @@ sub doit {
 		    cc => $params->{cc},
 		    topic_file => [$tempfile_filename]];
     my $response =
-	$ua->request(HTTP::Request::Common::POST($params->{url},
+	$ua->request(HTTP::Request::Common::POST($self->{url},
 						 Content_Type => 'form-data',
 						 Content => $content));
 

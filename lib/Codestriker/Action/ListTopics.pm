@@ -238,7 +238,8 @@ sub process($$$) {
 			   link => $topic->{'view_topic_url'},
 			   description => $description,
 			   dc => {
-			       creator => $topic->{'author'}
+			       creator => $topic->{'author'},
+			       subject => $topic->{'title'}
 			   });
 			   
 	}
