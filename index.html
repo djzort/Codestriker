@@ -88,10 +88,10 @@
 	    the proposed code differences.
 	</p>
         <p>
-	    The "Bug number" field is optional, and is used to link
-	    the review to a bug in your bug tracking system, such as
-	    Bugzilla.  If the bug number is entered, a link will be
-	    present in the view topic screen.
+	    The "Bug ids" field is optional, and is used to link the
+	    review to bugs present in your bug tracking system, such
+	    as Bugzilla.  If bug ids are entered, links to each bug
+	    will be present in the view topic screen.
         </p>
 	<p>
 	    The following three email address fields are stored into a
@@ -176,12 +176,13 @@
 	<h3>Coloured diff support</h3>
 	<p>
 	   Codestriker provides special support when the topic
-	   contents are in the form from the command "cvs diff
-	   -uN" or "diff -ruN".  Although not shown above, the topic view
-	   screen has a link at the top, to alternate between coloured
-	   diff and the textual view.  An example of a coloured diff
-	   can be seen below, which some developers find easier to
-	   read than an ordinary diff.
+	   contents are in the form from the command "cvs diff -uN" or
+	   "diff -ruN".  The "-p" or "--show-function-line" arguments
+	   are also supported in the display.  Although not shown
+	   above, the topic view screen has a link at the top, to
+	   alternate between coloured diff and the textual view.  An
+	   example of a coloured diff can be seen below, which some
+	   developers find easier to read than an ordinary diff.
 	</p>
 	<p>
 	   <a href="view3.jpg">
@@ -219,6 +220,16 @@
 	           alt="CVS integration"></a>
 	</p>
 
+	<p>
+ 	   Next to the "Line" links, the latest versions of
+ 	   Codestriker also contain "Parallel" links, which will bring
+ 	   up a new popup window that will show both the original and
+ 	   new file contents side-by-side, centered on the selected
+ 	   line number.  While this viewing mode is more bandwidth
+ 	   intensive, for some files, this can greatly aid in the
+ 	   reviewing process.
+        </p>	
+
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
@@ -229,6 +240,10 @@
 	    Codestriker sourceforge project information can be found from
         <A HREF="http://sourceforge.net/projects/codestriker">
            http://sourceforge.net/projects/codestriker</A>.
+	</p>
+	<p>
+	Please read the CHANGELOG file for functionality changes between
+	releases.
 	</p>
 	<p>
 	    I use codestriker as a tool behind our company's firewall

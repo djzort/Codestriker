@@ -33,6 +33,9 @@ http://codestriker.sourceforge.net
 Installation
 ------------
 
+Please read the CHANGELOG file for functionality changes between
+releases.
+
 I use codestriker as a tool behind our company's firewall for
 performing code reviews within our engineering team.  For RedHat 7.1,
 the installation is simply the following as root on the internal web

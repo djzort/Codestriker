@@ -1,5 +1,13 @@
 Version 1.4.3:
 
+* New popup viewing mode "parallel".  In addition to being able to
+  bring up a new window containing the contents of a file in its
+  original or new form, you can also set the popup display to be a
+  coloured diff, containing the contents of the original and the new
+  file side by side (similar to the main screen in coloured diff
+  mode).  While this mode is more bandwidth intensive, this can also
+  aid considerably in the reviewing process.
+
 * Support for "diff -uNp", "diff -uN --show-function-line=regexp",
   "cvs diff -uNp" and "cvs diff -uN  --show-function-line=regexp".
 

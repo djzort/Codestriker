@@ -154,11 +154,17 @@ $diff_current_filename = "";
 # The corresponding lines they refer to.
 @diff_new_lines_numbers = ();
 
+# The corresponding offsets they refer to.
+@diff_new_lines_offsets = ();
+
 # Old lines within a diff block.
 @diff_old_lines = ();
 
 # The corresponding lines they refer to.
 @diff_old_lines_numbers = ();
+
+# The corresponding offsets they refer to.
+@diff_old_lines_offsets = ();
 
 # A record of added and removed lines for a given diff block when displaying a
 # file in a popup window, along with their offsets.
@@ -171,6 +177,11 @@ $diff_current_filename = "";
 $ADDED_REVISION = "1.0";
 $REMOVED_REVISION = "0.0";
 $PATCH_REVISION = "0.1";
+
+# New constants used for viewing files.
+$OLD_FILE = 0;
+$NEW_FILE = 1;
+$BOTH_FILES = 2;
 
 # Subroutine prototypes.
 sub edit_topic($$$$$);
@@ -195,7 +206,7 @@ sub get_cc();
 sub build_edit_url($$$$);
 sub build_download_url($);
 sub build_view_url($$$$);
-sub build_view_file_url($$$$);
+sub build_view_file_url($$$$$);
 sub build_create_topic_url();
 sub generate_header($$$$$$);
 sub header_generated();
@@ -211,12 +222,12 @@ sub get_time_string($);
 sub make_canonical_email_list($);
 sub make_bug_list($);
 sub display_data ($$$$$$$$$$$$$$);
-sub display_coloured_data ($$$$$$$$$$$$$$);
-sub render_linenumber($$$);
-sub add_old_change($$);
-sub add_new_change($$);
-sub render_changes($$);
-sub render_inplace_changes($$$$$$);
+sub display_coloured_data ($$$$$$$$$$$$$$$$$);
+sub render_linenumber($$$$$);
+sub add_old_change($$$);
+sub add_new_change($$$);
+sub render_changes($$$);
+sub render_inplace_changes($$$$$$$);
 sub render_coloured_cell($);
 sub normal_mode_start($);
 sub normal_mode_finish($$);
@@ -730,9 +741,10 @@ sub build_edit_url ($$$$) {
 }
 
 # Create the URL for viewing a new file.
-sub build_view_file_url ($$$$) {
-    my ($topic, $filename, $new, $line) = @_;
-    return "?action=view_file&filename=$filename&topic=$topic&new=$new#${line}";
+sub build_view_file_url ($$$$$) {
+    my ($topic, $filename, $new, $line, $prefix) = @_;
+    return "?action=view_file&filename=$filename&topic=$topic&new=$new#" .
+	"$prefix$line";
 }
 
 # Generate a string which represents a digest of all the comments made for a
@@ -1013,23 +1025,26 @@ sub view_topic ($$$) {
 	    $reading_diff_block = 0;
 	}
 
-	my $data = CGI::escapeHTML($document[$i]);
 	my $url = $query->url() . build_edit_url($i, $topic, $context, $mode);
 
 	# Display the data.
 	if ($mode == $COLOURED_MODE) {
-	    display_coloured_data($i, $max_digit_width, $data, $url,
-				  $current_file, $current_file_revision,
+	    display_coloured_data($i, $i, $i, 0, $max_digit_width,
+				  $document[$i], $url, $current_file,
+				  $current_file_revision,
 				  $current_old_file_linenumber,
 				  $current_new_file_linenumber,
-				  $reading_diff_block, $diff_linenumbers_found,
-				  $topic, $mode, $cvsmatch,
+				  $reading_diff_block,
+				  $diff_linenumbers_found, $topic,
+				  $mode, $cvsmatch,
 				  $block_description);
 	} else {
-	    display_data($i, $max_digit_width, $data, $url, $current_file,
-			 $current_file_revision, $current_old_file_linenumber,
-			 $current_new_file_linenumber, $reading_diff_block,
-			 $diff_linenumbers_found, $topic, $mode, $cvsmatch,
+	    display_data($i, $max_digit_width, $document[$i], $url,
+			 $current_file, $current_file_revision,
+			 $current_old_file_linenumber,
+			 $current_new_file_linenumber,
+			 $reading_diff_block, $diff_linenumbers_found,
+			 $topic, $mode, $cvsmatch,
 			 $block_description);
 	}
 
@@ -1153,7 +1168,7 @@ sub coloured_mode_finish ($$) {
     my ($topic, $mode) = @_;
 
     # Make sure the last diff block (if any) is written.
-    render_changes($topic, $mode);
+    render_changes($topic, $mode, 0);
 
     print "</TABLE>\n";
 }
@@ -1166,13 +1181,16 @@ sub display_data ($$$$$$$$$$$$$$) {
 	$diff_linenumbers_found, $topic, $mode, $cvsmatch,
 	$block_description) = @_;
 
+    # Escape the data.
+    $data = CGI::escapeHTML($data);
+
     # Add the appropriate amount of spaces for alignment before rendering
     # the line number.
     my $digit_width = length($line);
     for (my $j = 0; $j < ($max_digit_width - $digit_width); $j++) {
 	print " ";
     }
-    print render_linenumber($line, $topic, $mode);
+    print render_linenumber($line, $line, "", $topic, $mode);
 
     # Now render the data.
     print " $data\n";
@@ -1181,22 +1199,25 @@ sub display_data ($$$$$$$$$$$$$$) {
 # Display a line for coloured data.  Note special handling is done for
 # unidiff formatted text, to output it in the "coloured-diff" style.  This
 # requires storing state when retrieving each line.
-sub display_coloured_data ($$$$$$$$$$$$$$) {
-    my ($line, $max_digit_width, $data, $edit_url, $current_file,
-	$current_file_revision, $current_old_file_linenumber,
-	$current_new_file_linenumber, $reading_diff_block,
-	$diff_linenumbers_found, $topic, $mode, $cvsmatch,
-	$block_description) = @_;
+sub display_coloured_data ($$$$$$$$$$$$$$$$$) {
+    my ($leftline, $rightline, $offset, $parallel, $max_digit_width,
+	$data, $edit_url, $current_file, $current_file_revision,
+	$current_old_file_linenumber, $current_new_file_linenumber,
+	$reading_diff_block, $diff_linenumbers_found, $topic, $mode,
+	$cvsmatch, $block_description) = @_;
 
     # Don't do anything if the diff block is still being read.  The upper
     # functions are storing the necessary data.
     return if ($reading_diff_block);
 
+    # Escape the data.
+    $data = CGI::escapeHTML($data);
+
     if ($diff_linenumbers_found) {
 	if ($diff_current_filename ne $current_file) {
 	    # The filename has changed, render the current diff block (if any)
 	    # close the table, and open a new one.
-	    render_changes($topic, $mode);
+	    render_changes($topic, $mode, $parallel);
 	    print $query->end_table();
 
 	    $diff_current_filename = $current_file;
@@ -1256,20 +1277,38 @@ sub display_coloured_data ($$$$$$$$$$$$$$) {
 	    # Display the line numbers corresponding to the patch, with links
 	    # to the CVS file.
 	    my $url_old_full = $query->url() .
-		build_view_file_url($topic, $current_file, 0,
-				    $current_old_file_linenumber);
+		build_view_file_url($topic, $current_file, $OLD_FILE,
+				    $current_old_file_linenumber, "");
 	    my $url_old = "javascript: myOpen('$url_old_full','CVS')";
+
+	    my $url_old_both_full = $query->url() .
+		build_view_file_url($topic, $current_file, $BOTH_FILES,
+				    $current_old_file_linenumber, "L");
+	    my $url_old_both =
+		"javascript: myOpen('$url_old_both_full','CVS')";
+
 	    my $url_new_full = $query->url() .
-		build_view_file_url($topic, $current_file, 1,
-				    $current_new_file_linenumber);
+		build_view_file_url($topic, $current_file, $NEW_FILE,
+				    $current_new_file_linenumber, "");
 	    my $url_new = "javascript: myOpen('$url_new_full','CVS')";
+
+	    my $url_new_both_full = $query->url() .
+		build_view_file_url($topic, $current_file, $BOTH_FILES,
+				    $current_new_file_linenumber, "R");
+	    my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
 
 	    print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_old"}, "Line " .
-						  "$current_old_file_linenumber")),
+						  "$current_old_file_linenumber") .
+					" | " .
+					$query->a({href=>"$url_old_both"},
+						  "Parallel")),
 			     $query->td({-class=>'line', -colspan=>'2'},
 					$query->a({href=>"$url_new"}, "Line " .
-						  "$current_new_file_linenumber"))),
+						  "$current_new_file_linenumber") .
+					" | " .
+					$query->a({href=>"$url_new_both"},
+						  "Parallel"))),
 					"\n";
 	} else {
 	    # No match in the repository - or a new file.  Just display
@@ -1282,25 +1321,33 @@ sub display_coloured_data ($$$$$$$$$$$$$$) {
 	}
     }
     else {
-	if ($data =~ /^\-(.*)/) {
+	if ($data =~ /^\-(.*)$/) {
 	    # Line corresponds to something which has been removed.
-	    add_old_change($1, $line);
-	} elsif ($data =~ /^\+(.*)/) {
+	    add_old_change($1, $leftline, $offset);
+	} elsif ($data =~ /^\+(.*)$/) {
 	    # Line corresponds to something which has been removed.
-	    add_new_change($1, $line);
-	} elsif ($data =~ /\\/) {
+	    add_new_change($1, $rightline, $offset);
+	} elsif ($data =~ /^\\/) {
 	    # A diff comment such as "No newline at end of file" - ignore it.
 	} else {
 	    # Render the previous diff changes visually.
-	    render_changes($topic, $mode);
+	    render_changes($topic, $mode, $parallel);
 
 	    # Render the current line for both cells.
 	    my $celldata = render_coloured_cell($data);
-	    my $rendered_linenumber =
-		render_linenumber($line, $topic, $mode);
-	    print $query->Tr($query->td($rendered_linenumber),
+	    my $left_prefix = $parallel ? "L" : "";
+	    my $right_prefix = $parallel ? "R" : "";
+	    my $rendered_left_linenumber =
+		render_linenumber($leftline, $offset, $left_prefix, $topic,
+				  $mode);
+	    my $rendered_right_linenumber =
+		($leftline == $rightline) ? $rendered_left_linenumber :
+		render_linenumber($rightline, $offset, $right_prefix, $topic,
+				  $mode);
+
+	    print $query->Tr($query->td($rendered_left_linenumber),
 			     $query->td({-class=>'n'}, $celldata),
-			     $query->td($rendered_linenumber),
+			     $query->td($rendered_right_linenumber),
 			     $query->td({-class=>'n'}, $celldata), "\n");
 	}
     }
@@ -1324,71 +1371,81 @@ sub render_coloured_cell($)
 }
 
 # Indicate a line of data which has been removed in the diff.
-sub add_old_change($$) {
-    my ($data, $linenumber) = @_;
+sub add_old_change($$$) {
+    my ($data, $linenumber, $offset) = @_;
     push @diff_old_lines, $data;
     push @diff_old_lines_numbers, $linenumber;
+    push @diff_old_lines_offsets, $offset;
 }
 
 # Indicate that a line of data has been added in the diff.
-sub add_new_change($$) {
-    my ($data, $linenumber) = @_;
+sub add_new_change($$$) {
+    my ($data, $linenumber, $offset) = @_;
     push @diff_new_lines, $data;
     push @diff_new_lines_numbers, $linenumber;
+    push @diff_new_lines_offsets, $offset;
 }
 
 # Render the current diff changes, if there is anything.
-sub render_changes($$) {
-    my ($topic, $mode) = @_;
+sub render_changes($$$) {
+    my ($topic, $mode, $parallel) = @_;
 
     return if ($#diff_new_lines == -1 && $#diff_old_lines == -1);
 
     if ($#diff_new_lines != -1 && $#diff_old_lines != -1) {
 	# Lines have been added and removed.
-	render_inplace_changes("c", "cb", "c", "cb", $topic, $mode);
+	render_inplace_changes("c", "cb", "c", "cb", $topic, $mode, $parallel);
     } elsif ($#diff_new_lines != -1 && $#diff_old_lines == -1) {
 	# New lines have been added.
-	render_inplace_changes("a", "ab", "a", "ab", $topic, $mode);
+	render_inplace_changes("a", "ab", "a", "ab", $topic, $mode, $parallel);
     } else {
 	# Lines have been removed.
-	render_inplace_changes("r", "rb", "r", "rb", $topic, $mode);
+	render_inplace_changes("r", "rb", "r", "rb", $topic, $mode, $parallel);
     }
 
     # Now that the diff changeset has been rendered, remove the state data.
     @diff_new_lines = ();
     @diff_new_lines_numbers = ();
+    @diff_new_lines_offsets = ();
     @diff_old_lines = ();
     @diff_old_lines_numbers = ();
+    @diff_old_lines_offsets = ();
 }
 
 # Render the inplace changes in the current diff change set.
-sub render_inplace_changes($$$$$$)
+sub render_inplace_changes($$$$$$$)
 {
     my ($old_col, $old_notpresent_col, $new_col, $new_notpresent_col,
-	$topic, $mode) = @_;
+	$topic, $mode, $parallel) = @_;
 
     my $old_data;
     my $new_data;
     my $old_data_line;
     my $new_data_line;
+    my $old_data_offset;
+    my $new_data_offset;
     while ($#diff_old_lines != -1 || $#diff_new_lines != -1) {
 
 	# Retrieve the next lines which were removed (if any).
 	if ($#diff_old_lines != -1) {
 	    $old_data = shift @diff_old_lines;
 	    $old_data_line = shift @diff_old_lines_numbers;
+	    $old_data_offset = shift @diff_old_lines_offsets;
 	} else {
 	    undef($old_data);
 	    undef($old_data_line);
+	    undef($old_data_offset);
 	}
 
 	# Retrieve the next lines which were added (if any).
 	if ($#diff_new_lines != -1) {
 	    $new_data = shift @diff_new_lines;
 	    $new_data_line = shift @diff_new_lines_numbers;
+	    $new_data_offset = shift @diff_new_lines_offsets;
 	} else {
 	    undef($new_data);
 	    undef($new_data_line);
+	    undef($new_data_offset);
 	}
 
 	my $render_old_data = render_coloured_cell($old_data);
@@ -1403,11 +1460,17 @@ sub render_inplace_changes($$$$$$)
 	    $render_old_colour = $old_notpresent_col;
 	}
 
-	print $query->Tr($query->td(render_linenumber($old_data_line, $topic,
+	my $old_prefix = $parallel ? "L" : "";
+	my $new_prefix = $parallel ? "R" : "";
+	print $query->Tr($query->td(render_linenumber($old_data_line,
+						      $old_data_offset,
+						      $old_prefix, $topic,
 						      $mode)),
 			 $query->td({-class=>"$render_old_colour"},
 				    $render_old_data),
-			 $query->td(render_linenumber($new_data_line, $topic,
+			 $query->td(render_linenumber($new_data_line,
+						      $new_data_offset,
+						      $new_prefix, $topic,
 						      $mode)),
 			 $query->td({-class=>"$render_new_colour"},
 				    $render_new_data), "\n");
@@ -1420,15 +1483,15 @@ sub render_inplace_changes($$$$$$)
 # title of the link should be set to the comment digest, and the
 # status line should be set if the mouse moves over the link.
 # Clicking on the link will take the user to the add comment page.
-sub render_linenumber($$$) {
-    my ($line, $topic, $mode) = @_;
+sub render_linenumber($$$$$) {
+    my ($line, $offset, $prefix, $topic, $mode) = @_;
 
     if (! defined $line) {
 	return "&nbsp;";
     }
     
     my $linedata;
-    if (defined $comment_exists{$line}) {
+    if ($offset != -1 && defined $comment_exists{$offset}) {
 	if ($mode == $COLOURED_MODE) {
 	    $linedata = $query->span({-class=>'com'}, $line);
 	} else {
@@ -1442,20 +1505,27 @@ sub render_linenumber($$$) {
 	}
     }
     
-    my $link_title = get_comment_digest($line);
+    # Check if the linenumber is outside the review.
+    if ($offset == -1) {
+	return $linedata;
+    }
+
+    my $link_title = get_comment_digest($offset);
     my $js_title = $link_title;
     $js_title =~ s/\'/\\\'/mg;
     my $edit_url =
-	$query->url() . build_edit_url($line, $topic, $context, $mode);
+	$query->url() . build_edit_url($offset, $topic, $context, $mode);
+    $edit_url = "javascript:fetch('$edit_url')" if ($prefix ne "");
     if ($link_title ne "") {
 	return $query->a(
-			 {name=>"$line",
+			 {name=>"$prefix$line",
 			  href=>"$edit_url",
 			  title=>"$link_title",
 			  onmouseover=>"window.status='$js_title'; " .
 			      "return true;"}, "$linedata");
     } else {
-	return $query->a({name=>"$line", href=>"$edit_url"},"$linedata");
+	return $query->a({name=>"$prefix$line", href=>"$edit_url"},
+			 "$linedata");
     }
 }
 
@@ -2097,7 +2167,7 @@ sub flush_monospaced_lines ($$$$$) {
 }	
 
 # Show the contents of a file, and indicate whether it is the file before
-# modification (pre-patch) or after.
+# modification (pre-patch), after or to show both.
 sub view_file ($$$) {
     my ($topic, $filename, $new) = @_;
     
@@ -2155,14 +2225,21 @@ sub view_file ($$$) {
     }
     
     # Output the new file, with the appropriate patch applied.
-    my $title = $new ? "New $filename" : "$filename v$revision";
+    my $title = $new == $NEW_FILE ? "New $filename" : "$filename v$revision";
     generate_header($topic, $title, "", "", "", $diff_background_col);
 
-    print "<PRE class=\"ms\">\n";
+    if ($new == $BOTH_FILES) {
+	print_coloured_table();
+    }
+    else {
+	print "<PRE class=\"ms\">\n";
+    }
 
     my $max_digit_width = length($#cvs_filedata);
     my $patch_line = <PATCH>;
     my $linenumber = 1;
+    my $old_linenumber = 1;
+    my $new_linenumber = 1;
     my $chunk_end = 1;
     my $next_chunk_end = 1;
     while (1) {
@@ -2180,16 +2257,39 @@ sub view_file ($$$) {
 	# Output those lines leading up to $patch_line_start.  These lines
 	# are not part of the review, so they can't be acted upon.
 	for (my $i = $chunk_end; $i < $patch_line_start; $i++, $linenumber++) {
-	    print render_monospaced_line($topic, $linenumber,
-					 $cvs_filedata[$i], -1,
-					 $max_digit_width, $max_line_length,
-					 "");
+	    if ($new == $BOTH_FILES) {
+		display_coloured_data($old_linenumber, $new_linenumber, -1, 1,
+				      $max_digit_width, " $cvs_filedata[$i]",
+				      "", "", "", 0, 0, 0, 0, $topic,
+				      $COLOURED_MODE, 1, "");
+		$old_linenumber++;
+		$new_linenumber++;
+	    }
+	    else {
+		print render_monospaced_line($topic, $linenumber,
+					     $cvs_filedata[$i], -1,
+					     $max_digit_width,
+					     $max_line_length, "");
+	    }
 	}
 	
 	# Read the information from the patch, and "apply" it to the
 	# output.
 	while (<PATCH>) {
 	    $offset++;
+	    s/\t/        /g;	# Replace tabs with spaces.
+
+	    # Handle the processing of the side-by-side view separately.
+	    if ($new == $BOTH_FILES && (/^\s/ || /^\-/ || /^\+/)) {
+		display_coloured_data($old_linenumber, $new_linenumber,
+				      $offset, 1, $max_digit_width, $_, "",
+				      "", "", 0, 0, 0, 0, $topic,
+				      $COLOURED_MODE, 1, "");
+		$old_linenumber++ if /^\s/ || /^\-/;
+		$new_linenumber++ if /^\s/ || /^\+/;
+		next;
+	    }
+
 	    if (/^\s(.*)$/) {
 		# An unchanged line, output it and anything pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
@@ -2212,8 +2312,10 @@ sub view_file ($$$) {
 	    } elsif (/^@@/) {
 		# Start of next diff block, exit from loop and flush anything
 		# pending.
-		flush_monospaced_lines($topic, $new, \$linenumber,
-				       $max_digit_width, $max_line_length);
+		if ($new != $BOTH_FILES) {
+		    flush_monospaced_lines($topic, $new, \$linenumber,
+					   $max_digit_width, $max_line_length);
+		}
 		$patch_line = $_;
 		last;
 	    } else {
@@ -2223,22 +2325,40 @@ sub view_file ($$$) {
 
 	$chunk_end = $next_chunk_end;
 
-	if (! defined $_) {
-	    # Reached the end of the patch file.  Flush anything pending.
-	    flush_monospaced_lines($topic, $new, \$linenumber,
-				   $max_digit_width, $max_line_length);
+	if (!defined $_) {
+	    if ($new != $BOTH_FILES) {
+		# Reached the end of the patch file.  Flush anything pending.
+		flush_monospaced_lines($topic, $new, \$linenumber,
+				       $max_digit_width, $max_line_length);
+	    }
 	    last;
 	}
     }
 
     # Display the last part of the file.
     for (my $i = $chunk_end; $i <= $#cvs_filedata; $i++, $linenumber++) {
-	print render_monospaced_line($topic, $linenumber, $cvs_filedata[$i],
-				     -1, $max_digit_width, $max_line_length,
-				     "");
+	if ($new == $BOTH_FILES) {
+	    display_coloured_data($old_linenumber, $new_linenumber, -1, 1,
+				  $max_digit_width, " $cvs_filedata[$i]",
+				  "", "", "", 0, 0, 0, 0, $topic,
+				  $COLOURED_MODE, 1, "");
+	    $old_linenumber++;
+	    $new_linenumber++;
+	}
+	else {
+	    print render_monospaced_line($topic, $linenumber,
+					 $cvs_filedata[$i], -1,
+					 $max_digit_width, $max_line_length,
+					 "");
+	}
     }
 
-    print "</PRE>\n";
+    if ($new == $BOTH_FILES) {
+	print $query->end_table();
+    }
+    else {
+	print "</PRE>\n";
+    }
     print $query->end_html();
 }
 
