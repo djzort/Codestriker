@@ -19,6 +19,14 @@ Once all reviewers have finished, the author has all
 review comments available in a structured fashion, as
 opposed to a pile of unstructured emails.
 
+Special support is provided for integration with a CVS
+repository, for the display of coloured diffs and for the
+ability to view original and new files in their entirety
+to assist in the review process.  Codestriker can be
+optionally linked with a bug tracking system, such as
+bugzilla, and a CVS web viewing system, such as CVS web to
+obtain further information necessary to complete a review.
+
 A tutorial on how to use codestriker can be seen from
 http://codestriker.sourceforge.net
 

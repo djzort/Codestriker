@@ -16,6 +16,9 @@ Version 1.4:
   description of the form "[Bb][Uu][Gg]\s*\d+" is also rendered to the
   appropriate bug tracking page.
 
+* Comment emails sent now include the filename and line number
+  (where possible) that the comment was made against.
+
 * Creation date for a topic is shown in the view topic screen.
 
 * Can download topic text as "text/plain" from view topic screen.

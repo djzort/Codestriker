@@ -18,8 +18,8 @@
 	</p>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.3.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.3.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -29,9 +29,7 @@
 	<p>
 	    Codestriker is a perl CGI script which is used for
 	    performing code reviews in a collaborative fashion as
-	    opposed to using unstructured emails.  Special support is
-	    provided linking CVS repositories and coloured diffs (see
-	    below).
+	    opposed to using unstructured emails.
 	</p>
 	<p>
 	    Authors create code review topics, where the nominated
@@ -48,6 +46,16 @@
 	    review comments available in a structured fashion, as
 	    opposed to a pile of unstructured emails.
 	</p>
+	<p>
+	    Special support is provided for integration with a CVS
+	    repository, for the display of coloured diffs and for the
+	    ability to view original and new files in their entirety
+	    to assist in the review process.  Codestriker can be
+	    optionally linked with a bug tracking system, such as
+	    bugzilla, and a CVS web viewing system, such as CVS web to
+	    obtain further information necessary to complete a review.
+        </p>
+
 	<h2>Example usage</h2>
 	<p>
 	    This example will show how a new topic is created, how it
@@ -60,30 +68,35 @@
 	</p>
 	<p>
 	    <a href="create.jpg">
-	       <img src="create_thumb.jpg" width="150" height="176"
+	       <img src="create_thumb.jpg" width="150" height="175"
 	       alt="Create review">
 	    </a>
 	</p>
 	<p>
-	    The <code>Topic title</code> field provides a summary of
-	    the new topic.  The <code>Topic description</code>
+	    The "Topic title" field provides a summary of
+	    the new topic.  The "Topic description"
 	    provides a description as to what the code changes are,
 	    which needs to be informative, as this is the text that
 	    is sent with the topic creation email.
 	</p>
 	<p>
 	    The actual code itself is entered either pasted inline
-	    into the <code>Topic text</code> form element, or uploaded
+	    into the "Topic text" form element, or uploaded
 	    from a file.  In practical use, often the text contains
 	    the output of the command "cvs diff -uN" or
 	    simply "diff -ruN", which will effectively shows
-	    the proposed code differences.  For the review of new
-	    files, the file itself could simply be uploaded.
+	    the proposed code differences.
 	</p>
+        <p>
+	    The "Bug number" field is optional, and is used to link
+	    the review to a bug in your bug tracking system, such as
+	    Bugzilla.  If the bug number is entered, a link will be
+	    present in the view topic screen.
+        </p>
 	<p>
 	    The following three email address fields are stored into a
 	    cookie, as they will often be used again for subsequent
-	    topic creations.  The <code>email address</code> is also
+	    topic creations.  The "email address" is also
 	    used when submitting comments.  Once the submit button is
 	    pressed, an email is sent to all of the email addresses
 	    indicating that a new topic has been created, with the URL
@@ -92,13 +105,19 @@
 	<h3>Viewing the topic</h3>
 	<p>
 	    When viewing a topic, the title appears at the top,
-	    followed by the email addresses of the people involved,
-	    and what their respective roles are.  The topic
-	    description follows.  The number of comments made against
-	    this topic is then shown.  The code text is then shown in
-	    its entirety, followed by the submitted comments.
-	    Clicking on <code>comments</code> will take the browser to
-	    the start of the comments.
+	    followed by the creation date of the topic, and a link to
+	    the bug page that this topic fixes (ie, a view bug page in
+	    bugzilla).  This is followed by the email addresses of the
+	    people involved, and what their respective roles are.  The
+	    size of the topic text is then shown, to indicate a rough
+	    size of the review.  The topic description follows.  The
+	    number of comments made against this topic is then shown.
+	    If required, the actual topic text can be downloaded (ie,
+	    if it is a patch which later needs to be applied).  The
+	    code text is then shown in its entirety, followed by the
+	    submitted comments.  Clicking on "comments" will take the
+	    browser to the start of the comments at the end of the
+	    page.
 	</p>
 	<p>
 	    A comment can be made against any line by simply clicking
@@ -111,7 +130,7 @@
 	</p>
 	<p>
 	    <a href="view.jpg">
-	        <img src="view_thumb.jpg" width="150" height="176"
+	        <img src="view_thumb.jpg" width="150" height="188"
 		     alt="View review 1"></a>
 	</p>
 	<p>
@@ -132,15 +151,15 @@
 	<p>
 	    A few lines are shown indicating the code of interest.
 	    The line marked in red is the line the comment is being
-	    made against.  Clicking on <code>increase</code> or
-	    <code>decrease</code> will increase or decrease the the
+	    made against.  Clicking on "increase" or
+	    "decrease" will increase or decrease the the
 	    number of surrounding lines respectively.  If cookies are
 	    enabled in your browser, the email address in the form
 	    will be remembered, so that you don't need to enter it in
 	    for all subsequent comments.
 	</p>
 	<p>
-	    The <code>comments</code> field is used for entered in
+	    The "comments" field is used for entered in
 	    your comments.  The submit button will lodge your comment,
 	    and take you back to the viewing page, centered on the
 	    line you just made your comment against, as shown in the
@@ -166,49 +185,45 @@
 	</p>
 	<p>
 	   <a href="view3.jpg">
-	      <img src="view3_thumb.jpg" width="150" height="153"
+	      <img src="view3_thumb.jpg" width="150" height="121"
 	           alt="View coloured diff"></a>
 	</p>
 	<p>
-	   Although not shown in the above screenshots, colour diff
-	   mode also displays a table of contents, which indicates
-	   which files are in the review.
-	</p>
-	<h3>CVS integration</h3>
+	   At the start of a page is a "table of contents", which
+	   indicates which files are a part of the review, and their
+	   associated revision numbers if applicable.  Clicking on the
+	   filenames will direct the browser directly to that section
+	   of the review.  Each file has a header of the form "Diff
+	   for &lt;filename&gt; ...".  The filename is linked to the
+	   associated CVS viewing page (such as CVS web) for that
+	   file.
+        </p>
 	<p>
-	   Typically, a CVS repository is used for managing a team's
-	   source codes.  Developers create reviews by issuing the
-	   command: "cvs diff -uN", which contains all of
-	   the changes the developer has made.
-	</p>	
-	<p>
-	   Codestriker can be configured to integrate with a CVS
-	   repository.  Once it knows the location of the CVS
-	   repository (via a configuration parameter in the script),
-	   the text of each diff segment (regardless of which viewing
-	   mode is used) will have a hyperlink, which if clicked, will
-	   create a popup window which contains the appropriate file
-	   taken from CVS, centered on the line in question.  This has
-	   proved to be very useful when reviewing diffs which
-	   don't provide enough contextual information to the
-	   reviewer.  Click on the image below to enlarge it.
+	   Each diff block is titled with a line heading.  Clicking on
+	   the left line heading will open a new popup window with the
+	   contents of the original file, located at that line number.
+	   Clicking on the right line heading will open a new popup
+	   window with the contents of the new file, located at line
+	   number.  This capability can assist greatly when doing
+	   complicated reviews, where a diff segment doesn't provide
+	   enough contextual information.  An example of a popup
+	   window can be seen in the screenshot below.  Note those
+	   lines in the popup which refer to the topic text will be
+	   hyperlinked to the add comment page, which will be loaded
+	   in the main browser.  Click on the image below to enlarge
+	   it.
 	</p>
         <p>
 	   <a href="screenshot.jpg">
 	      <img src="screenshot_thumb.jpg" width="200" height="160"
 	           alt="CVS integration"></a>
 	</p>
-	<p>
-	   Although not shown in the above screen shots, there is CVS
-	   integration for textual mode as well.  Each diff block hat
-	   demarcated with the "@@ ... @@" characters will also be
-	   hyperlinked to the CVS repository.
-	</p>
+
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.3.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.3.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -247,7 +262,11 @@
 	<p><font color="red">
 	    Read through the configuration options within
             codestriker.pl to ensure all the settings are correct for
-            your site.</font>
+            your site.</font>  Among other things, these include
+	    settings such as the location of your CVS repository, the
+	    base URL to your bug tracking system, and the base URL to
+	    your CVS viewing system.  Note these settings can be left
+	    blank, they aren't required in order to use Codestriker.
         </p> 
 	<p>
 	    For deployments outside an intranet, I would suggest using
@@ -267,7 +286,7 @@
 	<p>
 	    Please send me an email
 	   <A HREF="mailto:sitsNOSPAM@users.sourceforgeNOSPAM.net">
-		sitsNOSPAM@users.sourceforgeNOSPAM.net</A><P>
+		sitsNOSPAM@users.sourceforgeNOSPAM.net</A>
 		for your comments or
 		submit them directly on the sourceforge project page
 	    <a href="http://sourceforge.net/projects/codestriker">

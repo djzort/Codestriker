@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.3
+# Version 1.4
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -62,7 +62,13 @@ $cvsrep = "";
 # argument and filename is appended to the end of this string.
 $cvscmd = "/usr/bin/cvs -d ${cvsaccess}${cvsrep} co -p";
 
-# Set the CVS_RSH environment variable appropriately.  The indentity.pub
+# The location of the codestriker.css file on this site.
+$codestriker_css = "/codestriker.css";
+
+# The default viewing mode to use in the URL when creating a topic.
+$default_topic_create_mode = $NORMAL_MODE;
+
+# Set the CVS_RSH environment variable appropriately.  The indentity
 # file refers to a user which has ssh access to the above CVS repository.
 # If the repository is local, this setting won't be required, as $cvsrep will
 # just be the local pathname.  Make sure this is in a secure location.
@@ -74,12 +80,6 @@ $ENV{'PATH'} = "/bin:/usr/bin";
 
 # Don't allow posts larger than 500K.
 $CGI::POST_MAX=1024 * 500;
-
-# The location of the codestriker.css file on this site.
-$codestriker_css = "/codestriker.css";
-
-# The default mode to use in the URL when creating a topic.
-$default_topic_create_mode = $NORMAL_MODE;
 
 # Background colours for normal and diff modes.
 $background_col = "#ffffff";
@@ -261,13 +261,14 @@ sub normal_mode_finish($$);
 sub coloured_mode_start($);
 sub coloured_mode_finish($$);
 sub print_coloured_table();
+sub get_file_linenumber ($$$$$);
 sub main();
 
 # Call main to kick things off.
 main;
 
 sub main() {
-    # Retrieve he CGI parameters.
+    # Retrieve the CGI parameters.
     $query = new CGI;
     my $topic = $query->param('topic');
     my $line = $query->param('line');
@@ -1138,27 +1139,8 @@ sub display_data ($$$$$$$$$$$$$) {
     }
     print render_linenumber($line, $topic, $mode);
 
-    # Now render the data.  If we are linked to a CVS repository, check if
-    # a link need to be created for viewing the original file.  If the link
-    # is pressed, open a new window, containing the contents of the original
-    # file.
-    if ($current_file ne "" &&
-	$current_file_revision ne "" &&
-	$current_old_file_linenumber ne "" &&
-	$current_new_file_linenumber ne "")
-    {
-	my $cvs_url =
-	    $query->url() .
-	    build_view_file_url($topic, $current_file, 0,
-				$current_old_file_linenumber);
-	$data =~ /^\@\@ \-([\d,]+) (.*)$/;
-	
-	my $js = "javascript: myOpen('$cvs_url','CVS')";
-	
-	print " @@ ", $query->a({href=>"$js"}, "-$1"), " $2\n";
-    } else {
-	print " $data\n";
-    }
+    # Now render the data.
+    print " $data\n";
 }
 
 # Display a line for coloured data.  Note special handling is done for
@@ -1501,8 +1483,25 @@ sub submit_comments ($$$$$$) {
     }
     print $MAIL "Bcc: $email\n";
     print $MAIL "Subject: [REVIEW] Topic \"$document_title\" comment added by $email\n\n";
-    print $MAIL "$email added a comment to Topic \"$document_title\".\n";
+    print $MAIL "$email added a comment to Topic \"$document_title\".\n\n";
     print $MAIL "URL: $topic_url\n\n";
+
+    # Try to determine what file and line number this comment refers to.
+    my $filename = "";
+    my $file_linenumber = 0;
+    my $accurate = 0;
+    get_file_linenumber($topic, $line, \$filename, \$file_linenumber,
+			\$accurate);
+    if ($filename ne "") {
+	if ($file_linenumber > 0) {
+	    print $MAIL "File: $filename" . ($accurate ? "" : " around") .
+		" line $file_linenumber.\n\n";
+	}
+	else {
+	    print $MAIL "File: $filename\n\n";
+	}
+    }
+
     print $MAIL "Context:\n";
     print $MAIL "$email_hr\n\n";
     print $MAIL get_context($line, $topic, $email_context, 0), "\n";
@@ -2150,3 +2149,109 @@ sub view_file ($$$) {
     print $query->end_html();
 }
 
+# Given a topic and topic line number, try to determine the line
+# number of the new file it corresponds to.  For topic lines which
+# were made against '+' lines or unchanged lins, this will give an
+# accurate result.  For other situations, the number returned will be
+# approximate.  The results are returned in $filename_ref,
+# $linenumber_ref and $accurate_ref references.
+sub get_file_linenumber ($$$$$)
+{
+    my ($topic, $topic_linenumber,
+	$filename_ref, $linenumber_ref, $accurate_ref) = @_;
+    
+    # Check if this topic has a filetable.
+    if (!read_filetable_file($topic)) {
+	$$filename_ref = "";
+	return;
+    }
+    
+    # Find the appropriate file the $topic_linenumber refers to.
+    my $diff_limit = -1;
+    my $index;
+    for ($index = 0; $index <= $#filetable_filename; $index++) {
+	last if ($filetable_offset[$index] > $topic_linenumber);
+    }
+
+    # Check if the comment was made against a diff header.
+    if ($index <= $#filetable_offset) {
+	my $diff_header_size;
+	if ($filetable_revision[$index] eq $ADDED_REVISION ||
+	    $filetable_revision[$index] eq $REMOVED_REVISION) {
+	    # Added or removed file.
+	    $diff_header_size = 6;
+	}
+	elsif ($filetable_revision[$index] eq $PATCH_REVISION) {
+	    # Patch file
+	    $diff_header_size = 3;
+	}
+	else {
+	    # Normal CVS diff header.
+	    $diff_header_size = 7;
+	}
+
+	if ( ($topic_linenumber >=
+	      $filetable_offset[$index] - $diff_header_size) &&
+	     ($topic_linenumber <= $filetable_offset[$index]) ) {
+	    $$filename_ref = $filetable_filename[$index];
+	    $$linenumber_ref = -1;
+	    $$accurate_ref = 0;
+	    return;
+	}
+    }
+    $index--;
+
+    # Couldn't find a matching linenumber.
+    if ($index < 0 || $index > $#filetable_filename) {
+	$$filename_ref = "";
+	return;
+    }
+
+    # Open the diff file that is contained within this range.
+    if (!open(PATCH, "$datadir/$topic/diff.$index")) {
+	$$filename_ref = "";
+	return;
+    }
+
+    # Go through the patch file until we reach the topic linenumber of
+    # interest.
+    my $accurate_line = 0;
+    my $newfile_linenumber = 0;
+    my $current_topic_linenumber;
+    for ($current_topic_linenumber = $filetable_offset[$index];
+	 defined($_=<PATCH>) && $current_topic_linenumber <= $topic_linenumber;
+	 $current_topic_linenumber++) {
+	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@$/) {
+	    # Matching diff header, record what the current linenumber is now
+	    # in the new file.
+	    $newfile_linenumber = $1 - 1;
+	    $accurate_line = 0;
+	}
+	elsif (/^\s.*$/) {
+	    # A line with no change.
+	    $newfile_linenumber++;
+	    $accurate_line = 1;
+	}
+	elsif (/^\+.*$/) {
+	    # A line corresponding to the new file.
+	    $newfile_linenumber++;
+	    $accurate_line = 1;
+	}
+	elsif (/^\-.*$/) {
+	    # A line corresponding to the old file.
+	    $accurate_line = 0;
+	}
+    }
+
+    if ($current_topic_linenumber >= $topic_linenumber) {
+	# The topic linenumber was found.
+	$$filename_ref = $filetable_filename[$index];
+	$$linenumber_ref = $newfile_linenumber;
+	$$accurate_ref = $accurate_line;
+    }
+    else {
+	# The topic linenumber was not found.
+	$$filename_ref = "";
+    }
+    return;
+}
