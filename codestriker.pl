@@ -453,7 +453,42 @@ sub generate_header($$$$$$) {
 				-expires=>'+10y',
 				-path=>"$cookie_path",
 				-value=>\%cookie_value);
-    print $query->header(-cookie=>$cookie);
+
+    # This logic is taken from cvsweb.  There is _reason_ behind this logic...
+    # Basically mozilla supports gzip regardless even though some versions
+    # don't state this.  IE claims it does, but doesn't support it.  Using
+    # the gzip binary doesn't work apparently under mod_perl.
+    
+    # Determine if the client browser is capable of handled compressed HTML.
+    eval {
+	require Compress::Zlib;
+    };
+    $has_zlib = !$@;
+    my $browser = $ENV{'HTTP_USER_AGENT'}; 
+    my $can_compress = (((defined($ENV{'HTTP_ACCEPT_ENCODING'})
+			  && $ENV{'HTTP_ACCEPT_ENCODING'} =~ m|gzip|)
+			 || $browser =~ m%^Mozilla/3%)
+			&& ($browser !~ m/MSIE/)
+			&& !(defined($ENV{'MOD_PERL'}) && !$has_zlib));
+    my $compressed = 0;
+
+    # Output the appropriate header if compression is allowed to the client.
+    if ($can_compress &&
+	($has_zlib || ($gzip ne "" && open(GZIP, "| $gzip -1 -c")))) {
+	print $query->header(-cookie=>$cookie,
+			     -content_encoding=>'x-gzip',
+			     -vary=>'Accept-Encoding');
+
+	# Flush header output, and switch STDOUT to GZIP.
+	$| = 1; $| = 0;
+	if ($has_zlib) {
+	    tie *GZIP, __PACKAGE__, \*STDOUT;
+	}
+	select(GZIP);
+	$compressed = 1;
+    } else {
+	print $query->header(-cookie=>$cookie);
+    }
 
     my $title = "Codestriker";
     if (defined $topic_title && $topic_title ne "") {
@@ -466,6 +501,10 @@ sub generate_header($$$$$$) {
 			     -style=>{src=>"$codestriker_css"},
 			     -link=>'blue',
 			     -vlink=>'purple');
+
+    # Write a comment indicating if this was compressed or not.
+    print "\n<!-- Source was" . (!$compressed ? " not " : "") .
+	" sent compressed. -->\n";
 
     # Write the simple open window javascript method.
     print <<EOF;
@@ -2547,4 +2586,56 @@ sub get_file_linenumber ($$$$$)
 	$$filename_ref = "";
     }
     return;
+}
+
+# Implement a gzipped file handle via the Compress:Zlib compression
+# library.  This code was stolen from CVSweb.
+
+sub MAGIC1() { 0x1f }
+sub MAGIC2() { 0x8b }
+sub OSCODE() { 3    }
+
+sub TIEHANDLE {
+	my ($class, $out) = @_;
+	my $level = Compress::Zlib::Z_BEST_COMPRESSION();
+	my $wbits = -Compress::Zlib::MAX_WBITS();
+	my ($d) = Compress::Zlib::deflateInit(-Level => $level,
+					      -WindowBits => $wbits)
+	    or return undef;
+	my ($o) = {
+		handle => $out,
+		dh => $d,
+		crc => 0,
+		len => 0,
+	};
+	my ($header) = pack("c10", MAGIC1, MAGIC2,
+			    Compress::Zlib::Z_DEFLATED(),
+			    0,0,0,0,0,0, OSCODE);
+	print {$o->{handle}} $header;
+	return bless($o, $class);
+}
+
+sub PRINT {
+	my ($o) = shift;
+	my ($buf) = join(defined $, ? $, : "",@_);
+	my ($len) = length($buf);
+	my ($compressed, $status) = $o->{dh}->deflate($buf);
+	print {$o->{handle}} $compressed if defined($compressed);
+	$o->{crc} = Compress::Zlib::crc32($buf, $o->{crc});
+	$o->{len} += $len;
+	return $len;
+}
+
+sub CLOSE {
+	my ($o) = @_;
+	return if !defined( $o->{dh});
+	my ($buf) = $o->{dh}->flush();
+	$buf .= pack("V V", $o->{crc}, $o->{len});
+	print {$o->{handle}} $buf;
+	undef $o->{dh};
+}
+
+sub DESTROY {
+	my ($o) = @_;
+	CLOSE($o);
 }

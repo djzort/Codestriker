@@ -1,3 +1,11 @@
+Version 1.4.4:
+
+* Took the gzip compression code from CVSweb and plonked it in.  Works
+  nicely with Mozilla/Netscape/Konqueror.  If the Compress::Zlib
+  library is installed, that is used for compression, otherwise the
+  "gzip" executable is used (although this isn't an option if you are
+  running this script within mod_perl).
+
 Version 1.4.3:
 
 * New popup viewing mode "parallel".  In addition to being able to
