@@ -536,7 +536,7 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my $text_description_part = "lower(topic.description) LIKE ?";
     my $text_body_part = "lower(topic.document) LIKE ?";
     my $text_filename_part = "lower(topicfile.filename) LIKE ?";
-    my $text_comment_part = "lower(comment.commentfield) LIKE ?";
+    my $text_comment_part = "lower(commentdata.commentfield) LIKE ?";
 
     # Build up the base query.
     my $query =
@@ -549,8 +549,8 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     # Join with the comment table if required - GACK!
     if ($stext ne "" && $scomments) {
 	$query .= 'LEFT OUTER JOIN commentstate ON ' .
-	    'topic.id = commentstate.topicid LEFT OUTER JOIN comment ON ' .
-	    'commentstate.id = comment.commentstateid ';
+	    'topic.id = commentstate.topicid LEFT OUTER JOIN commentdata ON ' .
+	    'commentstate.id = commentdata.commentstateid ';
     }
 
     # Join with the file table if required.
@@ -671,7 +671,7 @@ sub delete($) {
     my $select = $dbh->prepare_cached('SELECT id FROM commentstate ' .
 				      'WHERE topicid = ?');
     my $delete_comments =
-	$dbh->prepare_cached('DELETE FROM comment ' .
+	$dbh->prepare_cached('DELETE FROM commentdata ' .
 			     'WHERE commentstateid = ?');
     my $delete_commentstate =
 	$dbh->prepare_cached('DELETE FROM commentstate ' .

@@ -11,22 +11,15 @@
 package Codestriker::DB::DBI;
 
 use strict;
-use DBI;
 use Codestriker;
+use Codestriker::DB::Database;
 
-# Retrieve a connection to the codestriker database.
+# Retrieve a connection to the codestriker database for the specified
 sub get_connection($) {
     my ($type) = @_;
 
-    # The latest versions of MySQL do support transaction control, but for
-    # now its easiest to disable it.  Would be nice to know how to do this in
-    # a better fashion.
-    my $autocommit = ($Codestriker::db =~ /^DBI:mysql/) ? 1 : 0;
-
-    return DBI->connect($Codestriker::db, $Codestriker::dbuser,
-			$Codestriker::dbpasswd,
-			{AutoCommit=>$autocommit, RaiseError=>1})
-	|| die "Couldn't connect to database: " . DBI::errstr;
+    my $database = Codestriker::DB::Database->get_database();
+    return $database->get_connection();
 }
 
 # Release a connection, and if $success is true and this is a transaction
@@ -39,7 +32,7 @@ sub release_connection($$$) {
     if ($connection->{AutoCommit} == 0) {
 	$success ? $connection->commit : $connection->rollback;
     }
-	    
+
     $connection->disconnect;
 }
 

@@ -27,6 +27,8 @@ sub new {
     $self->{date} = Codestriker->get_timestamp(time);
     $self->{state} = 0;
     $self->{version} = 0;
+    $self->{db_creation_ts} = "";
+    $self->{db_modified_ts} = "";
     $self->{creation_ts} = "";
     $self->{modified_ts} = "";
     
@@ -107,7 +109,7 @@ sub create($$$$$$$$$) {
 	
 	# Create the comment record.
 	my $insert_comment =
-	    $dbh->prepare_cached('INSERT INTO comment ' .
+	    $dbh->prepare_cached('INSERT INTO commentdata ' .
 				 '(commentstateid, '.
 				 'commentfield, author, creation_ts) ' .
 				 'VALUES (?, ?, ?, ?)');
@@ -129,8 +131,10 @@ sub create($$$$$$$$$) {
     $self->{date} = $timestamp;
     $self->{state} = $state;
     $self->{version} = $version;
-    $self->{creation_ts} = $creation_ts;
-    $self->{modified_ts} = $timestamp;
+    $self->{db_creation_ts} = $creation_ts;
+    $self->{creation_ts} = Codestriker->format_timestamp($creation_ts);
+    $self->{db_modified_ts} = $timestamp;
+    $self->{modified_ts} = Codestriker->format_timestamp($timestamp);
         
     # get the filename, for the new comment.
     my $get_filename = $dbh->prepare_cached('SELECT filename ' .
@@ -163,10 +167,10 @@ sub read_authors
 
     # Retrieve all of the comment information for the specified topicid.
     my $select_comment =
-	$dbh->prepare_cached('SELECT distinct(comment.author) ' .
-			     'FROM comment, commentstate ' .
-			     'WHERE commentstate.topicid = ? ' .
-			     'AND commentstate.id = comment.commentstateid ');
+	$dbh->prepare_cached('SELECT distinct(commentdata.author) ' .
+			     'FROM commentdata, commentstate ' .
+			     'WHERE commentstate.topicid = ? AND ' .
+			     'commentstate.id = commentdata.commentstateid ');
                              
     my $success = defined $select_comment;
     my $rc = $Codestriker::OK;
@@ -200,27 +204,27 @@ sub read_all_comments_for_topic($$) {
 
     # Retrieve all of the comment information for the specified topicid.
     my $select_comment =
-	$dbh->prepare_cached('SELECT comment.commentfield, ' .
-			     'comment.author, ' .
+	$dbh->prepare_cached('SELECT commentdata.commentfield, ' .
+			     'commentdata.author, ' .
 			     'commentstate.fileline, ' .
 			     'commentstate.filenumber, ' .
 			     'commentstate.filenew, ' .
-			     'comment.creation_ts, ' .
+			     'commentdata.creation_ts, ' .
 			     'commentstate.state, ' .
 			     'topicfile.filename, ' .
 			     'commentstate.version, ' .
 			     'commentstate.id, ' .
 			     'commentstate.creation_ts, ' .
 			     'commentstate.modified_ts ' .
-			     'FROM comment, commentstate, topicfile ' .
+			     'FROM commentdata, commentstate, topicfile ' .
 			     'WHERE commentstate.topicid = ? ' .
-			     'AND commentstate.id = comment.commentstateid ' .
+			     'AND commentstate.id = commentdata.commentstateid ' .
 			     'AND topicfile.topicid = commentstate.topicid ' .
 			     'AND topicfile.sequence = commentstate.filenumber ' .
 			     'ORDER BY ' .
 			     'commentstate.filenumber, ' .
 			     'commentstate.fileline, ' .
-			     'comment.creation_ts');
+			     'commentdata.creation_ts');
     my $success = defined $select_comment;
     my $rc = $Codestriker::OK;
     $success &&= $select_comment->execute($topicid);
@@ -241,7 +245,9 @@ sub read_all_comments_for_topic($$) {
 	    $comment->{filename} = $data[7];
 	    $comment->{version} = $data[8];
 	    $comment->{id} = $data[9];
+	    $comment->{db_creation_ts} = $data[10];
 	    $comment->{creation_ts} = Codestriker->format_timestamp($data[10]);
+	    $comment->{db_modified_ts} = $data[11];
 	    $comment->{modified_ts} = Codestriker->format_timestamp($data[11]);
 	    push @results, $comment;
 	}
@@ -341,10 +347,10 @@ sub change_state($$) {
     if ($new_stateid != $self->{state}) {
     	$self->{version} = $self->{version} + 1;
         $self->{state} = $new_stateid;
-	$self->{modified_ts} = $timestamp;
+	$self->{modified_ts} = Codestriker->format_timestamp($timestamp);
 	$success &&= $update_comments->execute($self->{version},
  					       $self->{state},
-					       $self->{creation_ts},
+					       $creation_ts,
 					       $timestamp,
 					       $self->{topicid}, 
                                                $self->{fileline},

@@ -147,11 +147,17 @@ if (%missing) {
 eval("use Cwd");
 eval("use File::Path");
 eval("use lib '../lib'");
-eval("use Codestriker::DB::DBI");
+eval("use Codestriker::DB::Database");
+eval("use Codestriker::DB::Column");
+eval("use Codestriker::DB::Table");
+eval("use Codestriker::DB::Index");
 eval("use Codestriker::Action::SubmitComment");
 eval("use Codestriker::Repository::RepositoryFactory");
 eval("use Codestriker::FileParser::Parser");
 eval("use Codestriker::FileParser::UnknownFormat");
+
+use lib '../lib';
+use Codestriker::DB::Database;
 
 # Set this variables, to avoid compilation warnings below.
 $Codestriker::COMMENT_SUBMITTED = 0;
@@ -161,241 +167,218 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 Codestriker->initialise(cwd() . '/..');
 
 # Obtain a database connection.
-my $dbh = Codestriker::DB::DBI->get_connection();
+my $database = Codestriker::DB::Database->get_database();
+my $dbh = $database->get_connection();
 
-# Record of all of the table definitions which need to be created.
-my %table;
+# Convenience methods and variables for creating table objects.
+my $TEXT = $Codestriker::DB::Column::TYPE->{TEXT};
+my $VARCHAR = $Codestriker::DB::Column::TYPE->{VARCHAR};
+my $INT32 = $Codestriker::DB::Column::TYPE->{INT32};
+my $INT16 = $Codestriker::DB::Column::TYPE->{INT16};
+my $DATETIME = $Codestriker::DB::Column::TYPE->{DATETIME};
+my $FLOAT = $Codestriker::DB::Column::TYPE->{FLOAT};
+sub col { return Codestriker::DB::Column->new(@_); }
+sub dbindex { return Codestriker::DB::Index->new(@_); }
+sub table { return Codestriker::DB::Table->new(@_); }
 
-# Record of index statements required.
-my %index;
+# The topic table.
+my $topic_table =
+  table(name => "topic",
+	columns => [col(name=>"id", type=>$INT32, pk=>1, autoincr=>1),
+		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"title", type=>$VARCHAR, length=>255),
+		    col(name=>"description", type=>$TEXT),
+		    col(name=>"document", type=>$TEXT),
+		    col(name=>"state", type=>$INT16),
+		    col(name=>"creation_ts", type=>$DATETIME),
+		    col(name=>"modified_ts", type=>$DATETIME),
+		    col(name=>"version", type=>$INT32),
+		    col(name=>"repository", type=>$TEXT, mandatory=>0),
+		    col(name=>"projectid", type=>$INT32)
+		   ],
+	indexes => [dbindex(name=>"author_idx", column_names=>["author"])]);
 
-# The database type for storing topic text.  It needs to support large
-# sizes.  By default, this is "text", which is fine for recent versions of
-# PostgreSQL.  For MySQL, this needs to be "mediumtext".
-my $text_type = "text";
-if ($Codestriker::db =~ /^DBI:mysql/i) {
-    $text_type = "mediumtext";
-}
-
-# The database type for a timestamp.  For MySQL and PostgreSQL, this is
-# "timestamp", for ODBC, this is "datetime".
-my $timestamp_type = "timestamp";
-if ($Codestriker::db =~ /^DBI:odbc/i) {
-    $timestamp_type = "datetime";
-}
-
-# The commentstate table needs a unique id.  For MySQL, use an auto
-# incrementor, for PostgreSQL and other databases, use a sequence, and
-# for ODBC, use "IDENTITY".
-my $auto_increment = "default nextval('sequence')";
-if ($Codestriker::db =~ /^DBI:mysql/i) {
-    $auto_increment = "auto_increment";
-} elsif ($Codestriker::db =~ /^DBI:odbc/i) {
-    $auto_increment = "IDENTITY";
-}
-
-$table{topic} =
-    "id int NOT NULL,
-     author varchar(255) NOT NULL,
-     title varchar(255) NOT NULL,
-     description text NOT NULL,
-     document $text_type NOT NULL,
-     state smallint NOT NULL,
-     creation_ts $timestamp_type NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     version int NOT NULL,
-     repository text,
-     projectid int NOT NULL,
-     PRIMARY KEY (id)";
-
-$index{topic} = "CREATE INDEX author_idx ON topic(author)";
-
-# Holds information relating to how a topic has changed over time.  Only
-# changeable topic attributes are recorded in this table.
-$table{topichistory} =
-    "topicid int NOT NULL,
-     author varchar(255) NOT NULL,
-     title varchar(255) NOT NULL,
-     description text NOT NULL,
-     state smallint NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     version int NOT NULL,
-     repository text,
-     projectid int NOT NULL,
-     reviewers text NOT NULL,
-     cc text NOT NULL,
-     modified_by_user varchar(255) NOT NULL,
-     PRIMARY KEY (topicid, version)";
-
-$index{topichistory} =
-    "CREATE INDEX th_idx ON topichistory(topicid)";
-
+# The topichistory table.  Holds information relating to how a topic
+# has changed over time.  Only changeable topic attributes are
+# recorded in this table.
+my $topichistory_table =
+  table(name => "topichistory",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"title", type=>$VARCHAR, length=>255),
+		    col(name=>"description", type=>$TEXT, length=>255),
+		    col(name=>"state", type=>$INT16),
+		    col(name=>"modified_ts", type=>$DATETIME),
+		    col(name=>"version", type=>$INT32, pk=>1),
+		    col(name=>"repository", type=>$TEXT, mandatory=>0),
+		    col(name=>"projectid", type=>$INT32),
+		    col(name=>"reviewers", type=>$TEXT),
+		    col(name=>"cc", type=>$TEXT),
+		    col(name=>"modified_by_user", type=>$VARCHAR,length=>255)
+		   ],
+	indexes => [dbindex(name=>"th_idx", column_names=>["topicid"])]);
+	
 # Holds information as to when a user viewed a topic.
-$table{topicviewhistory} =
-    "topicid int NOT NULL,
-     email varchar(255) NOT NULL,
-     creation_ts $timestamp_type NOT NULL";
-
-$index{topicviewhistory} =
-    "CREATE INDEX tvh_idx ON topicviewhistory(topicid)";
+my $topicviewhistory_table =
+  table(name => "topicviewhistory",
+	columns => [col(name=>"topicid", type=>$INT32),
+		    col(name=>"email", type=>$VARCHAR, length=>255),
+		    col(name=>"creation_ts", type=>$DATETIME)
+		   ],
+	indexes => [dbindex(name=>"tvh_idx", column_names=>["topicid"])]);
 
 # Holds all of the metric data that is owned by a specific user on a specific 
 # topic. One row per metric. Metric data that is left empty does not get a row.
-$table{topicusermetric} =
-    "topicid int NOT NULL,
-     email varchar(255) NOT NULL,
-     metric_name varchar(80) NOT NULL,
-     value float NOT NULL,
-     PRIMARY KEY (topicid,email,metric_name)";
-
-$index{topicusermetric} = "CREATE INDEX tum_idx ON topicusermetric(topicid)";
+my $topicusermetric_table =
+  table(name => "topicusermetric",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"email", type=>$VARCHAR, length=>255, pk=>1),
+		    col(name=>"metric_name", type=>$VARCHAR, length=>80,pk=>1),
+		    col(name=>"value", type=>$FLOAT)
+		   ],
+	indexes => [dbindex(name=>"tum_idx",
+			    column_names=>["topicid", "email",
+					   "metric_name"])]);
 
 # Holds all of the metric data that is owned by a specific topic. One row per 
 # metric. Metric data that is empty does not get a row.
-$table{topicmetric} =
-    "topicid int NOT NULL,
-     metric_name varchar(80) NOT NULL,
-     value float NOT NULL,
-     PRIMARY KEY (topicid,metric_name)";
+my $topicmetric_table =
+  table(name => "topicmetric",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"metric_name", type=>$VARCHAR, length=>80,pk=>1),
+		    col(name=>"value", type=>$FLOAT)
+		   ],
+	indexes => [dbindex(name=>"tm_idx", column_names=>["topicid"])]);
 
-$index{topicmetric} = "CREATE INDEX tm_idx ON topicmetric(topicid)";
+# Hold a specific datum of column data entered by a specific user for a
+# specific line.
+my $commentdata_table =
+  table(name => "commentdata",
+	columns => [col(name=>"commentstateid", type=>$INT32),
+		    col(name=>"commentfield", type=>$TEXT),
+		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"creation_ts", type=>$DATETIME)
+		   ],
+	indexes => [dbindex(name=>"comment_idx",
+			    column_names=>["commentstateid"])]);
 
-$table{comment} =
-    "commentstateid int NOT NULL,
-     commentfield text NOT NULL,
-     author varchar(255) NOT NULL,
-     creation_ts $timestamp_type NOT NULL";
-
-$index{comment} = "CREATE INDEX comment_idx ON comment(commentstateid)";
-
-$table{commentstate} =
-    "id int NOT NULL $auto_increment,
-     topicid int NOT NULL,
-     fileline int NOT NULL,
-     filenumber int NOT NULL,
-     filenew smallint NOT NULL,
-     state smallint NOT NULL,
-     version int NOT NULL,
-     creation_ts $timestamp_type NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     PRIMARY KEY (id)";
-
-$index{commentstate} =
-    "CREATE INDEX commentstate_topicid_idx ON commentstate(topicid)";
-
+# Contains the state of a bunch of ocmments on a specific line of code.
+my $commentstate_table =
+  table(name => "commentstate",
+	columns => [col(name=>"id", type=>$INT32, autoincr=>1, pk=>1),
+		    col(name=>"topicid", type=>$INT32),
+		    col(name=>"fileline", type=>$INT32),
+		    col(name=>"filenumber", type=>$INT32),
+		    col(name=>"filenew", type=>$INT16),
+		    col(name=>"state", type=>$INT16),
+		    col(name=>"version", type=>$INT32),
+		    col(name=>"creation_ts", type=>$DATETIME),
+		    col(name=>"modified_ts", type=>$DATETIME)
+		   ],
+	indexes => [dbindex(name=>"commentstate_topicid_idx",
+			    column_names=>["topicid"])]);
+		    
 # Holds information relating to how a commentstate has changed over time.
 # Only changeable commentstate attributes are recorded in this table.
-$table{commentstatehistory} =
-    "id int NOT NULL,
-     state smallint NOT NULL,
-     version int NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     modified_by_user varchar(255) NOT NULL,
-     PRIMARY KEY (id, version)";
+my $commentstatehistory_table =
+  table(name => "commentstatehistory",
+	columns => [col(name=>"id", type=>$INT32, pk=>1),
+		    col(name=>"state", type=>$INT16),
+		    col(name=>"version", type=>$INT32, pk=>1),
+		    col(name=>"modified_ts", type=>$DATETIME),
+		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
+		    ]);
 
-$table{participant} =
-    "email varchar(255) NOT NULL,
-     topicid int NOT NULL,
-     type smallint NOT NULL,
-     state smallint NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     version int NOT NULL,
-     PRIMARY KEY (topicid, email, type)";
+# Indicate what participants there are in a topic.
+my $participant_table =
+  table(name => "participant",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"email", type=>$VARCHAR, length=>255, pk=>1),
+		    col(name=>"type", type=>$INT16, pk=>1),
+		    col(name=>"state", type=>$INT16),
+		    col(name=>"modified_ts", type=>$DATETIME),
+		    col(name=>"version", type=>$INT32)
+		   ],
+	indexes => [dbindex(name=>"participant_tid_idx",
+			    column_names=>["topicid"])]);
 
-$index{participant} =
-    "CREATE INDEX participant_tid_idx ON participant(topicid)";
+# Indicate how bug records are related to topics.
+my $topicbug_table =
+  table(name => "topicbug",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"bugid", type=>$INT32, pk=>1)
+		   ],
+	indexes => [dbindex(name=>"topicbug_tid_idx",
+			    column_names=>["topicid"])]);
 
-$table{topicbug} =
-    "bugid int NOT NULL,
-     topicid int NOT NULL,
-     PRIMARY KEY (topicid, bugid)";
+# This table records which file fragments are associated with a topic.
+my $topicfile_table =
+  table(name => "topicfile",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"sequence", type=>$INT16, pk=>1),
+		    col(name=>"filename", type=>$TEXT),
+		    col(name=>"topicoffset", type=>$INT32),
+		    col(name=>"revision", type=>$VARCHAR, length=>100),
+		    col(name=>"binaryfile", type=>$INT16),
+		    col(name=>"diff", type=>$TEXT, mandatory=>0)
+		   ],
+	indexes => [dbindex(name=>"topicfile_tid_idx",
+			    column_names=>["topicid"])]);
 
-$index{topicbug} = "CREATE INDEX topicbug_tid_idx ON topicbug(topicid)";
+# This table records a specific "delta", which is a chunk of a diff file.
+my $delta_table =
+  table(name => "delta",
+	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
+		    col(name=>"file_sequence", type=>$INT16),
+		    col(name=>"delta_sequence", type=>$INT16, pk=>1),
+		    col(name=>"old_linenumber", type=>$INT32),
+		    col(name=>"new_linenumber", type=>$INT32),
+		    col(name=>"deltatext", type=>$TEXT),
+		    col(name=>"description", type=>$TEXT),
+		    col(name=>"repmatch", type=>$INT16)
+		   ],
+	indexes => [dbindex(name=>"delta_fid_idx",
+			    column_names=>["topicid"])]);
 
-$table{topicfile} =
-    "topicid int NOT NULL,
-     sequence smallint NOT NULL,
-     filename text NOT NULL,
-     topicoffset int NOT NULL,
-     revision varchar(100) NOT NULL,
-     binaryfile smallint NOT NULL,
-     diff $text_type,
-     PRIMARY KEY (topicid, sequence)";
+# This table records all projects in the system.
+my $project_table =
+  table(name => "project",
+	columns => [col(name=>"id", type=>$INT32, pk=>1, autoincr=>1),
+		    col(name=>"name", type=>$VARCHAR, length=>255),
+		    col(name=>"description", type=>$TEXT),
+		    col(name=>"creation_ts", type=>$DATETIME),
+		    col(name=>"modified_ts", type=>$DATETIME),
+		    col(name=>"version", type=>$INT32)
+		   ],
+	indexes => [dbindex(name=>"project_name_idx",
+			    column_names=>["name"])]);
 
-$index{topicfile} = "CREATE INDEX topicfile_tid_idx ON topicfile(topicid)";
-
-$table{delta} =
-    "topicid int NOT NULL,
-     file_sequence smallint NOT NULL,
-     delta_sequence smallint NOT NULL,
-     old_linenumber int NOT NULL,
-     new_linenumber int NOT NULL,
-     deltatext $text_type NOT NULL,
-     description $text_type NOT NULL,
-     repmatch smallint NOT NULL,
-     PRIMARY KEY (topicid, delta_sequence)";
-
-$index{delta} = "CREATE INDEX delta_fid_idx ON delta(topicid)";
-
-$table{project} =
-    "id int NOT NULL $auto_increment,
-     name varchar(255) NOT NULL,
-     description $text_type NOT NULL,
-     creation_ts $timestamp_type NOT NULL,
-     modified_ts $timestamp_type NOT NULL,
-     version int NOT NULL,
-     PRIMARY KEY (id)";
-
-$index{project} = "CREATE UNIQUE INDEX project_name_idx ON project(name)";
-
-$table{version} =
-    "id text NOT NULL,
-     sequence smallint NOT NULL";
-
-# Add a field to a specific table.  If the field already exists, then catch
-# the error and continue silently.
-sub add_field ($$$)
-{
-    my ($table, $field, $definition) = @_;
-    my $rc = 0;
-
-    # Perform this operation in a separate connection, so any errors won't
-    # affect the outer transaction.
-    my $local_dbh = Codestriker::DB::DBI->get_connection();
-    $local_dbh->{RaiseError} = 0;
-    $local_dbh->{PrintError} = 0;
-    if (! $local_dbh->do("ALTER TABLE $table ADD COLUMN $field $definition")) {
-	# Most likely, the column already exists, silently continue.
-    } else {
-	print "Added new field $field to table $table.\n";
-	$rc = 1;
-    }
-    Codestriker::DB::DBI->release_connection($local_dbh, 1);
-    return $rc;
-}
-
-# MySQL specific function adapted from Bugzilla.
-sub get_field_def ($$)
-{
-    my ($table, $field) = @_;
-    my $sth = $dbh->prepare("SHOW COLUMNS FROM $table");
-    $sth->execute;
-    
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[0] ne $field;
-        return $ref;
-    }
-}
+# Add all of the Codestriker tables into an array.
+my @tables = ();
+push @tables, $topic_table;
+push @tables, $topichistory_table;
+push @tables, $topicviewhistory_table;
+push @tables, $topicusermetric_table;
+push @tables, $topicmetric_table;
+push @tables, $commentdata_table;
+push @tables, $commentstate_table;
+push @tables, $commentstatehistory_table;
+push @tables, $participant_table;
+push @tables, $topicbug_table;
+push @tables, $topicfile_table;
+push @tables, $delta_table;
+push @tables, $project_table;
 
 # Move a table into table_old, create the table with the new definitions,
 # and create the indexes.
 sub move_old_table ($$)
 {
-    my ($tablename, $pkey_column) = @_;
-    
+    my ($table, $pkey_column) = @_;
+    my $tablename = $table->get_name();
+
+    # Rename the table with this name to another name.
     $dbh->do("ALTER TABLE $tablename RENAME TO ${tablename}_old") ||
 	die "Could not rename table $tablename: " . $dbh->errstr;
-
 
     # For PostgreSQL, need to drop and create the old primary key index
     # with a different name, otherwise the create table command below
@@ -408,41 +391,9 @@ sub move_old_table ($$)
 		 die "Could not create pkey index for old table: " .
 		 $dbh->errstr;
     }
-    
-    my $fields = $table{$tablename};
-    $dbh->do("CREATE TABLE $tablename (\n$fields\n)") ||
-	die "Could not create table $tablename: " . $dbh->errstr;
-    
-    if (defined $index{$tablename}) {
-	$dbh->do($index{$tablename}) ||
-	    die "Could not create indexes for table $tablename: " .
-	    $dbh->errstr;
-    
-    }
-}
 
-# Check if the specified column exists in the specified table.
-sub column_exists ($$)
-{
-    my ($tablename, $columnname) = @_;
-
-    my $local_dbh = Codestriker::DB::DBI->get_connection();
-    $local_dbh->{RaiseError} = 0;
-    $local_dbh->{PrintError} = 0;
-
-    my $stmt =
-	$local_dbh->prepare_cached("SELECT COUNT($columnname) " .
-				   "FROM $tablename");
-
-    my $rc = defined $stmt && $stmt->execute() ? 1 : 0;
-
-    if (defined $stmt) {
-	$stmt->finish();
-    }
-
-    Codestriker::DB::DBI->release_connection($local_dbh, 1);
-
-    return $rc;
+    # Now create the table.
+    $database->create_table($table);
 }
 
 # Create a new commentstate record with the specified data values.  Return
@@ -496,104 +447,55 @@ sub create_commentstate ($$$$)
     return $id;
 }
     
-# If we aren't using MySQL, create the sequence if required.
-if ($Codestriker::db !~ /^DBI:mysql/i) {
-    # Perform this operation in a separate connection, so any errors won't
-    # affect the outer transaction.
-    my $local_dbh = Codestriker::DB::DBI->get_connection();
-    $local_dbh->{RaiseError} = 0;
-    $local_dbh->{PrintError} = 0;
-    if (! $local_dbh->do("CREATE SEQUENCE sequence")) {
-	# Most likely, the sequence already exists, silently continue.
-    } else {
-	print "Created sequence\n";
-    }
-    Codestriker::DB::DBI->release_connection($local_dbh, 1);
+# Retrieve the tables which currently exist in the database, to determine
+# which databases are missing.
+my @existing_tables = $database->get_tables();
+
+foreach my $table (@tables) {
+    my $table_name = $table->get_name();
+    next if grep /^${table_name}$/i, @existing_tables;
+
+    print "Creating table " . $table->get_name() . "...\n";
+    $database->create_table($table);
 }
 
-# Create any missing tables.
-my @existing_tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
+# Make sure the database is committed before proceeding.
+$database->commit();
 
-foreach my $tablename (keys %table) {
-    next if grep /^$tablename$/, @existing_tables;
-    print "Creating table $tablename...\n";
-    
-    my $fields = $table{$tablename};
-    $dbh->do("CREATE TABLE $tablename (\n$fields\n)") ||
-	die "Could not create table $tablename: " . $dbh->errstr;
+# Add new fields to the topic field when upgrading old databases.
+$database->add_field('topic', 'repository', 'text');
+$database->add_field('topic', 'projectid', 'int');
 
-    if (defined $index{$tablename}) {
-	$dbh->do($index{$tablename}) ||
-	    die "Could not create indexes for table $tablename: " .
-	    $dbh->errstr;
-    }
-}
+# Migrate the "file" table to "topicfile", to avoid keyword issues with ODBC
+# and Oracle.  Make sure the error values of the database connection are
+# correctly set, to handle the most likely case where the "file" table doesn't
+# even exist.  
+$database->move_table("file", "topicfile");
+
+
+# Migrate the "comment" table to "commentdata", to avoid keyword issues with
+# ODBC and Oracle.  Make sure the error values of the database connection are
+# correctly set, to handle the most likely case where the "file" table doesn't
+# even exist.
+$database->move_table("comment", "commentdata");
 
 # If we are using MySQL, and we are upgrading from a version of the database
 # which used "text" instead of "mediumtext" for certain fields, update the
 # appropriate table columns.
 if ($Codestriker::db =~ /^DBI:mysql/i) {
     # Check that document field in topic is up-to-date.
-    my $ref = get_field_def("topic", "document");
+    my $ref = $database->get_field_def("topic", "document");
+    my $text_type = $database->_map_type($TEXT);
     if ($$ref[1] ne $text_type) {
 	print "Updating topic table for document field to be $text_type...\n";
 	$dbh->do("ALTER TABLE topic CHANGE document document $text_type") ||
 	    die "Could not alter topic table: " . $dbh->errstr;
     }
-
-    # Check that the diff field in file is up-to-date.
-    $ref = get_field_def("file", "diff");
-    if ($$ref[1] ne $text_type) {
-	print "Updating file table for diff field to be $text_type...\n";
-	$dbh->do("ALTER TABLE file CHANGE diff diff $text_type") ||
-	    die "Could not alter file table: " . $dbh->errstr;
-    }
 }
-
-# Make sure the database is committed before proceeding.
-Codestriker::DB::DBI->release_connection($dbh, 1);
-
-# Migrate the "file" table to "topicfile", to avoid keyword issues with ODBC.
-# Make sure the error values of the database connection are correctly set,
-# to handle the most likely case where the "file" table doesn't even exist.
-$dbh = Codestriker::DB::DBI->get_connection();
-$dbh->{RaiseError} = 0;
-$dbh->{PrintError} = 0;
-my $file_select = $dbh->prepare_cached("SELECT topicid, sequence, filename, " .
-				       "topicoffset, revision, binaryfile, " .
-				       "diff FROM file");
-if (defined $file_select && $file_select->execute()) {
-    print "Migrating \"file\" table to \"topicfile\"...\n";
-    my $file_insert = $dbh->prepare_cached("INSERT INTO topicfile " .
-					   "(topicid, sequence, filename, " .
-					   "topicoffset, revision, " .
-					   "binaryfile, diff) " .
-					   "VALUES (?, ?, ?, ?, ?, ?, ?)");
-    while (my ($topicid, $sequence, $filename, $topicoffset, $revision,
-	       $binaryfile, $diff) = $file_select->fetchrow_array()) {
-	if (! $file_insert->execute($topicid, $sequence, $filename,
-				    $topicoffset, $revision, $binaryfile,
-				    $diff)) {
-	    print "Problem migrating file table: $dbh->errstr\n";
-	    exit 1;
-	}
-    }
-    $file_select->finish();
-
-    # Now drop the old file table.
-    $dbh->do('DROP TABLE file');
-}
-Codestriker::DB::DBI->release_connection($dbh, 1);
-
-# Add appropriate fields to the database tables as things have evolved.
-$dbh = Codestriker::DB::DBI->get_connection();
-
-add_field('topic', 'repository', 'text');
-add_field('topic', 'projectid', 'int');
 
 # Determine if the comment and/or commentstate tables are old.
-my $old_comment_table = column_exists("comment", "line");
-my $old_commentstate_table = column_exists("commentstate", "line");
+my $old_comment_table = $database->column_exists("comment", "line");
+my $old_commentstate_table = $database->column_exists("commentstate", "line");
 
 if ($old_comment_table) {
     my %topicoffset_map;
@@ -648,7 +550,7 @@ if ($old_comment_table) {
 	   $stmt->fetchrow_array()) {
 	
 	# Update the associated row in the new comment table.
-	my $insert = $dbh->prepare_cached('INSERT INTO comment ' .
+	my $insert = $dbh->prepare_cached('INSERT INTO commentdata ' .
 					  '(commentstateid, commentfield, ' .
 					  'author, creation_ts) VALUES ' .
 					  '(?, ?, ?, ?)');
@@ -661,6 +563,9 @@ if ($old_comment_table) {
 
     # Drop the old comment table.
     $dbh->do('DROP TABLE comment_old');
+
+    # Commit these changes.
+    $database->commit();
     print "Done\n";
 }
 	
@@ -745,6 +650,7 @@ while (my ($topicid) = $stmt->fetchrow_array()) {
     unlink($tmpfile);
 }
 $stmt->finish();
+$database->commit();
 
 # Check if the version to be upgraded has any project rows or not, and if
 # not, link all topics to the default project.
@@ -763,7 +669,6 @@ if ($project_count == 0) {
 				      'VALUES (?, ?, ?, ?, ?) ');
     $create->execute('Default project', 'Default project description',
 		     $timestamp, $timestamp, 0);
-    $create->finish();
 
     # Get the id of this project entry.
     my $select = $dbh->prepare_cached('SELECT MIN(id) FROM project');
@@ -775,8 +680,8 @@ if ($project_count == 0) {
     print "Linking all topics to default project...\n";
     my $update = $dbh->prepare_cached('UPDATE topic SET projectid = ?');
     $update->execute($projectid);
-    $update->finish();
 }
+$database->commit();
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).
@@ -802,6 +707,8 @@ for (my $i = 0; <CODESTRIKER_BASE>; $i++) {
 	print CODESTRIKER_PL "# The base source is bin/codestriker.pl.base.\n";
     }
 }
+close CODESTRIKER_BASE;
+close CODESTRIKER_PL;
 
 # Make sure the generated file is executable.
 chmod 0755, '../cgi-bin/codestriker.pl';
@@ -818,5 +725,7 @@ if (-d 'template/en') {
 
 print "Done\n";
 
-Codestriker::DB::DBI->release_connection($dbh, 1);
+# Release the database connection.
+$database->release_connection(1);
+
 

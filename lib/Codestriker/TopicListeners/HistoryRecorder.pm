@@ -107,8 +107,8 @@ sub _insert_commentstatehistory_entry($$$) {
 			     'VALUES (?, ?, ?, ?, ?)');
     my $success = defined $insert;
     $success &&= $insert->execute($comment->{id}, $comment->{state},
-				  $comment->{version}, $comment->{modified_ts},
-				  $user);
+				  $comment->{version},
+				  $comment->{db_modified_ts}, $user);
     
 
     # Release the database connection.
