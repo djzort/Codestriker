@@ -118,7 +118,7 @@
 	    A few lines are shown indicating the code of interest.
 	    The line marked in red is the line the comment is being
 	    made against.  Clicking on <code>increase</code> or
-	    <code>dcrease</code> will increase or decrease the the
+	    <code>decrease</code> will increase or decrease the the
 	    number of surrounding lines respectively.  If cookies are
 	    enabled in your browser, the email address in the form
 	    will be remembered, so that you don't need to enter it in
@@ -136,11 +136,51 @@
 	<p>
 	    <img src="view2.jpg">
 	</p>
+
+	<h3>Coloured diff support</h3>
+	<p>
+	   Codestriker provides special support when the topic
+	   contents are in the form from the command <code>cvs diff
+	   -uN</code>.  Although not shown above, the topic view
+	   screen has a link at the top, to alternate between coloured
+	   diff and the textual view.  An example of a coloured diff
+	   can be seen below, which some developers find easier to
+	   read than an ordinary diff.
+	</p>
+	<p>
+	   <img src="view3.jpg">
+	</p>
+	<h3>CVS integration</h3>
+	<p>
+	   Typically, a CVS repository is used for managing a team's
+	   source codes.  Developers create reviews by issuing the
+	   command: <code>cvs diff -uN</code>, which contains all of
+	   the changes the developer has made.
+	</p>	
+	<p>
+	   Codestriker can be configured to integrate with a CVS
+	   repository.  Once it knows the location of the CVS
+	   repository (via a configuration parameter in the script),
+	   the text of each diff segment (regardless of which viewing
+	   mode is used) will have a hyperlink, which if clicked, will
+	   create a popup window which contains the appropriate file
+	   taken from CVS, centered on the line in question.  This has
+	   proved to be very useful when those reviewing diffs which
+	   don't provide enough contextual information to the
+	   reviewer.  Click <a href="screenshot.jpg">here</a> to see
+	   a screenshot of this.
+	</p>
+	<p>
+	   Although not shown in the above screen shots, there is CVS
+	   integration for textual mode as well.  Each diff block hat
+	   demarcated with the "@@ ... @@" characters will also be
+	   hyperlinked to the CVS repository.
+	</p>
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from:
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz">
-	http://prdownloads.sourceforge.net/codestriker/codestriker-1.0.tar.gz</A>
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz">
+	http://prdownloads.sourceforge.net/codestriker/codestriker-1.1.tar.gz</A>
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -182,14 +222,15 @@
 	    this tool.  My initial goal was to build something
 	    quickly and it get it out there for real use, which will
 	    then hopefully provide further input to future
-	    enhancements.
+	    enhancements.  Something sort term is to optimise the HTML
+	    output to use CSS to reduce the size.
 	</p>
 	<p>
 	    Please send me an email
 	   <A HREF="mailto:sitsNOSPAM@users.sourceforgeNOSPAM.net">
 		sitsNOSPAM@users.sourceforgeNOSPAM.net</A><P>
 		for your comments or
-		submit them directly on the sourceforge projct page
+		submit them directly on the sourceforge project page
 	    <a href="http://sourceforge.net/projects/codestriker">
 		http://sourceforge.net/projects/codestriker</a>.
 	</p>
