@@ -3,7 +3,7 @@
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
-# Version 1.4.3
+# Version 1.4.4
 #
 # Codestriker is a perl CGI script which is used for performing code reviews
 # in a collaborative fashion as opposed to using unstructured emails.
@@ -22,10 +22,38 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
+require 5.000;
+
+use strict;
+
+use CGI qw/:standard :html3/;
+use CGI::Carp 'fatalsToBrowser';
+
+use FileHandle;
+use IPC::Open2;
+
+#use diagnostics -verbose;
+
 use vars qw (
 	     $datadir $sendmail $bugtracker $cvsviewer $cvsrep $cvscmd
 	     $cvsaccess $codestriker_css $default_topic_create_mode
 	     $background_col $diff_background_col $default_tabwidth
+	     $use_compression $gzip $config $NORMAL_MODE $COLOURED_MODE @days
+	     @months $context $email_context $email_hr $context_colour
+	     $comment_line_colour $cookie_name $document_file $comment_file
+	     $filetable_file @document $document_title $document_bug_ids
+	     @document_description $document_reviewers $document_cc
+	     $document_author $document_creation_time %comment_exists
+	     @comment_linenumber @comment_data @comment_author
+	     @comment_date @filetable_filename @filetable_revision
+	     @filetable_offset @cvs_filedata $cvs_filedata_max_line_length
+	     $header_generated_record $diff_current_filename @diff_new_lines
+	     @diff_new_lines_numbers @diff_new_lines_offsets @diff_old_lines
+	     @diff_old_lines_numbers @diff_old_lines_offsets
+	     @view_file_minus @view_file_plus @view_file_minus_offset
+	     @view_file_plus_offset $ADDED_REVISION $REMOVED_REVISION
+	     $PATCH_REVISION $OLD_FILE $NEW_FILE $BOTH_FILES $tabwidth
+	     $output_compressed $query
 	     );
 
 # BEGIN CONFIGURATION OPTIONS --------------------
@@ -42,14 +70,6 @@ $ENV{'PATH'} = "/bin:/usr/bin";
 # Constants for viewing modes.
 $NORMAL_MODE = 0;
 $COLOURED_MODE = 1;
-
-use CGI qw/:standard :html3/;
-use CGI::Carp 'fatalsToBrowser';
-
-use FileHandle;
-use IPC::Open2;
-
-#use diagnostics -verbose;
 
 # Day strings
 @days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
@@ -186,6 +206,12 @@ $BOTH_FILES = 2;
 # The current tabwidth being used.
 $tabwidth = $default_tabwidth;
 
+# Indicates whether the output has been sent compressed.
+$output_compressed = 0;
+
+# The CGI query object.
+$query = undef;
+
 # Subroutine prototypes.
 sub edit_topic($$$$$);
 sub view_topic($$$);
@@ -240,6 +266,7 @@ sub coloured_mode_start($);
 sub coloured_mode_finish($$);
 sub print_coloured_table();
 sub get_file_linenumber ($$$$$);
+sub cleanup();
 sub main();
 
 # Call main to kick things off.
@@ -327,7 +354,31 @@ sub main() {
     }
 
     print $query->end_html();
-    return;
+    cleanup();
+    exit;
+}
+
+# Cleanup any open resources, so that this script can be re-used again
+# within a mod_perl environment.
+sub cleanup() {
+    if ($output_compressed) {
+	# Close the GZIP handle and remove the tie.
+	select(STDOUT);
+	close(GZIP);
+	untie *GZIP;
+	$output_compressed = 0;
+    }
+
+    # Close all of the other filehandles that might be open.  In most cases,
+    # these will already be closed, but we do this to ensure there are no
+    # file descriptor leaks.
+    close DOCUMENT;
+    close COMMENTS;
+    close FILETABLE;
+    close CVSFILE;
+    close PATCH;
+    close MAIL;
+    close DIFF;
 }
 
 # Untaint $topic, which should be just a bunch of digits.
@@ -457,20 +508,20 @@ sub generate_header($$$$$$) {
     # This logic is taken from cvsweb.  There is _reason_ behind this logic...
     # Basically mozilla supports gzip regardless even though some versions
     # don't state this.  IE claims it does, but doesn't support it.  Using
-    # the gzip binary doesn't work apparently under mod_perl.
+    # the gzip binary technique doesn't work apparently under mod_perl.
     
     # Determine if the client browser is capable of handled compressed HTML.
     eval {
 	require Compress::Zlib;
     };
-    $has_zlib = !$@;
+    my $has_zlib = !$@;
     my $browser = $ENV{'HTTP_USER_AGENT'}; 
-    my $can_compress = (((defined($ENV{'HTTP_ACCEPT_ENCODING'})
+    my $can_compress = ($use_compression &&
+			((defined($ENV{'HTTP_ACCEPT_ENCODING'})
 			  && $ENV{'HTTP_ACCEPT_ENCODING'} =~ m|gzip|)
 			 || $browser =~ m%^Mozilla/3%)
 			&& ($browser !~ m/MSIE/)
 			&& !(defined($ENV{'MOD_PERL'}) && !$has_zlib));
-    my $compressed = 0;
 
     # Output the appropriate header if compression is allowed to the client.
     if ($can_compress &&
@@ -485,7 +536,7 @@ sub generate_header($$$$$$) {
 	    tie *GZIP, __PACKAGE__, \*STDOUT;
 	}
 	select(GZIP);
-	$compressed = 1;
+	$output_compressed = 1;
     } else {
 	print $query->header(-cookie=>$cookie);
     }
@@ -503,10 +554,10 @@ sub generate_header($$$$$$) {
 			     -vlink=>'purple');
 
     # Write a comment indicating if this was compressed or not.
-    print "\n<!-- Source was" . (!$compressed ? " not " : "") .
+    print "\n<!-- Source was" . (!$output_compressed ? " not" : "") .
 	" sent compressed. -->\n";
 
-    # Write the simple open window javascript method.
+    # Write the simple open window javascript method for displaying popups.
     print <<EOF;
 <SCRIPT LANGUAGE="JavaScript"><!--
  var windowHandle = '';
@@ -547,7 +598,7 @@ sub myescapeHTML($) {
     my @words = split /([\s\n\t])/, $text;
     my $result = "";
     for (my $i = 0; $i <= $#words; $i++) {
-	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/) {
+	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {
 	    # A URL, create a link to it.
 	    $result .= $query->a({href=>$1}, $1) . CGI::escapeHTML($2);
 	} else {
@@ -559,8 +610,6 @@ sub myescapeHTML($) {
     return $result;
 }
 	
-    
-
 # Simple file locking routines.
 sub lock ($) {
     my ($fh) = @_;
@@ -575,7 +624,8 @@ sub unlock ($) {
     flock $fh, 8;
 }
 
-# Report the error message, and close of the HTML stream.
+# Report the error message, close off the HTML, and clean up any
+# resources.
 sub error_return ($) {
     my ($error_message) = @_;
     if (! header_generated()) {
@@ -585,7 +635,8 @@ sub error_return ($) {
     print $query->p, "<FONT COLOR='red'>$error_message</FONT>", $query->p;
     print "Press the \"back\" button, fix the problem and try again.";
     print $query->end_html();
-    exit 0;
+    cleanup();
+    exit;
 }
 
 # Read the topic's document file.
@@ -604,17 +655,17 @@ sub read_document_file($$) {
     # Parse the document metadata.
     while (<DOCUMENT>) {
 	my $data = $_;
-	if ($data =~ /^Author: (.+)$/) {
+	if ($data =~ /^Author: (.+)$/o) {
 	    $document_author = $1;
-	} elsif ($data =~ /^Title: (.+)$/) {
+	} elsif ($data =~ /^Title: (.+)$/o) {
 	    $document_title = $1;
-	} elsif ($data =~ /^Bug: (.*)$/) {
+	} elsif ($data =~ /^Bug: (.*)$/o) {
 	    $document_bug_ids = $1;
-	} elsif ($data =~ /^Reviewers: (.+)$/) {
+	} elsif ($data =~ /^Reviewers: (.+)$/o) {
 	    $document_reviewers = $1;
-	} elsif ($data =~ /^Cc: (.+)$/) {
+	} elsif ($data =~ /^Cc: (.+)$/o) {
 	    $document_cc = $1;
-	} elsif ($data =~ /^Description: (\d+)$/) {
+	} elsif ($data =~ /^Description: (\d+)$/o) {
 	    my $description_length = $1;
 
 	    # Read the document description.
@@ -660,7 +711,7 @@ sub read_comment_file($) {
     @comment_date = ();
     while (<COMMENTS>) {
 	# Read the metadata for the comment.
-	/^(\d+) (\d+) ([-_\@\w\.]+) (.*)$/;
+	/^(\d+) (\d+) ([-_\@\w\.]+) (.*)$/o;
 	my $comment_size = $1;
 	my $linenumber = $2;
 	my $author = $3;
@@ -688,17 +739,20 @@ sub read_filetable_file($) {
 	return 0;
     }
 
+    my $rc = 1;
     for (my $i = 0; <FILETABLE>; $i++) {
-	if (/\|(.*)\| ([\d\.]+) (\d+)$/) {
+	if (/\|(.*)\| ([\d\.]+) (\d+)$/o) {
 	    $filetable_filename[$i] = $1;
 	    $filetable_revision[$i] = $2;
 	    $filetable_offset[$i] = $3;
 	}
 	else {
-	    return 0;
+	    $rc = 0;
+	    last;
 	}
     }
-    return 1;
+    close FILETABLE;
+    return $rc;
 }
 
 # Read the specified CVS file and revision into memory.
@@ -713,11 +767,12 @@ sub read_cvs_file ($$) {
     for (my $i = 1; <CVSFILE>; $i++) {
 	chop;
 	$cvs_filedata[$i] = tabadjust($_, 0);
-	$line_length = length($cvs_filedata[$i]);
+	my $line_length = length($cvs_filedata[$i]);
 	if ($line_length > $cvs_filedata_max_line_length) {
 	    $cvs_filedata_max_line_length = $line_length;
 	}
     }
+    close CVSFILE;
 }
 
 # Return the email address stored in the cookie.
@@ -1093,24 +1148,25 @@ sub view_topic ($$$) {
 	    $block_description = "";
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^Index: (.*)$/ && $mode == $COLOURED_MODE) {
+	} elsif ($document[$i] =~ /^Index: (.*)$/o &&
+		 $mode == $COLOURED_MODE) {
 	    $index_filename = $1;
 	    next;
-	} elsif ($document[$i] =~ /^\?/ && $mode == $COLOURED_MODE) {
+	} elsif ($document[$i] =~ /^\?/o && $mode == $COLOURED_MODE) {
 	    next;
 	} elsif ($document[$i] =~ /^RCS file: ${cvsrep}\/(.*),v$/) {
 	    # The part identifying the file.
 	    $current_file = $1;
 	    $cvsmatch = 1;
-	} elsif ($document[$i] =~ /^RCS file:/) {
+	} elsif ($document[$i] =~ /^RCS file:/o) {
 	    # A new file (or a file that doesn't match CVS repository path).
 	    $current_file = $index_filename;
 	    $index_filename = "";
 	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^retrieving revision (.*)$/) {
+	} elsif ($document[$i] =~ /^retrieving revision (.*)$/o) {
 	    # The part identifying the revision.
 	    $current_file_revision = $1;
-	} elsif ($document[$i] =~ /^diff/ && $reading_diff_block == 0) {
+	} elsif ($document[$i] =~ /^diff/o && $reading_diff_block == 0) {
 	    # The start for an ordinary patch file.
 	    $current_file = "";
 	    $current_file_revision = "";
@@ -1119,13 +1175,13 @@ sub view_topic ($$$) {
 	    $block_description = "";
 	    $reading_diff_block = 1;
 	    $cvsmatch = 0;
-	} elsif ($document[$i] =~ /^\-\-\- (.*[^\s])\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/ &&
+	} elsif ($document[$i] =~ /^\-\-\- (.*[^\s])\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o &&
 		 $current_file eq "") {
 	    # This is likely to be an ordinary patch file - not a CVS one, in
 	    # which case this is the start of the diff block.
 	    $current_file = $1;
 	    $index_filename = "";
-	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@(.*)$/) {
+	} elsif ($document[$i] =~ /^\@\@ \-(\d+),\d+ \+(\d+),\d+ \@\@(.*)$/o) {
 	    # The part identifying the line number.
 	    $current_old_file_linenumber = $1;
 	    $current_new_file_linenumber = $2;
@@ -1135,8 +1191,6 @@ sub view_topic ($$$) {
 	}
 
 	my $url = $query->url() . build_edit_url($i, $topic, $context, $mode);
-
-	print "Data now: \"$document[$i]\"\n", $query->br if $document[$i] =~ /\t/;
 
 	# Display the data.
 	if ($mode == $COLOURED_MODE) {
@@ -1769,6 +1823,7 @@ sub submit_comments ($$$$$$) {
 	$mail_errors .= $_;
     }
 
+    close $MAIL;
     if ($mail_errors ne "") {
 	generate_header($topic, $document_title, $email, "", "",
 			$background_col);
@@ -1954,7 +2009,7 @@ sub submit_topic ($$$$$$$$) {
 	# Enter the data from the topic text.
 	my @lines = split /\n/, $topic_text;
 	for (my $i = 0; $i <= $#lines; $i++) {
-	    $lines[$i] =~ s/\r//;
+	    $lines[$i] =~ s/\r//o;
 	    print DOCUMENT "$lines[$i]\n";
 	}
     }
@@ -2027,7 +2082,7 @@ sub process_document($) {
 
     # Read the meta-data part of the document.
     while (<DOCUMENT>) {
-	last if (/^Text$/);
+	last if (/^Text$/o);
     }
 
     my $offset = 1;
@@ -2052,7 +2107,7 @@ sub process_document($) {
 
 	while (<DOCUMENT>) {
 	    $offset++;
-	    last if (/^Index/ || /^diff/); # The start of the next diff header.
+	    last if (/^Index/o || /^diff/o); # The start of the next diff header.
 	    print DIFF $_;
 	}
 	close DIFF;
@@ -2075,14 +2130,14 @@ sub read_diff_header($$$$$) {
     my ($fh, $offset, $filename, $revision, $line) = @_;
 
     # read any ? lines, denoting unknown files to CVS.
-    while ($line =~ /^\?/) {
+    while ($line =~ /^\?/o) {
 	$line = <$fh>;
 	$$offset++;
     }
     return 0 unless defined $line;
 
     # For CVS diffs, the Index line is next.
-    if ($line =~ /^Index:/) {
+    if ($line =~ /^Index:/o) {
 	$line = <$fh>;
 	return 0 unless defined $line;
 	$$offset++;
@@ -2105,7 +2160,7 @@ sub read_diff_header($$$$$) {
 	return 0 unless defined $line;
 	$$offset++;
 	$cvs_diff = 1;
-    } elsif ($line =~ /^RCS file: (.*)$/) {
+    } elsif ($line =~ /^RCS file: (.*)$/o) {
 	$$filename = $1;
 	$line = <$fh>;
 	return 0 unless defined $line;
@@ -2115,7 +2170,7 @@ sub read_diff_header($$$$$) {
 
     # Now we expect the retrieving revision line, unless it is a new or
     # removed file.
-    if ($line =~ /^retrieving revision (.*)$/) {
+    if ($line =~ /^retrieving revision (.*)$/o) {
 	$$revision = $1;
 	$line = <$fh>;
 	return 0 unless defined $line;
@@ -2125,29 +2180,29 @@ sub read_diff_header($$$$$) {
     # Now read in the diff line, followed by the legend lines.  If this is
     # not present, then we know we aren't dealing with a diff file of any
     # kind.
-    return 0 unless $line =~ /^diff/;
+    return 0 unless $line =~ /^diff/o;
     $line = <$fh>;
     return 0 unless defined $line;
     $$offset++;
 
-    if ($line =~ /^\-\-\- \/dev\/null/) {
+    if ($line =~ /^\-\-\- \/dev\/null/o) {
 	# File has been added.
 	$$revision = $ADDED_REVISION;
     } elsif ($cvs_diff == 0 &&
-	     $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/) {
+	     $line =~ /^\-\-\- (.*)\t(Mon|Tue|Wed|Thu|Fri|Sat|Sun).*$/o) {
 	$$filename = $1;
 	$$revision = $PATCH_REVISION;
-    } elsif (! $line =~ /^\-\-\-/) {
+    } elsif (! $line =~ /^\-\-\-/o) {
 	return 0;
     }
 
     $line = <$fh>;
     return 0 unless defined $line;
     $$offset++;
-    if ($line =~ /^\+\+\+ \/dev\/null/) {
+    if ($line =~ /^\+\+\+ \/dev\/null/o) {
 	# File has been removed.
 	$$revision = $REMOVED_REVISION;
-    } elsif (! $line =~ /^\+\+\+/) {
+    } elsif (! $line =~ /^\+\+\+/o) {
 	return 0;
     }
 
@@ -2180,7 +2235,7 @@ sub render_monospaced_line ($$$$$$$) {
 	if (defined $comment_exists{$offset}) {
 	    my $link_title = get_comment_digest($offset);
 	    my $js_title = $link_title;
-	    $js_title =~ s/\'/\\\'/mg;
+	    $js_title =~ s/\'/\\\'/mgo;
 	    $line_cell = "$prefix" .
 		$query->a({name=>"$linenumber",
 			   href=>"javascript:fetch('$edit_url')",
@@ -2328,7 +2383,7 @@ sub view_file ($$$) {
     # do for now, to reduce the resulting page size.
     my $max_line_length = $cvs_filedata_max_line_length;
     while (<PATCH>) {
-	if (/^\s(.*)$/ || /^\+(.*)$/ || /^\-(.*)$/) {
+	if (/^\s(.*)$/o || /^\+(.*)$/o || /^\-(.*)$/o) {
 	    my $line_length = length($1);
 	    if ($line_length > $max_line_length) {
 		$max_line_length = $line_length;
@@ -2363,7 +2418,7 @@ sub view_file ($$$) {
     while (1) {
 	# Read the next line of patch information.
 	my $patch_line_start;
-	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@.*$/) {
+	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@.*$/o) {
 	    $patch_line_start = $1;
 	    $next_chunk_end = $1 + $2;
 	}
@@ -2399,17 +2454,17 @@ sub view_file ($$$) {
 
 	    # Handle the processing of the side-by-side view separately.
 	    if ($new == $BOTH_FILES &&
-		($data =~ /^\s/ || $data =~ /^\-/ || $data =~ /^\+/)) {
+		($data =~ /^\s/o || $data =~ /^\-/o || $data =~ /^\+/o)) {
 		display_coloured_data($old_linenumber, $new_linenumber,
 				      $offset, 1, $max_digit_width, $_, "",
 				      "", "", 0, 0, 0, 0, $topic,
 				      $COLOURED_MODE, 1, "");
-		$old_linenumber++ if $data =~ /^\s/ || $data =~ /^\-/;
-		$new_linenumber++ if $data =~ /^\s/ || $data =~ /^\+/;
+		$old_linenumber++ if $data =~ /^\s/o || $data =~ /^\-/o;
+		$new_linenumber++ if $data =~ /^\s/o || $data =~ /^\+/o;
 		next;
 	    }
 
-	    if (/^\s(.*)$/) {
+	    if (/^\s(.*)$/o) {
 		# An unchanged line, output it and anything pending.
 		flush_monospaced_lines($topic, $new, \$linenumber,
 				       $max_digit_width, $max_line_length);
@@ -2417,18 +2472,18 @@ sub view_file ($$$) {
 					     $max_digit_width,
 					     $max_line_length, "");
 		$linenumber++;
-	    } elsif (/^\-(.*)$/) {
+	    } elsif (/^\-(.*)$/o) {
 		# A removed line.
 		add_minus_monospace_line($1, $offset);
-	    } elsif (/^\+(.*)$/) {
+	    } elsif (/^\+(.*)$/o) {
 		# An added line.
 		add_plus_monospace_line($1, $offset);
-	    } elsif (/^\\/) {
+	    } elsif (/^\\/o) {
 		# A line with a diff comment, such as:
 		# \ No newline at end of file.
 		# The easiest way to deal with these lines is to just ignore
 		# them.
-	    } elsif (/^@@/) {
+	    } elsif (/^@@/o) {
 		# Start of next diff block, exit from loop and flush anything
 		# pending.
 		if ($new != $BOTH_FILES) {
@@ -2479,6 +2534,7 @@ sub view_file ($$$) {
 	print "</PRE>\n";
     }
     print $query->end_html();
+    close PATCH;
 }
 
 # Given a topic and topic line number, try to determine the line
@@ -2553,23 +2609,23 @@ sub get_file_linenumber ($$$$$)
     for ($current_topic_linenumber = $filetable_offset[$index];
 	 defined($_=<PATCH>) && $current_topic_linenumber <= $topic_linenumber;
 	 $current_topic_linenumber++) {
-	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@.*$/) {
+	if (/^\@\@ \-\d+,\d+ \+(\d+),\d+ \@\@.*$/o) {
 	    # Matching diff header, record what the current linenumber is now
 	    # in the new file.
 	    $newfile_linenumber = $1 - 1;
 	    $accurate_line = 0;
 	}
-	elsif (/^\s.*$/) {
+	elsif (/^\s.*$/o) {
 	    # A line with no change.
 	    $newfile_linenumber++;
 	    $accurate_line = 1;
 	}
-	elsif (/^\+.*$/) {
+	elsif (/^\+.*$/o) {
 	    # A line corresponding to the new file.
 	    $newfile_linenumber++;
 	    $accurate_line = 1;
 	}
-	elsif (/^\-.*$/) {
+	elsif (/^\-.*$/o) {
 	    # A line corresponding to the old file.
 	    $accurate_line = 0;
 	}
@@ -2585,6 +2641,7 @@ sub get_file_linenumber ($$$$$)
 	# The topic linenumber was not found.
 	$$filename_ref = "";
     }
+    close PATCH;
     return;
 }
 

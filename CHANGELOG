@@ -4,7 +4,11 @@ Version 1.4.4:
   nicely with Mozilla/Netscape/Konqueror.  If the Compress::Zlib
   library is installed, that is used for compression, otherwise the
   "gzip" executable is used (although this isn't an option if you are
-  running this script within mod_perl).
+  running this script within mod_perl).  [Note there are two new
+  options in codestriker.conf - $use_compression and $gzip]
+
+* Codestriker now works under mod_perl successfully.  Updated
+  installation instructions for use under mod_perl.
 
 Version 1.4.3:
 

@@ -18,7 +18,7 @@
 	</p>
 	<p>
 	    The latest version of codestriker can be obtained from
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz">here</A>.
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.4.tar.gz">here</A>.
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -244,7 +244,7 @@
 	<h2>Installation</h2>
 	<p>
 	    The latest version of codestriker can be obtained from
-   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.3.tar.gz">here</A>.
+   <A HREF="http://prdownloads.sourceforge.net/codestriker/codestriker-1.4.4.tar.gz">here</A>.
 	</p>
 	<p>
 	    Codestriker sourceforge project information can be found from
@@ -261,12 +261,12 @@
 	    For RedHat 7.1, the installation is simply the following
 	    as root on the internal web server:
 	    <pre>
-	    cd /var/www/cgi-bin
-	    cp /from/installed/location/codestriker.pl .
-	    cp /from/installed/location/codestriker.css ../html
-	    mkdir /var/www/codestriker
-	    chown apache.apache /var/www/codestriker
-	    cp /from/installed/location/codestriker.conf /var/www/codestriker
+cd /var/www/cgi-bin
+cp /from/installed/location/codestriker.pl .
+cp /from/installed/location/codestriker.css ../html
+mkdir /var/www/codestriker
+chown apache.apache /var/www/codestriker
+cp /from/installed/location/codestriker.conf /var/www/codestriker
 	    </pre>
 	</p>
 	<p>
@@ -274,6 +274,58 @@
 	    is stored in another location, be sure to update its
 	    location in codestriker.pl.
         </p>
+	<p>
+	To use Codestriker with mod_perl, which reduces the startup
+	costs of creating a new Perl interpreter and parsing the
+	Codestriker script for each request, I do the following:
+	    <pre>
+mkdir /var/www/codestriker
+chown apache.apache /var/www/codestriker
+cd /var/www/codestriker
+cp /from/installed/location/codestriker.css ../html
+cp /from/installed/location/codestriker.pl .
+cp /from/installed/location/codestriker.conf .
+	    </pre>
+        </p>
+	<p>
+	Put the following lines in your httpd.conf (probably located
+	in /etc/httpd/conf), which will make
+	http://yoursite.yourdomain/codestriker/codestriker.pl the URL
+	to Codestriker.
+	<pre>
+Alias /codestriker/  /var/www/codestriker/
+
+&lt;Location /codestriker&gt;
+ SetHandler  perl-script
+ PerlHandler Apache::Registry
+ Options +ExecCGI
+&lt;/Location&gt;
+
+PerlTaintCheck On
+        </pre>
+	Most distributions of Linux seem to configure apache with mod_perl, so
+	the above approach is recommended.  Restart apache with something like
+	"/etc/rc.d/init.d/httpd restart" and you should be away.
+	</p>
+	<h3>Compression support</h3>
+	<p>
+	The pages generated from Codestriker can be quite large,
+	depending on the size of the review and files involved.  It
+	can send the HTML as content-encoding x-gzip.  Browsers such
+	as Netscape, Konqueror and Mozilla supporting the handling of
+	compressed data.  Unfortunately, IE can't.  Using compression
+	can make an enormous difference in the speed of transfers,
+	particularly over slow links.  If you have installed
+	Codestriker with mod_perl, and wish to use compression, you
+	must also install the Compress::Zlib module, available from
+	CPAN (<A HREF="http://www.cpan.org">http://www.cpan.org</A>).
+	For non mod_perl installs, the gzip executable can be used
+	for compression.  When receiving a page from Codestriker, the
+	page source contains near the top within an HTML comment
+	whether the text was sent compressed or not.
+	</p>
+
+	<h3>Data storage</h3>
 	<p>
 	    Codestriker stores all of its topic data and comments by
 	    default in <code>/var/www/codestriker</code>.  This
@@ -285,6 +337,8 @@
 	    is typically either nobody or apache.  Use the <code>ps
 	    auxww | grep httpd</code> command to find out.
 	</p>
+
+	<h3>Codestriker settings</h3>
 	<p><font color="red">
 
 	    Read through the configuration options within
@@ -303,15 +357,6 @@
 	    apache's <code>.htaccess</code> mechanism to limit access
 	    as to who can execute the script, as an extra security
 	    precaution.
-	</p>
-	<h2>Future plans</h2>
-	<p>
-	    Obviously there are many enhancements that can be made to
-	    this tool.  My initial goal was to build something
-	    quickly and it get it out there for real use, which will
-	    then hopefully provide further input to future
-	    enhancements.  Something short term is to optimise the HTML
-	    output to use CSS to reduce the size.
 	</p>
 	<p>
 	    Please send me an email
