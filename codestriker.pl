@@ -986,8 +986,8 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 				       -cellpadding=>'0'});
 	    print $query->Tr($query->td({-width=>'3%'}, "&nbsp;"),
 			     $query->td({-width=>'47%'}, "&nbsp;"),
-			     $query->td({-width=>'47%'}, "&nbsp;"),
-			     $query->td({-width=>'3%'}, "&nbsp;"));
+			     $query->td({-width=>'3%'}, "&nbsp;"),
+			     $query->td({-width=>'47%'}, "&nbsp;"));
 
 	    if ($cvsmatch) {
 		# File matches something is CVS repository.
@@ -1010,10 +1010,8 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	    }
 	}
 
-	print $query->Tr($query->td({-width=>'3%'}, "&nbsp;"),
-			 $query->td({-width=>'47%'}, "&nbsp;"),
-			 $query->td({-width=>'47%'}, "&nbsp;"),
-			 $query->td({-width=>'3%'}, "&nbsp;"));
+	print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
+			 $query->td("&nbsp;"), $query->td("&nbsp;"));
 	
 	if ($cvsmatch) {
 	    # Display the line numbers corresponding to the patch, with links
@@ -1061,10 +1059,10 @@ sub display_coloured_data ($$$$$$$$$$$$$) {
 	    my $celldata = render_coloured_cell($data);
 	    my $rendered_linenumber =
 		render_linenumber($line, $topic, $diff_font_face, $mode);
-	    print $query->Tr($query->td({-width=>'3%'}, $rendered_linenumber),
-			     $query->td({-width=>'47%'}, $celldata),
-			     $query->td({-width=>'47%'}, $rendered_linenumber),
-			     $query->td({-width=>'3%'}, $celldata));
+	    print $query->Tr($query->td($rendered_linenumber),
+			     $query->td($celldata),
+			     $query->td($rendered_linenumber),
+			     $query->td($celldata));
 	}
     }
 }
@@ -1173,17 +1171,13 @@ sub render_inplace_changes($$$$$$)
 	    $render_old_colour = $old_notpresent_col;
 	}
 
-	print $query->Tr($query->td({-width=>'3%'},
-				     render_linenumber($old_data_line, $topic,
+	print $query->Tr($query->td(render_linenumber($old_data_line, $topic,
 						      $diff_font_face, $mode)),
-			 $query->td({-bgcolor=>"$render_old_colour",
-				     -width=>'47%'},
+			 $query->td({-bgcolor=>"$render_old_colour"},
 				    $render_old_data),
-			 $query->td({-width=>'3%'},
-				     render_linenumber($new_data_line, $topic,
+			 $query->td(render_linenumber($new_data_line, $topic,
 						      $diff_font_face, $mode)),
-			 $query->td({-width=>'47%',
-				     -bgcolor=>"$render_new_colour"},
+			 $query->td({-bgcolor=>"$render_new_colour"},
 				    $render_new_data));
     }
 }
