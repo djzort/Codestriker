@@ -1,3 +1,8 @@
+Version 1.5.7
+
+* Set the attachment field in the HTTP header when downloading the
+  topic text, to make IE happier.
+
 Version 1.5.6
 
 * Codestriker has been integrated with LXR, so that when viewing a
