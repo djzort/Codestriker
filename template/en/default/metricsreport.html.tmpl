@@ -10,14 +10,15 @@
     <p>
 [% END %]
 
-<h3>User Metrics</h3>
+<h3>User Metrics - Past 16 weeks</h3>
 
 
 <table cellpadding="5%" >
     <tr class="tlh"><td>
-	<td>last topic authored (days)
-	<td>last topic reviewed (days)
-	<td colspan=5>number of topics participated in the past 16 weeks
+	<td>last topic authored (days)</td>
+	<td>last topic reviewed (days)</td>
+	<td>total Codestriker time (hours)</td>
+	<td colspan=4>number of topics participated</td>
     </tr>
 
     [% FOREACH user_metrics %]
@@ -26,6 +27,7 @@
 	<td>[% name | html %]
 	<td>[% date_last_authored %]
 	<td>[% date_last_participated %]
+	<td>[% total_codestriker_time %]
 	<td>[% total_topics %]
     </tr>
 
@@ -90,7 +92,7 @@
 
 
 <hr>
-<p><a href="[% download_url %]">Download Raw Data</a>
+<p><a href="[% download_url %]">Download all metric data as a tabbed delimited text file</a>
 
 
 [% PROCESS trailer.html.tmpl %]

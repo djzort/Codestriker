@@ -157,6 +157,23 @@
 
 </form>
 
+<HR>
+
+Activity Log:
+
+<table border="1">
+    <tr><td>who</td><td>when</td><td>change</td></tr>
+
+    [% FOREACH activity=activity_list %]
+    <tr><td>[% activity.email | html_entity%]</td>
+	<td>[% activity.date | html_entity%]</td>
+	<td>[% activity.description | html_entity | $AutomagicLinks %]</td></tr>
+    [% END %]
+
+</table>
+
+
+
 [% PROCESS trailer.html.tmpl %]
 
 </BODY>
