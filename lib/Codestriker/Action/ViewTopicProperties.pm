@@ -102,6 +102,7 @@ sub process($$$) {
     my @projects = Codestriker::Model::Project->list();
     $vars->{'projects'} = \@projects;
     $vars->{'project_states'} = \@Codestriker::project_states;
+    $vars->{'projects_enabled'} = Codestriker->projects_disabled() ? 0 : 1;
     $vars->{'topic_projectid'} = $topic->{project_id};
 
     $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
