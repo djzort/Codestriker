@@ -416,8 +416,9 @@ $use_compression = 0;
 	  specifies which source control system it is applied against
 	  (there may not be any, if it is just a simple patch or text
 	  file).  For many Codestriker deployments, there may only be
-	  a single SCM system.  The configuration file has the
-	  following default value which needs to be changed:
+	  a single SCM system.  There is currently support for CVS,
+	  Subversion and Perforce.  An example setting could be the
+	  following:
 	  <programlisting>
 @valid_repositories =
     (
@@ -425,7 +426,8 @@ $use_compression = 0;
      'http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi /cvsroot',
      'svn:http://svn.collab.net/repos/svn/trunk',
      ':pserver:anonymous:password@cvs.sourceforge.net:/cvsroot',
-     'c:/cvsrep'
+     'c:/cvsrep',
+     'perforce:sits:client@localhost:1666'
     );
 	  </programlisting>
 	  This is Perl syntax for a list of string values.  The first
@@ -463,8 +465,15 @@ $use_compression = 0;
           </programlisting>
 	</para>
 	<para>
-	  The final value is an example of a CVS repository located on
-	  a Win32 system.
+	  The next value is an example of a CVS repository located on
+	  a Win32 system.  Note that forward slashes are still used as
+	  a directory separator.
+	</para>
+	<para>
+	  The final value is a Perforce repository specification,
+	  where after the "perforce:" keyword, there is the Perforce
+	  user and client, followed by the hostname and port of the
+	  Perforce server.
 	</para>
 	<para>
 	  During a review, it is sometimes beneficial to see the
@@ -1436,6 +1445,17 @@ C:\Perl\bin\perl.exe "%s" %s
 	  repository automatically, by executing the appropriate CVS
 	  command itself.
 	</para>
+	<para>
+	  Alternatively, Codestriker can also accept CVS diffs of
+	  already committed code from commands such as:
+	  <programlisting>
+% cvs rdiff -uN -r START_TAG -r END_TAG MODULE
+	  </programlisting>
+	  Where START_TAG, END_TAG and MODULE are substituted with
+	  appropriate values.  Note this is no different to what
+	  Codestriker does when values are entered into the "Start
+	  tag", "End Tag" and "Module" fields when creating a topic.
+	</para>
       </sect2>
       <sect2>
         <title>Creating Diff Topics</title>
@@ -1492,6 +1512,31 @@ C:\Perl\bin\perl.exe "%s" %s
 	  This file should then be selected for the "Topic text
 	  upload" field.  The "Start tag", "End tag" and "Module"
 	  fields have no relevance in this situation.
+	</para>
+      </sect2>
+      <sect2>
+        <title>Creating Perforce Diff Topics</title>
+	<para>
+	  Similar to CVS, Perforce diffs are created by going to the
+	  top of your checkout (or client view in Perforce
+	  terminology) and issuing a command like:
+	  <programlisting>
+% p4 diff -du > /tmp/review.txt
+	  </programlisting>
+	  This file should then be selected for the "Topic text
+	  upload" field.  The "Start tag", "End tag" and "Module"
+	  fields have no relevance in this situation.
+	</para>
+	<para>
+	  Alternatively, for code which has already been committed
+	  into the repository (or depot in Perforce terminology), a
+	  command like the following can be used to generate the topic
+	  text:
+	  <programlisting>
+% p4 describe -du 132 > /tmp/review.txt
+	  </programlisting>
+	  Here 132 is the change-number.  This should be substituted
+	  with the change-number that you want to review.
 	</para>
       </sect2>
     </sect1>
