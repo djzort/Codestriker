@@ -4,7 +4,7 @@
     properties can be modified on this page.  #%]
 
 [% PROCESS viewtopicheader.html.tmpl version = version topicview = 0
-   topiccomments = 0 topicinfo = 0 topicproperties = 1 topictitle = 0
+   topiccomments = 0 topicinfo = 0 topicproperties = 1
    help = "x380.html#VIEW-TOPIC" %]
 
 <script language="JavaScript">
@@ -45,20 +45,18 @@ function DeleteTopicConfirm()
     which can be edited. #%]
 
 
+<p>
 <table cellpadding="2" cellspacing="2" border="0">
 
-<tr class="tth">
-  <td><b>Title:</b></td>
+<tr class="tt1">
+  <td>Title:</td>
   <td>
     <input type="text" name="topic_title" 
            value="[% title | html_entity %]" size="70" maxlength="70">
   </td>
 </th>
 
-[% SET type = 0 %]
-
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Author:</td>
   <td>
     <input type="text" name="email" value="[% author | html_entity %]" 
@@ -66,15 +64,13 @@ function DeleteTopicConfirm()
   </td>
 </tr>
 
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Created:</td>
   <td>[% document_creation_time | html_entity %]</td>
 </tr>
 
 [% IF bug_ids != '' %]
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Bug IDs:</td>
   <td>
     <input type="text" name="bug_ids" value="[% bug_ids %]"
@@ -83,8 +79,7 @@ function DeleteTopicConfirm()
 </tr>
 [% END %]
 
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Reviewers:</td>
   <td>
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
@@ -92,8 +87,7 @@ function DeleteTopicConfirm()
   </td>
 </tr>
 
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Cc:</td>
   <td>
     <input type="text" name="cc" value="[% cc | html_entity %]" 
@@ -101,21 +95,8 @@ function DeleteTopicConfirm()
   </td>
 </tr>
 
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
-  <td>Number of lines:</td>
-  <td>[% number_of_lines %]
-    [%# Give them a nudge, that the topic is too large. #%] 
-    [% IF number_of_lines > suggested_topic_size_lines && suggested_topic_size_lines > 0 %]
-      <FONT color=red>-- over suggested topic size limit of [% suggested_topic_size_lines %] lines.</FONT>
-  [% END %]
-  
- </td>
-</tr>
-
 [% IF topic_repository != '' %]
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Repository:</td>
   <td>
     <select name="repository">
@@ -132,8 +113,7 @@ function DeleteTopicConfirm()
 [% END %]
 
 [% IF projects_enabled != 0 %]
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td>Project:</td>
   <td>
     <select name="projectid">
@@ -149,8 +129,7 @@ function DeleteTopicConfirm()
 </tr>
 [% END %]
 
-<tr class="tt[% type mod 2 %]">
-  [% type = type + 1 %]
+<tr class="tt1">
   <td valign="top">Description:</td>
   <td>
     <textarea name="topic_description" rows="12" cols="70" 
@@ -158,8 +137,7 @@ function DeleteTopicConfirm()
   </td>
 </tr>
 
-<tr class="tt[% type mod 2 %]">
- [% type = type + 1 %]
+<tr class="tt1">
  <td>State:
    <FONT SIZE="-2"><A HREF="javascript:alert('
 When a topic is created, it is initialised in state \'open\'.\n
@@ -195,7 +173,7 @@ retrieving lists of topics from the search page.
  </td>
 </tr>
 
-<tr class="tth"><td colspan="2">&nbsp</td></tr>
+<tr class="tt1"><td colspan="2">&nbsp;</td></tr>
 
 
 [%# Render the submit button #%]

@@ -119,7 +119,16 @@ TR.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
 TR.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
 /* Codestriker heading */
-TR.heading {background-color: #eeeeee; color: #000000;  font-family: Helvetica, Arial; font-size: x-small}
+TD.heading {text-align: center; background-color: #000000; font-family: Helvetica, Arial; font-size: x-large}
+A.heading {text-decoration: none; color: #ffffff}
 
-TD.heading {background-color: #eeeeee; color: #000000;  font-family: Helvetica, Arial; font-size: x-large}
+/* Codestriker top-level menu */
+DIV.menu {font-family: Helvetica, Arial}
+
+/* Tabbing styles */
+TR.tab {background-color: #aaffaa; font-family: Helvetica, Arial}
+TD.selected {background-color: #aaffaa}
+TD.notselected {background-color: #cccccc}
+TD.space {background-color: #eeeeee}
+A.tab {text-decoration: none}
 

@@ -4,7 +4,7 @@
     script, as it is complex HTML that doesn't need to be
     customised. #%]
 
-[% PROCESS header.html.tmpl version = version %]
+[% PROCESS header.html.tmpl displaymenu = 1 version = version %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -12,31 +12,27 @@
     <p>
 [% END %]
 
-<table cellpadding="5%" cellspacing="0%" width="100%">
-<tr class="tlh">
-   <td width="1%" nowrap [% IF topicview == 0 %] bgcolor="#cccccc" [% END %]>
-	<a STYLE="text-decoration: none" href="[% view_topic_url %]">View Topic Text</a></td>
-   <td width="1" bgcolor="#eeeeee"></td>
-   <td width="1%" nowrap [% IF topicproperties == 0 %] bgcolor="#cccccc" [% END %]>
-	<a STYLE="text-decoration: none" href="[% view_topic_properties_url %]">View Topic Properties</a> </td>
-   <td width="1" bgcolor="#eeeeee"></td>
-   <td width="1%" nowrap [% IF topiccomments == 0 %] bgcolor="#cccccc" [% END %]>
-	<a STYLE="text-decoration: none" href="[% view_comments_url %]"> View all comments ([% number_comments %])</a></td>
-   <td width="1" bgcolor="#eeeeee"></td>
-   <td width="1%" nowrap [% IF topicinfo == 0 %] bgcolor="#cccccc" [% END %]>
-	<a STYLE="text-decoration: none" href="[% view_topicinfo_url %]"> View Topic Information</a> </td>
-
+<table cellpadding="5" cellspacing="0" border="0" width="100%">
+<tr class="tab">
+   <td width="1%" nowrap class=[% IF topicview == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
+	<a class="tab" href="[% view_topic_url %]">Topic Text</a></td>
+   <td width="1" class="space">&nbsp;</td>
+   <td width="1%" nowrap class=[% IF topicproperties == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
+	<a class="tab" href="[% view_topic_properties_url %]">Topic Properties</a></td>
+   <td width="1" class="space">&nbsp;</td>
+   <td width="1%" nowrap class=[% IF topiccomments == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
+	<a class="tab" href="[% view_comments_url %]">Topic Comments ([% number_comments %])</a></td>
+   <td width="1" class="space">&nbsp;</td>
+   <td width="1%" nowrap class=[% IF topicinfo == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
+	<a class="tab" href="[% view_topicinfo_url %]">Topic Information</a> </td>
    <td colspan=2 bgcolor="#eeeeee" align=right><b>[% author %]</b></td>
 </tr>
 </table>
 
-[%# Check if the topic title and date is to be displayed #%]
-[% IF topictitle != 0 %]
-<table cellpadding="5%" cellspacing="0%" width="100%">
-<tr class="tlh">
-    <td colspan=4>Topic Title: <b>[% title %]</b></td>
+<table cellpadding="5" cellspacing="0" border="0" width="100%">
+<tr class="tab">
+    <td>Topic title: <b>[% title %]</b></td>
     <td align=right>[% document_creation_time %]</td>
 </tr>
 </table>
-[% END %]
 

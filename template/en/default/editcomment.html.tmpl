@@ -2,20 +2,11 @@
 
 [% USE AutomagicLinks %]
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr class="heading">
-  <td valign="bottom"></td>   
-  <td class="heading"><center><a href="[% list_url | uri | html_entity %]" STYLE="text-decoration: none"><font color="black">[% main_title %]</font></a></center></td>
-  <td valign="bottom"><a href="[% doc_url | uri | html_entity %]/x380.html#ADD-COMMENT">Help</a></td>
-</tr>
-</table>
-<HR>
+[% PROCESS header.html.tmpl displaymenu = 0 version = version help = "x380.html#ADD-COMMENT" %]
 
-
-<table border=0 rules=groups cellpadding=5% cellspacing=0 width="100%">
-<colgroup span=3>
+<table border="0" cellpadding="5" cellspacing="0" width="100%">
 <tr class="tlh">
-    <td colspan=4>Topic Title: <b>[% topic_title | html_entity %]</b>. </td>
+    <td>Topic title: <b>[% topic_title | html_entity %]</b>.</td>
     <td align=right>[% document_creation_time | html_entity %]</td>
 </tr>
 </table>
