@@ -25,7 +25,7 @@ sub new {
     $self->{old_linenumber} = $_[4];
     $self->{new_linenumber} = $_[5];
     $self->{text} = $_[6];
-    $self->{description} = $_[7];
+    $self->{description} = (defined $_[7]) ? $_[7] : "";
     $self->{filenumber} = $_[8];
     $self->{repmatch} = $_[9];
     $self->{only_delta_in_file} = 0;

@@ -130,19 +130,28 @@ sub create_table {
 
     print STDERR "Statement is: $stmt\n" if $_DEBUG;
 
-    # Now create the table.
-    $self->{dbh}->do($stmt);
+    eval {
+	# Now create the table.
+	$self->{dbh}->do($stmt);
 
-    # Now create the indexes for this table.
-    foreach my $index (@{$table->get_indexes()}) {
-	my $index_stmt = "CREATE INDEX " . $index->get_name . " ON " .
-	    $table->get_name() . "(";
-	$index_stmt .= (join ', ', @{$index->get_column_names()}) . ")";
+	# Now create the indexes for this table.
+	foreach my $index (@{$table->get_indexes()}) {
+	    my $index_stmt = "CREATE INDEX " . $index->get_name . " ON " .
+		$table->get_name() . "(";
+	    $index_stmt .= (join ', ', @{$index->get_column_names()}) . ")";
+	    
+	    print STDERR "Index statement is: $index_stmt\n" if $_DEBUG;
+	    
+	    # Now execute the statement to create the index.
+	    $self->{dbh}->do($index_stmt);
+	}
 
-	print STDERR "Index statement is: $index_stmt\n" if $_DEBUG;
-
-	# Now execute the statement to create the index.
-	$self->{dbh}->do($index_stmt);
+	# Commit the table creation.
+	$self->commit();
+    };
+    if ($@) {
+	eval { $self->rollback() };
+	die "Unable to create table/indexes.\n";
     }
 }
 

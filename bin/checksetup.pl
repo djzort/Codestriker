@@ -184,7 +184,7 @@ sub table { return Codestriker::DB::Table->new(@_); }
 # The topic table.
 my $topic_table =
   table(name => "topic",
-	columns => [col(name=>"id", type=>$INT32, pk=>1, autoincr=>1),
+	columns => [col(name=>"id", type=>$INT32, pk=>1),
 		    col(name=>"author", type=>$VARCHAR, length=>255),
 		    col(name=>"title", type=>$VARCHAR, length=>255),
 		    col(name=>"description", type=>$TEXT),
@@ -213,8 +213,8 @@ my $topichistory_table =
 		    col(name=>"repository", type=>$TEXT, mandatory=>0),
 		    col(name=>"projectid", type=>$INT32),
 		    col(name=>"reviewers", type=>$TEXT),
-		    col(name=>"cc", type=>$TEXT),
-		    col(name=>"modified_by_user", type=>$VARCHAR,length=>255)
+		    col(name=>"cc", type=>$TEXT, mandatory=>0),
+		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
 		   ],
 	indexes => [dbindex(name=>"th_idx", column_names=>["topicid"])]);
 	
@@ -233,12 +233,11 @@ my $topicusermetric_table =
   table(name => "topicusermetric",
 	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
 		    col(name=>"email", type=>$VARCHAR, length=>255, pk=>1),
-		    col(name=>"metric_name", type=>$VARCHAR, length=>80,pk=>1),
+		    col(name=>"metric_name", type=>$VARCHAR, length=>80, pk=>1),
 		    col(name=>"value", type=>$FLOAT)
 		   ],
 	indexes => [dbindex(name=>"tum_idx",
-			    column_names=>["topicid", "email",
-					   "metric_name"])]);
+			    column_names=>["topicid", "email"])]);
 
 # Holds all of the metric data that is owned by a specific topic. One row per 
 # metric. Metric data that is empty does not get a row.
@@ -334,7 +333,7 @@ my $delta_table =
 		    col(name=>"old_linenumber", type=>$INT32),
 		    col(name=>"new_linenumber", type=>$INT32),
 		    col(name=>"deltatext", type=>$TEXT),
-		    col(name=>"description", type=>$TEXT),
+		    col(name=>"description", type=>$TEXT, mandatory=>0),
 		    col(name=>"repmatch", type=>$INT16)
 		   ],
 	indexes => [dbindex(name=>"delta_fid_idx",

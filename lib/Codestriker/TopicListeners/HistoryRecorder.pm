@@ -86,6 +86,10 @@ sub topic_viewed($$$) {
 			     'VALUES (?, ?, ?)');
     my $success = defined $insert;
     my $creation_ts = Codestriker->get_timestamp(time);
+    if (! defined $user || $user eq "") {
+	$user = "unknown";
+    }
+
     $success &&= $insert->execute($topic->{topicid}, $user, $creation_ts);
 
     # Release the database connection.

@@ -33,6 +33,7 @@ sub new {
     
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
+    $self->{sequence_created} = 0;
     return bless $self, $type;
 }
 
@@ -108,18 +109,34 @@ sub _oracle_handle_auto_increment
 
     my $dbh = $self->{dbh};
 
-    $dbh->do("CREATE TRIGGER ${tablename}_${fieldname}_ins_row " .
-	     "BEFORE INSERT ON ${tablename} FOR EACH ROW " .
-	     "DECLARE newid integer; " .
-	     "BEGIN " .
-	     "IF (:NEW.${fieldname} IS NULL) " .
-	     "THEN " .
-	     "SELECT sequence.NextVal INTO newid FROM DUAL; " .
-	     ":NEW.${fieldname} := newid; " .
-	     "END IF; " .
-	     "END;")
-	|| die "Could not create trigger for table $tablename: " .
-	$dbh->errstr;
+    # Make sure the sequence is present in the database for the trigger to
+    # work.
+    eval {
+	if ($self->{sequence_created} == 0) {
+
+	    $dbh->do("CREATE SEQUENCE sequence");
+	    print "Created sequence\n";
+	    $self->{sequence_created} = 1;
+	}
+
+	# Now create the actual trigger on the table.
+	$dbh->do("CREATE TRIGGER ${tablename}_${fieldname}_ins_row " .
+		 "BEFORE INSERT ON ${tablename} FOR EACH ROW " .
+		 "DECLARE newid integer; " .
+		 "BEGIN " .
+		 "IF (:NEW.${fieldname} IS NULL) " .
+		 "THEN " .
+		 "SELECT sequence.NextVal INTO newid FROM DUAL; " .
+		 ":NEW.${fieldname} := newid; " .
+		 "END IF; " .
+		 "END;");
+	print "Created trigger\n";
+	$dbh->commit();
+    };
+    if ($@) {
+	eval { $self->rollback() };
+	die "Unable to create sequence/trigger.\n";
+    }
 }
 
 1;

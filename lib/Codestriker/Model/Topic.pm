@@ -542,24 +542,65 @@ sub query($$$$$$$$$$$$$\@\@\@\@\@\@\@\@\@) {
     my $query =
 	"SELECT topic.id, topic.title, topic.author, topic.creation_ts, " .
 	"topic.state, topicbug.bugid, participant.email, participant.type, " .
-	"topic.version " .
-	"FROM topic LEFT OUTER JOIN topicbug ON topic.id = topicbug.topicid " .
+	"topic.version ";
+
+    # Since Oracle < 9i can't handle LEFT OUTER JOIN, determine what tables
+    # are required in this query and add them in.
+    if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	my @fromlist = ("topic", "topicbug", "participant");
+	if ($stext ne "" && $scomments) {
+	    push @fromlist, "commentstate";
+	    push @fromlist, "commentata";
+	}
+	if ($stext ne "" && $sfilename) {
+	    push @fromlist, "topicfile";
+	}
+	$query .= "FROM " . (join ', ', @fromlist) . " WHERE ";
+    }
+    else {
+	$query .= "FROM topic ";
+    }
+
+    # Add the join to topicbug and participant.
+    if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	$query .= "topic.id = topicbug.topicid(+) AND " .
+	    "topic.id = participant.topicid(+) ";
+    }
+    else {
+	$query .= "LEFT OUTER JOIN topicbug ON topic.id = topicbug.topicid " .
 	"LEFT OUTER JOIN participant ON topic.id = participant.topicid ";
+    }
 
     # Join with the comment table if required - GACK!
     if ($stext ne "" && $scomments) {
-	$query .= 'LEFT OUTER JOIN commentstate ON ' .
-	    'topic.id = commentstate.topicid LEFT OUTER JOIN commentdata ON ' .
-	    'commentstate.id = commentdata.commentstateid ';
+	if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	    $query .=
+		'topic.id = commentstate.topicid(+) AND '.
+		'commentstate.id = commentdata.commentstateid(+) ';
+	}
+	else {
+	    $query .= 
+		'LEFT OUTER JOIN commentstate ON ' .
+		'topic.id = commentstate.topicid '.
+		'LEFT OUTER JOIN commentdata ON ' .
+		'commentstate.id = commentdata.commentstateid ';
+	}
     }
 
     # Join with the file table if required.
     if ($stext ne "" && $sfilename) {
-	$query .= 'LEFT OUTER JOIN topicfile ON topicfile.topicid = topic.id ';
+	if ($Codestriker::db =~ /^DBI:Oracle/i) {
+	    $query .= 'topic.id = topicfile.topicid(+) ';
+	}
+	else {
+	    $query .= 'LEFT OUTER JOIN topicfile ON ' .
+		'topicfile.topicid = topic.id ';
+	}
     }
 
-    # Combine the "AND" conditions together.
-    my $first_condition = 1;
+    # Combine the "AND" conditions together.  Note for Oracle, the 'WHERE'
+    # keyword has already been used.
+    my $first_condition = ($Codestriker::db =~ /^DBI:Oracle/i) ? 0 : 1;
     my @values = ();
     $query = _add_condition($query, $author_part, $sauthor, \@values,
 			    \$first_condition);
