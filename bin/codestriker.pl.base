@@ -57,6 +57,13 @@ use Codestriker::Action::ViewTopicProperties;
 use Codestriker::Action::ViewTopicComments;
 use Codestriker::Template::Plugin::AutomagicLinks;
 
+# Set the PATH to something sane if we aren't running under windows.
+# For a lot of annoying reasons, we can't run Codestriker in
+# tainted mode under Win32.
+my $osname = $Config{'osname'};
+my $windows = (defined $osname && $osname eq "MSWin32") ? 1 : 0;
+$ENV{'PATH'} = '/bin:/usr/bin' if ($windows == 0);
+
 # Prototypes of subroutines used in this module.
 sub main();
 
