@@ -86,7 +86,6 @@ sub get_deltas($$$) {
 			     'ORDER BY delta_sequence ASC');
     
     my $success = defined $select_deltas;
-	print STDERR "Topic id $topicid filename $filenumber\n";
     if ($filenumber != -1) {
 	$success &&= $select_deltas->execute($topicid, $filenumber);
     } else {
