@@ -9,14 +9,13 @@
 # are stored into the associated Bugzilla records.
 
 use strict;
-use warnings;
 
 package Codestriker::TopicListeners::Bugzilla;
 
 use Codestriker::TopicListeners::TopicListener;
 use Codestriker::BugDB::BugDBConnectionFactory;
 
-our @ISA = ("Codestriker::TopicListeners::TopicListener");
+@Codestriker::TopicListeners::Bugzilla::ISA = ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;

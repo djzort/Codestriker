@@ -60,7 +60,8 @@ function DeleteTopicConfirm()
   <td>Author:</td>
   <td>
     <input type="text" name="author" value="[% author | html_entity %]" 
-           size="50" maxlength="80">
+           size="50" maxlength="80"
+	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
 
@@ -83,7 +84,8 @@ function DeleteTopicConfirm()
   <td>Reviewers:</td>
   <td>
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
-           size="50" maxlength="150">
+           size="50" maxlength="150"
+	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
 
@@ -91,7 +93,8 @@ function DeleteTopicConfirm()
   <td>Cc:</td>
   <td>
     <input type="text" name="cc" value="[% cc | html_entity %]" 
-           size="50" maxlength="150">
+           size="50" maxlength="150"
+	   [% IF antispam_email %]disabled[% END %]>
   </td>
 </tr>
 

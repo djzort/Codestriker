@@ -9,14 +9,13 @@
 # comment's state.
 
 use strict;
-use warnings;
 
 package Codestriker::TopicListeners::HistoryRecorder;
 
 use Codestriker::TopicListeners::TopicListener;
 use Codestriker::DB::DBI;
 
-our @ISA = ("Codestriker::TopicListeners::TopicListener");
+@Codesrtiker::TopicListeners::HistoryRecorder::ISA = ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;

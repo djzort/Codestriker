@@ -9,7 +9,6 @@
 # is sent from this file when an topic event happens.
 
 use strict;
-use warnings;
 
 package Codestriker::TopicListeners::Email;
 
@@ -18,11 +17,11 @@ use Net::SMTP;
 use Sys::Hostname;
 
 # Separator to use in email.
-our $EMAIL_HR = "--------------------------------------------------------------";
+my $EMAIL_HR = "--------------------------------------------------------------";
 # If true, just ignore all email requests.
 my $DEVNULL_EMAIL = 0;
 
-our @ISA = ("Codestriker::TopicListeners::TopicListener");
+@Codestriker::TopicListeners::Email::ISA = ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;

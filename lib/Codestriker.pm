@@ -22,7 +22,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $p4 $vss $bugtracker
 	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist 
               $allow_projects $antispam_email $VERSION $title $BASEDIR
-	      $metric_config $tmpdir
+	      $metric_config $tmpdir @metric_schema
 	      );
 
 # Version of Codestriker.
@@ -105,7 +105,7 @@ $metric_config = "";
 # will not be stored to the database if it does not pass the format
 # expected for the filter type.
 
-our @metrics_schema = 
+my @metrics_schema = 
 ( 
   # planning time
   {

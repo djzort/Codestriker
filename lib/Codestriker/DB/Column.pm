@@ -10,7 +10,6 @@
 package Codestriker::DB::Column;
 
 use strict;
-use warnings;
 
 # Export the type values.
 use vars qw ( $TYPE );

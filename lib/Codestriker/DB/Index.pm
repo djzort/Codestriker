@@ -10,7 +10,6 @@
 package Codestriker::DB::Index;
 
 use strict;
-use warnings;
 
 # Create a new Index object.
 # usage: Index->new({name=>"table_index1", column_names=>["col1", "col2"]});

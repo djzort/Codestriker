@@ -12,7 +12,6 @@
 package Codestriker::TopicListeners::TopicListener;
 
 use strict;
-use warnings;
 
 sub new {
     my $type = shift;

@@ -9,7 +9,6 @@
 package Codestriker::Model::Metrics;
 
 use strict;
-use warnings;
 
 use Codestriker::DB::DBI;
 

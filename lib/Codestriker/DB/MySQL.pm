@@ -8,14 +8,13 @@
 package Codestriker::DB::MySQL;
 
 use strict;
-use warnings;
 use DBI;
 use Codestriker;
 use Codestriker::DB::Database;
 
 # Module for handling a MySQL database.
 
-our @ISA = ("Codestriker::DB::Database");
+@Codestriker::DB::MySQL::ISA = ("Codestriker::DB::Database");
 
 # Type mappings.
 my $_TYPE = {

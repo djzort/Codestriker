@@ -8,7 +8,6 @@
 # Object to create and call all of the lister objects.
 
 use strict;
-use warnings;
 
 package Codestriker::TopicListeners::Manager;
 
@@ -16,7 +15,7 @@ use Codestriker::TopicListeners::Email;
 use Codestriker::TopicListeners::Bugzilla;
 use Codestriker::TopicListeners::HistoryRecorder;
 
-our @topic_listeners;
+my @topic_listeners;
 
 sub topic_create { 
     _create_listeners();

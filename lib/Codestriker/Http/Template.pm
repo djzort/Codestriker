@@ -74,6 +74,9 @@ sub process($$) {
     # Indicate if bug db integration is enabled.
     $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
 
+    # Indicate if antispam_email is enabled.
+    $vars->{'antispam_email'} = $Codestriker::antispam_email;
+
     # CodeStriker Version, used in the title.
     $vars->{'version'} = $Codestriker::VERSION;
 

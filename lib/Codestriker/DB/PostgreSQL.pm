@@ -8,7 +8,6 @@
 package Codestriker::DB::PostgreSQL;
 
 use strict;
-use warnings;
 use DBI;
 use Codestriker;
 use Codestriker::DB::Database;
@@ -16,7 +15,7 @@ use Codestriker::DB::Column;
 
 # Module for handling a PostgreSQL database.
 
-our @ISA = ("Codestriker::DB::Database");
+@Codestriker::DB::PostgreSQL::ISA = ("Codestriker::DB::Database");
 
 # Type mappings.
 my $_TYPE = {

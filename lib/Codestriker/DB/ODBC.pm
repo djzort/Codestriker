@@ -8,14 +8,13 @@
 package Codestriker::DB::ODBC;
 
 use strict;
-use warnings;
 use DBI;
 use Codestriker;
 use Codestriker::DB::Database;
 
 # Module for handling an ODBC database.
 
-our @ISA = ("Codestriker::DB::Database");
+@Codestriker::DB::ODBC::ISA = ("Codestriker::DB::Database");
 
 # Type mappings.
 my $_TYPE = {

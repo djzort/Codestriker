@@ -64,11 +64,20 @@ sub process($$$) {
     if ($topic_description eq "") {
 	$feedback .= "Topic description cannot be empty.\n";
     }
-    if ($author eq "") {
-	$feedback .= "Author cannot be empty.\n";
-    }
-    if ($reviewers eq "") {
-	$feedback .= "Reviewers cannot be empty.\n";
+
+    if ($Codestriker::antispam_email == 0) {
+	if ($author eq "") {
+	    $feedback .= "Author cannot be empty.\n";
+	}
+	if ($reviewers eq "") {
+	    $feedback .= "Reviewers cannot be empty.\n";
+	}
+    } else {
+	# Note if anti_spam email is on, don't allow the user to
+	# change the $author, $reviewers or $cc properties.
+	$author = $topic->{author};
+	$reviewers = $topic->{reviewers};
+	$cc = $topic->{cc};
     }
 
     if ($feedback eq "") {

@@ -10,7 +10,6 @@
 package Codestriker::DB::Table;
 
 use strict;
-use warnings;
 
 # A table consists of an array of Column objects, plus an array of indexes.
 # usage: Table->new{name=>"table_name", columns=>\@columns, indexes=>\@indexes}

@@ -10,7 +10,6 @@
 package Codestriker::Action::SubmitEditCommentsState;
 
 use strict;
-use warnings;
 
 use Codestriker::Action::ViewTopicComments;
 use Codestriker::TopicListeners::Manager;

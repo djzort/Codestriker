@@ -8,14 +8,13 @@
 package Codestriker::DB::Oracle;
 
 use strict;
-use warnings;
 use DBI;
 use Codestriker;
 use Codestriker::DB::Database;
 
 # Module for handling an Oracle database.
 
-our @ISA = ("Codestriker::DB::Database");
+@Codestriker::DB::Oracle::ISA = ("Codestriker::DB::Database");
 
 # Type mappings.
 my $_TYPE = {

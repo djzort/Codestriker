@@ -8,7 +8,6 @@
 package Codestriker::DB::Database;
 
 use strict;
-use warnings;
 
 use DBI;
 use Codestriker;

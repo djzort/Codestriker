@@ -10,12 +10,11 @@
 package Codestriker::Model::MetricStats;
 
 use strict;
-use warnings;
 
 use Codestriker::DB::DBI;
 
-our $total_participants_header = 'Total Participants';
-our $topic_size_lines_header = 'Topic Size In Lines';
+my $total_participants_header = 'Total Participants';
+my $topic_size_lines_header = 'Topic Size In Lines';
 
 # Returns the list of users that have participated in a Codestriker topics.
 #
