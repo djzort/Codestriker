@@ -365,7 +365,7 @@ my $topicfile_table =
 		    col(name=>"sequence", type=>$INT16, pk=>1),
 		    col(name=>"filename", type=>$VARCHAR, length=>1024),
 		    col(name=>"topicoffset", type=>$INT32),
-		    col(name=>"revision", type=>$VARCHAR, length=>100),
+		    col(name=>"revision", type=>$VARCHAR, length=>255),
 		    col(name=>"binaryfile", type=>$INT16),
 		    col(name=>"diff", type=>$TEXT, mandatory=>0)
 		   ],
