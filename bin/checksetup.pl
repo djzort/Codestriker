@@ -24,6 +24,7 @@ use Config;
 # doesn't try to grab this during compile time, otherwise nasty-looking
 # error messages will appear to the user.
 eval("use Cwd");
+eval("use CPAN");
 eval("use File::Path");
 eval("use lib '../lib'");
 eval("use Codestriker");
@@ -44,6 +45,16 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 # Initialise Codestriker, load up the configuration file.
 Codestriker->initialise(cwd() . '/..');
 
+# Make sure the $db configuration variable has been set, and if not
+# complain and exit.
+if (! defined $Codestriker::db) {
+    print STDERR
+	"The database configuration variable \$db has not been set.\n";
+    print STDERR
+	"Please edit the codestriker.conf file and run this command again.\n";
+    exit -1;
+}
+
 # Indicate which modules are required for codestriker (this code is
 # completely stolen more-or-less verbatim from Bugzilla)
 my $modules = [ 
@@ -62,6 +73,10 @@ my $modules = [
     { 
         name => 'DBI', 
         version => '1.13' 
+    }, 
+    { 
+        name => 'HTML::Mason', 
+        version => '0' 
     }, 
     { 
         name => 'Template', 
@@ -233,7 +248,44 @@ EOF
 	print "\n";
 	print "Modules can also be downloaded from http://www.cpan.org.\n\n";
     }
-    exit;
+
+    if ($windows) {
+	# Need to find out how to do automatic installs with PPM.
+	exit -1;
+    }
+
+    # Check we are running as root so the Perl modules can be properly
+    # installed.
+    print "\n";
+
+    if ($< != 0) {
+        print "Execute this script as root so I can install these modules ";
+        print "automatically.\n\n";
+        exit -1;
+    }
+
+    print "Shall I try to download and install these modules for you? (y/n): ";
+    flush STDOUT;
+    
+    my $answer = <STDIN>;
+    chop $answer;
+    if ($answer =~ /^y/i) {
+	# Try to install the modules using CPAN.
+	foreach my $module (keys %missing) {
+	    my $obj = CPAN::Shell->expand('Module', $module);
+	    
+	    if (! $obj->install) {
+		print STDERR "\n\nFailed to install module: $module.\n";
+		print STDERR "Try to install this module manually, " .
+		    "and run this script again.\n\n";
+		exit(1);
+	    }
+	}
+	
+    } else {
+	# User decided to bail out.
+	exit -1;
+    }
 }
 
 
