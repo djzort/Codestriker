@@ -211,6 +211,12 @@ $table{topichistory} =
      modified_by_user varchar(255) NOT NULL,
      PRIMARY KEY (id, version)";
 
+# Holds information as to when a user viewed a topic.
+$table{topicviewhistory} =
+    "topicid int NOT NULL,
+     email varchar(255) NOT NULL,
+     creation_ts timestamp NOT NULL";
+
 # Holds all of the metric data that is owned by a specific user on a specific 
 # topic. One row per metric. Metric data that is left empty does not get a row.
 $table{topicusermetric} =

@@ -16,6 +16,7 @@ use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
+use Codestriker::TopicListeners::Manager;
 
 # If the input is valid, display the topic.
 sub process($$$) {
@@ -235,6 +236,9 @@ sub process($$$) {
     print $query->end_html();
 
     $http_response->generate_footer();
+
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
 
 # This function is used by all of the three topic pages to fill out the

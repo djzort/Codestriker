@@ -38,6 +38,15 @@ sub topic_changed($$$) {
     return '';    
 }
 
+sub topic_viewed($$$) {
+    my ($self, $user, $topic) = @_;
+
+    # Default version of function that does nothing, and allowed the
+    # event to continue.
+    
+    return '';    
+}
+
 sub comment_create($$$) {
     my ($self, $topic, $comment) = @_;
 

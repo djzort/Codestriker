@@ -70,6 +70,27 @@ sub topic_changed($$$$) {
     return '';
 }
 
+# Add a record to the topicviewhistory table to indicate the user has
+# viewed the specified topic.
+sub topic_viewed($$$) {
+    my ($self, $user, $topic) = @_;
+
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $insert =
+	$dbh->prepare_cached('INSERT INTO topicviewhistory ' .
+			     '(topicid, email, creation_ts) ' .
+			     'VALUES (?, ?, ?)');
+    my $success = defined $insert;
+    my $creation_ts = Codestriker->get_timestamp(time);
+    $success &&= $insert->execute($topic->{topicid}, $user, $creation_ts);
+
+    # Release the database connection.
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+}
+
 # Insert a row into the commentstatehistory table.
 sub _insert_commentstatehistory_entry($$$) {
     my ($self, $user, $comment) = @_;

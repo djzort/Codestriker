@@ -4,8 +4,9 @@
 Version 1.8.0
 
 * Added in a new topic listener which records all changes to a
-  comment's state, and any property changes to a topic.  Two new
-  database tables have been added to store this information.
+  comment's state, property changes to a topic and when a topic has
+  been viewed. Three new database tables have been added to store this
+  information, which can be accessed from the metrics tab of a topic.
 
 * Added in the ability for the topic's properties to be changed,
   including the title, author, bug ids, reviewers, cc, repository,
