@@ -107,18 +107,21 @@ sub process($$$) {
 	$Codestriker::suggested_topic_size_lines eq "" ?
 	0 : $Codestriker::suggested_topic_size_lines;
 
-    # Set the repository to the default if it is not entered.
-    if ($repository_url eq "") {
-	$repository_url = $Codestriker::valid_repositories[0];
-    }
+    my $repository = undef;
+    if ($Codestriker::allow_repositories) {
+	# Set the repository to the default if it is not entered.
+	if ($repository_url eq "") {
+	    $repository_url = $Codestriker::valid_repositories[0];
+	}
 
-    # Check if the repository argument is valid.
-    my $repository =
-	Codestriker::Repository::RepositoryFactory->get($repository_url);
-    if (! defined $repository) {
-	$feedback .= "The repository value \"$repository_url\" is invalid.\n";
-	$feedback .= "Please correct this value in your codestriker.conf " .
-	    "file, and try again.\n";
+	# Check if the repository argument is valid.
+	my $repository =
+	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+	if (! defined $repository) {
+	    $feedback .= "The repository value \"$repository_url\" is invalid.\n";
+	    $feedback .= "Please correct this value in your codestriker.conf " .
+		"file, and try again.\n";
+	}
     }
 
     # If there is a problem with the input, redirect to the create screen

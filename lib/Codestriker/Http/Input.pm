@@ -175,8 +175,7 @@ sub process($) {
     $self->_set_property_from_cookie('tabwidth',
 				     $Codestriker::default_tabwidth);
     $self->_set_property_from_cookie('email', "");
-    $self->_set_property_from_cookie('repository',
-				     $Codestriker::default_repository);
+    $self->_set_property_from_cookie('repository', "");
     $self->_set_property_from_cookie('projectid', 0);
     $self->_set_property_from_cookie('module', "");
 
