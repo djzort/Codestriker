@@ -115,20 +115,6 @@ sub process($) {
     $self->{project_name} = "" if ! defined $self->{project_name};
     $self->{project_description} = "" if ! defined $self->{project_description};
 
-    my @topic_metrics = $query->param('topic_metric');
-    $self->{topic_metric} = \@topic_metrics;
-
-    my @author_metrics = $query->param('author_metric');
-    $self->{author_metric} = \@author_metrics;
-
-    for (my $userindex = 0; $userindex < 100; ++$userindex)
-    {
-	my @reviewer_metrics = $query->param("reviewer_metric,$userindex");
-
-	last if (scalar(@reviewer_metrics) == 0);
-	$self->{"reviewer_metric,$userindex"} = \@reviewer_metrics;
-    }
-
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
 	$self->{topic_description} =~ s/\r//g;
@@ -175,8 +161,7 @@ sub process($) {
     $self->_set_property_from_cookie('tabwidth',
 				     $Codestriker::default_tabwidth);
     $self->_set_property_from_cookie('email', "");
-    $self->_set_property_from_cookie('repository',
-				     $Codestriker::default_repository);
+    $self->_set_property_from_cookie('repository', "");
     $self->_set_property_from_cookie('projectid', 0);
     $self->_set_property_from_cookie('module', "");
 
@@ -205,7 +190,6 @@ sub process($) {
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
     $self->{cc} = $self->make_canonical_email_list($self->{cc});
     $self->{bug_ids} = $self->make_canonical_bug_list($self->{bug_ids});
-    $self->{comment_cc} = $self->make_canonical_email_list($self->{comment_cc});
 
     # Initialise the feedback field to empty.
     $self->{feedback} = "";
