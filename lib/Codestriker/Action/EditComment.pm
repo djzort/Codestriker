@@ -97,14 +97,10 @@ sub process($$$) {
 	    my $author = $comments[$i]{author};
 	    $display_comment->{author} = Codestriker->filter_email($author);
 	    $display_comment->{date} = $comments[$i]{date};
-	    $display_comment->{data} =
-		$http_response->escapeHTML($comments[$i]{data});
+	    $display_comment->{data} = $comments[$i]{data};
 	    $display_comment->{line} = "";
 	    $display_comment->{lineurl} = "";
 	    $display_comment->{linename} = "";
-	    $display_comment->{date} = $comments[$i]{date};
-	    $display_comment->{data} =
-		$http_response->escapeHTML($comments[$i]{data});
 	    $display_comment->{line} = "";
 	    $display_comment->{lineurl} = "";
 	    $display_comment->{linename} = "";

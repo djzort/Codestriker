@@ -1,5 +1,7 @@
 [%# Display a list of comments #%]
 
+[% USE AutomagicLinks %]
+
 [% PROCESS viewtopicheader.html.tmpl version = version help="x476.html" topicview=0 topiccomments=1 topicinfo=0 %]
 
 <SCRIPT language="JavaScript">
@@ -38,6 +40,52 @@ function SelectFilter(post)
         window.form.post();
     }
 }
+
+// This function checks all comment checkboxes.
+function CheckAll()
+{
+    if (document.form.selected_comments == null)
+    {
+        return;  // No comments.
+    }
+
+    if (document.form.selected_comments.length == null)
+    {
+        // Only one comment, older browsers don't represent checkboxes
+        // in array notation when there is only one element.
+        document.form.selected_comments.checked = true;
+        return;
+    }
+
+    // Check all the arrays.    
+    for (var i = 0; i < document.form.selected_comments.length; i++)
+    {
+        document.form.selected_comments[i].checked = true;
+    }    
+}
+
+// This function clear all comment checkboxes.
+function ClearAll()
+{
+    if (document.form.selected_comments == null)
+    {
+        return;  // No comments.
+    }
+
+    if (document.form.selected_comments.length == null)
+    {
+        // Only one comment, older browsers don't represent checkboxes
+        // in array notation when there is only one element.
+        document.form.selected_comments.checked = false;
+        return;
+    }
+
+    for (var i = 0; i < document.form.selected_comments.length; i++)
+    {
+        document.form.selected_comments[i].checked = false;
+    }    
+}
+
 // -->
 </SCRIPT>
 
@@ -85,6 +133,11 @@ state and
 
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
+    <TR>
+        <TD COLSPAN="3">
+            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
+        </TD>
+    </TR>
 [% last_fileline = -1 %]
 [% last_filenumber = -1 %]
 [% FOREACH comment = comments %]
@@ -93,11 +146,11 @@ state and
     [% IF comment.fileline != last_fileline ||
           comment.filenumber != last_filenumber %]
     <TR CLASS="comments">
-        <TD>
+        <TD WIDTH="1%">
             <INPUT TYPE="checkbox" NAME="selected_comments" 
 	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
         </TD>
-	<TD><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+	<TD WIDTH="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
 	<TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
@@ -111,7 +164,7 @@ state and
     </TR>
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD></TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
@@ -121,15 +174,22 @@ state and
 
     <TR CLASS="commenth">
         <TD CLASS="commentb">&nbsp;</TD>
-        <TD COLSPAN="2">[% comment.author %]&nbsp;[% comment.date %]</TD>
+        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
     </TR>
 
 [% END %]
 
     <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
+
+
+    <TR>
+        <TD COLSPAN="3">
+            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
+        </TD>
+    </TR>
 
 </TABLE>
 

@@ -1,5 +1,7 @@
 [%# Screen for the add comment form. #%]
 
+[% USE AutomagicLinks %]
+
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr class="heading">
   <td valign="bottom"></td>   
@@ -13,8 +15,8 @@
 <table border=0 rules=groups cellpadding=5% cellspacing=0 width="100%">
 <colgroup span=3>
 <tr class="tlh">
-    <td colspan=4>Topic Title: <b>[% topic_title %]</b>. </td>
-    <td align=right>[% document_creation_time %]</td>
+    <td colspan=4>Topic Title: <b>[% topic_title | html_entity %]</b>. </td>
+    <td align=right>[% document_creation_time | html_entity %]</td>
 </tr>
 </table>
 
@@ -66,12 +68,12 @@ Enter new comment:
 [% comment.line %]</A>
 [% END %]
 
-[% comment.author %]&nbsp;[% comment.date %]
+[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]
 </TD>
 </TR>
 <TR CLASS="commentb">
 <TD>
-<PRE>[% comment.data %]</PRE></TD>
+<PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
 </TR>
 [% END %]
 </TABLE>

@@ -3,6 +3,8 @@
     script, as it is complex HTML that doesn't need to be
     customised. #%]
 
+[% USE AutomagicLinks %]
+
 [% PROCESS viewtopicheader.html.tmpl version = version topicview=0 topiccomments=0 topicinfo=1 %]
 
 <script language="JavaScript">
@@ -30,7 +32,7 @@ function DeleteTopicConfirm()
 -->
 </script>
 
-<pre>[% description FILTER html_entity %]</pre>
+<pre>[% description | html_entity | $AutomagicLinks %]</pre>
 
 [%# Create a table illustrating the title, author, creation date, bug
     ids, reviewers, number of lines and the current state. #%]
@@ -51,7 +53,7 @@ function DeleteTopicConfirm()
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Author:</td>
- <td colspan="5">[% author %]</td>
+ <td colspan="5">[% author | html_entity %]</td>
 </tr>
 
 [% IF bug_string != '' %]
@@ -63,7 +65,7 @@ function DeleteTopicConfirm()
 
 <tr class="tt[% type mod 2 %]">
  <td>Reviewers:</td>
- <td colspan="5"><input type="text" size="50" value="[% document_reviewers  %]"></td>
+ <td colspan="5"><input type="text" size="50" value="[% document_reviewers | html_entity %]"></td>
 </tr>
 
 <tr class="tt[% type mod 2 %]">
@@ -113,7 +115,7 @@ retrieving lists of topics from the search page.
 [% IF projects_enabled != 0 %]
 <tr class="tt[% type mod 2 %]">
  <td>Project:</td>
- <td colspan="5">[% project_name %]</td>
+ <td colspan="5">[% project_name | html_entity %]</td>
 </tr>
 [% END %]
 
