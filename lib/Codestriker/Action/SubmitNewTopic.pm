@@ -274,6 +274,22 @@ sub process($$$) {
         return;
     }
 
+    # Make sure the specified topicids to be obsoleted are in fact valid.
+    if (defined $obsoletes && $obsoletes ne '') {
+	my @data = split ',', $obsoletes;
+	for (my $i = 0; $i <= $#data; $i+=2) {
+	    my $id = $data[$i];
+	    my $version = $data[$i+1];
+
+	    if (! Codestriker::Model::Topic::exists($id)) {
+		$feedback .= "Obsoleted topics specified do not exist.\n";
+		_forward_create_topic($error_vars, $feedback, $url_builder);
+		$http_response->generate_footer();
+		return;
+	    }
+	}
+    }
+
     # Create the topic in the model.
     my $topic = Codestriker::Model::Topic->new($topicid);
     $topic->create($topicid, $email, $topic_title,

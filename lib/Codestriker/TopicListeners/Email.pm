@@ -50,14 +50,31 @@ sub topic_create($$) {
                 \@offsets,
                 \@binary);
 
+    # Determine if any topics are obsoleted by this topic.
+    my $query = new CGI;
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+    my @obsolete_topic_urls = ();
+    foreach my $obsolete_topic (@{$topic->{obsoleted_topics}}) {
+	push @obsolete_topic_urls,
+	     $url_builder->view_url_extended($obsolete_topic, -1, "", "", "",
+					     $query->url(), 0);
+    }
+    my $obsolete_text = "";
+    if ($#obsolete_topic_urls >= 0) {
+	$obsolete_text = "This topic obsoletes the following topics:\n\n";
+	$obsolete_text .= join("\n", @obsolete_topic_urls) . "\n\n";
+    }
+
     my $notes = 
         "Description: \n" .  
 	"$topic->{description}\n\n" .
+	$obsolete_text .
 	"$EMAIL_HR\n\n" .
         "The topic was created with the following files:\n\n" .
         join("\n",@filenames);
 
-    $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc, $bcc,$notes);
+    $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc, $bcc,
+			     $notes);
 
     return '';
 }
@@ -349,7 +366,8 @@ sub comment_create($$$) {
 # This is a private helper function that is used to send topic emails. Topic 
 # emails include topic creation, state changes, and deletes.
 sub _send_topic_email {
-    my ($self, $topic, $new, $event_name, $include_url, $from, $to, $cc, $bcc, $notes) = @_;
+    my ($self, $topic, $new, $event_name, $include_url, $from, $to, $cc,
+	$bcc, $notes) = @_;
   
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

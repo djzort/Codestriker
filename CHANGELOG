@@ -32,6 +32,8 @@ Version 1.8.5
 * Minor fix for handing CVS rdiff text which end in a binary entry.
   Problem found by Dave Clendenan.
 
+* Shorten the URLs sent in the email messages.
+
 Version 1.8.4
 
 * The topic properties page now displays the start tag, end tag and

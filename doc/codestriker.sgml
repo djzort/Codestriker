@@ -689,6 +689,16 @@ $lxr_map =
 	  Unless you have specific reasons to, most intranet
 	  deployments of Codestriker can leave these options as is.
 	  <programlisting>
+# Exclude these file types from review topics.   
+# You will generally want to exclude any non-human-readable files.
+@exclude_file_types = ('rtf', 'doc', 'gif', 'bmp', 'jpeg', 'jpg', 'mdb',
+		       'ppt', 'vsd', 'xls', 'zip', 'tgz', 'tar', 'gz',
+		       'opt', 'aps', 'ncb', 'a', 'so', 'dll', 'lib',
+		       'exe', 'png', 'pdf', 'bin', 'out', 'ld', 'fm',
+		       'indd', 'wav', 'o', 'obj', 'mpp', 'vsw', 'jfif',
+		       'tif', 'tiff', 'xbm', 'fnt', 'ttf', 'pfm', 'pfb',
+		       'eps', 'wpj', 'sxi');
+
 # Indicate if topics can be deleted.  Turning this to false can be useful for
 # "anonymous" installations of codestriker.
 $allow_delete = 1;
@@ -1481,7 +1491,13 @@ C:\Perl\bin\perl.exe "%s" %s
         other screens, and requires the submission of a number of
         details in order to create a topic.  A screenshot can be seen
         in <xref linkend="figure-create-topic">.  It is also possible
-        to generate new topics from the command line.  Check out the
+        to create a new topic which obsoletes a number of other topics
+        via the "Obsolete Topics" button on the topic list screen (see
+        <xref linkend="topic-list">).  This is normally done when a
+        review has many comments, and a new review (which obsoletes
+        the old review) needs to be created which has addressed these
+        comments.  It is also possible to generate new topics from the
+        command line.  Check out the
         <filename>SubmitCodeReview.pl</filename> script in the
         <filename>bin</filename> directory in the Codestriker
         distribution.

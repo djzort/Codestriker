@@ -50,9 +50,6 @@ sub new($$) {
 sub view_url_extended ($$$$$$$$$$) {
     my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
 	$updated, $brmode, $fview) = @_;
-    if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
-    if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
-    if (!(defined $fview)) { $fview = $Codestriker::default_file_to_view; }
     
     return ($prefix ne "" ? $prefix : $self->{query}->url()) .
 	"?topic=$topic&action=view" .

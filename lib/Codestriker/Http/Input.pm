@@ -193,6 +193,8 @@ sub process($) {
 				     $Codestriker::default_topic_create_mode);
     $self->_set_property_from_cookie('tabwidth',
 				     $Codestriker::default_tabwidth);
+    $self->_set_property_from_cookie('fview',
+				     $Codestriker::default_file_to_view);
     $self->_set_property_from_cookie('email', "");
     $self->_set_property_from_cookie('repository', "");
     $self->_set_property_from_cookie('projectid', 0);
