@@ -42,18 +42,24 @@ sub process($$$) {
     my @document_description = split /\n/, $topic->{description};
 
     # Retrieve the diff hunk for this file and line number.
-    my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn, $line, $new);
+    my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
+						     $line, $new);
 
     # Display the header of this page.
-    $http_response->generate_header(topic=>$topicid, topic_title=>$topic->{title}, email=>$email, 
-    				    mode=>$mode, tabwidth=>$tabwidth, repository=>$topic->{repository}, 
+    $http_response->generate_header(topic=>$topicid,
+				    topic_title=>$topic->{title},
+				    email=>$email, 
+    				    mode=>$mode,
+				    tabwidth=>$tabwidth,
+				    repository=>$topic->{repository}, 
 				    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};
     $vars->{'topic_title'} = $topic->{title};
 
-    Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic, $url_builder);
+    Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
+						       $url_builder);
 
     my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
     my $view_comments_url = $url_builder->view_comments_url($topicid);
@@ -67,12 +73,13 @@ sub process($$$) {
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
-	$url_builder->edit_url($fn, $line, $new, $topicid, $inc_context, "", "");
+	$url_builder->edit_url($fn, $line, $new, $topicid,
+			       $inc_context, "", "");
     my $dec_context_url =
-	$url_builder->edit_url($fn, $line, $new, $topicid, $dec_context, "", "");
+	$url_builder->edit_url($fn, $line, $new, $topicid,
+			       $dec_context, "", "");
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
-
     $vars->{'context'} = $query->pre(
 	    Codestriker::Http::Render->get_context($line, 
 						   $context, 1,

@@ -36,7 +36,7 @@ sub get_query($) {
 # Most of the input parameters are used for storage into the user's cookie.
 sub generate_header {
     
-    my ($self,%params) = @_;
+    my ($self, %params) = @_;
 
     my $topic = "";
     my $topic_title = "";
@@ -57,6 +57,9 @@ sub generate_header {
     return if ($self->{header_generated});
     $self->{header_generated} = 1;
     my $query = $self->{query};
+
+    # Set the topic parameter.
+    $topic = $params{topic};
 
     # Set the cookie in the HTTP header for the $email, $cc, $reviewers and
     # $tabwidth parameters.
