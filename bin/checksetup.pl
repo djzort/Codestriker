@@ -1,4 +1,4 @@
-#!c:/perl/bin/perl -w
+#!/usr/bin/perl -w
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -148,7 +148,9 @@ if (%missing) {
 
 	print <<EOF;
 
-These can be installed by doing the following in PPM 2.0:
+These can be installed by doing the following in PPM 2.0 (the version of ppm is
+displayed when you start it up).
+
 C:\> ppm
 
 PPM> set repository oi http://openinteract.sourceforge.net/ppmpackages
@@ -164,8 +166,12 @@ PPM> install (package-name)
 *NOTE* The Template package name may not be "Template" but "Template-Toolkit"
 when entering the commands above.
 
-See http://openinteract.sourceforge.net/cgi-bin/twiki/view/OI/ActivePerlPackages for more details.
-Another repository of Perl packages is http://theoryx5.uwinnipeg.ca/ppmpackages.
+http://openinteract.sourceforge.net/cgi-bin/twiki/view/OI/ActivePerlPackages
+has more information if you still have problems.
+
+Another repository of Perl packages is http://theoryx5.uwinnipeg.ca/ppmpackages
+which also has mod_perl for Win32.
+
 The ActiveState default repository in PPM has almost all of the packages
 required.
 EOF
