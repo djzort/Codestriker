@@ -234,8 +234,12 @@ sub generate_header {
     print "<script src=\"$overlib_draggable_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$xbdhtml_js\" type=\"text/javascript\"></script>\n";
     print "<script src=\"$codestriker_js\" type=\"text/javascript\"></script>\n";
+    print "<script type=\"text/javascript\">\n";
+    print "    var cs_load_anchor = '$load_anchor';\n";
+    print "    var cs_reload = $reload;\n";
+    print "</script>\n";
 
-    # Write a comment indicating if this was compressed or not.
+    # Write an HTML comment indicating if response was sent compressed or not.
     $self->{output_compressed} = $output_compressed;
     print "\n<!-- Source was" . (!$output_compressed ? " not" : "") .
 	" sent compressed. -->\n";
