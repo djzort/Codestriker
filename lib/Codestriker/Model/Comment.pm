@@ -22,7 +22,7 @@ sub create($$$$$$) {
 
     # Create the prepared statements.
     my $insert_comment =
-	$dbh->prepare_cached('INSERT INTO COMMENT (topicid, commentfield, ' .
+	$dbh->prepare_cached('INSERT INTO comment (topicid, commentfield, ' .
 			     'author, line, creation_ts) ' .
 			     'VALUES (?, ?, ?, ?, ?)');
     my $success = defined $insert_comment;

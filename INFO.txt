@@ -36,3 +36,43 @@ mysql> CREATE TABLE test (
 show index from version;
 describe version;
 show tables;
+
+
+mysql> select modified_ts, creation_ts from topic;
+ERROR 1146: Table 'codestrikerdb.topic' doesn't exist
+mysql> update topic set version=10, state=5, modified_ts=20020116104906 where id=7168516;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select modified_ts, creation_ts from topic where id=7168516;
++----------------+----------------+
+| modified_ts    | creation_ts    |
++----------------+----------------+
+| 20020116104906 | 20020529073931 |
++----------------+----------------+
+1 row in set (0.00 sec)
+
+mysql> update topic set version=10, state=5, modified_ts=20020116104906 where id=7168516;
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> select modified_ts, creation_ts from topic where id=7168516;
++----------------+----------------+
+| modified_ts    | creation_ts    |
++----------------+----------------+
+| 20020116104906 | 20020529073931 |
++----------------+----------------+
+1 row in set (0.00 sec)
+
+mysql> update topic set version=10, state=5, modified_ts=20020116104950 where id=7168516;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select modified_ts, creation_ts from topic where id=7168516;
++----------------+----------------+
+| modified_ts    | creation_ts    |
++----------------+----------------+
+| 20020116104950 | 20020529074022 |
++----------------+----------------+
+1 row in set (0.00 sec)
+

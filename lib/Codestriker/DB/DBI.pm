@@ -19,7 +19,7 @@ sub get_connection($) {
     my ($type) = @_;
 
     return DBI->connect($Codestriker::db, $Codestriker::dbuser,
-			$Codestriker::dbpasswd, {AutoCommit=>0, RaiseError=>1})
+			$Codestriker::dbpasswd, {AutoCommit=>0, RaiseError=>0})
 	|| die "Couldn't connect to database: " . DBI->errstr;
 }
 

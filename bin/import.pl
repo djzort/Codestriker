@@ -63,6 +63,7 @@ sub main() {
 	    # Retrieve the time the topic was created.
 	    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
 		$atime,$mtime,$ctime,$blksize,$blocks) = stat DOCUMENT;
+	    
 	    my $document_ts = Codestriker->get_timestamp($mtime);
 
 	    # The document text.

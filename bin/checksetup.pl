@@ -133,5 +133,6 @@ if (!$found) {
 }
 
 $dbh->commit;
+$dbh->disconnect;
 
 

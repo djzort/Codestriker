@@ -99,6 +99,7 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 
     my $success = defined $select_topic && defined $select_bugs &&
 	defined $select_participants;
+    my $errmsg;
 
     # Retrieve the topic information.
     $success &&= $select_topic->execute($topicid);
@@ -110,6 +111,11 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 	 $creationtime, $modifiedtime, $version)
 	    = $select_topic->fetchrow_array();
 	$select_topic->finish();
+
+	if (!defined $id) {
+	    $success = 0;
+	    $errmsg = "Invalid topic: $topicid\n";
+	}
     }
 
     # Retrieve the bug relating to this topic.
@@ -140,7 +146,10 @@ sub read($$\$\$\$\$\$\$\$\$\$\$\$) {
 
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh);
-    die $dbh->errstr unless $success;
+    if (!$success) {
+	$errmsg = $dbh->errstr unless defined $errmsg;
+	die "$errmsg\n";
+    }
 
     # Store the data into the referenced variables.
     $$author_ref = $author;

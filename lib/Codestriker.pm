@@ -21,7 +21,7 @@ use vars qw ( $datadir $sendmail $use_compression $gzip $bugtracker
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.5.0d1";
+$Codestriker::VERSION = "1.5.0b1";
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";
@@ -81,7 +81,8 @@ sub get_timestamp($$) {
 sub format_timestamp($$) {
     my ($type, $timestamp) = @_;
 
-    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/) {
+    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
+	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
 	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	    localtime($time_value);
@@ -99,7 +100,8 @@ sub format_timestamp($$) {
 sub format_short_timestamp($$) {
     my ($type, $timestamp) = @_;
 
-    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/) {
+    if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
+	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
 	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
 	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
 	    localtime($time_value);
