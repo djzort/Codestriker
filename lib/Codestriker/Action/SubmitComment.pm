@@ -149,8 +149,9 @@ sub process($$$) {
 	}
     }
 
-    # Send the email notification out, if it is allowed in the config file.
-    if ( $Codestriker::allow_comment_email || $cc_recipients ne "")
+    # Send the email notification out, if it is allowed in the config file,
+    # or if something has been entered in the cc field.
+    if ( $Codestriker::allow_comment_email || $cc ne "")
     {
 	if (!Codestriker::Smtp::SendEmail->doit(0, $topic, $from, $to,
 						$cc_recipients, $bcc,

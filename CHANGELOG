@@ -1,6 +1,12 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.6
+
+* Fixed bug found by Jason Remillard <jremillardshop@yahoo.com> where
+  emails were being sent for those lines which already had a comment,
+  but $allow_comment_email was false.
+
 Version 1.7.5
 
 * Added in support for parsing VSS diffs, and retrieving file data
