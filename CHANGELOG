@@ -4,7 +4,23 @@
 Version 1.7.5
 
 * Added in support for parsing VSS diffs, and retrieving file data
-  from a VSS repository.
+  from a VSS repository.  VSS support is not complete yet, as the
+  script for generated the diff text has not been submitted yet.
+
+The following changes below were from Aaron Kardell
+<akardell@altonaed.com>:
+
+* Modified unidiff parser so that diffs created with
+  --show-function-line and --show-c-function can be parsed and
+  displayed in the view topic screen.
+
+* Incoporated SubmitCodeReview.pl script, which can be used for
+  automating the submission of a code review topic from the command
+  line.  It also has support for incremental code reviews.  See the
+  script and its help text for more details.
+
+* Added an option to the view topic screen which controls how text is
+  wrapped.  This can be useful for reviews with long source code lines.
 
 The following changes below were from Jason Remillard
 <jremillardshop@yahoo.com>:

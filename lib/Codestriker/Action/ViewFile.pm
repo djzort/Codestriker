@@ -60,7 +60,8 @@ sub process($$$) {
     my $revision = $deltas[0]->{revision};
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic);
+    my @comments = Codestriker::Model::Comment->read($topic, "", "",
+						     "", "", "");
 
     # Load the appropriate original form of this file into memory.
     my ($filedata_max_line_length, @filedata);

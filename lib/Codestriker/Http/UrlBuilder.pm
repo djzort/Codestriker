@@ -49,20 +49,23 @@ sub new($$) {
 # Create the URL for viewing a topic with a specified tabwidth.
 sub view_url_extended ($$$$$$$$) {
     my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
-	$updated) = @_;
+	$updated, $brmode) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
 	"?topic=$topic&action=view" .
 	($updated ? "&updated=$updated" : "") .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
 	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
+	((defined $brmode && $brmode ne "") ? "&brmode=$brmode" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
 }
 
 # Create the URL for viewing a topic.
 sub view_url ($$$$) {
-    my ($self, $topic, $line, $mode) = @_;
-    return $self->view_url_extended($topic, $line, $mode, "", "", "");
+    my ($self, $topic, $line, $mode, $brmode) = @_;
+    if (!(defined $brmode)) { $brmode = ""; }
+    return $self->view_url_extended($topic, $line, $mode, "", "", "",
+				    undef, $brmode);
 }
 
 # Create the URL for downloading the topic text.

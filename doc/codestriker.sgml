@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.7.4</subtitle>
+    <subtitle>Version 1.7.5</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -607,6 +607,53 @@ $antispam_email = 0;
 	  </programlisting>
 	</para>
       </sect2>
+      <sect2>
+        <title>Topic Length Restrictions</title>
+	<para>
+	  As explained by the comments in the configuration file, it
+	  is possible to limit the size of code review topics that
+	  will be accepted by the system:
+	  <programlisting>
+# The number of problems found per line drops if the size of the 
+# topic is too large. A common inspection pitfall is for authors to 
+# attempt to review too much material and then miss problems. 
+# These two options allow the Codestriker administrator to limit 
+# the length of the topics. Topics that have more lines than 
+# $maximum_topic_size_lines are rejected when they are created. 
+# Topics that are larger than $suggested_topic_size_lines generate 
+# a warning displayed in the topic page, but are accepted into the 
+# system. Codestriker measures that length of the topic by counting 
+# the number of lines in the topic text.
+#
+# The codestriker default of not enforcing any limits is specified by
+# settings either option to an empty string. If you are not sure 
+# what a resonable limit would be, start with a suggested_topic_size_lines
+# set to 350, and adjust with experence.
+$maximum_topic_size_lines = '';
+$suggested_topic_size_lines = '';
+	  </programlisting>
+	</para>
+      </sect2>
+      <sect2>
+        <title>Comment Email Configuration</title>
+	<para>
+	  By default, whenever a comment it submitted, an email will
+	  be sent to the author of the comment, the author of the
+	  review, and anyone else who has submitted a comment on the
+	  line of code in question.  This may not be appropriate for
+	  some team processes, and can be changed by setting
+	  <varname>$allow_comment_email</varname> to 0.
+	   <programlisting>
+# If true, codestriker will send out emails to the topic owner and
+# comment submitter when a comment is added. If this option is false,
+# no email will be sent to either the topic owner or the comment
+# submitter. Emails about each comment may not be needed if a meeting
+# is planned to discuss the topic. If the comment submitter specifies
+# a cc user, an email is always sent out, regardless of this setting.
+$allow_comment_email = 1;
+	   </programlisting>
+	</para>
+      </sect2>
     </sect1>
 
     <sect1 id="running-checksetup.pl">
@@ -1012,11 +1059,11 @@ PerlSwitches -T
         selected the checkboxes next to the topics of interest, and
         pressing the "Update" button with the state dropdown selected
         to the desired state.  If topic deletion functionality has
-        been enabled, the "Delete topics" button will delete the
-        selected topics from the database.  Generally speaking, topics
-        are only deleted if the wrong content was posted by mistake.
-        It is useful to maintain all historical topics in the
-        Codestriker database, as they can be searched over in the
+        been enabled, topics can be deleted by clicking on the
+        individual topic, and then deleting it.  Generally speaking,
+        topics are only deleted if the wrong content was posted by
+        mistake.  It is useful to maintain all historical topics in
+        the Codestriker database, as they can be searched over in the
         future, which is covered in <xref linkend="topic-search">.
       </para>
     </sect1>
@@ -1082,7 +1129,11 @@ PerlSwitches -T
         The "Create topic" screen can be accessed from a number of
         other screens, and requires the submission of a number of
         details in order to create a topic.  A screenshot can be seen
-        in <xref linkend="figure-create-topic">.
+        in <xref linkend="figure-create-topic">.  It is also possible
+        to generate new topics from the command line.  Check out the
+        <filename>SubmitCodeReview.pl</filename> script in the
+        <filename>bin</filename> directory in the Codestriker
+        distribution.
 	<figure id="figure-create-topic" float="1">
 	  <title>Create Topic Screenshot</title>
 	  <mediaobject>
@@ -1158,7 +1209,12 @@ PerlSwitches -T
           different flags, or even using "cvs rdiff" instead.
           Codestriker can accept any input, as long as
           <option>-u</option> is specified, to ensure the diff is in
-          unidiff format.
+          unidiff format.  Note for reviews which include C/C++ code,
+          you can also include the
+          <option>--show-function-line</option> and/or
+          <option>--show-c-function</option> options, which will
+          indicate for each diff delta in the display, what function
+          is being modified.
 	</para>
 	<para>
 	  This filename can either be entered directly into the "Topic
@@ -1199,7 +1255,12 @@ PerlSwitches -T
           <filename>../old-version</filename> and
           <filename>.</filename> to find differences.  There are
           likely to be other options that will be specified, run
-          <command>man diff</command> for more options.
+          <command>man diff</command> for more options.  Note for
+          reviews which include C/C++ code, you can also include the
+          <option>--show-function-line</option> and/or
+          <option>--show-c-function</option> options, which will
+          indicate for each diff delta in the display, what function
+          is being modified.
 	</para>
 	<para>
 	  The "Start tag", "End tag" and "Module" fields have no
@@ -1351,9 +1412,14 @@ PerlSwitches -T
 	  links to the associated bug descriptions will be shown here.
 	  The topic's state is also shown here, and can be modified if
 	  appropriate, by selected the state from the drop-down list
-	  and pressing "Update".  If deletion has been enabled, a
-	  "Delete" button will appear, that allows the topic to be
-	  deleted.
+	  and pressing "Update".  If deletion has been enabled, the
+	  "Delete Topic..." state will be present in this dropdown,
+	  allowing the topic to be deleted.
+	</para>
+	<para>
+	  The number of comments that have been made to this topic is
+	  shown next.  Clicking on this link will take you to the
+	  "View Comments" page (see <xref linkend="view-comments">).
 	</para>
 	<para>
 	  A link called "Download" topic text is shown.  Following
@@ -1362,8 +1428,9 @@ PerlSwitches -T
 	  useful if the raw diff needs to be retrieved, so it can be
 	  used as a patch file.  There are some links which affect the
 	  display, such as whether a mono-space font should be used to
-	  render the code changes (requires more screen real-estate)
-	  and what tab-width to use.
+	  render the code changes (requires more screen real-estate),
+	  whether to preserve the code's line-breaking or not, and
+	  what tab-width to use.
 	</para>
 	<para>
 	  This is followed by the table of contents of the review,
@@ -1555,16 +1622,18 @@ PerlSwitches -T
     <sect1 id="view-comments">
       <title>Viewing Comments</title>
       <para>
-        From the "View Topic" page (see <xref
-        linkend="view-topic">), there is a link at the top to view the
-        comments associated with a topic.  This can be clicked at any
-        stage to see what comments have been submitted against a
-        review.  It is often useful for the author once a review has
-        been completed, to work their way through the comments from
-        the browser, although they can do this with their email client
-        as well, since each comment will generate an email message.
-	An example screenshot of the "View Comments" page can be seen
-        in <xref linkend="view-comments">.
+        From the "View Topic" page (see <xref linkend="view-topic">),
+        there is a link at the top to view the comments associated
+        with a topic.  This can be clicked at any stage to see what
+        comments have been submitted against a review.  It is often
+        useful for the author once a review has been completed, to
+        work their way through the comments from the browser, although
+        they can do this with their email client as well (assuming
+        <varname>$allow_comment_email</varname> is true in
+        <filename>codestriker.conf</filename>), since each comment
+        will generate an email message.  An example screenshot of the
+        "View Comments" page can be seen in <xref
+        linkend="view-comments">.
         <figure id="figure-viewcomments" float="1">
 	   <title>View Comments Screenshot</title>
 	   <mediaobject>
@@ -1627,6 +1696,18 @@ PerlSwitches -T
         In this particular example, there are two comment blocks, for
         file <filename>codestriker/codestriker.pl</filename>, on lines
         27 and 60.
+      </para>
+      <para>
+        At the top of this page are a number of filtering options,
+        which control what comments are displayed.  Comments can be
+        filtered by the author of the comment and/or by comment block
+        state.  In addition, for each comment block, it is also
+        possible to display the context of the topic text the comment
+        block is made against (as is done for the "Add Comment" page,
+        see
+        <xref linkend="add-comment">).  These controls provide the
+        capability for generating code review reports, which can then
+        be used at code inspection meetings.
       </para>
     </sect1>
     <sect1 id="topic-search">
@@ -1863,7 +1944,10 @@ PerlSwitches -T
 		used for initialising the system, and for performing
 		upgrades.  This isn't the most pretty script in the
 		world, partly for all of the old data-migration it has
-		to do from old versions to the current version.
+		to do from old versions to the current version.  This
+		directory also contains
+		<filename>SubmitCodeReview.pl</filename> which is a
+		way of generating code reviews from the command line.
 	      </para>
 	    </listitem>
 	  </varlistentry>

@@ -57,7 +57,7 @@ sub process($$$) {
 
     # Retrieve the comment details for this topic.
     my @comments =
-	Codestriker::Model::Comment->read($topic);
+	Codestriker::Model::Comment->read($topic, "", "", $fn, $line, $new);
 
     # Retrieve line-by-line versions of the description.
     my @document_description = split /\n/, $description;
@@ -123,25 +123,21 @@ sub process($$$) {
     # in chronological order.
     my @display_comments = ();
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{fileline} == $line &&
-	    $comments[$i]{filenumber} == $fn &&
-	    $comments[$i]{filenew} == $new) {
-	    my $display_comment = {};
-	    my $author = $comments[$i]{author};
-	    if ($Codestriker::antispam_email) {
-		$display_comment->{author} =
-		    Codestriker->make_antispam_email($author);
-	    } else {
-		$display_comment->{author} = $author;
-	    }
-	    $display_comment->{date} = $comments[$i]{date};
-	    $display_comment->{data} =
-		$http_response->escapeHTML($comments[$i]{data});
-	    $display_comment->{line} = "";
-	    $display_comment->{lineurl} = "";
-	    $display_comment->{linename} = "";
-	    push @display_comments, $display_comment;
+	my $display_comment = {};
+	my $author = $comments[$i]{author};
+	if ($Codestriker::antispam_email) {
+	    $display_comment->{author} =
+		Codestriker->make_antispam_email($author);
+	} else {
+	    $display_comment->{author} = $author;
 	}
+	$display_comment->{date} = $comments[$i]{date};
+	$display_comment->{data} =
+	    $http_response->escapeHTML($comments[$i]{data});
+	$display_comment->{line} = "";
+	$display_comment->{lineurl} = "";
+	$display_comment->{linename} = "";
+	push @display_comments, $display_comment;
     }
     $vars->{'comments'} = \@display_comments;
 

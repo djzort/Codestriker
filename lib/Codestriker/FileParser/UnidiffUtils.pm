@@ -22,9 +22,17 @@ sub read_unidiff_text($$$$) {
     my $lastpos = tell $fh;
     my $line = <$fh>;
     while (defined $line &&
-	   $line =~ /^\@\@ \-(\d+)(\,\d+)? \+(\d+)(\,\d+)? \@\@/) {
+	   $line =~ /^\@\@ \-(\d+)(\,\d+)? \+(\d+)(\,\d+)? \@\@(.*)$/) {
 	my $old_linenumber = $1;
 	my $new_linenumber = $3;
+	my $function_name = $5;
+
+	if (length($function_name) > 1) {
+	    $function_name =~ s/^ //;
+	}
+	else {
+	    $function_name = "";
+	}
 
 	# Now read in the diff text until finished.
 	my $diff = "";
@@ -43,7 +51,7 @@ sub read_unidiff_text($$$$) {
 	$chunk->{new_linenumber} = $new_linenumber;
 	$chunk->{binary} = 0;
 	$chunk->{text} = $diff;
-	$chunk->{description} = "";
+	$chunk->{description} = $function_name;
 	$chunk->{repmatch} = $repmatch;
 	push @result, $chunk;
     }

@@ -83,15 +83,13 @@ sub process($$$) {
     my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic);
+    my @comments = Codestriker::Model::Comment->read($topic, "", "",
+						     $fn, $line, $new);
     my %contributors = ();
     $contributors{$email} = 1;
     my $cc_recipients = "";
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{fileline} == $line &&
-	    $comments[$i]{filenumber} == $fn &&
-	    $comments[$i]{filenew} == $new &&
-	    $comments[$i]{author} ne $document_author &&
+	if ($comments[$i]{author} ne $document_author &&
 	    ! exists $contributors{$comments[$i]{author}}) {
 	    $contributors{$comments[$i]{author}} = 1;
 	    $cc_recipients .= "$comments[$i]{author}, ";

@@ -25,6 +25,7 @@ sub process($$$) {
     my $query = $http_response->get_query();
     my $topic = $http_input->get('topic');
     my $mode = $http_input->get('mode');
+    my $brmode = $http_input->get('brmode');
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
     my $feedback = $http_input->get('feedback');
@@ -62,7 +63,8 @@ sub process($$$) {
     my @document = split /\n/, $topic_data;
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic);
+    my @comments = Codestriker::Model::Comment->read($topic, "", "",
+						     "", "", "");
 
     $http_response->generate_header($topic, $document_title, $email,
 				    "", "", $mode, $tabwidth, $repository_url,
@@ -170,7 +172,11 @@ sub process($$$) {
     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
 	$mode = $Codestriker::COLOURED_MODE;
     }
+    if (! defined $brmode) {
+        $brmode = $Codestriker::default_topic_br_mode;
+    }
     $vars->{'mode'} = $mode;
+    $vars->{'brmode'} = $brmode;
     $vars->{'topic_version'} = $version;
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic_state;
@@ -209,17 +215,35 @@ sub process($$$) {
     # If there are no files associated with the review, remove this
     # option.
     my $coloured_url =
-	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE);
+	$url_builder->view_url($topic, -1, $Codestriker::COLOURED_MODE,
+			       $brmode);
     my $coloured_mono_url =
 	$url_builder->view_url($topic, -1,
-			       $Codestriker::COLOURED_MONO_MODE);
+			       $Codestriker::COLOURED_MONO_MODE, $brmode);
+    my $br_normal_url =
+	$url_builder->view_url($topic, -1, $mode,
+			       $Codestriker::LINE_BREAK_NORMAL_MODE);
+    my $br_assist_url =
+	$url_builder->view_url($topic, -1, $mode,
+			       $Codestriker::LINE_BREAK_ASSIST_MODE);
 	
     if ($mode == $Codestriker::COLOURED_MODE) {
 	print "View as " .
-	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff.");
+	    $query->a({href=>$coloured_mono_url}, "coloured monospace diff") .
+	    ".";
     } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
 	print "View as " .
-	    $query->a({href=>$coloured_url}, "coloured variable-width diff.");
+	    $query->a({href=>$coloured_url}, "coloured variable-width diff") .
+	    ".";
+    }
+
+    print $query->br;
+    if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
+	print "View with " .
+	    $query->a({href=>$br_assist_url}, "minimal screen width") . ".";
+    } elsif ($brmode == $Codestriker::LINE_BREAK_ASSIST_MODE) {
+	print "View with " .
+	    $query->a({href=>$br_normal_url}, "minimal line breaks") . ".";
     }
     print $query->br;
 
@@ -228,7 +252,7 @@ sub process($$$) {
     my $change_tabwidth_url;
     $change_tabwidth_url =
 	$url_builder->view_url_extended($topic, -1, $mode, $newtabwidth,
-					"", "", 0);
+					"", "", 0, $brmode);
 
     print "Tab width set to $tabwidth (";
     print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
@@ -244,7 +268,7 @@ sub process($$$) {
 						$max_digit_width, $topic,
 						$mode, \@comments, $tabwidth,
 						$repository, \@filenames,
-						\@revisions, \@binary, -1);
+						\@revisions, \@binary, -1, $brmode);
 
     # Display the data that is being reviewed.
     $render->start();

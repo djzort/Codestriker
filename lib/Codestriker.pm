@@ -19,13 +19,13 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $vss $bugtracker
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
 	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
-	      $lxr_map $allow_comment_email
+	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist $allow_repositories
               $allow_projects $antispam_email $VERSION $BASEDIR
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.7.5-pre1";
+$Codestriker::VERSION = "1.7.5";
 
 # The maximum size of a diff file to accept.  At the moment, this is 20Mb.
 $Codestriker::DIFF_SIZE_LIMIT = 20000 * 1024;

@@ -52,7 +52,7 @@ my $COMMENT_LINE_COLOUR = "red";
 sub new ($$$$$$$\%\@$$\@\@\@$) {
     my ($type, $query, $url_builder, $parallel, $max_digit_width, $topic,
 	$mode, $comments, $tabwidth, $repository, $filenames_ref,
-	$revisions_ref, $binaries_ref, $max_line_length) = @_;
+	$revisions_ref, $binaries_ref, $max_line_length, $brmode) = @_;
 
     # Record all of the above parameters as instance variables, which remain
     # constant while we render code lines.
@@ -63,6 +63,10 @@ sub new ($$$$$$$\%\@$$\@\@\@$) {
     $self->{max_digit_width} = $max_digit_width;
     $self->{topic} = $topic;
     $self->{mode} = $mode;
+    if (! defined $brmode) {
+        $brmode = $Codestriker::default_topic_br_mode;
+    }
+    $self->{brmode} = $brmode;
     $self->{comments} = $comments;
     $self->{tabwidth} = $tabwidth;
     $self->{repository} = $repository;
@@ -299,7 +303,8 @@ sub delta_file_header ($$$$) {
     # Url to the table of contents on the same page.
     my $contents_url =
 	$self->{url_builder}->view_url($self->{topic}, -1,
-				       $self->{mode}) .	"#contents";
+				       $self->{mode}, $self->{brmode})
+	. "#contents";
 
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
@@ -357,6 +362,10 @@ sub delta_heading ($$$$$$$) {
 
     my $query = $self->{query};
 
+    # Create some blank space.
+    print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
+		     $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
+
     # Output a diff block description if one is available, in a separate
     # row.
     if ($description ne "") {
@@ -366,10 +375,6 @@ sub delta_heading ($$$$$$$) {
 			 $query->td({-class=>'line', -colspan=>'2'},
 				    $description_escaped));
     }
-
-    # Create some blank space.
-    print $query->Tr($query->td("&nbsp;"), $query->td("&nbsp;"),
-		     $query->td("&nbsp;"), $query->td("&nbsp;"), "\n");
 
     if ($repmatch && $revision ne $Codestriker::ADDED_REVISION &&
 	$revision ne $Codestriker::PATCH_REVISION) {
@@ -522,7 +527,12 @@ sub render_coloured_cell($$)
 
     # Replace spaces and tabs with the appropriate number of &nbsp;'s.
     $data = tabadjust($self, $self->{tabwidth}, $data, 1);
+    if ($self->{brmode} == $Codestriker::LINE_BREAK_ASSIST_MODE) {
+	$data =~ s/^(\s+)/my $sp='';for(my $i=0;$i<length($1);$i++){$sp.='&nbsp;'}$sp;/ge;
+    }
+    else {
     $data =~ s/\s/&nbsp;/g;
+    }
 
     # Add LXR links to the output.
     $data = $self->lxr_data($data);
