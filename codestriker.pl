@@ -2087,7 +2087,8 @@ sub view_file ($$$) {
     my $patch_line = <PATCH>;
     my $linenumber = 1;
     my $chunk_end = 1;
-    for (my $next_chunk_end = 1 ;; $chunk_end = $next_chunk_end) {
+    my $next_chunk_end = 1;
+    while (1) {
 	# Read the next line of patch information.
 	my $patch_line_start;
 	if ($patch_line =~ /^\@\@ \-(\d+),(\d+) \+\d+,\d+ \@\@$/) {
@@ -2135,6 +2136,8 @@ sub view_file ($$$) {
 		error_return("Unable to handle patch line: $_");
 	    }
 	}
+
+	$chunk_end = $next_chunk_end;
 
 	if (! defined $_) {
 	    # Reached the end of the patch file.  Flush anything pending.
