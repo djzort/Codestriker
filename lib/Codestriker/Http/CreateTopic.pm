@@ -47,10 +47,14 @@ sub doit {
 		    reviewers => $params->{reviewers},
 		    cc => $params->{cc},
 		    topic_file => [$tempfile_filename]];
-    my $res =
+    my $response =
 	$ua->request(HTTP::Request::Common::POST($params->{url},
 						 Content_Type => 'form-data',
 						 Content => $content));
+
+    # Indicate if the operation was successful.
+    my $content = $response->content;
+    return $content =~ /Topic created/ && $content =~ /Topic URL/;    
 }
 
 1;
