@@ -212,7 +212,27 @@ $table{version} =
     "id text NOT NULL,
      sequence smallint NOT NULL";
 
-# MySQL specific functions adapted from Bugzilla.
+# Add a field to a specific table.  If the field already exists, then catch
+# the error and continue silently.
+sub add_field ($$$)
+{
+    my ($table, $field, $definition) = @_;
+
+    # Perform this operation in a separate connection, so any errors won't
+    # affect the outer transaction.
+    my $local_dbh = Codestriker::DB::DBI->get_connection();
+    $local_dbh->{RaiseError} = 0;
+    $local_dbh->{PrintError} = 0;
+    if (! $local_dbh->do("ALTER TABLE $table ADD COLUMN $field $definition")) {
+	# Most likely, the column already exists, silently continue.
+    } else {
+	$local_dbh->commit;
+	print "Added new field $field to table $table.\n";
+    }
+    $local_dbh->disconnect;
+}
+
+# MySQL specific function adapted from Bugzilla.
 sub get_field_def ($$)
 {
     my ($table, $field) = @_;
@@ -224,18 +244,6 @@ sub get_field_def ($$)
         return $ref;
    }
 }
-sub add_field ($$$)
-{
-    my ($table, $field, $definition) = @_;
-
-    my $ref = get_field_def($table, $field);
-    return if $ref; # already added?
-
-    print "Adding new field $field to table $table ...\n";
-    $dbh->do("ALTER TABLE $table
-              ADD COLUMN $field $definition");
-}
-
 
 # Create any missing tables.
 my @existing_tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
@@ -277,6 +285,8 @@ if ($Codestriker::db =~ /^DBI:mysql/i) {
 }
 
 # Add appropriate fields to the database tables as things have evolved.
+# Make sure the database is committed before proceeding.
+$dbh->commit;
 add_field('topic', 'repository', 'text');
     
 # Insert the version number into the table, if required.
