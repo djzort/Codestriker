@@ -30,7 +30,8 @@ sub parse ($$$) {
 	my $repmatch;
 
 	# Skip whitespace.
-	while (defined($line) && $line =~ /^\s*$/o) {
+	while (defined($line) &&
+	       ($line =~ /^\s*$/o || $line =~ /^Version not found/o)) {
 	    $line = <$fh>;
 	}
 	return @result unless defined $line;
@@ -38,7 +39,6 @@ sub parse ($$$) {
 	# For VSS diffs, the start of the diff block is the "Diffing:" line
 	# which contains the filename and version number.  Some diffs may
 	# not contain the version number for us.
-	return () unless defined $line;
 	if ($line =~ /^Diffing: (.*);(.+)$/o) {
 	    $filename = $1;
 	    $revision = $2;
