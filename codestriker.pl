@@ -138,7 +138,7 @@ $filetable_file = "filetable";
 $document_title = "";
 
 # The associated document bug number.
-$document_bug_number = "";
+$document_bug_ids = "";
 
 # The document description.
 @document_description = ();
@@ -227,6 +227,7 @@ sub submit_topic($$$$$$$$);
 sub view_file($$$);
 sub error_return($);
 sub display_context($$$);
+sub escapeHTML ($);
 sub read_document_file($$);
 sub read_comment_file($);
 sub read_filetable_file($);
@@ -250,8 +251,10 @@ sub untaint_filename($);
 sub untaint_revision($);
 sub untaint_email($);
 sub untaint_emails($);
+sub untaint_bug_ids($);
 sub get_time_string($);
 sub make_canonical_email_list($);
+sub make_bug_list($);
 sub display_data ($$$$$$$$$$$$$$);
 sub display_coloured_data ($$$$$$$$$$$$$$);
 sub render_linenumber($$$);
@@ -290,7 +293,7 @@ sub main() {
     my $filename = $query->param('filename');
     my $linenumber = $query->param('linenumber');
     my $mode = $query->param('mode');
-    my $bug_number = $query->param('bug_number');
+    my $bug_ids = $query->param('bug_ids');
     my $new = $query->param('new');
 
     # Untaint the required input.
@@ -300,7 +303,7 @@ sub main() {
     $cc = untaint_emails($cc);
     $filename = untaint_filename($filename);
     $revision = untaint_revision($revision);
-    $bug_number = untaint_digits($bug_number, 'bug_number');
+    $bug_ids = untaint_bug_ids($bug_ids);
     $new = untaint_digits($new, 'new');
 
     # By default, don't show coloured view.
@@ -325,7 +328,7 @@ sub main() {
     }
     elsif ($action eq "submit_topic") {
 	submit_topic($topic_title, $email, $topic_text, $topic_description,
-		     $reviewers, $cc, $topic_text_fh, $bug_number);
+		     $reviewers, $cc, $topic_text_fh, $bug_ids);
     }
     elsif ($action eq "download") {
 	download_topic_text($topic);
@@ -409,7 +412,7 @@ sub untaint_emails($) {
     my ($emails) = @_;
 
     if (defined $emails && $emails ne "") {
-	if ($emails =~ /^([-_@\w,\.\s]+)$/) {
+	if ($emails =~ /^([-_@\w,;\.\s]+)$/) {
 	    return $1;
 	} else {
 	    error_return("Invalid email list \"$emails\" - you naughty boy.");
@@ -418,7 +421,21 @@ sub untaint_emails($) {
 	return $emails;
     }
 }
-    
+
+# Untaint a list of big ids.
+sub untaint_bug_ids($) {
+    my ($bug_ids) = @_;
+
+    if (defined $bug_ids && $bug_ids ne "") {
+	if ($bug_ids =~ /^([0-9A-Za-z_;,\s\n\t]+)$/) {
+	    return $1;
+	} else {
+	    error_return("Invalid bug ids \"$bug_ids\" - you naught boy.");
+	}
+    } else {
+	return $bug_ids;
+    }
+}
 
 # Return true if the header has been generated already, false otherwise.
 sub header_generated() {
@@ -496,6 +513,28 @@ sub get_time_string($) {
 		   $hour, $min, $sec);
 }
 
+# Routine to convert text into an HTML version, but with hyperlinks rendered.
+sub escapeHTML ($) {
+    my ($text) = @_;
+
+    # Split the text into words, and for any URL, convert it appropriately.
+    my @words = split /([\s\n\t])/, $text;
+    my $result = "";
+    for (my $i = 0; $i <= $#words; $i++) {
+	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/) {
+	    # A URL, create a link to it.
+	    $result .= $query->a({href=>$1}, $1) . CGI::escapeHTML($2);
+	} else {
+	    # Regular text, just escape it apprporiately and append it.
+	    $result .= CGI::escapeHTML($words[$i]);
+	}
+    }
+
+    return $result;
+}
+	
+    
+
 # Simple file locking routines.
 sub lock ($) {
     my ($fh) = @_;
@@ -544,7 +583,7 @@ sub read_document_file($$) {
 	} elsif ($data =~ /^Title: (.+)$/) {
 	    $document_title = $1;
 	} elsif ($data =~ /^Bug: (.*)$/) {
-	    $document_bug_number = $1;
+	    $document_bug_ids = $1;
 	} elsif ($data =~ /^Reviewers: (.+)$/) {
 	    $document_reviewers = $1;
 	} elsif ($data =~ /^Cc: (.+)$/) {
@@ -817,7 +856,7 @@ sub edit_topic ($$$$$) {
 	if ($comment_linenumber[$i] == $line) {
 	    print $query->hr, "$comment_author[$i] $comment_date[$i]";
 	    print $query->br, "\n";
-	    print $query->pre(CGI::escapeHTML($comment_data[$i])), $query->p;
+	    print $query->pre(escapeHTML($comment_data[$i])), $query->p;
 	}
     }
     
@@ -875,11 +914,16 @@ sub view_topic ($$$) {
 		     $query->td($document_author)), "\n";
     print $query->Tr($query->td("Created: "),
 		     $query->td($document_creation_time)), "\n";
-    if ($document_bug_number ne "") {
-	my $bug_url = "${bugtracker}${document_bug_number}";
-	print $query->Tr($query->td("Bug: "),
-			 $query->td($query->a({href=>"$bug_url"},
-					      $document_bug_number))), "\n";
+    if ($document_bug_ids ne "") {
+	my @bugs = split ' ', $document_bug_ids;
+	my $bug_string = "";
+	for (my $i = 0; $i <= $#bugs; $i++) {
+	    $bug_string .= $query->a({href=>"$bugtracker$bugs[$i]"},
+				     $bugs[$i]);
+	    $bug_string .= ', ' unless ($i == $#bugs);
+	}
+	print $query->Tr($query->td("Bug IDs: "),
+			 $query->td($bug_string));
     }
     print $query->Tr($query->td("Reviewers: "),
 		     $query->td($document_reviewers)), "\n";
@@ -894,8 +938,10 @@ sub view_topic ($$$) {
     print "<PRE>\n";
     my $data = "";
     for (my $i = 0; $i <= $#document_description; $i++) {
-	$data .= CGI::escapeHTML($document_description[$i]) . "\n";
+	$data .= $document_description[$i] . "\n";
     }
+
+    $data = escapeHTML($data);
 
     # Replace occurances of bug strings with the appropriate links.
     if ($bugtracker ne "") {
@@ -1048,7 +1094,7 @@ sub view_topic ($$$) {
 	print $query->a({href=>"$edit_url"},
 			"line $comment_linenumber[$i]"), ": ";
 	print "$comment_author[$i] $comment_date[$i]", $query->br, "\n";
-	print $query->pre(CGI::escapeHTML($comment_data[$i])), $query->p;
+	print $query->pre(escapeHTML($comment_data[$i])), $query->p;
     }
 }
 
@@ -1628,8 +1674,8 @@ sub create_topic () {
 		     $query->td($query->filefield(-name=>'topic_file',
 						  -size=>40,
 						  -maxlength=>200)));
-    print $query->Tr($query->td("Bug number: "),
-		     $query->td($query->textfield(-name=>'bug_number',
+    print $query->Tr($query->td("Bug IDs: "),
+		     $query->td($query->textfield(-name=>'bug_ids',
 						  -size=>30,
 						  -maxlength=>50)));
     my $default_email = get_email();
@@ -1664,22 +1710,28 @@ sub make_canonical_email_list($) {
     my ($emails) = @_;
 
     if (defined $emails && $emails ne "") {
-	my $result = "";
-	while ($emails =~ /^[\s\,]*([-_\@\w\.]+)[\s\,]*(.*)$/) {
-	    $result .= "$1, ";
-	    $emails = $2;
-	}
-	substr($result, -2) = "" if ($result ne "");
-	return $result;
+	return join ', ', split /[\s\n\t,;]+/, $emails;
     } else {
 	return $emails;
+    }
+}
+
+# Given a list of bug ids separated by commas and spaces, return
+# a canonical form, where they are separated by a comma and a space.
+sub make_canonical_bug_list ($) {
+    my ($bugs) = @_;
+
+    if (defined $bugs && $bugs ne "") {
+	return join ' ', split /[\s\n\t,;]+/, $bugs;
+    } else {
+	return "";
     }
 }
 
 # Handle the submission of a new topic.
 sub submit_topic ($$$$$$$$) {
     my ($topic_title, $email, $topic_text, $topic_description,
-	$reviewers, $cc, $fh, $bug_number) = @_;
+	$reviewers, $cc, $fh, $bug_ids) = @_;
 
     # Check that the fields have been filled appropriately.
     if (! defined $topic_title || $topic_title eq "") {
@@ -1701,8 +1753,8 @@ sub submit_topic ($$$$$$$$) {
 	error_return("No reviewers were entered");
     }
 
-    # The bug number is optional.
-    $bug_number = "" if (! defined $bug_number);
+    # Canonicalise the bug ids.
+    $bug_ids = make_canonical_bug_list($bug_ids);
 
     # Create a directory where to copy the document, and to create the
     # comment file.
@@ -1730,7 +1782,7 @@ sub submit_topic ($$$$$$$$) {
     # Write out the topic metadata.
     print DOCUMENT "Author: $email\n";
     print DOCUMENT "Title: $topic_title\n";
-    print DOCUMENT "Bug: $bug_number\n";
+    print DOCUMENT "Bug: $bug_ids\n";
     print DOCUMENT "Reviewers: $reviewers\n";
     print DOCUMENT "Cc: $cc\n" if (defined $cc && $cc ne "");
     print DOCUMENT "Description: $description_length\n";
@@ -1782,7 +1834,7 @@ sub submit_topic ($$$$$$$$) {
     print MAIL "Subject: [REVIEW] Topic \"$topic_title\" created\n";
     print MAIL "Topic \"$topic_title\" created\n";
     print MAIL "Author: $email\n";
-    print MAIL "Bug: $bug_number\n" if ($bug_number ne "");
+    print MAIL "Bug IDs: $bug_ids\n" if ($bug_ids ne "");
     print MAIL "Reviewers: $reviewers\n";
     print MAIL "URL: $topic_url\n\n";
     print MAIL "Description:\n";

@@ -3,6 +3,11 @@ Version 1.4.3:
 * Support for "diff -uNp", "diff -uN --show-function-line=regexp",
   "cvs diff -uNp" and "cvs diff -uN  --show-function-line=regexp".
 
+* URLs entered in the description or in a comment will be rendered as
+  a link to that URL.
+
+* Allow the bug field to accept multiple bug IDs.
+
 Version 1.4.2:
 
 * Can now handle diffs which end in: "\ No newline at end of file".
