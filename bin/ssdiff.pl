@@ -26,6 +26,9 @@ my $ss = 'C:/Program Files/Microsoft Visual Studio/VSS/win32/ss.exe';
 my $ss_username = 'admin';
 my $ss_password = 'password';
 
+# Set this to 1 to see all the SS commands being executed.
+my $verbose = 0;
+
 # End script configuration.
 ###############################################################################
 
@@ -55,8 +58,12 @@ else {
 
 # Now execute an 'ss dir' command to determine what files are a part
 # of this project.
+if ($verbose) {
+    print STDERR "\"$ss\" dir -y${ss_username},${ss_password}" .
+	" -R -I-Y \"$ss_project\"\n";
+}
 open(VSS, "\"$ss\" dir -y${ss_username},${ss_password}" .
-     " -R -I- \"$ss_project\" |") || die "Unable to run ss diff command: $!";
+     " -R -I-Y \"$ss_project\" |") || die "Unable to run ss diff command: $!";
 
 # Collect the list of filename and revision numbers into a list.
 my @files = ();
@@ -87,8 +94,12 @@ my $top_dir_length = length($top_dir);
 for (my $i = 0; $i <= $#files; $i++) {
     # Determine if the file is a text file, and if not, skip it.
     # Also determine its version number.
+    if ($verbose) {
+	print STDERR "\"$ss\" properties \"$files[$i]\"" .
+	    " -y${ss_username},${ss_password} -I-Y\n";
+    }
     open(VSS, "\"$ss\" properties \"$files[$i]\"" .
-	 " -y${ss_username},${ss_password} -I- |")
+	 " -y${ss_username},${ss_password} -I-Y |")
 	    || die "Unable to run ss properties on $files[$i]\n";
     my $text_type = 0;
     my $version;
@@ -124,7 +135,11 @@ for (my $i = 0; $i <= $#files; $i++) {
     # Note the command has to be redirected to a file, otherwise the ss
     # command will wrap the lines.
     my $command_output = "$tempdir\\___output.txt";
-    system("\"$ss\" diff -y${ss_username},${ss_password} -I-" .
+    if ($verbose) {
+	print STDERR "\"$ss\" diff -y${ss_username},${ss_password} -I-Y" .
+	    " -DU3000X5 -O\"$command_output\" \"$files[$i]\" \"$real_file\"\n";
+    }
+    system("\"$ss\" diff -y${ss_username},${ss_password} -I-Y" .
 	   " -DU3000X5 -O\"$command_output\" \"$files[$i]\" \"$real_file\"");
     if (open(VSS, $command_output)) {
 	# Because ss doesn't include the version number of the file we are
