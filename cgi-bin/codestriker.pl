@@ -86,8 +86,16 @@ sub main() {
         Codestriker::Action::ChangeTopicState->process($http_input,
 						       $http_response);
     } else {
-	# Default action is to list topics that are in state open.
-	Codestriker::Action::ListTopics->process($http_input, $http_response);
+	# Default action is to list topics that are in state open if the
+	# list functionality is enabled, otherwise go to the create topic
+	# screen.
+	if ($Codestriker::allow_searchlist) {
+	    Codestriker::Action::ListTopics->process($http_input,
+						     $http_response);
+        } else {
+	    Codestriker::Action::CreateTopic->process($http_input,
+						      $http_response);
+	}
     }
 	
     # Output the HTML footer, and return.
