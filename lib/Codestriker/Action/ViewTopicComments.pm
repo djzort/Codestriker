@@ -28,15 +28,22 @@ sub process($$$) {
     my $feedback = $http_input->get('feedback');
     my $show_context = $http_input->get('scontext');
     my $show_comments_from_user = $http_input->get('sauthor');
-    my $show_comments_by_state  = $http_input->get('sstate');
     
-    # Perform some error checking here on the parameters.
+    # Retrieve the filter parameters from the metrics, if any.
+    my %metric_filter = ();
+    foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
+	my $name = "comment_state_metric_" . $comment_state_metric->{name};
+	my $value = $http_input->get($name);
+	if (defined $value && $value ne "__any__") {
+	    $metric_filter{$comment_state_metric->{name}} = $value;
+	}
+    }
 
     # Retrieve the comment details for this topic.
     my @comments =
 	Codestriker::Model::Comment->read_filtered($topicid,
-						   $show_comments_by_state,
-						   $show_comments_from_user);
+						   $show_comments_from_user,
+						   \%metric_filter);
 
     # Retrieve the appropriate topic details.           
     my $topic = Codestriker::Model::Topic->new($topicid);     
@@ -97,12 +104,10 @@ sub process($$$) {
 		$comment->{fileline} . "','" . $comment->{filenew} . "')";
 	    $comment->{anchor} = $comment->{filenumber} . "|" .
 		$comment->{fileline} . "|" . $comment->{filenew};
+
 	    $last_fileline = $comment->{fileline};
 	    $last_filenumber = $comment->{filenumber};
 	}
-
-	my $state = $comment->{state};
-	$comment->{state} = $Codestriker::comment_states[$state];
 
         if ($show_context ne "" && $show_context > 0) {
                 my $delta = Codestriker::Model::Delta->get_delta($topicid, 
@@ -120,34 +125,27 @@ sub process($$$) {
        }
     }
 
-    # Indicate what states the comments can be transferred to.
-    my @states = ();
-    for (my $i = 0; $i <= $#Codestriker::comment_states; $i++) {
-	my $state = $Codestriker::comment_states[$i];
-	if ($state ne "Draft" && $state ne "Deleted") {
-	    push @states, $state;
-	}
-    }
-
     # Store the parameters to the template.
     $vars->{'email'} = $email;
     $vars->{'comments'} = \@comments;
-    $vars->{'states'} = \@states;
-    
     $vars->{'users'} = \@usersThatHaveComments;
     
     # Push in the current filter combo box selections so the window remembers
     # what the user has currently set.
-    $vars->{'scontext'} = $show_context;    
-    if ( $show_comments_by_state ne '') {
-    	$vars->{'select_sstate'} = $show_comments_by_state + 1;
-    }
-    else {
-    	$vars->{'select_sstate'} = 0;
-    }
- 
-    $vars->{'sstate'} = $show_comments_by_state;     
+    $vars->{'scontext'} = $show_context;
     $vars->{'sauthor'} = $http_input->get('sauthor');
+    $vars->{'metrics_selection'} = \%metric_filter;
+
+    # Store the metrics configuration into the template so it knows
+    # how to render the dropdowns.
+    my @metrics = ();
+    foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	my $metric_data = {};
+	$metric_data->{name} = $metric_config->{name};
+	$metric_data->{values} = $metric_config->{values};
+	push @metrics, $metric_data;
+    }
+    $vars->{'metrics'} = \@metrics;
 
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("viewtopiccomments");

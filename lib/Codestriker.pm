@@ -22,11 +22,11 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $ssh $p4 $vss $bugtracker
 	      $lxr_map $allow_comment_email $default_topic_br_mode
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
-	      $metric_config $tmpdir @metric_schema
+	      $metric_config $tmpdir @metric_schema $comment_state_metrics
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.8.4a1";
+$Codestriker::VERSION = "1.8.4a3";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";
@@ -402,9 +402,10 @@ sub filter_email {
     return $email;
 }
 
-# Pass in two collections of string, it will return the elements in the string
-# that were added and where removed. All 4 params are references to lists. Mainly 
-# used to compare lists of reviewers and cc.
+# Pass in two collections of string, it will return the elements in
+# the string that were added and where removed. All 4 params are
+# references to lists. Mainly used to compare lists of reviewers and
+# cc.
 sub set_differences($$$$)
 {
     my ($list1_r, $list2_r, $added, $removed) = @_;

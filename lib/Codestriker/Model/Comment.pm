@@ -25,12 +25,12 @@ sub new {
     $self->{author} = '';
     $self->{data} = '';
     $self->{date} = Codestriker->get_timestamp(time);
-    $self->{state} = 0;
     $self->{version} = 0;
     $self->{db_creation_ts} = "";
     $self->{db_modified_ts} = "";
     $self->{creation_ts} = "";
     $self->{modified_ts} = "";
+    $self->{metrics} = undef;
     
     bless $self, $class;
     return $self;
@@ -38,9 +38,9 @@ sub new {
 
 # Create a new comment with all of the specified properties.  Ensure that the
 # associated commentstate record is created/updated.
-sub create($$$$$$$$$) {
+sub create {
     my ($self, $topicid, $fileline, $filenumber, $filenew, $author, $data,
-	$state) = @_;
+	$metrics) = @_;
             
     my $timestamp = Codestriker->get_timestamp(time);
     
@@ -69,20 +69,19 @@ sub create($$$$$$$$$) {
 	    $creation_ts = $timestamp;
 	    my $insert = $dbh->prepare_cached('INSERT INTO commentstate ' .
 					      '(topicid, fileline, ' .
-					      'filenumber, filenew, state, ' .
+					      'filenumber, filenew, ' .
 					      'version, creation_ts, ' .
 					      'modified_ts) VALUES ' .
-					      '(?, ?, ?, ?, ?, ?, ? ,?)');
+					      '(?, ?, ?, ?, ?, ?, ?)');
 	    $success &&= defined $insert;
 	    $success &&= $insert->execute($topicid, $fileline, $filenumber,
-					  $filenew,
-					  $Codestriker::COMMENT_SUBMITTED, 0,
+					  $filenew, 0,
 					  $creation_ts, $creation_ts);
 	    $success &&= $insert->finish();
 	} else {
 	    # Update the commentstate record.
 	    my $update = $dbh->prepare_cached('UPDATE commentstate SET ' .
-					      'version = ?, state = ?, ' .
+					      'version = ?, ' .
 					      'creation_ts = ?, ' .
 					      'modified_ts = ? ' .
 					      'WHERE topicid = ? AND ' .
@@ -91,7 +90,6 @@ sub create($$$$$$$$$) {
 					      'filenew = ?');
 	    $success &&= defined $update;
 	    $success &&= $update->execute(++$version,
-					  $Codestriker::COMMENT_SUBMITTED,
 					  $creation_ts, $timestamp,
 					  $topicid, $fileline, $filenumber,
 					  $filenew);
@@ -119,6 +117,9 @@ sub create($$$$$$$$$) {
 	$success &&= $insert_comment->execute($commentstateid, $data,
 					      $author, $timestamp);
 	$success &&= $insert_comment->finish();
+
+	# Now handle any commentmetric rows.
+	update_comment_metrics($commentstateid, $metrics, $dbh);
     }
 
     $self->{id} = $commentstateid;
@@ -129,12 +130,16 @@ sub create($$$$$$$$$) {
     $self->{author} = $author;
     $self->{data} = $data;
     $self->{date} = $timestamp;
-    $self->{state} = $state;
     $self->{version} = $version;
     $self->{db_creation_ts} = $creation_ts;
     $self->{creation_ts} = Codestriker->format_timestamp($creation_ts);
     $self->{db_modified_ts} = $timestamp;
     $self->{modified_ts} = Codestriker->format_timestamp($timestamp);
+
+    # Update the metrics into the object as a hash.
+    foreach my $metric (@{ $metrics }) {
+	$self->{metrics}->{$metric->{name}} = $metric->{value};
+    }
         
     # get the filename, for the new comment.
     my $get_filename = $dbh->prepare_cached('SELECT filename ' .
@@ -153,6 +158,56 @@ sub create($$$$$$$$$) {
     die $dbh->errstr if !$success;
 }
 
+
+# Update the comment metrics for a specific commentstate.  Note the rows for
+# a specific metric may or may not already exist.
+sub update_comment_metrics {
+    my ($commentstateid, $metrics, $dbh) = @_;
+
+    # Now create any necessary commentmetric rows.  Note its possible this
+    # may refer to existing data which needs to be updated, or could be
+    # new metric data.
+    eval {
+	if (defined $metrics) {
+	    foreach my $metric (@{ $metrics }) {
+		# Check if a value for this metric name has been created
+		# already.
+		my $select_metric =
+		    $dbh->prepare_cached('SELECT COUNT(id) ' .
+					 'FROM commentstatemetric ' .
+					 'WHERE id = ? AND name = ?');
+		$select_metric->execute($commentstateid, $metric->{name});
+		my $count;
+		($count) = $select_metric->fetchrow_array();
+		$select_metric->finish();
+		if ($count == 0) {
+		    # Need to create a new row for this metric.
+		    my $insert_metric =
+			$dbh->prepare_cached('INSERT INTO commentstatemetric '.
+					     '(id, name, value) VALUES ' .
+					     '(?, ?, ?)');
+		    $insert_metric->execute($commentstateid, $metric->{name},
+					    $metric->{value});
+		    $insert_metric->finish();
+		} else {
+		    # Need to update this row for this metric.
+		    my $update_metric =
+			$dbh->prepare_cached('UPDATE commentstatemetric ' .
+					     'SET value = ? ' .
+					     'WHERE id = ? AND name = ?');
+		    $update_metric->execute($metric->{value}, $commentstateid,
+					    $metric->{name});
+		    $update_metric->finish();
+		}
+	    }
+	}
+    };
+    if ($@) {
+	warn "Unable to update comment state metric data because $@\n";
+	eval { $dbh->rollback() };
+    }
+}
+    
 # This function returns as a list the authors emails address that have entered 
 # comments against a topic.
 sub read_authors
@@ -191,8 +246,8 @@ sub read_authors
     return @results;   
 }
 
-# Return all of the comments made for a specified topic. This should only be called be called by the 
-# Topic object.
+# Return all of the comments made for a specified topic. This should only be
+# called be called by the Topic object.
 sub read_all_comments_for_topic($$) {
     my ($type, $topicid) = @_;
 
@@ -210,7 +265,6 @@ sub read_all_comments_for_topic($$) {
 			     'commentstate.filenumber, ' .
 			     'commentstate.filenew, ' .
 			     'commentdata.creation_ts, ' .
-			     'commentstate.state, ' .
 			     'topicfile.filename, ' .
 			     'commentstate.version, ' .
 			     'commentstate.id, ' .
@@ -241,43 +295,59 @@ sub read_all_comments_for_topic($$) {
 	    $comment->{filenumber} = $data[3];
 	    $comment->{filenew} = $data[4];
 	    $comment->{date} = Codestriker->format_timestamp($data[5]);
-	    $comment->{state} = $data[6];
-	    $comment->{filename} = $data[7];
-	    $comment->{version} = $data[8];
-	    $comment->{id} = $data[9];
-	    $comment->{db_creation_ts} = $data[10];
-	    $comment->{creation_ts} = Codestriker->format_timestamp($data[10]);
-	    $comment->{db_modified_ts} = $data[11];
-	    $comment->{modified_ts} = Codestriker->format_timestamp($data[11]);
+	    $comment->{filename} = $data[6];
+	    $comment->{version} = $data[7];
+	    $comment->{id} = $data[8];
+	    $comment->{db_creation_ts} = $data[9];
+	    $comment->{creation_ts} = Codestriker->format_timestamp($data[9]);
+	    $comment->{db_modified_ts} = $data[10];
+	    $comment->{modified_ts} = Codestriker->format_timestamp($data[10]);
 	    push @results, $comment;
 	}
 	$select_comment->finish();
     }
 
+    # Now for each comment returned, retrieve the comment metrics data as well.
+    foreach my $comment (@results) {
+	my $select_metric =
+	    $dbh->prepare_cached('SELECT name, value ' .
+				 'FROM commentstatemetric ' .
+				 'WHERE id = ?');
+	$select_metric->execute($comment->{id});
+	my %metrics = ();
+	my @data;
+	while (@data = $select_metric->fetchrow_array()) {
+	    $metrics{$data[0]} = $data[1];
+	}
+	$select_metric->finish();
+
+	# Update this comment update with the list of metrics associated with
+	# it.
+	$comment->{metrics} = \%metrics;
+    }
+
     Codestriker::DB::DBI->release_connection($dbh, $success);
-    die $dbh->errstr unless $success;
 
     return @results;
 }
 
-# Return all of the comments made for a specified topic filtered by state 
-# and author. The filtered parameter is not used if it is empty.
-sub read_filtered($$$$) {
-    my ($type, $topicid, $filtered_by_state_index, $filtered_by_author) = @_;
+# Return all of the comments made for a specified topic filtered by
+# author and metric values.  If a filter parameter is not defined, then
+# it is ignored.
+sub read_filtered {
+    my ($type, $topicid, $filtered_by_author, $metric_filter) = @_;
+
+    my %metric_filter = %{ $metric_filter };
     
     # Read all of the comments from the database. 
     my @comments = $type->read_all_comments_for_topic($topicid);
 
-    # Now filter out comments that don't match the comment state and
-    # author filter.
+    # Now filter out comments that don't match the author and metric 
+    # filter.
     @comments = grep { 
         my $comment = $_;
         my $keep_comment = 1;
                                 
-        # Check for filter via the state of the comment.
-        $keep_comment = 0 if ($filtered_by_state_index ne ""  && 
-			      $filtered_by_state_index ne $comment->{state} );
-        
         # Check for filters via the comment author name, handle email
         # SPAM filtering.
         my $filteredAuthor =
@@ -285,19 +355,33 @@ sub read_filtered($$$$) {
         my $filteredByAuthor =
             	    Codestriker->filter_email($filtered_by_author);
 
-        $keep_comment = 0 if ($filteredByAuthor ne "" && 
-			      $filteredAuthor ne $filteredByAuthor);
+        if ($filteredByAuthor ne "" && $filteredAuthor ne $filteredByAuthor) {
+	    # Don't keep this record.
+	    $keep_comment = 0;
+	}
+	else {
+	    # Check if the metric values match for each key.
+	    foreach my $metric (keys %metric_filter) {
+		if ($comment->{metrics}->{$metric} ne
+		    $metric_filter{$metric}) {
+		    $keep_comment = 0;
+		    last;
+		}
+	    }
+	}
 
+	# Indicate whether this comment should be kept or not.
  	$keep_comment;
     } @comments;
     
     return @comments;
 }
 
-# Update the state of the specified commentstate.  The version parameter
-# indicates what version of the commentstate the user was operating on.
-sub change_state($$) {
-    my ($self, $new_stateid, $version) = @_;
+# Update the specified metriuc for the specified commentstate.  The version
+# parameter indicates what version of the commentstate the user was operating
+# on.
+sub change_state {
+    my ($self, $metric_name, $metric_value, $version) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -306,17 +390,21 @@ sub change_state($$) {
 
     # Check that the version reflects the current version in the DB.
     my $select_comments =
-	$dbh->prepare_cached('SELECT version, state, creation_ts ' .
+	$dbh->prepare_cached('SELECT id, version, creation_ts ' .
 			     'FROM commentstate ' .
 			     'WHERE topicid = ? AND fileline = ? AND ' .
 			     'filenumber = ? AND filenew = ?');
     my $update_comments =
 	$dbh->prepare_cached('UPDATE commentstate SET version = ?, ' .
-			     'state = ?, creation_ts = ?, modified_ts = ? ' .
-			     'WHERE topicid = ? AND fileline = ? ' .
-			     'AND filenumber = ? AND filenew = ?');
+			     'creation_ts = ?, modified_ts = ? ' .
+			     'WHERE id = ?');
 
-    my $success = defined $select_comments && defined $update_comments;
+    my $update_metrics =
+	$dbh->prepare_cached('UPDATE commentstatemetric SET value = ? ' .
+			     'WHERE id = ? AND name = ?');
+
+    my $success = defined $select_comments && defined $update_comments
+	&& defined $update_metrics;
     my $rc = $Codestriker::OK;
 
     # Retrieve the current comment data.
@@ -326,9 +414,9 @@ sub change_state($$) {
 					   $self->{filenew});
 
     # Make sure that the topic still exists, and is therefore valid.
-    my ($current_version, $current_stateid, $creation_ts);
+    my ($id, $current_version, $creation_ts);
     if ($success && 
-	! (($current_version, $current_stateid, $creation_ts)
+	! (($id, $current_version, $creation_ts)
 	   = $select_comments->fetchrow_array())) {
 	# Invalid topic id.
 	$success = 0;
@@ -342,42 +430,20 @@ sub change_state($$) {
 	$rc = $Codestriker::STALE_VERSION;
     }
 
-    # If the state hasn't changed, don't do anything, otherwise update the
-    # comments.
-    if ($new_stateid != $self->{state}) {
-    	$self->{version} = $self->{version} + 1;
-        $self->{state} = $new_stateid;
-	$self->{modified_ts} = Codestriker->format_timestamp($timestamp);
-	$success &&= $update_comments->execute($self->{version},
- 					       $self->{state},
-					       $creation_ts,
-					       $timestamp,
-					       $self->{topicid}, 
-                                               $self->{fileline},
-					       $self->{filenumber}, 
-                                               $self->{filenew});
-    }
+    # Now update the version number for ocmmentstate, and the metric
+    # record itself.
+    $self->{version} = $self->{version} + 1;
+    $self->{metrics}->{$metric_name} = $metric_value;
+    $self->{modified_ts} = Codestriker->format_timestamp($timestamp);
+    $success &&= $update_comments->execute($self->{version},
+					   $creation_ts,
+					   $timestamp,
+					   $id);
+    $success &&= $update_metrics->execute($metric_value, $id, $metric_name);
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
     
     return $rc;
 }
-
-# Class method to convert state name to state id, returns -1 if the
-# state name is invalid.
-sub convert_state_to_stateid {
-    my ($comment_state) = @_;
-    
-    # Map the state name to its number.
-    my $stateid = -1;
-    my $id;
-    for ($id = 0; $id <= $#Codestriker::comment_states; $id++) {
-	last if ($Codestriker::comment_states[$id] eq $comment_state);
-    }
-    if ($id <= $#Codestriker::comment_states) {
-	$stateid = $id;
-    }
-}    
-
 
 1;

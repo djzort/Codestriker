@@ -65,19 +65,6 @@ sub process($$$) {
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
 						       $url_builder);
 
-    # Get the total count of each type of comment for this topic.
-    my @commentcounts;
-
-    foreach my $state (@Codestriker::comment_states) {
-	push @commentcounts, { name=>$state, count=>0 };
-    }
-    
-    foreach my $comment (@topic_comments) {
-	++$commentcounts[$comment->{state}]->{count};
-    }
-
-    $vars->{'commentcounts'} = \@commentcounts;   
-
     my @projectids = ($topic->{project_id});
 
     $vars->{'view_topic_url'} =

@@ -469,7 +469,7 @@ sub get_topic_history {
 
     my $last_history_row;
 
-    foreach my $current_history_row ( @topic_history) {
+    foreach my $current_history_row (@topic_history) {
 	if ( !defined($last_history_row) ) {
 	    # The first event is always the topic creation, so lets make 
 	    # that now.

@@ -101,6 +101,7 @@ sub process($$$) {
 	    $display_comment->{author} = Codestriker->filter_email($author);
 	    $display_comment->{date} = $comments[$i]{date};
 	    $display_comment->{data} = $comments[$i]{data};
+	    $display_comment->{metrics} = $comments[$i]{metrics};
 	    $display_comment->{line} = "";
 	    $display_comment->{lineurl} = "";
 	    $display_comment->{linename} = "";
@@ -111,6 +112,25 @@ sub process($$$) {
 	}
     }
     $vars->{'comments'} = \@display_comments;
+
+    # Store the metrics associated with this comment, if any.  Store the
+    # metrics configuration, in addition to the current values set for this
+    # comment state, if any.
+    my @metrics = ();
+    my $current_metrics_for_comment;
+    if ($#display_comments > -1) {
+	$current_metrics_for_comment = $display_comments[0]->{metrics};
+    }
+    foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	my $metric_data = {};
+	$metric_data->{name} = $metric_config->{name};
+	$metric_data->{values} = $metric_config->{values};
+	$metric_data->{default_value} = $metric_config->{default_value};
+	$metric_data->{current_value} =
+	    $current_metrics_for_comment->{$metric_config->{name}};
+	push @metrics, $metric_data;
+    }
+    $vars->{'metrics'} = \@metrics;
 
     # Populate the form values.
     $vars->{'line'} = $line;

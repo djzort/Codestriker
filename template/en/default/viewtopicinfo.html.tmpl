@@ -20,33 +20,49 @@
  <td>&nbsp;</td><td colspan="5"></td>
 </tr>
 
-<tr class="tt0">
+<tr class="tth">
  <td>Comments</td>
- 
-   [% FOREACH commentcounts %]
-   <td>[% name %]</td> 
-   [% END %]
- 
-   <td>All Types</td>
-</tr>
-
-<tr class="tt1">
-  <td></td>
-  [% FOREACH commentcounts %]
-    <td>[% count %]</td> 
-  [% END %]
-  <td>[% number_comments %]</td>
-</tr>
-
-[% # Topic metrics sections %]
-<tr class="tt1">
- <td>&nbsp;</td><td colspan="5"></td>
 </tr>
 
 <tr class="tt0">
-    <td>Topic Info</td>
-    <td>Lines</td>
-	
+ <td>Comment Threads</td>
+ <td>Comments</td>
+</tr>
+<tr>
+ <td>[% number_comment_threads %]</td>
+ <td>[% number_comments %]</td>
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+[% FOREACH metric = comment_metrics %]
+
+   [%# Output the headers #%]
+   <tr class="tt0">
+   <td>[% metric.name %]</td>
+   [% FOREACH value = metric.values %]
+   <td>[% value %]</td>   
+   [% END %]
+   </tr>
+
+   [%# Now output the values #%]
+   <tr>
+   <td>&nbsp;</td>
+   [% FOREACH value = metric.values %]
+   <td>[% comment_metric_tally.${metric.name}.$value %]</td>
+   [% END %]
+   </tr>
+
+[% END %]
+
+<tr><td>&nbsp;</td></tr>
+ 
+<tr class="tth">
+    <td>Topic</td>
+</tr>
+
+<tr class="tt0">
+<td>Lines</td>
 [% FOREACH topic_metrics %]
     <td onmouseover="(window.status='[% description %]'); return true"
 	onmouseout="(window.status=''); return true">[% name %]
@@ -60,7 +76,6 @@
 [% END %]
 </tr>
 <tr class="tt1">
-    <td></td>
     <td>[% number_of_lines %]</td>
 
 [% FOREACH topic_metrics %]

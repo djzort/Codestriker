@@ -36,16 +36,61 @@ function load_form_data() {
    return cookie.split('&');
 }
 
-var field_comments   = '';
-var field_email      = '[% email %]';
-var field_comment_cc = '';
+// Set the form field from the values present in the cookie.
+function set_form_fields() {
+   var field_comments   = '';
+   var field_email      = '[% email %]';
+   var field_comment_cc = '';
 
-var fields = load_form_data();
-if (fields != null) {
-   field_comments   = unescape(fields[0]);
-   field_email      = unescape(fields[1]);
-   field_comment_cc = unescape(fields[2]);
+   var fields = load_form_data();
+   if (fields != null) {
+      field_comments   = unescape(fields[0]);
+      field_email      = unescape(fields[1]);
+      field_comment_cc = unescape(fields[2]);
+   }
+
+   // Now set the form elements below if the values are available.
+   if (field_comments != null) {
+      document.add_comment.comments.value = field_comments;
+   }
+   if (field_email != null) {
+      document.add_comment.email.value = field_email;
+   }
+   if (field_comment_cc != null) {
+      document.add_comment.comment_cc.value = field_comment_cc;
+   }
 }
+
+// Called when the form is submitted to ensure the metric dropdowns are set
+// as well as the comment field.
+function verify() {
+  // Check the form field has a comment in it.
+  if (document.add_comment.comments.value == '') {
+      alert('No comment has been entered.');
+      return false;
+  }
+
+  // Check the metrics have been set.
+  var index;
+  var value;
+  [% FOREACH metric = metrics %]
+      index = document.add_comment.comment_state_metric_[% metric.name %].options.selectedIndex;
+      if (index == -1) {
+          alert('Metric [% metric.name %] has not been specified.');
+	  return false;
+      }
+      value = document.add_comment.comment_state_metric_[% metric.name %].options[index].value;
+      if (value == 'Select Value') {
+          alert('Metric [% metric.name %] has not been specified.');
+	  return false;
+      }
+
+  [% END %]
+
+  // If we reached here, then all metrics have been set.
+  return true;
+}
+
 </SCRIPT>
 
 [%# Screen for the add comment form. #%]
@@ -62,9 +107,8 @@ if (fields != null) {
 </table>
 
 <P>
-Enter new comment:
 
-<FORM NAME="add_comment" METHOD="POST" ENCTYPE="application/x-www-form-urlencoded">
+<FORM NAME="add_comment" METHOD="POST" onSubmit="return verify();" ENCTYPE="application/x-www-form-urlencoded">
  <INPUT TYPE="hidden" NAME="action" VALUE="submit_comment">
  <INPUT TYPE="hidden" NAME="line" VALUE="[% line %]">
  <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
@@ -72,11 +116,59 @@ Enter new comment:
  <INPUT TYPE="hidden" NAME="a" VALUE="[% anchor %]">
  <INPUT TYPE="hidden" NAME="fn" VALUE="[% fn %]">
  <INPUT TYPE="hidden" NAME="new" VALUE="[% new %]">
- <SCRIPT language="JavaScript">
-    document.write('<TEXTAREA NAME="comments" ROWS=13 COLS=75 WRAP="hard">\n');
-    document.write(field_comments);
-    document.write('</TEXTAREA>\n');
- </SCRIPT>
+
+ Enter new comment:<BR>
+ <TEXTAREA NAME="comments" ROWS=13 COLS=75 WRAP="hard"></TEXTAREA>
+
+ [% IF metrics != '' %]
+   <P>
+   <TABLE>
+     [% FOREACH metric = metrics %]
+     [% IF loop.index() % 4 == 0 %]
+     <TR>
+     [% END %]
+       <TD ALIGN="right">[% metric.name %]:</TD>
+       <TD ALIGN="left">
+         <SELECT NAME="comment_state_metric_[% metric.name %]">
+           [% IF metric.current_value == '' %]
+
+	     [% IF metric.default_value == '' %]
+               <OPTION VALUE="Select Value">&lt;Select Value&gt;</OPTION>
+             [% END %]
+	     [% FOREACH value = metric.values %]
+	       <OPTION [% IF value == metric.default_value %]SELECTED[% END %] VALUE="[% value %]">[% value %]</OPTION>
+             [% END %]
+
+	   [% ELSE %]
+
+	     [% FOREACH value = metric.values %]
+	       [% SET found_current_value = 0 %]
+
+	       [% IF value == metric.current_value %]
+	         <OPTION SELECTED VALUE="[% value %]">[% value %]</OPTION>
+		 [% SET found_current_value = 1 %]
+               [% ELSE %]
+	         <OPTION VALUE="[% value %]">[% value %]</OPTION>
+	       [% END %]
+	     [% END %]
+
+	     [% IF found_current_value == 0 %]
+	       [%# Old metric data value no longer in config. #%]
+
+	       <OPTION VALUE="[% metric.current_value %]">[% metric.current_value %]</OPTION>
+	     [% END %]
+
+	   [% END %]
+	 </SELECT>
+         &nbsp;&nbsp;&nbsp;&nbsp;
+       </TD>
+     [% IF loop.index() % 4 == 3 || loop.last() %]
+     </TR>
+     [% END %]
+     [% END %]
+   </TABLE>
+ [% END %]
+
  <P>
 
  <TABLE>
@@ -84,18 +176,14 @@ Enter new comment:
   <TD>Your email address: </TD>
   </SCRIPT>
   <TD>
-  <SCRIPT language="JavaScript">
-     document.write('<INPUT TYPE="text" NAME="email" SIZE=50 MAXLENGTH=100 VALUE="' + field_email + '">\n');
-  </SCRIPT>
+    <INPUT TYPE="text" NAME="email" SIZE=50 MAXLENGTH=100>
   </TD>
   <TD></TD>
  </TR>
  <TR>
   <TD>Cc: </TD>
   <TD>
-  <SCRIPT language="JavaScript">
-     document.write('<INPUT TYPE="text" NAME="comment_cc" SIZE=50 MAXLENGTH=150 VALUE="' + field_comment_cc + '">\n');
-  </SCRIPT>
+     <INPUT TYPE="text" NAME="comment_cc" SIZE=50 MAXLENGTH=150>
   </TD>
   <TD><INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()"></TD>
  </TR>
@@ -136,6 +224,11 @@ Enter new comment:
 <P>Context: (<A onClick="save_form_data()" HREF="[% inc_context_url %]">increase</A> | <A onClick="save_form_data()" HREF="[% dec_context_url %]">decrease)</A>
 <PRE>[% context %]
 </PRE>
+
+<SCRIPT>
+  // Now that the form has loaded, set the form fields.
+  set_form_fields();
+</SCRIPT>
 
 [% PROCESS trailer.html.tmpl %]
 

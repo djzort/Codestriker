@@ -15,7 +15,8 @@ package Codestriker::TopicListeners::HistoryRecorder;
 use Codestriker::TopicListeners::TopicListener;
 use Codestriker::DB::DBI;
 
-@Codesrtiker::TopicListeners::HistoryRecorder::ISA = ("Codestriker::TopicListeners::TopicListener");
+@Codestriker::TopicListeners::HistoryRecorder::ISA =
+    ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;
@@ -76,10 +77,11 @@ sub topic_changed($$$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
         my @array = $dbh->selectrow_array('SELECT COUNT(version) '. 
-			     'FROM topichistory ' .
-			     'WHERE ? = topicid and ? = version',
-                              {},
-                              $topic->{topicid},$topic_orig->{version});
+					  'FROM topichistory ' .
+					  'WHERE ? = topicid and ? = version',
+					  {},
+					  $topic->{topicid},
+					  $topic_orig->{version});
 
         my $old_topic_has_history = $array[0];
 
@@ -128,23 +130,29 @@ sub topic_viewed($$$) {
 }
 
 # Insert a row into the commentstatehistory table.
-sub _insert_commentstatehistory_entry($$$) {
-    my ($self, $user, $comment) = @_;
+sub _insert_commentstatehistory_entry($$$$$) {
+    my ($self, $user, $comment, $metric_name, $metric_value) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
+    my $get_count =
+	$dbh->prepare_cached('SELECT COUNT(*) FROM commentstatehistory ' .
+			     'WHERE id = ?');
+
     my $insert =
 	$dbh->prepare_cached('INSERT INTO commentstatehistory ' .
-			     '(id, state, version, ' .
+			     '(id, version, metric_name, metric_value, ' .
 			     'modified_ts, modified_by_user) '.
-			     'VALUES (?, ?, ?, ?, ?)');
-    my $success = defined $insert;
-    $success &&= $insert->execute($comment->{id}, $comment->{state},
-				  $comment->{version},
+			     'VALUES (?, ?, ?, ?, ?, ?)');
+    my $success = defined $insert && defined $get_count;
+    $success &&= $get_count->execute($comment->{id});
+    my ($count) = $get_count->fetchrow_array() if $success;
+    $success &&= $get_count->finish();
+    $success &&= $insert->execute($comment->{id}, $count+1,
+				  $metric_name, $metric_value,
 				  $comment->{db_modified_ts}, $user);
     
-
     # Release the database connection.
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
@@ -154,16 +162,23 @@ sub _insert_commentstatehistory_entry($$$) {
 sub comment_create($$$) {
     my ($self, $topic, $comment) = @_;
 
-    # The author of the new comment is also the user who created it.
-    $self->_insert_commentstatehistory_entry($comment->{author}, $comment);
+    # The author of the new comment is also the user who created it.  Need
+    # to add in all the new metrics created as separate rows.
+    foreach my $metric_name (keys %{$comment->{metrics}}) {
+	my $metric_value = $comment->{metrics}->{$metric_name};
+	$self->_insert_commentstatehistory_entry($comment->{author}, $comment,
+						 $metric_name, $metric_value);
+    }
     return '';    
 }
 
 # Add an updated record for this commentstate to the commentstatehistory table.
-sub comment_state_change($$$$$) {
-    my ($self, $user, $old_state_id, $topic, $comment) = @_;
+sub comment_state_change($$$$$$$) {
+    my ($self, $user, $metric_name, $old_value, $new_value,
+	$topic, $comment) = @_;
 
-    $self->_insert_commentstatehistory_entry($user, $comment);
+    $self->_insert_commentstatehistory_entry($user, $comment, $metric_name,
+					     $new_value);
     return '';    
 }
 

@@ -53,7 +53,7 @@ sub parse ($$$) {
 	# Note, some review text is formed by concatenating multiple
 	# cvs diffs together, so the check is done here.  Also, this handles
 	# trailing whitespace.
-	while (defined($line) && ($line =~ /^\?/o || $line =~ /^\s*$/)) {
+	while (defined($line) && ($line =~ /^\?/o || $line =~ /^\s*$/o)) {
 	    $line = <$fh>;
 	}
 	return @result unless defined $line;

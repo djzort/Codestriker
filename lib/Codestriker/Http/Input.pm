@@ -134,6 +134,12 @@ sub process($) {
 	$self->{"reviewer_metric,$userindex"} = \@reviewer_metrics;
     }
 
+    # Set the comment state metric data.
+    foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
+	my $name = "comment_state_metric_" . $comment_state_metric->{name};
+	$self->{$name} = $query->param($name);
+    }
+
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
 	$self->{topic_description} =~ s/\r//g;

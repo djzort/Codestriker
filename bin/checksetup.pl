@@ -308,7 +308,7 @@ my $commentdata_table =
 	indexes => [dbindex(name=>"comment_idx",
 			    column_names=>["commentstateid"])]);
 
-# Contains the state of a bunch of ocmments on a specific line of code.
+# Contains the state of a bunch of comments on a specific line of code.
 my $commentstate_table =
   table(name => "commentstate",
 	columns => [col(name=>"id", type=>$INT32, autoincr=>1, pk=>1),
@@ -323,13 +323,23 @@ my $commentstate_table =
 		   ],
 	indexes => [dbindex(name=>"commentstate_topicid_idx",
 			    column_names=>["topicid"])]);
+
+# Contains the metrics associated with a commentstate record.  This is
+# configurable over time, so basic string data is stored into here.
+my $commentstatemetric_table =
+  table(name => "commentstatemetric",
+	columns => [col(name=>"id", type=>$INT32, pk=>1),
+		    col(name=>"name", type=>$VARCHAR, length=>80, pk=>1),
+		    col(name=>"value", type=>$VARCHAR, length=>80)
+		    ]);
 		    
 # Holds information relating to how a commentstate has changed over time.
 # Only changeable commentstate attributes are recorded in this table.
 my $commentstatehistory_table =
   table(name => "commentstatehistory",
 	columns => [col(name=>"id", type=>$INT32, pk=>1),
-		    col(name=>"state", type=>$INT16),
+		    col(name=>"metric_name", type=>$VARCHAR, length=>80),
+		    col(name=>"metric_value", type=>$VARCHAR, length=>80),
 		    col(name=>"version", type=>$INT32, pk=>1),
 		    col(name=>"modified_ts", type=>$DATETIME),
 		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
@@ -408,6 +418,7 @@ push @tables, $topicusermetric_table;
 push @tables, $topicmetric_table;
 push @tables, $commentdata_table;
 push @tables, $commentstate_table;
+push @tables, $commentstatemetric_table;
 push @tables, $commentstatehistory_table;
 push @tables, $participant_table;
 push @tables, $topicbug_table;
@@ -521,8 +532,12 @@ foreach my $table (@tables) {
 $database->commit();
 
 # Add new fields to the topic field when upgrading old databases.
-$database->add_field('topic', 'repository', 'text');
-$database->add_field('topic', 'projectid', 'int');
+$database->add_field('topic', 'repository', $TEXT);
+$database->add_field('topic', 'projectid', $INT32);
+
+# Add the new metric fields to the commentstatehistory table.
+$database->add_field('commentstatehistory', 'metric_name', $TEXT);
+$database->add_field('commentstatehistory', 'metric_value', $TEXT);
 
 # If we are using MySQL, and we are upgrading from a version of the database
 # which used "text" instead of "mediumtext" for certain fields, update the
@@ -735,6 +750,68 @@ if ($project_count == 0) {
     $update->execute($projectid);
 }
 $database->commit();
+
+# Check if the data needs to be upgraded to the new commentstate metric
+# scheme from the old state_id scheme.  For now, assume the old state-ids
+# are the default values present in Codestriker.conf.  If they were changed
+# by the user, they could always modify the DB values appropriately.
+eval {
+    $dbh->{PrintError} = 0;
+    my @old_comment_states = ("Submitted", "Invalid", "Completed");
+    $stmt = $dbh->prepare_cached('SELECT id, state, creation_ts, modified_ts '.
+				 'FROM commentstate WHERE state >= 0');
+    $stmt->execute();
+    
+    my $update = $dbh->prepare_cached('UPDATE commentstate ' .
+				      'SET state = ?, creation_ts = ?, ' .
+				      'modified_ts = ? ' .
+				      'WHERE id = ?');
+    my $insert = $dbh->prepare_cached('INSERT INTO commentstatemetric ' .
+				      '(id, name, value) VALUES (?, ?, ?) ');
+    
+    my $count = 0;
+    while (my ($id, $state, $creation_ts, $modified_ts) =
+	   $stmt->fetchrow_array()) {
+	print "Migrating old commentstate records... \n" if $count == 0;
+	# Update the state to its negative value, so the information isn't
+	# lost, but also to mark it as being migrated.
+	$update->execute(-$state - 1, $creation_ts, $modified_ts, $id);
+	my $value = $old_comment_states[$state];
+	$value = "Unknown $state" unless defined $value;
+	$insert->execute($id, "Status", $value);
+	$count++;
+    }
+    print "Migrated $count records.\n" if $count > 0;
+    $stmt->finish();
+
+    # Now do the same for the commentstatehistory records.
+    $stmt = $dbh->prepare_cached('SELECT id, state, version, modified_ts ' .
+				 'FROM commentstatehistory ' .
+				 'WHERE state >= 0');
+    $stmt->execute();
+    
+    $update = $dbh->prepare_cached('UPDATE commentstatehistory ' .
+				   'SET metric_name = ?, metric_value = ?, ' .
+				   ' state = ?, modified_ts = ? ' .
+				   'WHERE id = ? AND version = ?');
+    $count = 0;
+    while (my ($id, $state, $version, $modified_ts) =
+	   $stmt->fetchrow_array()) {
+	print "Migrating old commentstatehistory records...\n" if $count == 0;
+	my $value = $old_comment_states[$state];
+	$value = "Unknown $state" unless defined $value;
+	$update->execute("Status", $value, -$state - 1, $modified_ts,
+			 $id, $version);
+	$count++;
+    }
+    print "Migrated $count records.\n" if $count > 0;
+    $stmt->finish();
+};
+if ($@) {
+    print "Failed because of $@\n";
+}
+
+$dbh->{PrintError} = 1;
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).

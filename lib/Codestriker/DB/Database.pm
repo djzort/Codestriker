@@ -178,8 +178,9 @@ sub add_field {
 
     eval {
 	$dbh->{PrintError} = 0;
+	my $field_type = $self->_map_type($definition);
 
-	$dbh->do("ALTER TABLE $table ADD COLUMN $field $definition");
+	$dbh->do("ALTER TABLE $table ADD COLUMN $field $field_type");
 	print "Added new field $field to table $table.\n";
 	$rc = 1;
 	$self->commit();

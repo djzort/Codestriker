@@ -19,16 +19,21 @@ function SelectFilter(post)
     	url = url + '&sauthor=' + userSelection;
     }
         
-    var stateIndex = document.form.filter_comments_state.options.selectedIndex;     
-    if ( stateIndex > 0)
-    {
-    	url = url + '&sstate=' + (stateIndex-1);
-    }
-    
     var contextIndex = document.form.show_context_in_comments.options.selectedIndex;
     var contextSelection = document.form.show_context_in_comments.options[contextIndex].value;
     
     url = url + '&scontext=' + contextSelection;
+
+    // Try to piece together the current values of the metric dropdown boxes.
+    var metricIndex;
+    var metricSelection;
+    [% FOREACH metric = metrics %]
+
+      metricIndex = document.form.comment_state_metric_[% metric.name %].options.selectedIndex;
+      metricSelection = document.form.comment_state_metric_[% metric.name %].options[metricIndex].value;
+      url = url + '&comment_state_metric_[% metric.name %]=' + metricSelection;
+
+    [% END %]
     
     // The filtering url parameters have been build, now a "get" back to the web server
     // with the updated filter paramters, the ListComments.pm script will refilter then.
@@ -41,51 +46,6 @@ function SelectFilter(post)
     	window.form.action = '[% view_comments_url %]' + url ;
         window.form.post();
     }
-}
-
-// This function checks all comment checkboxes.
-function CheckAll()
-{
-    if (document.form.selected_comments == null)
-    {
-        return;  // No comments.
-    }
-
-    if (document.form.selected_comments.length == null)
-    {
-        // Only one comment, older browsers don't represent checkboxes
-        // in array notation when there is only one element.
-        document.form.selected_comments.checked = true;
-        return;
-    }
-
-    // Check all the arrays.    
-    for (var i = 0; i < document.form.selected_comments.length; i++)
-    {
-        document.form.selected_comments[i].checked = true;
-    }    
-}
-
-// This function clear all comment checkboxes.
-function ClearAll()
-{
-    if (document.form.selected_comments == null)
-    {
-        return;  // No comments.
-    }
-
-    if (document.form.selected_comments.length == null)
-    {
-        // Only one comment, older browsers don't represent checkboxes
-        // in array notation when there is only one element.
-        document.form.selected_comments.checked = false;
-        return;
-    }
-
-    for (var i = 0; i < document.form.selected_comments.length; i++)
-    {
-        document.form.selected_comments[i].checked = false;
-    }    
 }
 
 // -->
@@ -102,38 +62,52 @@ function ClearAll()
 
 <P><FONT size="5">Comments: &nbsp; &nbsp;</FONT>
 
-Show comments authored by: &nbsp;
+<BR>
+<TABLE>
+<TR>
+  <TD ALIGN="right">Show authored by: &nbsp;</TD>
+  <TD ALIGN="left">
   <SELECT name="filter_comments_author" onChange="SelectFilter(0)">
      <OPTION value="1"> Everybody </OPTION>
      [% FOREACH user = users %]
      <OPTION value="[% user %]" [% IF sauthor == user %] SELECTED [% END %] >[% user %]</OPTION>
      [% END %]
   </SELECT>
-     
-with: 
-  <SELECT name="filter_comments_state" onChange="SelectFilter(0)">
-     <OPTION value="Any" [% IF select_sstate == 0 %] SELECTED [% END %]> Any </OPTION>
-     [% FOREACH state = states %]
-     <OPTION value="[% state %]" [% IF loop.count() == select_sstate %] SELECTED [% END %]>[% state %] </OPTION>
-     [% END %]
-  </SELECT>
-  
-state and
 
+with
   <SELECT name="show_context_in_comments" onChange="SelectFilter(0)">
      <OPTION value="0" [% IF scontext == 0 %] SELECTED [% END %]>no context</OPTION>
      <OPTION value="3" [% IF scontext == 3 %] SELECTED [% END %]>with context 3 lines</OPTION>
      <OPTION value="6" [% IF scontext == 6 %] SELECTED [% END %]>with context 6 lines</OPTION>
   </SELECT>
-.
+  </TD>
+</TR>
+
+[% IF metrics != '' %]
+[% FOREACH metric = metrics %]
+  [% IF loop.index() % 4 == 0 %]<TR><TD>&nbsp;</TD><TD ALIGN="left">[% END %]
+  [% metric.name %]:
+  <SELECT NAME="comment_state_metric_[% metric.name %]" onChange="SelectFilter(0)">
+    <OPTION VALUE="__any__">Any</OPTION>
+    [% SET selected_value = metrics_selection.${metric.name} %]
+    [% FOREACH value = metric.values %]
+      [% IF selected_value != '' && selected_value == value %]
+        <OPTION SELECTED VALUE="[% value %]">[% value %]</OPTION>
+      [% ELSE %]
+        <OPTION VALUE="[% value %]">[% value %]</OPTION>
+      [% END %]
+    [% END %]
+  </SELECT>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  [% IF loop.index() % 4 == 3 || loop.last() %]</TD></TR>[% END %]
+[% END %]
+[% END %]
+</TABLE>
+
+<P>
 
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
-    <TR>
-        <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
-        </TD>
-    </TR>
 [% last_fileline = -1 %]
 [% last_filenumber = -1 %]
 [% FOREACH comment = comments %]
@@ -142,25 +116,49 @@ state and
     [% IF comment.fileline != last_fileline ||
           comment.filenumber != last_filenumber %]
     <TR CLASS="comments">
-        <TD WIDTH="1%">
-            <INPUT TYPE="checkbox" NAME="selected_comments" 
-	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
-        </TD>
-	<TD WIDTH="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+        [%# Display the comment thread information #%]
 	<TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
 	       [% IF allow_repositories != 0 %] <A HREF="[% comment.view_parallel %]">Parallel</A> | [% END %]
-	       <A HREF="[% comment.edit_url %]">Add comment</A>
+	       <A NAME="[% comment.anchor %]" HREF="[% comment.edit_url %]">Add comment</A>
 	    [% ELSE %]
 	       Line: [% comment.line %] |
-	        <A HREF="[% comment.edit_url %]">Add comment</A>
+	        <A NAME="[% comment.anchor %]" HREF="[% comment.edit_url %]">Add comment</A>
 	    [% END %]
 	</TD>
     </TR>
+
+    [%# Now display the metric dropdowns #%]
+    [% IF metrics != '' %]
+    [% FOREACH metric = metrics %]
+        [% IF loop.index() % 4 == 0 %]<TR><TD>[% END %]
+        [% SET metric_name = metric.name %]
+	[% metric_name %]:
+   	<SELECT NAME="comment_state_metric|[% metric_name %]|[%comment.filenumber %]|[% comment.fileline %]|[% comment.filenew %]|[% comment.version %]">
+ 	[% SET comment_metric_value = comment.metrics.$metric_name %]
+        [% SET found_current_value = 0 %]
+	[% FOREACH value = metric.values %]
+	    [% IF value == comment_metric_value %]
+	        <OPTION SELECTED VALUE="[% value %]">[% value %]</OPTION>
+		[% SET found_current_value = 1 %]
+	    [% ELSE %]
+	        <OPTION VALUE="[% value %]">[% value %]</OPTION>
+	    [% END %]
+	[% END %]
+
+	[% IF found_current_value == 0 %]
+	    <OPTION VALUE="[% comment_metric_value %]">[% comment_metric_value %]</OPTION>
+	[% END %]
+	</SELECT>
+	&nbsp;&nbsp;&nbsp;&nbsp;
+        [% IF loop.index() % 4 == 3 || loop.last() %]</TD></TR>[% END %]
+    [% END %]
+    [% END %]
+
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
+        <TD>&nbsp;<PRE>[% comment.context %]</PRE></TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
@@ -169,35 +167,21 @@ state and
     [% END %]
 
     <TR CLASS="commenth">
-        <TD CLASS="commentb">&nbsp;</TD>
-        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
+        <TD>[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+        <TD><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
     </TR>
 
 [% END %]
 
-    <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
-
-
-    <TR>
-        <TD COLSPAN="3">
-            <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:ClearAll()">Clear All</A>
-        </TD>
-    </TR>
+    <TR CLASS="comments"><TD>&nbsp;</TD></TR>
 
 </TABLE>
 
 <P>
 
-Change state: &nbsp;
-  <SELECT name="comment_state">
-     [% FOREACH state = states %]
-     <OPTION value="[% state %]">[% state %]</OPTION>
-     [% END %]
-  </SELECT>
-  <INPUT TYPE="submit" NAME="button" VALUE="Update">
+<INPUT TYPE="submit" NAME="button" VALUE="Update">
 
 </FORM>
 

@@ -3,6 +3,9 @@
 
 Version 1.8.4
 
+* !!!INITIAL VERSION OF COMMENT METRICS.  DO NOT USE FOR PRODUCTION
+  USE, YET  UNTESTED!!!
+
 * It is now possible in the create topic screen to only specify a
   single tag and a module name in order to create a new topic, rather
   than both the start and end tags, with the module name.  The effect

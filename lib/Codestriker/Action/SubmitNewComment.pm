@@ -43,15 +43,26 @@ sub process($$$) {
 	$http_response->error("No email address was entered");
     }
 
+    # Retrieve the comment metric values.
+    my @metrics = ();
+    foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
+	my $name = "comment_state_metric_" . $comment_state_metric->{name};
+	my $metric = {};
+	$metric->{name} = $comment_state_metric->{name};
+	$metric->{value} = $http_input->get($name);
+	if ($metric->{value} eq "Select Value") {
+	    $http_response->error("Metric value for $metric->{name} unspecified");
+	}
+	push @metrics, $metric;
+    }
+
     # Retrieve the appropriate topic details.
     my $topic = Codestriker::Model::Topic->new($topicid); 
 
     # Create the comment in the database.
     my $comment = Codestriker::Model::Comment->new();
     $comment->create($topicid, $line, $fn, $new,
-		     $email, $comments,
-	             $Codestriker::COMMENT_SUBMITTED);
-                        
+		     $email, $comments, \@metrics);
     $comment->{cc} = $cc;
     
     # Tell the listener classes that a comment has just been created.

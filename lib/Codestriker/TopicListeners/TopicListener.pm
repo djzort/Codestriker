@@ -55,8 +55,9 @@ sub comment_create($$$) {
     return '';    
 }
 
-sub comment_state_change($$$$$) {
-    my ($self, $user, $old_state_id, $topic, $comment) = @_;
+sub comment_state_change($$$$$$$) {
+    my ($self, $user, $metric_name, $old_value, $new_value,
+	$topic, $comment) = @_;
 
     # Default version of function that does nothing, and allowed the
     # event to continue.

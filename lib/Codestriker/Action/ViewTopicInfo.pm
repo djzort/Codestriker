@@ -58,18 +58,67 @@ sub process($$$) {
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
 						       $url_builder);
 
-    # Get the total count of each type of comment for this topic.
-    my @commentcounts;
-
-    foreach my $state (@Codestriker::comment_states) {
-	push @commentcounts, { name=>$state, count=>0 };
+    # Get the metrics configuration.  Its important to start from the
+    # configuration so that the display matches the order of the config
+    # file declaration.  Any unknown metric names/values will be appended.
+    my @comment_metrics = ();
+    my %comment_metric_tally = ();
+    my $known_metrics;
+    foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
+	my $metric_data = {};
+	$metric_data->{name} = $metric_config->{name};
+	$metric_data->{values} = $metric_config->{values};
+	foreach my $value (@{ $metric_data->{values} }) {
+	    $known_metrics->{$metric_config->{name}}->{$value} = 1;
+	    $comment_metric_tally{$metric_config->{name}}->{$value} = 0;
+	}
+	$known_metrics->{$metric_config->{name}}->{'__array__'} =
+	    $metric_config->{values};
+	push @comment_metrics, $metric_data;
     }
-    
+
+    # Now tally the metric counts.  This code is complicated by having to
+    # deal with old metric configurations that no longer mirror the current
+    # active configuration.  The old values should still be reported.
+    my $number_comments = 0;
+    my $number_comment_threads = 0;
+    my %processed_comment_thread = ();
     foreach my $comment (@topic_comments) {
-	++$commentcounts[$comment->{state}]->{count};
+	if (! exists $processed_comment_thread{$comment->{id}}) {
+	    $processed_comment_thread{$comment->{id}} = 1;
+	    $number_comment_threads++;
+
+	    # Go through all the metric values stored in this comment thread.
+	    foreach my $metric (keys %{ $comment->{metrics} }) {
+		my $value = $comment->{metrics}->{$metric};
+		$comment_metric_tally{$metric}->{$value}++;
+
+		# If this is an old metric from an old config, make sure it
+		# is included in the config for the final display.
+		if (! defined $known_metrics->{$metric}) {
+		    # Old metric name not in the current config.
+		    my $metric_data = {};
+		    $metric_data->{name} = $metric;
+		    $metric_data->{values} = [ $value ];
+		    $known_metrics->{$metric}->{$value} = 1;
+		    $known_metrics->{$metric}->{'__array__'} =
+			$metric_data->{values};
+		    push @comment_metrics, $metric_data;
+		} elsif (! defined $known_metrics->{$metric}->{$value}) {
+		    # Known metric name, unknown value.
+		    push @{ $known_metrics->{$metric}->{'__array__'} },
+		         $value;
+		    $known_metrics->{$metric}->{$value} = 1;
+		}
+	    }
+	}
+	$number_comments++;
     }
 
-    $vars->{'commentcounts'} = \@commentcounts;   
+    $vars->{'comment_metrics'} = \@comment_metrics;
+    $vars->{'comment_metric_tally'} = \%comment_metric_tally;
+    $vars->{'number_comments'} = $number_comments;
+    $vars->{'number_comment_threads'} = $number_comment_threads;
 
     my @projectids = ($topic->{project_id});
 
@@ -136,12 +185,15 @@ sub process($$$) {
     my @topic_metrics = $topic->get_metrics()->get_topic_metrics();
     $vars->{topic_metrics} = \@topic_metrics;
 
-    my @author_metrics = $topic->get_metrics()->get_user_metrics($topic->{author});
+    my @author_metrics =
+	$topic->get_metrics()->get_user_metrics($topic->{author});
     $vars->{author_metrics} = \@author_metrics;
     
-    my @reviewer_list = $topic->get_metrics()->get_complete_list_of_topic_participants();
+    my @reviewer_list =
+	$topic->get_metrics()->get_complete_list_of_topic_participants();
 
-    # Remove the author from the list just in case somebody put themselves in twice.
+    # Remove the author from the list just in case somebody put
+    # themselves in twice.
     @reviewer_list = grep { $_ ne $topic->{author} } @reviewer_list;
 
     my @reviewer_metrics;
@@ -149,8 +201,9 @@ sub process($$$) {
     {
 	my @user_metrics = $topic->get_metrics()->get_user_metrics($reviewer);
 
-        # Make a copy, we don't want to modify the names in the list. This is just
-        # for the consumption of the html templates.
+        # Make a copy, we don't want to modify the names in the
+        # list. This is just for the consumption of the html
+        # templates.
         my $reviewer_ui_name = $reviewer;
         $reviewer_ui_name = "(unknown user)" if ($reviewer eq "");
 
@@ -165,7 +218,8 @@ sub process($$$) {
 
     $vars->{reviewer_metrics} = \@reviewer_metrics;
 
-    my @total_metrics = $topic->get_metrics()->get_user_metrics_totals(@reviewer_list, $topic->{author});
+    my @total_metrics = $topic->get_metrics()->get_user_metrics_totals(
+                                            @reviewer_list, $topic->{author});
     $vars->{total_metrics} = \@total_metrics;
 
     my @topic_history = $topic->get_metrics()->get_topic_history();

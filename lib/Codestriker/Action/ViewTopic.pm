@@ -288,7 +288,6 @@ sub ProcessTopicHeader($$$) {
 
     $vars->{'reviewers'} = Codestriker->filter_email($topic->{reviewers});
     $vars->{'cc'} =  Codestriker->filter_email($topic->{cc});
-
 }
 
 1;
