@@ -211,28 +211,78 @@ sub lxr_data($$) {
 }
 
 # Render a delta.  If the filename has changed since the last delta, output the
-# appropriate file headers.
+# appropriate file headers. Pass in the delta object you want to render.
 sub delta ($$$$$$$$$$) {
-    my ($self, $filename, $filenumber, $revision, $old_linenumber,
-	$new_linenumber, $text, $description, $binary, $repmatch) = @_;
+    my ($self, $delta) = @_;
+
+    my $filename = $delta->{filename};
+    my $filenumber = $delta->{filenumber},
+    my $revision = $delta->{revision};
+    my $old_linenumber = $delta->{old_linenumber};
+    my $new_linenumber = $delta->{new_linenumber};
+    my $text = $delta->{text};
+    my $description = $delta->{description};
+    my $binary = $delta->{binary};
+    my $repmatch = $delta->{repmatch};
 
     # Don't do anything for binary files.
     return if $binary;
 
     my $query = $self->{query};
 
-    # Check if the file heading needs to be output.
-    if ($self->{diff_current_filename} ne $filename) {
-	$self->delta_file_header($filename, $revision, $repmatch);
+    if ($delta->is_delta_new_file() == 0 )
+    {
+        # Check if the file heading needs to be output.
+        if ($self->{diff_current_filename} ne $filename) {
+	    $self->delta_file_header($filename, $revision, $repmatch);
+        }
+
+        # Display the delta heading.
+        $self->delta_heading($filenumber, $revision, $old_linenumber,
+			     $new_linenumber, $description, $repmatch);
+
+        # Now render the actual diff text itself.
+        $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
+			  $new_linenumber, $text, $repmatch, 1, 1);
     }
+    else
+    {
+	# Special formatting for full file upload that is not a diff.
+        # If it not a diff, show the entire delta (actually the file
+        # contents) in a single column.
+        print $query->start_table({-width=>'100%',
+				   -border=>'0',
+				   -cellspacing=>'0',
+				   -cellpadding=>'0'}), "\n";
+        print $query->Tr($query->td({-width=>'2%'}, "&nbsp;"),
+			 $query->td({-width=>'98%'}, "&nbsp;"),"\n");
+	
+	print $query->Tr($query->td({-class=>'file'}),
+                         $query->td({-class=>'file'},
+				    "File  ",
+				    $query->a({name=>$filename},
+					      $filename)));
+	my @lines = split /\n/, $text;
+        for (my $i = 0; $i <= $#lines; $i++) {
+	    my $line = $lines[$i];
+	    
+	    my $rendered_left_linenumber =
+		$self->render_linenumber($i+1, $filenumber,1,1);
+	    
+	    # Removed the delta text, where + is added to the start of each
+	    # line.  Also make sure the line is suitably escaped.
+	    $line =~ s/^\+ //;
+	    $line = HTML::Entities::encode($line);
 
-    # Display the delta heading.
-    $self->delta_heading($filenumber, $revision, $old_linenumber,
-			 $new_linenumber, $description, $repmatch);
-
-    # Now render the actual diff text itself.
-    $self->delta_text($filename, $filenumber, $revision, $old_linenumber,
-		      $new_linenumber, $text, $repmatch, 1, 1);
+	    my $cell = $self->render_coloured_cell($line);
+	    my $cell_class =
+		$self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
+	    
+	    print $query->Tr($query->td($rendered_left_linenumber),
+			     $query->td({-class=>$cell_class}, $cell),
+			     "\n");
+    	}
+    }
 }
 
 # Output the header for a series of deltas for a specific file.
@@ -332,23 +382,23 @@ sub delta_heading ($$$$$$$) {
 	    $url_builder->view_file_url($topic, $filenumber, 0,
 					$old_linenumber, $mode, 0);
 	my $url_old = "javascript: myOpen('$url_old_full','CVS')";
-	
+
 	my $url_old_both_full =
 	    $url_builder->view_file_url($topic, $filenumber, 0,
 					$old_linenumber, $mode, 1);
 	my $url_old_both =
 	    "javascript: myOpen('$url_old_both_full','CVS')";
-	
+
 	my $url_new_full =
 	    $url_builder->view_file_url($topic, $filenumber, 1,
 					$new_linenumber, $mode, 0);
 	my $url_new = "javascript: myOpen('$url_new_full','CVS')";
-	
+
 	my $url_new_both_full =
 	    $url_builder->view_file_url($topic, $filenumber, 1,
 					$new_linenumber, $mode, 1);
 	my $url_new_both = "javascript: myOpen('$url_new_both_full','CVS')";
-	
+
 	print $query->Tr($query->td({-class=>'line', -colspan=>'2'},
 				    $query->a({href=>$url_old}, "Line " .
 					      $old_linenumber) .
@@ -434,18 +484,18 @@ sub display_coloured_data ($$$$) {
 
 	# Render the current line for both cells.
 	my $celldata = $self->render_coloured_cell($data);
-	
+
 	# Determine the appropriate classes to render.
 	my $cell_class =
 	    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-	
+
 	my $rendered_left_linenumber =
 	    $self->render_linenumber($leftline, $filenumber, 0, $link);
 	my $rendered_right_linenumber =
 	    ($leftline == $rightline && !$self->{parallel}) ?
 	    $rendered_left_linenumber :
 	    $self->render_linenumber($rightline, $filenumber, 1, $link);
-	
+
 	print $query->Tr($query->td($rendered_left_linenumber),
 			 $query->td({-class=>$cell_class}, $celldata),
 			 $query->td($rendered_right_linenumber),
@@ -465,7 +515,7 @@ sub display_coloured_data ($$$$) {
 sub render_coloured_cell($$)
 {
     my ($self, $data) = @_;
-    
+
     if (! defined $data || $data eq "") {
 	return "&nbsp;";
     }
@@ -809,7 +859,7 @@ sub _coloured_mode_finish ($) {
 # Display a line for a single file view.
 sub display_single_filedata ($$$$$) {
     my ($self, $filenumber, $data, $new, $link) = @_;
-    
+
     my $leftline = $self->{old_linenumber};
     my $rightline = $self->{new_linenumber};
     my $max_line_length = $self->{max_line_length};
@@ -981,7 +1031,7 @@ sub flush_monospaced_lines ($$$$$) {
     $#view_file_minus_offset = -1;
     $#view_file_plus = -1;
     $#view_file_plus_offset = -1;
-}	
+}
 
 # Replace the passed in string with the correct number of spaces, for
 # alignment purposes.
@@ -1000,14 +1050,14 @@ sub tabadjust ($$$$) {
     return $_;
 }
 
-# Retrieve the data that forms the "context" when submitting a comment.	
+# Retrieve the data that forms the "context" when submitting a comment.
 sub get_context ($$$$$$$$$) {
     my ($type, $targetline, $topic, $context, $html_view, $old_startline,
 	$new_startline, $text, $new) = @_;
 
     # Break the text into lines.
     my @document = split /\n/, $text;
-    
+
     # Calculate the location of the target line within the diff chunk.
     my $offset;
     my $old_linenumber = $old_startline;
@@ -1023,7 +1073,7 @@ sub get_context ($$$$$$$$$) {
 	    $old_linenumber++;
 	    $new_linenumber++;
 	} elsif ($data =~ /^\+/o) {
-	    last if ($new && $new_linenumber == $targetline);	    
+	    last if ($new && $new_linenumber == $targetline);
 	    $new_linenumber++;
 	} elsif ($data =~ /^\-/o) {
 	    last if ($new == 0 && $old_linenumber == $targetline);

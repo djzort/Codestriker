@@ -47,10 +47,10 @@ sub process($$$) {
 
     # Indicate whether the topic text needs to be retrieved by the repository
     # object.
-    my $retrieve_text = 0;
+    my $retrieve_text_from_rep = 0;
     if ($start_tag ne "" && $end_tag ne "" && $module ne "") {
-	$retrieve_text = 1;
-	
+	$retrieve_text_from_rep = 1;
+
 	# Check if this action is permitted.
 	if ($Codestriker::allow_repositories == 0) {
 	    $feedback .= "Repository functionality has been disabled.  " .
@@ -66,8 +66,8 @@ sub process($$$) {
     }
     if ($email eq "") {
 	$feedback .= "No email address was entered.\n";
-    }	
-    if (!defined $fh && $retrieve_text == 0) {
+    }
+    if (!defined $fh && $retrieve_text_from_rep == 0) {
 	$feedback .= "No filename or module/tags were entered.\n";
     }
     if ($reviewers eq "") {
@@ -129,7 +129,7 @@ sub process($$$) {
     # create a temporary file to store the topic text.
     my $temp_topic_filename = "";
     my $temp_error_filename = "";
-    if ($retrieve_text && defined $repository) {
+    if ($retrieve_text_from_rep && defined $repository) {
 
 	# Store the topic text into this temporary file.
 	$temp_topic_filename = "topictext.$topicid";
@@ -144,7 +144,7 @@ sub process($$$) {
 	if ($rc == $Codestriker::DIFF_TOO_BIG) {
 	    $feedback .= "Generated diff file is too big.\n";
 	} elsif ($rc == $Codestriker::UNSUPPORTED_OPERATION) {
-	    $feedback .= "Repository \"" . $repository->toString() . 
+	    $feedback .= "Repository \"" . $repository->toString() .
 		"\" doesn't support topic text tag retrieval.\n";
 	}
 
@@ -165,7 +165,7 @@ sub process($$$) {
     # Try to parse the topic text into its diff chunks.
     my @deltas =
 	Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
-					       $topicid);
+					       $topicid, scalar($topic_file));
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
@@ -183,7 +183,7 @@ sub process($$$) {
 	    }
 	    else {
 		$feedback = "Uploaded file doesn't exist or is empty.\n";
-	    }		
+	    }
 
 	    # Remove the temporary files if required, and forward control
 	    # back to the create topic page.
@@ -195,7 +195,7 @@ sub process($$$) {
 	}
     }
 
-    # Remove the temporary files if required
+    # Remove the temporary files if required.
     unlink $temp_topic_filename if $temp_topic_filename ne "";
     unlink $temp_error_filename if $temp_error_filename ne "";
 
@@ -271,7 +271,7 @@ sub process($$$) {
     $vars->{'list_url'} =
 	$url_builder->list_topics_url("", "", "", "", "", "", "",
 				      "", "", "", [ 0 ], undef);
-    
+
     my $template = Codestriker::Http::Template->new("submittopic");
     $template->process($vars);
 

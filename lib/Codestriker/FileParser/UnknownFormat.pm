@@ -16,7 +16,7 @@ use strict;
 # Return the array of filenames, revision number, linenumber, whether its
 # binary or not, and the diff text.
 sub parse ($$) {
-    my ($type, $fh) = @_;
+    my ($type, $fh, $uploaded_filename) = @_;
 
     # Array of results found.
     my @result = ();
@@ -40,7 +40,5 @@ sub parse ($$) {
 
     return @result;
 }
-	
-1;
 
-    
+1;

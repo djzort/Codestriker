@@ -11,7 +11,9 @@
     <a href="[% create_topic_url %]">Create new topic</a>
 [% IF searchlist_enabled != 0 %]
     | <a href="[% list_url %]">List open topics</a>
+[% IF projects_enabled != 0 %]
     | <a href="[% list_url_in_project %]">List open topics in project</a>
+[% END %]
     | <a href="[% search_url %]">Search</a>
 [% END %]
 [% IF projects_enabled != 0 %]
@@ -80,11 +82,13 @@
 </tr>
 [% END %]
 
+[% IF projects_enabled != 0 %]
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]
  <td>Project:</td>
  <td>[% project_name %]</td>
 </tr>
+[% END %]
 
 <tr class="tt[% type mod 2 %]">
  [% type = type + 1 %]

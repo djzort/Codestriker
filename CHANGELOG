@@ -1,6 +1,20 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.7.5
+
+The following changes below were from Jason Remillard
+<jremillardshop@yahoo.com>:
+
+* The topic view page has been modified so that a non-diff topic makes
+  better use of screen real-estate.
+
+* Non-diff topic text uploads now include the filename, rather than
+  just "unknown".
+
+* Turned off more project-specific display that should be hidden when
+  projects are not enabled.
+
 Version 1.7.4
 
 * Major documentation rewrite.  All documentation (installation/user

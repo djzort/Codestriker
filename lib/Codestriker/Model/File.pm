@@ -9,6 +9,8 @@
 
 package Codestriker::Model::File;
 
+use Codestriker::Model::Delta;
+
 use strict;
 
 # Create the appropriate delta rows for this review.  Note this gets called
@@ -39,7 +41,8 @@ sub create($$$$) {
 	my $delta = $deltas[$i];
 	if ($last_filename ne $delta->{filename}) {
 	    # Create new file entry.
-	    $success &&= $insert_file->execute($topicid, ++$file_sequence,
+	    $success &&= $insert_file->execute($topicid,
+					       ++$file_sequence,
 					       $delta->{filename}, -1,
 					       $delta->{revision}, "",
 					       $delta->{binary});
@@ -104,7 +107,7 @@ sub get_filetable($$$$$$) {
 			     'ORDER BY sequence');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid);
-    
+
     # Store the results in the referenced arrays.
     if ($success) {
 	my @data;
@@ -130,52 +133,23 @@ sub get_delta_set($$) {
 sub get_deltas($$$) {
     my ($type, $topicid, $filenumber) = @_;
 
-    # Obtain a database connection.
-    my $dbh = Codestriker::DB::DBI->get_connection();
+    my @results = Codestriker::Model::Delta::get_deltas($topicid, $filenumber);
 
-    # Setup the appropriate statement and execute it.
-    my $select_deltas =
-	$dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
-			     'binaryfile, old_linenumber, new_linenumber, ' .
-			     'deltatext, description, file.sequence, ' .
-			     'repmatch FROM file, delta ' .
-			     'WHERE delta.topicid = ? AND ' .
-			     'delta.topicid = file.topicid AND ' .
-			     'delta.file_sequence = file.sequence ' .
-			     (($filenumber != -1) ?
-			      'AND file.sequence = ? ' : '').
-			     'ORDER BY delta_sequence ASC');
-
-    my $success = defined $select_deltas;
-    if ($filenumber != -1) {
-	$success &&= $select_deltas->execute($topicid, $filenumber);
-    } else {
-	$success &&= $select_deltas->execute($topicid);
-    }
-    
-    # Store the results into an array of objects.
-    my @results = ();
-    if ($success) {
-	my @data;
-	while (@data = $select_deltas->fetchrow_array()) {
-	    my $delta = {};
-	    $delta->{filename} = $data[1];
-	    $delta->{revision} = $data[2];
-	    $delta->{binary} = $data[3];
-	    $delta->{old_linenumber} = $data[4];
-	    $delta->{new_linenumber} = $data[5];
-	    $delta->{text} = $data[6];
-	    $delta->{description} = $data[7];
-	    $delta->{filenumber} = $data[8];
-	    $delta->{repmatch} = $data[9];
-	    push @results, $delta;
-	}
+    # The delta object needs to know if there are only delta objects
+    # in this file so it can figure out if the delta is a new file.
+    foreach my $delta (@results) {
+	if (scalar(@results) == 1)
+        {
+        	$delta->{only_delta_in_file} = 1;
+        }
+        else
+        {
+        	$delta->{only_delta_in_file} = 0;
+        }
     }
 
-    Codestriker::DB::DBI->release_connection($dbh, $success);
-    die $dbh->errstr unless $success;
+     return @results;
 
-    return @results;
 }
 
 # Retrieve the delta for the specific filename and linenumber.
@@ -185,7 +159,7 @@ sub get_delta($$$) {
     # Grab all the deltas for this file, and grab the delta with the highest
     # starting line number lower than or equal to the specific linenumber,
     # and matching the same file number.
-    my @deltas = Codestriker::Model::File->get_deltas($topicid, $filenumber);
+    my @deltas = $type->get_deltas($topicid, $filenumber);
     my $found_delta = undef;
     for (my $i = 0; $i <= $#deltas; $i++) {
 	my $delta = $deltas[$i];
@@ -198,7 +172,7 @@ sub get_delta($$$) {
 	    return $found_delta;
 	}
     }
-	
+
     # Return the matching delta found, if any.
     return $found_delta;
 }

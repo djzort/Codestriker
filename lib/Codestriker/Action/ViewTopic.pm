@@ -253,11 +253,7 @@ sub process($$$) {
     for (my $i = 0; $i <= $#deltas; $i++) {
 	my $delta =  $deltas[$i];
 
-	$render->delta($delta->{filename}, $delta->{filenumber},
-		       $delta->{revision}, $delta->{old_linenumber},
-		       $delta->{new_linenumber}, $delta->{text},
-		       $delta->{description}, $delta->{binary},
-		       $delta->{repmatch});
+	$render->delta($delta);
     }
 
     $render->finish();
