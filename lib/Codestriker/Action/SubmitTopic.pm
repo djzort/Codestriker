@@ -67,7 +67,7 @@ sub process($$$) {
     }
 
     $http_response->generate_header("", "Create new topic", $email, $reviewers,
-				    $cc, "", "", $repository, "", 0, 0);
+				    $cc, "", "", $repository_url, "", 0, 0);
 
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
