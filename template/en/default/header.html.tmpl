@@ -11,10 +11,10 @@
 [% IF displaymenu != 0 %]
 <p>
 <div class="menu">
-  <a href="[% list_url | uri | html_entity %]">List open topics</a> | 
-  <a href="[% create_topic_url | uri | html_entity %]">Create new topic</a> | 
-  [% IF searchlist_enabled != 0 %]<a href="[% search_url | uri | html_entity %]">Search</a> | [% END %]
-  <a href="[% doc_url | uri | html_entity %]/[% help | uri | html_entity %]">Help</a>
+  <a href="[% list_url | uri | html_entity %]">List open topics</a>
+  | <a href="[% create_topic_url | uri | html_entity %]">Create new topic</a>
+  [% IF searchlist_enabled != 0 %] | <a href="[% search_url | uri | html_entity %]">Search</a> [% END %]
+  [% IF help != "" %] | <a href="[% doc_url | uri | html_entity %]/[% help %]">Help</a>[% END %]
 </div>
 [% END %]
 
