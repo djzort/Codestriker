@@ -193,6 +193,38 @@ sub read($$) {
     return @results;
 }
 
+# Returns a list of comments that are against the same line of the same
+# file.
+sub read_same_line
+{
+    my ($type,$topicid, $fn, $line, $new) = @_;
+    
+    # Read all of the comments from the database. 
+    my @comments = $type->read($topicid);
+
+    # Now filter out comments that don't match file, line, and new or old file attribute.
+    @comments = grep { 
+        my $comment = $_;
+        my $keep_comment = 0;
+        
+        if ( $fn   == $comment->{filenumber} && 
+             $line == $comment->{fileline} && 
+             $new  == $comment->{filenew})
+        {
+    	    $keep_comment = 1;
+        }
+        else
+        {
+            $keep_comment = 0;
+        }
+        
+        $keep_comment;      
+    } @comments;
+    
+    return @comments;
+    
+}
+
 # Return all of the comments made for a specified topic filtered by state 
 # and author. The filtered parameter is not used if it is empty.
 sub read_filtered

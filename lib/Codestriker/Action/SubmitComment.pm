@@ -83,8 +83,8 @@ sub process($$$) {
     my $delta = Codestriker::Model::File->get_delta($topic, $fn, $line, $new);
 
     # Retrieve the comment details for this topic.
-    my @comments = Codestriker::Model::Comment->read($topic, "", "",
-						     $fn, $line, $new);
+    my @comments = Codestriker::Model::Comment->read_same_line($topic, $fn, $line, $new);
+                                                                                                          
     my %contributors = ();
     $contributors{$email} = 1;
     my $cc_recipients = "";

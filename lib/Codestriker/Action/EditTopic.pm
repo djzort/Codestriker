@@ -56,8 +56,7 @@ sub process($$$) {
     }
 
     # Retrieve the comment details for this topic.
-    my @comments =
-	Codestriker::Model::Comment->read($topic, "", "", $fn, $line, $new);
+    my @comments = Codestriker::Model::Comment->read_same_line($topic, $fn, $line, $new);
 
     # Retrieve line-by-line versions of the description.
     my @document_description = split /\n/, $description;
