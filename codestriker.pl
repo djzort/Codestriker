@@ -1844,7 +1844,7 @@ sub submit_comments ($$$$$$) {
     {
 	if ($cc_recipients ne "")
 	{
-	    $cc_recipients .= make_canonical_email_list($cc);
+	    $cc_recipients .= ", " . make_canonical_email_list($cc);
 	}
 	else
 	{
