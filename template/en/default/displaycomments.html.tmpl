@@ -113,7 +113,7 @@ state and
 <TABLE CELLPADDING="1" CELLSPACING="3" BORDER="0" WIDTH="100%">
 
     <TR>
-        <TD COLSPAN="2">
+        <TD COLSPAN="3">
             <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:UnCheckAll()">Clear All</A>
         </TD>
     </TR>
@@ -125,11 +125,12 @@ state and
     [% IF comment.fileline != last_fileline ||
           comment.filenumber != last_filenumber %]
     <TR CLASS="comments">
-        <TD>
+        <TD WIDTH="1%">
             <INPUT TYPE="checkbox" NAME="selected_comments" 
 	           VALUE="[%comment.filenumber %],[% comment.fileline %],[% comment.filenew %],[% comment.version %]">
         </TD>
-	<TD><A NAME="[% comment.anchor %]">[% comment.state %]</A> | 
+	<TD WIDTH="1%"><A NAME="[% comment.anchor %]">[% comment.state %]</A></TD>
+        <TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %]:[% comment.fileline %]</A> |
 	       <A HREF="[% comment.view_parallel %]">Parallel</A> |
@@ -142,7 +143,7 @@ state and
     </TR>
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD>&nbsp;</TD><TD><PRE>[% comment.context %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.context %]</PRE></TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
@@ -152,10 +153,10 @@ state and
 
     <TR CLASS="commenth">
         <TD CLASS="commentb">&nbsp;</TD>
-        <TD>[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
+        <TD COLSPAN="2">[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD>&nbsp;</TD><TD><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+        <TD>&nbsp;</TD><TD COLSPAN="2"><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
     </TR>
 
 [% END %]
@@ -163,7 +164,7 @@ state and
     <TR CLASS="comments"><TD COLSPAN="3">&nbsp;</TD></TR>
 
     <TR>
-        <TD COLSPAN="2">
+        <TD COLSPAN="3">
             <A HREF="javascript:CheckAll()">Check All</A> | <A HREF="javascript:UnCheckAll()">Clear All</A>
         </TD>
     </TR>
