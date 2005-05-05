@@ -22,6 +22,8 @@ sub new($$) {
     my $self = {};
     $self->{header_generated} = 0;
     $self->{query} = $query;
+    $self->{format} = $query->param('format');
+    $self->{action} = $query->param('action');
     return bless $self, $type;
 }
 
@@ -440,15 +442,29 @@ sub error($$) {
     my ($self, $error_message) = @_;
 
     my $query = $self->{query};
-    if (! $self->{generated_header}) {
-	print $query->header, $query->start_html(-title=>'Codestriker error',
-						 -bgcolor=>'white');
+
+    # Check if the expected format is XML.
+    if (defined $self->{format} && $self->{format} eq "xml") {
+	print $query->header(-content_type=>'text/xml');
+	print "<?xml version=\"1.0\" encoding=\"UTF-8\" " .
+	            "standalone=\"yes\"?>\n";
+	print "<response><method>" . $self->{action} . "</method>" .
+	    "<result>" . HTML::Entities::encode($error_message) .
+	    "</result></response>\n";
+    }
+    else {
+	if (! $self->{generated_header}) {
+	    print $query->header,
+	    $query->start_html(-title=>'Codestriker error',
+			       -bgcolor=>'white');
+	}
+
+	print $query->p, "<FONT COLOR='red'>$error_message</FONT>", $query->p;
+	print $query->end_html();
+
+	$self->generate_footer();
     }
 
-    print $query->p, "<FONT COLOR='red'>$error_message</FONT>", $query->p;
-    print $query->end_html();
-
-    $self->generate_footer();
     exit;
 }
 

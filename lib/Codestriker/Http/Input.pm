@@ -102,7 +102,7 @@ sub process($) {
     $self->{end_tag} = $query->param('end_tag');
     $self->{module} = $query->param('module');
     $self->{topic_sort_change} = $query->param('topic_sort_change');
-    $self->{content} = $query->param('content');
+    $self->{format} = $query->param('format');
     $self->{obsoletes} = $query->param('obsoletes');
     my @selected_topics = $query->param('selected_topics');
     $self->{selected_topics} = \@selected_topics;
@@ -124,7 +124,7 @@ sub process($) {
     $self->{project_description} = "" if ! defined $self->{project_description};
     $self->{project_state} = "" if ! defined $self->{project_state};
     $self->{topic_sort_change} = "" if ! defined $self->{topic_sort_change};
-    $self->{content} = "html" if ! defined $self->{content};
+    $self->{format} = "html" if ! defined $self->{format};
     $self->{obsoletes} = "" if ! defined $self->{obsoletes};
     $self->{default_to_head} = 0 if ! defined $self->{default_to_head};
 

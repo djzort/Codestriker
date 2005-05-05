@@ -141,3 +141,6 @@ TD.notselected {background-color: #cccccc}
 TD.space {background-color: #eeeeee}
 A.tab {text-decoration: none}
 
+/* Styles for error field in comment posting tooltip. */
+span.hidden {display: none}
+span.error {display: inline; color: red}

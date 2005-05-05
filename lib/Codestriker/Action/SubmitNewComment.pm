@@ -34,6 +34,7 @@ sub process($$$) {
     my $cc = $http_input->get('comment_cc');
     my $mode = $http_input->get('mode');
     my $anchor = $http_input->get('a');
+    my $format = $http_input->get('format');
     
     # Check that the fields have been filled appropriately.
     if ($comments eq "" || !defined $comments) {
@@ -71,31 +72,41 @@ sub process($$$) {
     if ( $listener_response ne '') {
 	$http_response->error($listener_response);
     }
-                        
-    # Display a simple screen indicating that the comment has been registered.
-    # Clicking the Close button simply dismisses the edit popup.  Leaving it
-    # up will ensure the next editing topic will be handled quickly, as the
-    # overhead of bringing up a new window is removed.
-    my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
-    $http_response->generate_header(topic=>$topic,
-				    topic_title=>"Comment Submitted: $topic->{title}",
-				    email=>$email, 
-                                    repository=>$topic->{repository},
-				    load_anchor=>$anchor,
-				    reload=>$reload, cache=>0);
-                                    
-    my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
-    my $view_comments_url = $url_builder->view_comments_url($topicid);
-                                    
-    my $vars = {};
-    $vars->{'view_topic_url'} = $view_topic_url;
-    $vars->{'view_comments_url'} = $view_comments_url;
-    $vars->{'comment'} = $comments;
 
-    my $template = Codestriker::Http::Template->new("submitnewcomment");
-    $template->process($vars);
+    if (defined $format && $format eq "xml") {
+	print $query->header(-content_type=>'text/xml');
+	print "<?xml version=\"1.0\" encoding=\"UTF-8\" " .
+	            "standalone=\"yes\"?>\n";
+	print "<response><method>submitnewcomment</method>" .
+	    "<result>OK</result></response>\n";
+    } else {
+	# Display a simple screen indicating that the comment has been
+	# registered.  Clicking the Close button simply dismisses the
+	# edit popup.  Leaving it # up will ensure the next editing
+	# topic will be handled quickly, as the # overhead of bringing
+	# up a new window is removed.
+	my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
+	$http_response->generate_header(topic=>$topic,
+					topic_title=>"Comment Submitted: " .
+					             "$topic->{title}",
+					email=>$email, 
+					repository=>$topic->{repository},
+					load_anchor=>$anchor,
+					reload=>$reload, cache=>0);
+                                    
+	my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
+	my $view_comments_url = $url_builder->view_comments_url($topicid);
+                                    
+	my $vars = {};
+	$vars->{'view_topic_url'} = $view_topic_url;
+	$vars->{'view_comments_url'} = $view_comments_url;
+	$vars->{'comment'} = $comments;
+	
+	my $template = Codestriker::Http::Template->new("submitnewcomment");
+	$template->process($vars);
 
-    $http_response->generate_footer();
+	$http_response->generate_footer();
+    }
 }
 
 # Given a topic and topic line number, try to determine the line
