@@ -75,6 +75,9 @@ Version 1.9.0
   Win32, this isn't an issue.  Found by Michael R. Brumm
   <michaelbrumm@users.sourceforge.net>.
 
+* Fixed message "Character in 'c' format wrapped in pack at
+  ... Response.pm", as reported by an anonymous user.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

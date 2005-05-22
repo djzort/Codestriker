@@ -490,7 +490,7 @@ sub TIEHANDLE {
 		crc => 0,
 		len => 0,
 	};
-	my ($header) = pack("c10", MAGIC1, MAGIC2,
+	my ($header) = pack("C10", MAGIC1, MAGIC2,
 			    Compress::Zlib::Z_DEFLATED(),
 			    0,0,0,0,0,0, OSCODE);
 	print {$o->{handle}} $header;
