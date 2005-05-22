@@ -244,6 +244,8 @@ sub generate_header {
     print "    var cs_reload = $reload;\n";
     print "    var cs_topicid = $topic->{topicid};\n" if defined $topic;
     print "    var cs_email = '$email';\n" if defined $email;
+    print "    var cs_css = '$codestriker_css';\n";
+    print "    var cs_xbdhtml_js = '$xbdhtml_js';\n";
 
     # Now output all of the comment metric information.
     print "    var cs_metric_data = new Array();\n";

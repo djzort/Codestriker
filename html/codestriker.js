@@ -2,6 +2,12 @@
 ol_fgcolor = '#FFFFCC';
 ol_textsize = '2';
 
+// Codestriker XMLHttpRequest object that is used.
+var cs_request;
+
+// Reference to status element.
+var cs_status_element;
+
 // Handle to the popup window.
 var windowHandle = '';
 
@@ -63,16 +69,21 @@ function view_topic_on_load_handler()
 function add_comment_html(file, line, new_value)
 {
     // Get the location of the codestriker URL.
-    var l = location;
+    var l = top.location;
     var url = l.protocol + '//' + l.host + l.pathname;
 
     // Create the hidden error span, and the initial form, with the
     // appropriate hidden fields.
-    var html =
+    var html = '<html><head>' +
+            '<link rel="stylesheet" type="text/css" ' +
+            '      href="' + cs_css + '"/>\n' +
+            '<script src="' + cs_xbdhtml_js + '" type="text/javascript"></script>\n' +
+            '</head>\n' +
+            '<body bgcolor="#eeeeee">\n' +
             '<span class="hidden" id="statusField">&nbsp;</span>\n' +
 	    '<form name="add_comment" method="POST" ' +
             'action="' + url + '" ' +
-            'onSubmit="return verify();" ' +
+            'onSubmit="return top.verify(document.add_comment, getElt(\'statusField\'));" ' +
             'enctype="application/x-www-form-urlencoded">\n' +
 	    '<input type="hidden" name="action" value="submit_comment">\n' +
 	    '<input type="hidden" name="line" value="' + line + '">\n' +
@@ -83,17 +94,17 @@ function add_comment_html(file, line, new_value)
 	    '</textarea>\n';
 
     // Now add in the metric dropdowns.
-    if (cs_metric_data.length > 0) {
+    if (top.cs_metric_data.length > 0) {
         html += '<p><table>\n';
     }
-    for (var i = 0; i < cs_metric_data.length; i++) {
+    for (var i = 0; i < top.cs_metric_data.length; i++) {
         if (i % 2 == 0) {
             html += '<tr>\n';
         }
-        html += '<td align="right">' + cs_metric_data[i].name + ':</td>\n';
+        html += '<td align="right">' + top.cs_metric_data[i].name + ':</td>\n';
         html += '<td align="left">\n';
         html += '<select name="comment_state_metric_' +
-		cs_metric_data[i].name + '">\n';
+		top.cs_metric_data[i].name + '">\n';
         
 	// Check if a value has been selected for this metric.
 	var key = file + '|' + line + '|' + new_value;
@@ -102,18 +113,18 @@ function add_comment_html(file, line, new_value)
         if (comment_number != null &&
             comment_metrics[comment_number] != null) {
             current_value = 
-               comment_metrics[comment_number][cs_metric_data[i].name];
+               comment_metrics[comment_number][top.cs_metric_data[i].name];
         }
         if (current_value == null) {
 	    // If there is no default value defined, create an empty setting.
-	    if (cs_metric_data[i].default_value == null) {
+	    if (top.cs_metric_data[i].default_value == null) {
                 html += '<option value="Select Value">' +
 		        '&lt;Select Value&gt;</option>\n';
             }
-	    for (var j = 0; j < cs_metric_data[i].values.length; j++) {
+	    for (var j = 0; j < top.cs_metric_data[i].values.length; j++) {
                 html += '<option ';
-                var value = cs_metric_data[i].values[j];
-                if (value == cs_metric_data[i].default_value) {
+                var value = top.cs_metric_data[i].values[j];
+                if (value == top.cs_metric_data[i].default_value) {
                     html += 'selected ';
                 }
                 html += 'value="' + value + '">' + value + '</option>\n';
@@ -122,8 +133,8 @@ function add_comment_html(file, line, new_value)
         else {
             // This metric does have a current value selected.
             var found_current_value = 0;
-	    for (var j = 0; j < cs_metric_data[i].values.length; j++) {
-                var value = cs_metric_data[i].values[j];
+	    for (var j = 0; j < top.cs_metric_data[i].values.length; j++) {
+                var value = top.cs_metric_data[i].values[j];
                 if (value == current_value) {
                     html += '<option selected value="' + value + '">' +
                             value + '</option>\n';
@@ -145,11 +156,11 @@ function add_comment_html(file, line, new_value)
        }
        html += '</select>\n';
        html += '&nbsp;&nbsp;&nbsp;&nbsp;</td>\n';
-       if (i % 2 == 1 || i == cs_metric_data.length-1) {
+       if (i % 2 == 1 || i == top.cs_metric_data.length-1) {
            html += '</tr>\n';
        }
     }
-    if (cs_metric_data.length > 0) {
+    if (top.cs_metric_data.length > 0) {
         html += '</table>\n';
     }
 
@@ -161,23 +172,24 @@ function add_comment_html(file, line, new_value)
                    'value="' + cs_email + '">\n' +
             '</td><td></td></tr><tr>' +
 	    '<td>Cc: <font size="-1">' +
-            '<a href="javascript:add_other_reviewers();">' +
+            '<a href="javascript:top.add_other_reviewers(document.add_comment);">' +
             '(add other reviewers)</a></font> </td>' +
             '<td>' +
 	    '<input type="text" name="comment_cc" size="25" ' +
                     'maxlength="150"></td>\n' +
             '<td><input type="submit" name="submit" value="Submit"></td>' +
-            '</tr></table></form>\n';
+            '</tr></table></form></body></html>\n';
 
     // Return the generated html.
     return html;
 }
 
 // Verify that a comment is ready to be shipped out.
-function verify()
+function verify(comment_form, status_field)
 {
-    // Get a reference to the comment form.
-    var comment_form = document.add_comment;
+    // Set the global status element so it can be updated when
+    // the request is being sent and received.
+    top.cs_status_element = status_field;
 
     // Check that the comment field has a comment entered in it.
     if (comment_form.comments.value == '') {
@@ -192,8 +204,8 @@ function verify()
     }
 
     // Check that the metrics have been set.
-    for (var i = 0; i < cs_metric_data.length; i++) {
-        var metric_name = cs_metric_data[i].name;
+    for (var i = 0; i < top.cs_metric_data.length; i++) {
+        var metric_name = top.cs_metric_data[i].name;
         var name = 'comment_state_metric_' + metric_name;
         var index = comment_form.elements[name].options.selectedIndex;
         if (index == -1) {
@@ -221,9 +233,9 @@ function verify()
     params += '&comment_cc=' + escape(comment_form.comment_cc.value);
     params += '&format=xml';
     
-    for (var i = 0; i < cs_metric_data.length; i++) {
+    for (var i = 0; i < top.cs_metric_data.length; i++) {
         var comment_param =
-            escape('comment_state_metric_' + cs_metric_data[i].name);
+            escape('comment_state_metric_' + top.cs_metric_data[i].name);
         params += '&' + comment_param + '=' +
                   escape(eval('comment_form.' + comment_param + '.value'));
     }
@@ -232,11 +244,8 @@ function verify()
 }
 
 // Add all the other reviews into the Cc field of the comment frame.
-function add_other_reviewers()
+function add_other_reviewers(comment_form)
 {
-    // Get a reference to the comment form.
-    var comment_form = document.add_comment;
-
     // Find out who the reviewers are for this review.
     var reviewers = topic_reviewers.split(/[\s,]+/);
     
@@ -274,18 +283,19 @@ function add_comment_tooltip(file, line, new_value)
 {
     var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
                'Close</a><p>' +
-               add_comment_html(file,line,new_value);
-    overlib(html, STICKY, DRAGGABLE, CENTERPOPUP);
+               '<iframe width="480" height="300" name="comment_frame" ' +
+               'src="javascript:top.add_comment_html(' +
+               file + ',' + line + ',' + new_value + ');">' +
+                'Can\'t view iframe</iframe>';
+    overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 480,
+            HEIGHT, 300);
 }
-
-// Codestriker XMLHttpRequest object that is used.
-var cs_request;
 
 // Function for posting to Codestriker using the XMLHttpRequest object.
 function postXMLDoc(params)
 {
     // Generate the basic Codestriker URL.
-    var l = location;
+    var l = top.location;
     var url = l.protocol + '//' + l.host + l.pathname;
 
     // Check for Mozilla/Safari.
@@ -299,7 +309,7 @@ function postXMLDoc(params)
 
     // If the request object was created, generate the request.
     if (cs_request) {
-        cs_request.onreadystatechange = processReqChange;
+        cs_request.onreadystatechange = top.processReqChange;
         cs_request.open("POST", url, true);
         cs_request.setRequestHeader("Content-Type",
                                     "application/x-www-form-urlencoded");
@@ -310,10 +320,9 @@ function postXMLDoc(params)
 // Function for updating the status text in the add comment tooltip.
 function setStatusText(newStatusText)
 {
-    var statusElt = document.getElementById('statusField');
-    statusElt.className = 'error';
+    cs_status_element.className = 'error';
     var newStatusTextNode = document.createTextNode(newStatusText);
-    statusElt.replaceChild(newStatusTextNode, statusElt.childNodes[0]);
+    cs_status_element.replaceChild(newStatusTextNode, cs_status_element.childNodes[0]);
 }
 
 // Function for handling state changes to the request object.
@@ -322,7 +331,7 @@ function processReqChange()
     // Only check for completed requests.
     if (cs_request.readyState == 4) {
         if (cs_request.status == 200) {
-            var response = cs_request.responseXML.documentElement;
+            var response = top.cs_request.responseXML.documentElement;
             result = response.getElementsByTagName('result')[0].firstChild.data;
             if (result == 'OK') {
                 // Hide the popup if the comment was successful.

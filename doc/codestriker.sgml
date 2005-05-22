@@ -136,7 +136,10 @@
         <listitem>
 	  <para>unpacking and configuring Codestriker.</para>
 	</listitem>
-      </itemizedlist>             
+      </itemizedlist>
+      Note for Win32 systems, only use Perl 5.6.X and Apache 1.X.
+      The more recent versions have problems which prevent Codestriker
+      working correctly.
     </para>
 
     <sect1 id="codestriker-database-creation">
@@ -982,6 +985,8 @@ $metric_config = "none";
         Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
+        Only use Perl 5.6.X, as Perl 5.8.X for Win32 has issues that
+        prevent Codestriker from working correctly.
       </para>
       <para>
         To run <filename>checksetup.pl</filename> under UNIX, do the
@@ -1018,7 +1023,8 @@ $metric_config = "none";
         url="http://httpd.apache.org">http://httpd.apache.org</ulink>),
         which is available for download for both UNIX and Window
         platforms.  Apache should be already available for most UNIX
-        distributions.
+        distributions.  Apache 1.X is recommended for Win32 systems,
+        as 2.X may have issues with running Codestriker.
       </para>
       <para>
         <emphasis>Note any Codestriker or Apache configuration changes
