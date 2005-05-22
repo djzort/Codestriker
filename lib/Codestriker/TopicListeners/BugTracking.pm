@@ -5,8 +5,9 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Topic Listener for Bugzilla. All Codestriker topic lifecycle events
-# are stored into the associated Bugzilla records.
+# Topic Listener for a bug-tracking system, such as Bugzilla or Flyspray.
+# All Codestriker topic lifecycle events are stored into the bug-tracking
+# system for the record linked to the Codestriker topic.
 
 use strict;
 
@@ -76,7 +77,7 @@ sub topic_changed($$$$) {
 	my @ids = split /, /, $topic->{bug_ids};
                                                                     
 	my $text = "Codestriker topic: $topic_url\n" .
-	    "State changed to \"$newstate\" by $topic->{author}\n";
+	    "State changed to \"$newstate\" by $user\n";
             
 	for (my $i = 0; $i <= $#ids; $i++) {
 	    $bug_db_connection->update_bug($ids[$i], $text);

@@ -11,6 +11,7 @@ package Codestriker::BugDB::BugDBConnectionFactory;
 
 use strict;
 use Codestriker::BugDB::BugzillaConnection;
+use Codestriker::BugDB::FlysprayConnection;
 
 # Factory method for retrieving a BugDBConnection object.
 sub getBugDBConnection ($) {
@@ -19,6 +20,8 @@ sub getBugDBConnection ($) {
     my $dbtype = $Codestriker::bug_db;
     if ($dbtype eq "bugzilla") {
 	return Codestriker::BugDB::BugzillaConnection->get_connection();
+    } elsif ($dbtype eq "flyspray") {
+	return Codestriker::BugDB::FlysprayConnection->get_connection();
     } else {
 	die "Unsupported bug database type: $dbtype";
     }

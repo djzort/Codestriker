@@ -12,7 +12,7 @@ use strict;
 package Codestriker::TopicListeners::Manager;
 
 use Codestriker::TopicListeners::Email;
-use Codestriker::TopicListeners::Bugzilla;
+use Codestriker::TopicListeners::BugTracking;
 use Codestriker::TopicListeners::HistoryRecorder;
 
 my @topic_listeners;
@@ -107,7 +107,7 @@ sub comment_state_change {
 sub _create_listeners {
    if (scalar(@topic_listeners) == 0) {
        push @topic_listeners,
-            Codestriker::TopicListeners::Bugzilla->new();
+            Codestriker::TopicListeners::BugTracking->new();
 
        push @topic_listeners,
             Codestriker::TopicListeners::Email->new();

@@ -100,7 +100,7 @@ sub parse ($$$) {
 	    # Try and read the base revision this change is against,
 	    # while handling new and removed files.
 	    my $base_revision = -1;
-	    if ($line =~ /^\-\-\- .*\s\(revision (\d+)\)/) {
+	    if ($line =~ /^\-\-\- .*\s\([Rr]evision (\d+)\)/i) {
 		$base_revision = $1;
 	    } elsif ($line !~ /^\-\-\- .*\s\(working copy\)/) {
 		return ();
@@ -110,7 +110,7 @@ sub parse ($$$) {
 	    $line = <$fh>;
 	    return () unless defined $line;
 	    if ($line !~ /^\+\+\+ .*\s\(working copy\)/ &&
-		$line !~ /^\+\+\+ .*\s\(revision \d+\)/) {
+		$line !~ /^\+\+\+ .*\s\([Rr]evision \d+\)/) {
 		return ();
 	    }
 

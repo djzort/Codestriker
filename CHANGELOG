@@ -1,7 +1,7 @@
 *** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
-Version 1.8.6
+Version 1.9.0
 
 * Now using overlib javascript library
   (http://www.bosrup.com/web/overlib) for formatted "tooltips".  When
@@ -12,6 +12,10 @@ Version 1.8.6
   line.  Help text on the create topic and search screens have been
   modified to use this tooltip library as well as opposed to
   javascript alert windows.
+
+* Comments are now added view an overlib tooltip window, rather than
+  using a separate browser window.  This speeds up the reviewing
+  process and keeps the reviewer focussed on a single browser window.
 
 * It is now possible to create a comment associated with a specific
   file, or the topic itself, rather than being associated with a
@@ -54,6 +58,22 @@ Version 1.8.6
 
 * On UNIX platforms, missing modules can be fetched and installed
   automatically using the CPAN module, if required.
+
+* Subversion 1.1 has changed it diff format slightly.  Parser as been
+  updated, as reported by Martin Apel <Martin.Apel@softlab.de>.
+
+* Added integration support for Flyspray bug-tracking system.  From
+  Martin Apel.
+
+* Fixed text message written to bug-tracking system where the topic
+  author was used instead of the actual user, when the topic state was
+  changed.  Found by Jason Remilliard.
+
+* Make sure for Win32 deployments, that the PATH environment
+  variable is not zapped.  This created issues when launching external
+  programs, such as an SCM program.  Since taint-mode is broken under
+  Win32, this isn't an issue.  Found by Michael R. Brumm
+  <michaelbrumm@users.sourceforge.net>.
 
 Version 1.8.5
 

@@ -7,7 +7,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.8.5</subtitle>
+    <subtitle>Version 1.9.0</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001, 2002, 2003, 2004</para>
     </legalnotice>
@@ -39,7 +39,7 @@
         database, which Codestriker can search over.
       </para>
       <para>
-        Special support is provided for integration with
+        Special support is provided for integration with 
 	<ulink url="http://cvshome.org">CVS</ulink>,
 	<ulink url="http://subversion.tigris.org">Subversion</ulink>,
 	<ulink url="http://www.perforce.com">Perforce</ulink>,
@@ -65,7 +65,7 @@
         deployed on Win32 systems (Windows 98 and above).  It can be
         used in conjunction with a number of relational databases,
         including MySQL, PostgreSQL, Oracle, SQL Server, and other
-        ODBC-complaint databases.
+        ODBC-compliant databases.
         The Codestriker home page is located at:
 	<ulink
 	url="http://codestriker.sourceforge.net">http://codestriker.sourceforge.net</ulink>.
@@ -109,7 +109,7 @@
         The remainder of this document is in three parts.  The next
         part is concerned with installing Codestriker and customising
         it.  Following that is the user's guide.  Lastly, details on
-        Codestriker's code structure, database schema is presented.
+        Codestriker's code structure and database schema is presented.
       </para>
     </sect1>
     <sect1>
@@ -138,8 +138,8 @@
 	</listitem>
       </itemizedlist>
       Note for Win32 systems, only use Perl 5.6.X and Apache 1.X.
-      The more recent versions have problems which prevent Codestriker
-      working correctly.
+      Perl 5.8.X and Apache 2.X have issues on Win32 which prevent
+      Codestriker working correctly.
     </para>
 
     <sect1 id="codestriker-database-creation">
@@ -162,7 +162,7 @@
 	  <ulink
 	  url="http://www.mysql.com">http://www.mysql.com</ulink>.
 	  For Linux RedHat distributions, the necessary packages
-	  required are mysql mysql-devel, mysql-server, which may or
+	  required are mysql, mysql-devel, mysql-server, which may or
 	  may not already be present on your system.  Depending on
 	  your UNIX operating system, starting mysql will be something
 	  like the following:
@@ -219,7 +219,7 @@ DROP DATABASE codestrikerdb;
 	<para>
 	  At the time of writing PostgreSQL was only available for
 	  UNIX platforms, however it is quite possible by the time you
-	  are reading this that a version for Windows is available.
+	  are reading this that a version for Windows will be available.
 	  The project page for PostgreSQL is:
 	  <ulink
 	  url="http://www.postgresql.org">http://www.postgresql.org</ulink>.
@@ -280,18 +280,18 @@ DROP DATABASE codestrikerdb;
       <sect2>
         <title>Using SQL Server</title>
 	<para>
-          Codestriker has been deployed using SQL Server, via the ODBC
-          interface.  The first step is to create a "Codestriker"
-          system data source, by going to "Control Panel" ->
-          "Administrative Tools" -> "Data Sources (ODBC)".  From here,
-          select the "System DSN" tab, and click "Add".  Select the
-          driver named "SQL Server", then click "Finish".  Enter in
-          "Codestriker" for the name textfield, "Codestriker database"
-          for the description textfield, and select the appropriate
-          SQL Server from the server dropdown box, then click "Next".
-          Choose the authentication appropriate for your site, and
-          work your way through the final configuration options.
-          Modify the <varname>$db</varname> variable in the
+          Codestriker has been deployed using SQL Server on Win32, via
+          the ODBC interface.  The first step is to create a
+          "Codestriker" system data source, by going to "Control
+          Panel" -> "Administrative Tools" -> "Data Sources (ODBC)".
+          From here, select the "System DSN" tab, and click "Add".
+          Select the driver named "SQL Server", then click "Finish".
+          Enter in "Codestriker" for the name textfield, "Codestriker
+          database" for the description textfield, and select the
+          appropriate SQL Server from the server dropdown box, then
+          click "Next".  Choose the authentication appropriate for
+          your site, and work your way through the final configuration
+          options.  Modify the <varname>$db</varname> variable in the
 	  <filename>codestriker.conf</filename> file appropriately
 	  (see the example) so that Codestriker knows how to connect
 	  to this datasource.  For more advanced connection settings,
@@ -568,12 +568,13 @@ $cvs = 'c:/gnu/bin/cvs';
 	  been resolved, Codestriker can add in a link to the code
 	  review topic, which shows the actual code which fixed the
 	  bug (and any important decisions made in the Codestriker
-	  comments).  Currently, there is only support for Bugzilla,
+	  comments).  Currently, there is support for Bugzilla and Flyspray,
 	  but it is not difficult to add in support for other systems.
 	</para>
 	<para>
 	  If you don't use Bugzilla (<ulink
-	  url="http://bugzilla.mozilla.org">http://bugzilla.mozilla.org</ulink>),
+	  url="http://bugzilla.mozilla.org">http://bugzilla.mozilla.org</ulink>)
+          or Flyspray,
 	  you can skip this section, as by default, there is no
 	  linking to a bug tracking system.  An example configuration
 	  could be as follows:
@@ -965,13 +966,23 @@ $comment_state_metrics =
 $metric_config = "none";
 	  </programlisting>
         </para>
+      <sect2>
+        <title>RSS Support</title>
+        <para>
+          If you install the <code>XML::RSS</code> module, and re-run
+          <filename>install.pl</filename>, Codestriker will display an
+          RSS link on the topic list page, which can be used as a URL
+          into your RSS reader, to keep track of new topics being
+          added to the system.
+	</para>
+      </sect2>
       </sect2>
     </sect1>
 
-    <sect1 id="running-checksetup.pl">
-      <title>Running checksetup.pl</title>
+    <sect1 id="running-install.pl">
+      <title>Running install.pl</title>
       <para>
-        The <filename>checksetup.pl</filename> script located in
+        The <filename>install.pl</filename> script located in
         the <filename>bin</filename> directory <emphasis>must</emphasis> be run
         before Codestriker can be used, or after each upgrade.  There
         is no harm in running it as many times as you like.  The
@@ -989,17 +1000,17 @@ $metric_config = "none";
         prevent Codestriker from working correctly.
       </para>
       <para>
-        To run <filename>checksetup.pl</filename> under UNIX, do the
+        To run <filename>install.pl</filename> under UNIX, do the
         following:
 <programlisting>
 % cd /codestriker/install/location/bin
-% ./checksetup.pl
+% ./install.pl
 </programlisting>
         For Windows, you need to do something like the following from
         the command prompt:
 <programlisting>
 % cd c:\codestriker\install\location\bin
-% checksetup.pl
+% install.pl
 </programlisting>
       </para>
       <para>
@@ -1173,8 +1184,8 @@ PerlTaintCheck On
           cannot be used.  You'll also need to remove the
           <option>-T</option> argument from
           <filename>bin/codestriker.pl.base</filename>, and re-run
-          <command>checksetup.pl</command> again (see <xref
-          linkend="running-checksetup.pl">) if you want to use
+          <command>install.pl</command> again (see <xref
+          linkend="running-install.pl">) if you want to use
           Codestriker and LXR.
 	</para>
         <para>
@@ -1313,7 +1324,7 @@ C:\Perl\bin\perl.exe "%s" %s
         used, copy/modify your existing
         <filename>codestriker.conf</filename> file, and <emphasis>most
         importantly, run
-        <filename>checksetup.pl</filename></emphasis>.  There is no
+        <filename>install.pl</filename></emphasis>.  There is no
         harm in running this script as many times as you like.
       </para>
     </sect1>
@@ -2063,27 +2074,24 @@ C:\Project\> ssdiff.pl > topic.txt
 	  details on what can be done with these complete file-based
 	  views, which can assist enormously in the review process.
 	</para>
-	<para>
-	  Every line of code in the display, is prefixed with a
-	  hyperlinked number.  This number represents the line number
-	  of the file.  If a comment needs to be made against a
-	  specific linenumber, click on the linenumber, and a new
-	  browser window will come up with the "Add Comment" page (see
-	  <xref linkend="add-comment">).  This may take some time the
-	  first time, as a new browser window needs to be created.
-	  After the comment has been entered, the main browser window
-	  is displayed, and the comment window is not closed, so that
-	  for subsequent comments, the add comment window can be
-	  displayed quickly.
-	</para>
       </sect2>
       <sect2 id="add-comment">
 	<title>Adding a Comment</title>
 	<para>
+	  Every line of code in the display, is prefixed with a
+	  hyperlinked number.  This number represents the line number
+	  of the file.  If a comment needs to be made against a
+	  specific linenumber, click on the linenumber, and floating
+	  window will come up with the "Add Comment" page (see
+	  <xref linkend="add-comment">).  If a comment has already
+          been made against a line, it will be red.  Hovering over
+          the line will bring up a tooltip window, containing the
+          details of the comment made.
+	</para>
+	<para>
 	  A comment against a line is made by clicking on the line
-	  number of interest.  This will display another browser
-	  window, an example can be seen in <xref
-	  linkend="figure-add-comment">.
+	  number of interest.  This will display a floating window,
+	  an example can be seen in <xref linkend="figure-add-comment">.
 	  <figure id="figure-add-comment" float="1">
 	   <title>Add Comment Screenshot</title>
 	   <mediaobject>
@@ -2095,8 +2103,8 @@ C:\Project\> ssdiff.pl > topic.txt
 	     </imageobject>
 	   </mediaobject>
 	  </figure>
-	  As can be seen in the figure, a summary of the topic title
-          is displayed, followed by a text box where the comment can
+	  As can be seen in the figure, the window contains a 
+          text box where the comment can
           be entered.  Any formatting will be preserved, so that you
           can enter new code fragments, if required.  Any comment
           metrics defined in the Codestriker configuration will appear
@@ -2113,21 +2121,11 @@ C:\Project\> ssdiff.pl > topic.txt
           this line, so that it is possible to get a form of
           discussion happening.
           </para>
-          <para>
-          Any comments already made (if any) against this specific
-	  line will then be displayed.  The screenshot shows one
-	  comment has already been made against this code line.  The
-	  code line the comment is being made against is then
-	  displayed.  The "increase" link can increase the amount of
-	  context code to display, while "decrease" will decrease the
-	  amount of context code.  The code line in question will be
-	  highlighted in red.
-	</para>
 	<para>
-	  Once the comment has been submitted, the main "View Topic"
-	  window will be displayed so that the review can quickly
-	  continue.  If a new comment needs to be added, the comment
-	  browser window will be bought back quickly into focus.
+	  Once the comment has been accepted by the server, it will be
+          automatically dismissed.  If there was an error processing
+          the comment, an error message will be displayed at the top
+          of the window.
 	</para>
       </sect2>
       <sect2 id="view-file">
@@ -2143,8 +2141,8 @@ C:\Project\> ssdiff.pl > topic.txt
 	</para>
 	<para>
 	  When a "Line" link is clicked, a new browser window will
-	  come up with the contents of the file.  Like the "Add
-	  Comment" window, this will be slow the first time, but in
+	  come up with the contents of the file.  This will be slow
+          the first time, but in
 	  subsequent times will be fast since the browser window is
 	  not closed.  An example of this window can be seen in <xref
 	  linkend="figure-viewfile">.
@@ -2241,7 +2239,7 @@ C:\Project\> ssdiff.pl > topic.txt
 	File" page (see <xref linkend="view-file">) centered on the
 	line number of the comment, "Parallel" will do the same, by
 	using the parallel view, and the "Add comment" link will bring
-	up the "Add Comment" page (see <xref linkend="add-comment">)
+	up the "Add Comment" window (see <xref linkend="add-comment">)
 	for that line number.
       </para>
       <para>
@@ -2623,7 +2621,7 @@ C:\Project\> ssdiff.pl > topic.txt
 	    <listitem>
 	      <para>
 	        This contains the all-important
-		<filename>checksetup.pl</filename> script, which is
+		<filename>install.pl</filename> script, which is
 		used for initialising the system, and for performing
 		upgrades.  This isn't the most pretty script in the
 		world, partly for all of the old data-migration it has
@@ -2690,7 +2688,7 @@ C:\Project\> ssdiff.pl > topic.txt
     <sect1>
       <title>Database Schema</title>
       <para>
-        The <filename>bin/checksetup.pl</filename> script contains the
+        The <filename>bin/install.pl</filename> script contains the
         <command>CREATE TABLE</command> statements that are used when
         the Codestriker database is initialised, in the
         <varname>$table</varname> hash.  The following tables are
