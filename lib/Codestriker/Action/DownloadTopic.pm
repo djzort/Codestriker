@@ -33,7 +33,6 @@ sub process($$$) {
 			 -content_type=>'text/plain',
 			 -attachment=>"topic${topicid}.txt",
 			 -filename=>"topic${topicid}.txt",
-			 -content_disposition=>"filename=\"topic${topicid}.txt\";",
 			 -pragma=>"Cache",
 			 -cache_control=>"Cache");
     print $topic->{document};
