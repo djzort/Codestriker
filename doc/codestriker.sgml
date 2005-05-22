@@ -966,16 +966,16 @@ $comment_state_metrics =
 $metric_config = "none";
 	  </programlisting>
         </para>
+      </sect2>
       <sect2>
         <title>RSS Support</title>
         <para>
-          If you install the <code>XML::RSS</code> module, and re-run
+          If you install the <filename>XML::RSS</filename> module, and re-run
           <filename>install.pl</filename>, Codestriker will display an
           RSS link on the topic list page, which can be used as a URL
           into your RSS reader, to keep track of new topics being
           added to the system.
 	</para>
-      </sect2>
       </sect2>
     </sect1>
 

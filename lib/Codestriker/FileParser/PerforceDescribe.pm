@@ -125,6 +125,14 @@ sub parse ($$$) {
 
 	if ($filetype eq "text") {
 	    # Now read the entire diff chunk.
+	    # Note there may be an optional '---' and '+++' lines
+	    # before the chunk.
+	    my $lastpos = tell $fh;
+	    if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+		# Move the file pointer back.
+		seek $fh, $lastpos, 0;
+	    }
+
 	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
 		read_unidiff_text($fh, $filename, $revision, $repmatch);
 	    push @result, @file_diffs;

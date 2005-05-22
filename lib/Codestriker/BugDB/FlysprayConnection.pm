@@ -51,7 +51,7 @@ sub update_bug($$$$) {
 
     # Execute the statement.
 
-    $comment =~ s/(http:\S+)/<A HREF=\"\1\">$1<\/A>/g;
+    $comment =~ s/(http:\S+)/<A HREF=\"$1\">$1<\/A>/g;
     $insert_comment->execute($bugid, $Codestriker::bug_db_user_id, time(), $comment) or die $insert_comment->errstr;
     $insert_history->execute($bugid, $Codestriker::bug_db_user_id, time()) or die $insert_history->errstr;
 }

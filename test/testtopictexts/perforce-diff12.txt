@@ -1,0 +1,31 @@
+==== //depot/main/lid.java#1 - /cygdrive/e/src/lid.java ====
+--- D:/cygwin/tmp/tmp.3472.0	2005-04-04 20:48:03.589625000 -0700
++++ /cygdrive/e/src/lid.java	2005-03-31 16:11:55.589625000 -0800
+@@ -1,3 +1,7 @@
++/*
++ * List only directory elements
++ */
++
+ import java.io.*;
+
+ public class lid
+==== //depot/main/PrintDesc.java#9 - /cygdrive/e/src/PrintDesc.java ====
+--- D:/cygwin/tmp/tmp.3472.1	2005-04-04 20:48:03.636500000 -0700
++++ /cygdrive/e/src/PrintDesc.java	2005-03-30 18:08:01.620875000 -0800
+@@ -1,3 +1,5 @@
++/* Added comment so there's a diff */
++
+ import org.apache.tools.ant.BuildException;
+ import org.apache.tools.ant.Task;
+
+@@ -6,6 +8,7 @@
+     // The method executing the task
+     // @param None Executes the task
+     public void execute() throws BuildException {
++    // And one here as well.
+         String desc = getOwningTarget().getDescription();
+         if( desc != null ) {
+             System.out.println(desc);
+
+
+

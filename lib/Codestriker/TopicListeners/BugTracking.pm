@@ -11,12 +11,12 @@
 
 use strict;
 
-package Codestriker::TopicListeners::Bugzilla;
+package Codestriker::TopicListeners::BugTracking;
 
 use Codestriker::TopicListeners::TopicListener;
 use Codestriker::BugDB::BugDBConnectionFactory;
 
-@Codestriker::TopicListeners::Bugzilla::ISA = ("Codestriker::TopicListeners::TopicListener");
+@Codestriker::TopicListeners::BugTracking::ISA = ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;

@@ -465,9 +465,14 @@ sub project_state_change_enabled {
     
 # Returns true if the given topic is 'readonly', i.e. if the given topic
 # status is in the list of readonly_states in codestriker.conf.
-sub topic_readonly($) {
+sub topic_readonly {
     my ($topic_state) = @_;
-    return (grep /^$topic_state$/, @Codestriker::readonly_states);
+    if (defined @Codestriker::readonly_states) {
+	return (grep /^$topic_state$/, @Codestriker::readonly_states);
+    } else {
+	# Backwards compatibility for older configs.
+	return $topic_state > 0;
+    }
 }
 
 1;

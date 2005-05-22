@@ -100,8 +100,10 @@ sub process($$) {
 
     # Determine whether the current topic is 'readonly'; this determines
     # the editability of various fields.
-    $vars->{'topic_readonly'} = 
-        Codestriker::topic_readonly($vars->{'default_state'});
+    if (defined $vars->{'default_state'}) {
+	$vars->{'topic_readonly'} = 
+	    Codestriker::topic_readonly($vars->{'default_state'});
+    }
 
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

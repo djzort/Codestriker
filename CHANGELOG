@@ -89,6 +89,10 @@ Version 1.9.0
   path in the filename field.  Starting and ending slash not removed
   from module name during getDiff.
 
+* Modified the Perforce parser to handle file-types that return
+  "xbinary".  Also handled Perforce diffs which contain unidiff style
+  '---' and '+++' header lines.  From Hope Duryea <hope_duryea@yahoo.com>.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

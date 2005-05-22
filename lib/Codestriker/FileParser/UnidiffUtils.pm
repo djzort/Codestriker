@@ -34,10 +34,11 @@ sub read_unidiff_text($$$$) {
 	    $function_name = "";
 	}
 
-	# Now read in the diff text until finished.
+	# Now read in the diff text until finished.  Note Perforce
+	# diffs can contain empty lines.
 	my $diff = "";
 	$line = <$fh>;
-	while (defined $line && $line =~ /^[ \-\+\\]/o) {
+	while (defined $line && ($line =~ /^$/o || $line =~ /^[ \-\+\\]/o)) {
 	    # Skip lines line "\ No newline at end of file".
 	    $diff .= $line unless $line =~ /^[\\]/o;
 	    $lastpos = tell $fh;

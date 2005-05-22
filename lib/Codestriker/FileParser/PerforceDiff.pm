@@ -46,7 +46,7 @@ sub parse ($$$) {
 	    my $revision = $2;
 	    my $file_type = $3;
 
-	    if ($file_type eq "ubinary" ||
+	    if ($file_type eq "ubinary" || $file_type eq "xbinary" ||
 		$file_type eq "binary") {
 		# Binary file, skip the next line and add the record in.
 		$line = <$fh>;
@@ -62,6 +62,14 @@ sub parse ($$$) {
 		push @result, $chunk;
 	    }
 	    elsif ($file_type eq "text") {
+		# Note there may be an optional '---' and '+++' lines
+		# before the chunk.
+		my $lastpos = tell $fh;
+		if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+		    # Move the file pointer back.
+		    seek $fh, $lastpos, 0;
+		}
+
 		my @file_diffs = Codestriker::FileParser::UnidiffUtils->
 		    read_unidiff_text($fh, $filename, $revision, $repmatch);
 		push @result, @file_diffs;
@@ -75,7 +83,15 @@ sub parse ($$$) {
 	    my $revision = $2;
 
 	    # Now read the entire diff chunk (it may be empty if the
-	    # user hasn't actually modified the file).
+	    # user hasn't actually modified the file).  Note there
+	    # may be an optional '---' and '+++' lines before the
+	    # chunk.
+	    my $lastpos = tell $fh;
+	    if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+		# Move the file pointer back.
+		seek $fh, $lastpos, 0;
+	    }
+
 	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
 		read_unidiff_text($fh, $filename, $revision, $repmatch);
 	    push @result, @file_diffs;
