@@ -98,6 +98,10 @@ sub process($$) {
                                           0 : 
                                           $Codestriker::suggested_topic_size_lines;
 
+    # Determine whether the current topic is 'readonly'; this determines
+    # the editability of various fields.
+    $vars->{'topic_readonly'} = 
+        Codestriker::topic_readonly($vars->{'default_state'});
 
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

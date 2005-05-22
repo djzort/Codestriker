@@ -783,8 +783,8 @@ sub render_comment_link {
     $params->{name} = $anchor;
 
     # Only set the href attribute if the comment is in open state.
-    if ($self->{topic_state} eq $Codestriker::topic_states[0]) {
-	$params->{href} = $edit_url;
+    if (!Codestriker::topic_readonly($self->{topic_state})) {
+	    $params->{href} = $edit_url;
     }
 
     # If a comment exists on this line, set span and the overlib hooks onto

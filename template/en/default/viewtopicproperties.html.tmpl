@@ -54,7 +54,7 @@ function DeleteTopicConfirm()
     <input type="text" name="topic_title" 
            value="[% title | html_entity %]" size="70"
 		[%# Check to see if the topic is open or not #%]
-		[% IF states.0 != default_state %]
+        [% IF topic_readonly != 0 %]
 			readonly
 		[% END %]
 		    maxlength="70">
@@ -67,7 +67,7 @@ function DeleteTopicConfirm()
     <input type="text" name="author" value="[% author | html_entity %]" 
            size="50" maxlength="80"
            [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || states.0 != default_state %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
   </td>
 </tr>
 
@@ -81,7 +81,7 @@ function DeleteTopicConfirm()
   <td>Bug IDs:</td>
   <td>
     <input type="text" name="bug_ids" value="[% bug_ids %]"
-           size="30" maxlength="50" [% IF states.0 != default_state %]readonly[% END %]>
+           size="30" maxlength="50" [% IF topic_readonly != 0 %]readonly[% END %]>
     Links:
     [% FOREACH bug = bug_id_array %]
         [% IF loop.count() != 1 %], [% END %]
@@ -97,7 +97,7 @@ function DeleteTopicConfirm()
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
            size="50" maxlength="150"
   	   [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || states.0 != default_state %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
   </td>
 </tr>
 
@@ -107,7 +107,7 @@ function DeleteTopicConfirm()
     <input type="text" name="cc" value="[% cc | html_entity %]" 
            size="50" maxlength="150"
  	   [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || states.0 != default_state %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
   </td>
 </tr>
 
@@ -150,7 +150,7 @@ function DeleteTopicConfirm()
   <td>Project:</td>
   <td>
     [%# Check to see if the project is open or not #%]
-    [% IF states.0 == default_state %]
+    [% IF topic_readonly == 0 %]
       <select name="projectid">
        [% FOREACH project = projects %]
           [% IF project.id == topic_projectid %]
@@ -182,7 +182,7 @@ function DeleteTopicConfirm()
   <td>
     <textarea name="topic_description" rows="12" cols="70" 
 		[%# Check to see if the topic is open or not #%]
-		[% IF states.0 != default_state %] readonly [% END %]
+		[% IF topic_readonly != 0 %] readonly [% END %]
               wrap="hard">[% description | html_entity %]</textarea>
   </td>
 </tr>

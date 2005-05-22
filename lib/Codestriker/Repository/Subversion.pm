@@ -45,7 +45,7 @@ sub retrieve ($$$\$) {
     $filename =~ s/ /%20/g;
 
     my $cmd = "svn cat --non-interactive --no-auth-cache " . $self->{userCmdLine} .
-              "--revision $revision " .
+              " --revision $revision " .
               "\"" . $self->{repository_url} . "/$filename\"";
 
     my $write_stdin_fh = new FileHandle;
@@ -100,19 +100,58 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $stdout_fh, $stderr_fh) = @_;
 
-    my $cmd = "svn diff --non-interactive --no-auth-cache " . $self->{userCmdLine} . 
-              "-r $start_tag:$end_tag " . 
-              "--old \"$self->{repository_url}\" \"$module_name\"";
+    # Make sure the moduel does not end or start with a /
+    $module_name =~ s/\/$//;
+    $module_name =~ s/^\///;
+
+    # Replace any spaces with %20 uri friendly escapes.
+    my $filename = $module_name;
+    $filename =~ s/ /%20/g;
+
+    my $cmd = "svn cat --non-interactive --no-auth-cache " . $self->{userCmdLine} .
+              " --revision HEAD " .
+              "\"" . $self->{repository_url} . "/$filename\"";
 
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
 
-    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,$cmd);
+    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh, $cmd);
 
-    # Make sure the moduel does not end or start with a /
-    $module_name =~ s/\\$//;
-    $module_name =~ s/^\\//;
+    while(<$read_stdout_fh>) {}
+
+    my $directory;
+
+    # If there is an error about it being a directory, then use the
+    # module name as a directory.
+    while(<$read_stderr_fh>) {
+        my $line = $_;
+
+        if ($line =~ /^svn: URL '.*' refers to a directory/) {
+            $directory = $module_name;
+        }
+    }
+
+    # if there was no error, then the module name is a file, so get the
+    # directory before the file name.
+    if (! defined $directory) {
+        $module_name =~ /(.*)\/[^\/]+/;
+        $directory = $1;
+    }
+
+    $write_stdin_fh->close();
+    $read_stdout_fh->close();
+    $read_stderr_fh->close();
+
+    $cmd = "svn diff --non-interactive --no-auth-cache " . $self->{userCmdLine} . 
+              " -r $start_tag:$end_tag " . 
+              "--old \"$self->{repository_url}\" \"$module_name\"";
+
+    $write_stdin_fh = new FileHandle;
+    $read_stdout_fh = new FileHandle;
+    $read_stderr_fh = new FileHandle;
+
+    $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh, $cmd);
 
     while(<$read_stdout_fh>) {
         my $line = $_;
@@ -131,9 +170,9 @@ sub getDiff ($$$$$) {
                 $line =~ /^--- $module_name/ == 0 &&
                 $line =~ /^Index: $module_name/ == 0) {
 
-                $line =~ s/^--- /--- $module_name\// or
-                $line =~ s/^Index: /Index: $module_name\// or
-                $line =~ s/^\+\+\+ /\+\+\+ $module_name\//;
+                $line =~ s/^--- /--- $directory\// or
+                $line =~ s/^Index: /Index: $directory\// or
+                $line =~ s/^\+\+\+ /\+\+\+ $directory\//;
             }
         }
 

@@ -78,6 +78,17 @@ Version 1.9.0
 * Fixed message "Character in 'c' format wrapped in pack at
   ... Response.pm", as reported by an anonymous user.
 
+* 'Readonly' topic states are now specified in codestriker.conf.  For
+  installations that add their own topic states, this allows them to
+  have more than one state in which topics can be edited.
+  From Dan Prince <dan.prince@alumni.carleton.edu>.
+
+* Subversion topic creation fixes from Michael R. Brumm
+  <michaelbrumm@users.sourceforge.net>.  If module refers to file,
+  path workaround duplicates the file's name at the end of the file
+  path in the filename field.  Starting and ending slash not removed
+  from module name during getDiff.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS
