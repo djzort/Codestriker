@@ -471,7 +471,7 @@ sub topic_readonly {
 	return (grep /^$topic_state$/, @Codestriker::readonly_states);
     } else {
 	# Backwards compatibility for older configs.
-	return $topic_state > 0;
+	return $topic_state ne "Open";
     }
 }
 
