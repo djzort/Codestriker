@@ -239,6 +239,9 @@ function verify(comment_form, status_field)
         params += '&' + comment_param + '=' +
                   escape(eval('comment_form.' + comment_param + '.value'));
     }
+
+    setStatusText('Submitting comment...');
+
     postXMLDoc(params);
     return false;
 }
