@@ -324,8 +324,13 @@ function postXMLDoc(params)
 function setStatusText(newStatusText)
 {
     cs_status_element.className = 'error';
-    var newStatusTextNode = document.createTextNode(newStatusText);
-    cs_status_element.replaceChild(newStatusTextNode, cs_status_element.childNodes[0]);
+    if (is.ie) {
+        cs_status_element.innerText = newStatusText;
+    }
+    else {
+        var newStatusTextNode = document.createTextNode(newStatusText);
+        cs_status_element.replaceChild(newStatusTextNode, cs_status_element.childNodes[0]);
+    }
 }
 
 // Function for handling state changes to the request object.
