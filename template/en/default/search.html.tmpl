@@ -16,30 +16,27 @@
 [%# The author input field #%]
 <TR>
  <TD>Author: <FONT SIZE="-2"><a href="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on topic author, which may be wildcarded \
-as joe* or joe*company*.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+as joe* or joe*company*.')">(?)</a></FONT></TD>
  <TD><INPUT TYPE="text" NAME="sauthor" SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
 [%# The reviewer input field #%]
 <TR>
  <TD>Reviewer: <FONT SIZE="-2"><a href="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on topic reviewer, which may be wildcarded \
-as paul* or paul*company*.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+as paul* or paul*company*.')">(?)</a></FONT></TD>
  <TD><INPUT TYPE="text" NAME="sreviewer" SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
 [%# The Cc input field #%]
 <TR>
  <TD>Cc: <FONT SIZE="-2"><a href="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on topic CC, which may be wildcarded \
-as group* or group*company*.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+as group* or group*company*.')">(?)</a></FONT></TD>
  <TD><INPUT TYPE="text" NAME="scc"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
 
@@ -47,10 +44,9 @@ onmouseout="return nd();">(?)</a></FONT></TD>
 [% IF bugdb_enabled != 0 %]
 <TR>
  <TD>Bug ID: <FONT SIZE="-2"><A HREF="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on the topic bugid.  This field \
-cannot be wildcarded.')"
-onmouseout="return nd();">(?)</a></FONT>
+cannot be wildcarded.')">(?)</a></FONT>
 </TD>
  <TD><INPUT TYPE="text" NAME="sbugid"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
@@ -59,12 +55,11 @@ onmouseout="return nd();">(?)</a></FONT>
 [%# The state multi-select #%]
 <TR>
  <TD>State: <FONT SIZE="-2"><a href="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on the topic\'s state.  Multiple \
 fields can be selected here by holding down the control \
 button while selecting.  State \'Any\' indicates the \
-returned topics can be in any state.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+returned topics can be in any state.')">(?)</a></FONT></TD>
  <TD><SELECT NAME="state_group" SIZE=3 MULTIPLE>
        [% FOREACH state = states %]
            [% IF state == 'Open' %]
@@ -80,12 +75,11 @@ onmouseout="return nd();">(?)</a></FONT></TD>
 [%# The project multi-select #%]
 <TR>
  <TD>Project: <FONT SIZE="-2"><a href="javascript:void(0)"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on topic project membership. \
 Multiple fields can be selected here by holding down the \
 control button while selecting.  State \'Any\' indicates the \
-returned topics can in any project.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+returned topics can in any project.')">(?)</a></FONT></TD>
  <TD><SELECT NAME="project_group" SIZE=3 MULTIPLE>
        [% FOREACH project = projects %]
            [% IF project.name == 'Any' %]
@@ -101,10 +95,9 @@ onmouseout="return nd();">(?)</a></FONT></TD>
 [%# The contains text input field and checkbox #%]
 <TR>
  <TD>Contains text: <FONT SIZE="-2"><a href="javascript:void(0);"
-onmouseover="return overlib('\
+onmouseover="return create_window('\
 Constrain the search on text contained in the title, description, \
-comment, body and filename topic attributes.  Text can be wildcarded.')"
-onmouseout="return nd();">(?)</a></FONT></TD>
+comment, body and filename topic attributes.  Text can be wildcarded.')">(?)</a></FONT></TD>
  <TD><INPUT TYPE="text" NAME="stext"  SIZE=50 MAXLENGTH=100></TD>
 </TR>
 <TR>

@@ -294,6 +294,15 @@ function add_comment_tooltip(file, line, new_value)
             HEIGHT, 300);
 }
 
+// Create a new tooltip window which creates a sticky, draggable
+// window with a close link.
+function create_window(text)
+{
+    var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
+               'Close</a><p>' + text;
+    overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP);
+}
+
 // Function for posting to Codestriker using the XMLHttpRequest object.
 function postXMLDoc(params)
 {
