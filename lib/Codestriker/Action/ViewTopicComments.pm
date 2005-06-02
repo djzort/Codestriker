@@ -134,6 +134,7 @@ sub process($$$) {
     $vars->{'email'} = $email;
     $vars->{'comments'} = \@comments;
     $vars->{'users'} = \@usersThatHaveComments;
+    $vars->{'tabwidth'} = $tabwidth;
     
     # Push in the current filter combo box selections so the window remembers
     # what the user has currently set.

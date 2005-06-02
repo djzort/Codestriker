@@ -820,43 +820,6 @@ sub render_comment_link {
     return $query->a($params, $text);
 }
 
-# Generate a string which represents a digest of all the comments made for a
-# particular line number.  Used for "tool-tip" windows for line number links
-# and/or setting the status bar.
-sub get_comment_digest($$$$) {
-    my ($self, $line, $filenumber, $new) = @_;
-
-    my $digest = "";
-    my %comment_hash = %{ $self->{comment_hash} };
-    my $key = "$filenumber|$line|$new";
-    if (defined $comment_hash{$key}) {
-	my @comments = @{ $comment_hash{$key} };
-
-	for (my $i = 0; $i <= $#comments; $i++) {
-	    my $comment = $comments[$i];
-
-	    # Need to format the data appropriately for HTML display.
-	    my $data = HTML::Entities::encode($comment->{data});
-	    $data =~ s/\n/<br>/mg;
-	    $data =~ s/ /&nbsp;/mg;
-	    $data = tabadjust($self->{tabwidth}, $data, 1);
-
-	    # Show each comment with the author and date in bold.
-	    $digest .= "<b>Comment from $comment->{author} ";
-	    $digest .= "on $comment->{date}</b><br>";
-	    $digest .= "$data";
-
-	    # Add a newline at the end if required.
-	    if ($i < $#comments &&
-		substr($digest, length($digest)-4, 4) ne '<br>') {
-		$digest .= '<br>';
-	    }
-	}
-    }
-
-    return $digest;
-}
-
 # Start hook called when about to start rendering to a page.
 sub start($) {
     my ($self) = @_;
@@ -1222,11 +1185,11 @@ sub tabadjust ($$$) {
     $_ = $input;
     if ($htmlmode) {
 	1 while s/\t+/'&nbsp;' x
-	    (length($&) * $tabwidth - length($`) % $tabwidth)/e;
+	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
     }
     else {
 	1 while s/\t+/' ' x
-	    (length($&) * $tabwidth - length($`) % $tabwidth)/e;
+	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
     }
     return $_;
 }

@@ -1,6 +1,8 @@
 // Global settings for overLIB.
 ol_fgcolor = '#FFFFCC';
 ol_textsize = '2';
+ol_width = 300;
+ol_height= 150;
 
 // Codestriker XMLHttpRequest object that is used.
 var cs_request;
@@ -289,7 +291,9 @@ function add_comment_tooltip(file, line, new_value)
                '<iframe width="480" height="300" name="comment_frame" ' +
                'src="javascript:top.add_comment_html(' +
                file + ',' + line + ',' + new_value + ');">' +
-                'Can\'t view iframe</iframe>';
+                'This browser is not supported.  Please use ' +
+                'a modern browser, such as Firefox or IE which ' +
+                'supports iframes.</iframe>';
     overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 480,
             HEIGHT, 300);
 }

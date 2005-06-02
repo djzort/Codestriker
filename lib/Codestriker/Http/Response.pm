@@ -381,9 +381,9 @@ sub generate_comment_declarations
 
 	    # Need to format the data appropriately for HTML display.
 	    my $data = HTML::Entities::encode($comment->{data});
-	    $data =~ s/\'/\\\'/mg;
-	    $data =~ s/\n/<br>/mg;
-	    $data =~ s/ /&nbsp;/mg;
+	    $data =~ s/\'/\\\'/mgo;
+	    $data =~ s/\n/<br>/mgo;
+	    $data =~ s/ \s+/'&nbsp;' x (length($&)-1)/emgo;
 	    $data = Codestriker::Http::Render::tabadjust($tabwidth, $data, 1);
 
 	    # Show each comment with the author and date in bold.

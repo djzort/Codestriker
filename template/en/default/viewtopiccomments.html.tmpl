@@ -1,6 +1,7 @@
 [%# Display a list of comments #%]
 
 [% USE AutomagicLinks %]
+[% USE FormatWhitespace tabwidth = tabwidth %]
 
 [% PROCESS viewtopicheader.html.tmpl version = version
    help = "x586.html" topicview = 0 topicproperties = 0 topiccomments = 1
@@ -165,7 +166,7 @@ with
 
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD>&nbsp;<PRE>[% comment.context %]</PRE></TD>
+        <TD>&nbsp;[% comment.context %]</TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
@@ -177,7 +178,7 @@ with
         <TD>[% comment.author | html_entity %]&nbsp;[% comment.date | html_entity %]</TD>
     </TR>
     <TR CLASS="commentb">
-        <TD><PRE>[% comment.data | html_entity | $AutomagicLinks %]</PRE></TD>
+        <TD>[% comment.data | html_entity | $FormatWhitespace | $AutomagicLinks %]</TD>
     </TR>
 
 [% END %]

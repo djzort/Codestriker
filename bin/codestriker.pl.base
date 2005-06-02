@@ -62,6 +62,7 @@ use Codestriker::Action::ViewTopicComments;
 use Codestriker::Template::Plugin::AutomagicLinks;
 use Codestriker::Template::Plugin::JavascriptEscape;
 use Codestriker::Template::Plugin::StringObfuscator;
+use Codestriker::Template::Plugin::FormatWhitespace;
 
 # Set the temp file location, if one has been specified.
 if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
