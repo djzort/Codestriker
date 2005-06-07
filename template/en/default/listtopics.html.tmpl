@@ -10,21 +10,21 @@
 [% END %]
 
 [%# Display the heading and create the table #%]
-<FORM METHOD="POST" ENCTYPE="multipart/form-data">
-<INPUT TYPE="hidden" NAME="action" VALUE="change_topics_state">
+<FORM METHOD="post" ENCTYPE="multipart/form-data">
+<input TYPE="hidden" NAME="action" VALUE="change_topics_state" />
 
 [%# Store the search parameters as hidden variables #%]
-<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor | html_entity %]">
-<INPUT TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer | html_entity %]">
-<INPUT TYPE="hidden" NAME="scc" VALUE="[% scc | html_entity %]">
-<INPUT TYPE="hidden" NAME="sbugid" VALUE="[% sbugid %]">
-<INPUT TYPE="hidden" NAME="stext" VALUE="[% stext | html_entity %]">
-<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
-<INPUT TYPE="hidden" NAME="stitle" VALUE="[% stitle | html_entity %]">
-<INPUT TYPE="hidden" NAME="sdescription" VALUE="[% sdescription | html_entity %]">
-<INPUT TYPE="hidden" NAME="scomments" VALUE="[% scomments | html_entity %]">
-<INPUT TYPE="hidden" NAME="sbody" VALUE="[% sbody | html_entity %]">
-<INPUT TYPE="hidden" NAME="sfilename" VALUE="[% sfilename | html_entity %]">
+<input TYPE="hidden" NAME="sauthor" VALUE="[% sauthor | html_entity %]" />
+<input TYPE="hidden" NAME="sreviewer" VALUE="[% sreviewer | html_entity %]" />
+<input TYPE="hidden" NAME="scc" VALUE="[% scc | html_entity %]" />
+<input TYPE="hidden" NAME="sbugid" VALUE="[% sbugid %]" />
+<input TYPE="hidden" NAME="stext" VALUE="[% stext | html_entity %]" />
+<input TYPE="hidden" NAME="sstate" VALUE="[% sstate %]" />
+<input TYPE="hidden" NAME="stitle" VALUE="[% stitle | html_entity %]" />
+<input TYPE="hidden" NAME="sdescription" VALUE="[% sdescription | html_entity %]" />
+<input TYPE="hidden" NAME="scomments" VALUE="[% scomments | html_entity %]" />
+<input TYPE="hidden" NAME="sbody" VALUE="[% sbody | html_entity %]" />
+<input TYPE="hidden" NAME="sfilename" VALUE="[% sfilename | html_entity %]" />
 
 <H1>Topic list</H1>
 
@@ -34,18 +34,18 @@
 
     [%# Display the table header #%]
     <tr class="tlh">
-        <th colspan="2"><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=title">Title</a></th>
-        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=author">Author</a></th>
+        <th colspan="2"><a href="[% list_sort_url | uri | html_entity %]&amp;topic_sort_change=title">Title</a></th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&amp;topic_sort_change=author">Author</a></th>
         <th>Reviewer</th>
         <th>Cc</th>
-        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=created">Created</a></th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&amp;topic_sort_change=created">Created</a></th>
         [% FOREACH commentmetric = commentmetrics %]
             <th>[% commentmetric.value | html_entity %]</th>
         [% END %]
 	[% IF bugdb_enabled != 0 %]
         <th>Bug IDs</th>
 	[% END %]
-        <th><a href="[% list_sort_url | uri | html_entity %]&topic_sort_change=state">State</a></th>
+        <th><a href="[% list_sort_url | uri | html_entity %]&amp;topic_sort_change=state">State</a></th>
     </tr>
 
     [%# Display each topic row, alternating the background colour #%]
@@ -53,7 +53,7 @@
     [% FLUSH IF loop.count() % 10 == 1 %]
 
     <tr class="[% loop.count() % 2 == 0 ? 'tl1' : 'tl2' %]">
-        <td><INPUT TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]"></td>
+        <td><input TYPE="checkbox" NAME="selected_topics" VALUE="[% topic.id %],[% topic.version %]" /></td>
         <td><a href="[% topic.view_topic_url | uri | html_entity %]">[% topic.title | html_entity %]</a></td>
         <td>[% topic.author | html_entity %]</td>
         <td>[% topic.reviewer | html_entity %]</td>
@@ -71,7 +71,7 @@
     [% END %]
 
     <tr class="tlh">
-        <td colspan="8">&nbsp</td>
+        <td colspan="8">&nbsp;</td>
     </tr>
 </table>
 
@@ -100,21 +100,21 @@ Change state: &nbsp;
   </select>
 </td>
 <td>
-   <input type="submit" name="button" value="Update">
+   <input type="submit" name="button" value="Update" />
 </td>
 </tr>
 [% IF obsoleted_state_present == 1 %]
 <tr>
 <td>&nbsp;</td>
 <td>
-   <input type="submit" name="button" value="Obsolete Topic(s)">
+   <input type="submit" name="button" value="Obsolete Topic(s)" />
 </td>
 </tr>
 [% END %]
 </table>
 
    <table width="100%">
-    <tr class="tlh"><td>&nbsp</td></tr>
+    <tr class="tlh"><td>&nbsp;</td></tr>
    </table>
 
 </FORM>
@@ -129,7 +129,7 @@ Change state: &nbsp;
 [% IF rss_enabled %]
 
 | <a href="[% list_sort_url_rss | uri | html %]">RSS</a>
-  <link rel="alternate" type="application/rdf+xml" title="RSS" href="[% list_sort_url_rss | uri | html %]">
+  <link rel="alternate" type="application/rdf+xml" title="RSS" href="[% list_sort_url_rss | uri | html %]" />
 [% END %]
 
 </p>

@@ -24,9 +24,9 @@
 <p>
 [% END %]
 
-<FORM METHOD="POST" ENCTYPE="multipart/form-data">
-<INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic">
-<INPUT TYPE="hidden" NAME="obsoletes" VALUE="[% obsoletes %]">
+<FORM METHOD="post" ENCTYPE="multipart/form-data">
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic" />
+<INPUT TYPE="hidden" NAME="obsoletes" VALUE="[% obsoletes %]" />
 
 [%# The topic title input field #%]
 Topic title:
@@ -34,8 +34,8 @@ Topic title:
 onmouseover="return create_window('The topic title should be a concise but \
 informative summary of the code to be reviewed.  The title is used in the \
 subject of sent emails, and in the topic list screen.');">(?)</a></FONT>
-<BR>
-<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70>
+<BR/>
+<INPUT TYPE="text" NAME="topic_title" VALUE="[% topic_title | html_entity %]" SIZE=70 MAXLENGTH=70 />
 <P>
 
 [%# The topic description input field #%]
@@ -46,7 +46,7 @@ The topic description should contain enough information \
 for a reviewer to understand broadly what the code change \
 achieves. This information is sent with the new topic \
 notification email to all reviewers.')">(?)</a></FONT>
-<BR>
+<BR/>
 <TEXTAREA NAME="topic_description" ROWS=12 COLS=70 WRAP="hard">[% topic_description | html_entity %]</TEXTAREA>
 <P>
 
@@ -81,7 +81,7 @@ but will be treated simply as \'new files\'. \
 This should be left blank if you are reviewing files \
 directly from a repository.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200></TD>
+ <TD COLSPAN="3"><INPUT TYPE="file" NAME="topic_file" VALUE="[% topic_file | html_entity %]" SIZE=40 MAXLENGTH=200 /></TD>
 </TR>
 
 [% IF allow_repositories != 0 %]
@@ -101,7 +101,7 @@ files in the specified module corresponding to the entered tag \
 will be downloaded.')">(?)</a></FONT>
 </TD>
 <TD>
-<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="start_tag" VALUE="[% start_tag | html_entity %]" SIZE=20 MAXLENGTH=150 />
 </TD>
 <TD>End tag: <FONT SIZE="-2"><a href="javascript:void(0);"
 onmouseover="return create_window('\
@@ -114,7 +114,7 @@ If only one tag value is specified, the full contents of all \
 files in the specified module corresponding to the entered tag \
 will be downloaded.')">(?)</A></FONT></TD>
 <TD>
-<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="end_tag" VALUE="[% end_tag  | html_entity %]" SIZE=20 MAXLENGTH=150 />
 </TD>
 </TR>
 <TR>
@@ -127,7 +127,7 @@ This is the path to the file or module relative to the repository \
 root that should be inspected. It is ignored if text is uploaded.')">(?)</a></FONT>
 </TD>
 <TD>
-<INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150>
+<INPUT TYPE="text" NAME="module" VALUE="[% module | html_entity %]" SIZE=20 MAXLENGTH=150 />
 </TD>
 </TR>
 
@@ -142,7 +142,7 @@ This will allow diffs between a branch and the HEAD revision, without \
 showing files not on the branch as deleted. \
 This option affects only CVS topics currently.')">(?)</A></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="checkbox" NAME="default_to_head" [% IF default_to_head %]CHECKED[% END %]></TD>
+ <TD COLSPAN="3"><INPUT TYPE="checkbox" NAME="default_to_head" [% IF default_to_head %]CHECKED[% END %] /></TD>
 </TR>
 [% END %]
 
@@ -221,7 +221,7 @@ associated bugs for cross referencing.  When a bug is viewed, \
 it can be easily determined what code fixes have been applied \
 to it.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="bug_ids" VALUE="[% bug_ids | html_entity %]" SIZE=30 MAXLENGTH=50 /></TD>
 </TR>
 [% END %]
 
@@ -234,7 +234,7 @@ This is your email address.  All comments made against a topic \
 will be sent to this address.  The new topic notification email \
 will also be sent to this address.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="email" VALUE="[% email | html_entity %]" SIZE=50 MAXLENGTH=80 /></TD>
 </TR>
 
 [%# The reviewers input field #%]
@@ -246,7 +246,7 @@ This is a comma separated list of email addresses, which are the \
 people who need to review this code.  When the topic is created, \
 the new topic notification  email will be sent to these addresses.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150 /></TD>
 </TR>
 
 [%# The Cc input field #%]
@@ -258,12 +258,12 @@ This is a comma separated list of email addresses, which are \
 not intended to be reviewers, but typically a mailing list \
 to notify a number of people about the creation of a new topic.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150 /></TD>
 </TR>
 </TABLE>
 
 <P>
-<INPUT TYPE="submit" NAME=".submit" VALUE="Create Topic">
+<INPUT TYPE="submit" NAME=".submit" VALUE="Create Topic" />
 
 </FORM>
 

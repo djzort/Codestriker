@@ -10,10 +10,10 @@
 [% SET metric_input_exists = 0 %]
 <form method="post" enctype="application/x-www-form-urlencoded" name="form">
 
-<input type="hidden" name="action" value="edit_topic_metrics">
-<input type="hidden" name="topic" value="[% topic %]">
-<input type="hidden" name="mode" value="[% mode %]">
-<input type="hidden" name="version" value="[% topic_version %]">
+<input type="hidden" name="action" value="edit_topic_metrics" />
+<input type="hidden" name="topic" value="[% topic %]" />
+<input type="hidden" name="mode" value="[% mode %]" />
+<input type="hidden" name="version" value="[% topic_version %]" />
 
 <h3>Comment Metrics</h3>
 
@@ -77,7 +77,7 @@
 	[% FOREACH metric = topic_metrics %]
 	[% IF metric.enabled %]
         [% metric_input_exists = 1 %]
-	<td><input name="topic_metric" type="text" size="6" value="[% metric.value %]"></td>
+	<td><input name="topic_metric" type="text" size="6" value="[% metric.value %]"/></td>
         [% ELSE %]
 	<td>[% metric.value %]</td>
 	[% END %]
@@ -117,12 +117,12 @@
     [% IF metric.scope == 'author' || metric.scope == 'participant' %]
 	[% IF metric.enabled %]
         [% metric_input_exists = 1 %]
-        <td><input name="author_metric" type="text" value="[% metric.value %]" size="6"></td>
+        <td><input name="author_metric" type="text" value="[% metric.value %]" size="6"/></td>
 	[% ELSE %]
     	<td>[% metric.value %]</td>
 	[% END %]
     [% ELSE %]
-    <td><input name="author_metric" type="hidden"></td>
+    <td><input name="author_metric" type="hidden"/></td>
     [% END %]
 
     [% END %]
@@ -138,12 +138,12 @@
     [% IF metric.scope != 'author' %]
 	[% IF metric.enabled != 0 %]
         [% metric_input_exists = 1 %]
-	<td><input name="reviewer_metric,[% reviewerindex %]" type="text" value="[% metric.value %]" size="6"></td>
+	<td><input name="reviewer_metric,[% reviewerindex %]" type="text" value="[% metric.value %]" size="6"/></td>
 	[% ELSE %]
 	<td>[% metric.value %]</td>
 	[% END %]
     [% ELSE %]
-    <td><input name="reviewer_metric,[% reviewerindex %]" type="hidden"></td>
+    <td><input name="reviewer_metric,[% reviewerindex %]" type="hidden"/></td>
     [% END %]
 
     [% END %]
@@ -165,7 +165,7 @@
 [% IF metric_input_exists == 1 %]
 [%# Render the submit button #%]
 <input type="submit" name="button" value="Update Metrics" 
-       onClick="return DeleteTopicConfirm();"> 
+       onClick="return DeleteTopicConfirm();"/> 
 [% END %]
 </form>
 

@@ -7,7 +7,7 @@
    help = "x586.html" topicview = 0 topicproperties = 0 topiccomments = 1
    topicinfo = 0 closehead = 1 %]
 
-<SCRIPT language="JavaScript">
+<SCRIPT type="text/javascript">
 <!-- This function handles the three filter select boxes at the top of the table.
 function SelectFilter(post)
 {
@@ -48,18 +48,18 @@ function SelectFilter(post)
 // -->
 </SCRIPT>
 
-<FORM METHOD="POST" ENCTYPE="multipart/form-data" name="form">
-<INPUT TYPE="hidden" NAME="action" VALUE="change_comments_state">
-<INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">
+<FORM METHOD="post" ENCTYPE="multipart/form-data" name="form">
+<INPUT TYPE="hidden" NAME="action" VALUE="change_comments_state" />
+<INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]" />
 
-<INPUT TYPE="hidden" NAME="scontext" VALUE="[% scontext %]">
-<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]">
-<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]">
+<INPUT TYPE="hidden" NAME="scontext" VALUE="[% scontext %]" />
+<INPUT TYPE="hidden" NAME="sauthor" VALUE="[% sauthor %]" />
+<INPUT TYPE="hidden" NAME="sstate" VALUE="[% sstate %]" />
 
 
 <P><FONT size="5">Comments: &nbsp; &nbsp;</FONT>
 
-<BR>
+<BR/>
 <TABLE>
 <TR>
   <TD ALIGN="right">Show authored by: &nbsp;</TD>
@@ -190,7 +190,7 @@ with
 [%# Check to see if the topic is open or not #%]
 [% IF topic_readonly == 0 %]
 <P>
-<INPUT TYPE="submit" NAME="button" VALUE="Update">
+<INPUT TYPE="submit" NAME="button" VALUE="Update" />
 [% END %]
 
 </FORM>

@@ -7,7 +7,7 @@
    topiccomments = 0 topicinfo = 0 topicproperties = 1 closehead = 1
    help = "x608.html" %]
 
-<script language="JavaScript">
+<script type="text/javascript">
 <!--
 //
 // This function will hit the user with a "are you sure" message box if they
@@ -35,10 +35,10 @@ function DeleteTopicConfirm()
 [%# Create a form to allow the topic's properties to be changed #%]
 <form method="post" enctype="application/x-www-form-urlencoded" name="form">
 
-<input type="hidden" name="action" value="edit_topic_properties">
-<input type="hidden" name="topic" value="[% topicid %]">
-<input type="hidden" name="mode" value="[% mode %]">
-<input type="hidden" name="version" value="[% topic_version %]">
+<input type="hidden" name="action" value="edit_topic_properties" />
+<input type="hidden" name="topic" value="[% topicid %]" />
+<input type="hidden" name="mode" value="[% mode %]" />
+<input type="hidden" name="version" value="[% topic_version %]" />
 
 [%# Create a table illustrating the title, author, creation date, bug
     ids, reviewers, number of lines and the current state, most of
@@ -57,7 +57,7 @@ function DeleteTopicConfirm()
         [% IF topic_readonly != 0 %]
 			readonly
 		[% END %]
-		    maxlength="70">
+		    maxlength="70"/>
   </td>
 </tr>
 
@@ -67,7 +67,7 @@ function DeleteTopicConfirm()
     <input type="text" name="author" value="[% author | html_entity %]" 
            size="50" maxlength="80"
            [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %] />
   </td>
 </tr>
 
@@ -81,7 +81,7 @@ function DeleteTopicConfirm()
   <td>Bug IDs:</td>
   <td>
     <input type="text" name="bug_ids" value="[% bug_ids %]"
-           size="30" maxlength="50" [% IF topic_readonly != 0 %]readonly[% END %]>
+           size="30" maxlength="50" [% IF topic_readonly != 0 %]readonly[% END %] />
     Links:
     [% FOREACH bug = bug_id_array %]
         [% IF loop.count() != 1 %], [% END %]
@@ -97,7 +97,7 @@ function DeleteTopicConfirm()
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
            size="50" maxlength="150"
   	   [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %] />
   </td>
 </tr>
 
@@ -107,7 +107,7 @@ function DeleteTopicConfirm()
     <input type="text" name="cc" value="[% cc | html_entity %]" 
            size="50" maxlength="150"
  	   [%# Check to see if the topic is open or not #%]
-	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %]>
+	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %] />
   </td>
 </tr>
 
@@ -135,12 +135,14 @@ function DeleteTopicConfirm()
 [% IF topic_repository != '' %]
 <tr class="tt1">
   <td>Repository:</td>
+  <td>
        [% FOREACH entry = repositories %]
           [% IF entry == topic_repository %]
-		<input type="hidden" name="repository" value="[% topic_repository %]" readonly>
-		<td>[% entry | html_entity %]</td>
+		<input type="hidden" name="repository" value="[% topic_repository %]" readonly />
+		[% entry | html_entity %]
 	  [% END %]
        [% END %]
+  </td>
 </tr>
 
 [% END %]
@@ -166,15 +168,15 @@ function DeleteTopicConfirm()
     [% ELSE %]
 	[% FOREACH project = projects %]
 	    [% IF project.id == topic_projectid %]
-		<input type="hidden" name="projectid" value="[% project.id %]">
-		<input type="text" name="projectname" value="[% project.name | html_entity %]" readonly>
+		<input type="hidden" name="projectid" value="[% project.id %]" />
+		<input type="text" name="projectname" value="[% project.name | html_entity %]" readonly />
 	    [% END %]
 	[% END %]
     [% END %]
  </td>
 </tr>
 [% ELSE %]
-  <input type="hidden" name="projectid" value="[% topic_projectid %]">
+  <input type="hidden" name="projectid" value="[% topic_projectid %]" />
 [% END %]
 
 <tr class="tt1">
@@ -231,7 +233,7 @@ state \'obsoleted\'.
 <tr>
   <td colspan="2">
     <input type="submit" name="button" value="Update Topic" 
-           onClick="return DeleteTopicConfirm();">
+           onClick="return DeleteTopicConfirm();" />
   </td>
 </tr>
 

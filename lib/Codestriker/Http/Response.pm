@@ -173,10 +173,12 @@ sub generate_header {
 	if ($cache) {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -content_encoding=>'x-gzip',
+				 -charset=>"ISO-8859-1",
 				 -vary=>'Accept-Encoding');
 	} else {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -expires=>'+1d',
+				 -charset=>"ISO-8859-1",
 				 -cache_control=>'no-store',
 				 -pragma=>'no-cache',
 				 -content_encoding=>'x-gzip',
@@ -192,10 +194,12 @@ sub generate_header {
 	$output_compressed = 1;
     } else {
 	if ($cache) {
-	    print $query->header(-cookie=>$cookie_obj);
+	    print $query->header(-cookie=>$cookie_obj,
+					 -charset=>"ISO-8859-1");
 	} else {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -expires=>'+1d',
+				 -charset=>"ISO-8859-1",
 				 -cache_control=>'no-store',
 				 -pragma=>'no-cache');
 	}
@@ -368,10 +372,10 @@ sub generate_comment_declarations
 	my $key = $comment_locations[$index];
 	$key =~ /^(\-?\d+)\|(\-?\d+)\|(\d+)$/o;
         $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
-	    "; void(0);\">Add Comment</a> | ";
+	    "; void(0);\">Add Comment<\\/a> | ";
 
 	# Add a close link.
-	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close</a><p>";
+	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close<\\/a><p>";
 
 	# Create the actual comment text.
 	my @comments = @{ $comment_hash{$key} };
@@ -388,7 +392,7 @@ sub generate_comment_declarations
 
 	    # Show each comment with the author and date in bold.
 	    $overlib_html .= "<b>Comment from $comment->{author} ";
-	    $overlib_html .= "on $comment->{date}</b><br>";
+	    $overlib_html .= "on $comment->{date}<\\/b><br>";
 	    $overlib_html .= "$data";
 
 	    # Add a newline at the end if required.

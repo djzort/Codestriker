@@ -7,9 +7,9 @@
 
 <P>
 
-<FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">
+<FORM METHOD="post"  ENCTYPE="application/x-www-form-urlencoded">
 
-<INPUT TYPE="hidden" NAME="action" VALUE="submit_search">
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_search" />
 
 <TABLE>
 
@@ -19,7 +19,7 @@
 onmouseover="return create_window('\
 Constrain the search on topic author, which may be wildcarded \
 as joe* or joe*company*.')">(?)</a></FONT></TD>
- <TD><INPUT TYPE="text" NAME="sauthor" SIZE=50 MAXLENGTH=100></TD>
+ <TD><INPUT TYPE="text" NAME="sauthor" SIZE=50 MAXLENGTH=100 /></TD>
 </TR>
 
 [%# The reviewer input field #%]
@@ -28,7 +28,7 @@ as joe* or joe*company*.')">(?)</a></FONT></TD>
 onmouseover="return create_window('\
 Constrain the search on topic reviewer, which may be wildcarded \
 as paul* or paul*company*.')">(?)</a></FONT></TD>
- <TD><INPUT TYPE="text" NAME="sreviewer" SIZE=50 MAXLENGTH=100></TD>
+ <TD><INPUT TYPE="text" NAME="sreviewer" SIZE=50 MAXLENGTH=100 /></TD>
 </TR>
 
 [%# The Cc input field #%]
@@ -37,7 +37,7 @@ as paul* or paul*company*.')">(?)</a></FONT></TD>
 onmouseover="return create_window('\
 Constrain the search on topic CC, which may be wildcarded \
 as group* or group*company*.')">(?)</a></FONT></TD>
- <TD><INPUT TYPE="text" NAME="scc"  SIZE=50 MAXLENGTH=100></TD>
+ <TD><INPUT TYPE="text" NAME="scc"  SIZE=50 MAXLENGTH=100 /></TD>
 </TR>
 
 [%# The Bug id input field #%]
@@ -48,7 +48,7 @@ onmouseover="return create_window('\
 Constrain the search on the topic bugid.  This field \
 cannot be wildcarded.')">(?)</a></FONT>
 </TD>
- <TD><INPUT TYPE="text" NAME="sbugid"  SIZE=50 MAXLENGTH=100></TD>
+ <TD><INPUT TYPE="text" NAME="sbugid"  SIZE=50 MAXLENGTH=100 /></TD>
 </TR>
 [% END %]
 
@@ -98,23 +98,23 @@ returned topics can in any project.')">(?)</a></FONT></TD>
 onmouseover="return create_window('\
 Constrain the search on text contained in the title, description, \
 comment, body and filename topic attributes.  Text can be wildcarded.')">(?)</a></FONT></TD>
- <TD><INPUT TYPE="text" NAME="stext"  SIZE=50 MAXLENGTH=100></TD>
+ <TD><INPUT TYPE="text" NAME="stext"  SIZE=50 MAXLENGTH=100 /></TD>
 </TR>
 <TR>
  <TD>&nbsp;</TD>
  <TD>in: &nbsp;&nbsp;
-     [% IF enable_title %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="title" CHECKED>title&nbsp; [% END %]
-     [% IF enable_description %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="description">description&nbsp; [% END %]
-     [% IF enable_comment %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="comment">comment&nbsp; [% END %]
-     [% IF enable_body %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="body">body&nbsp; [% END %]
-     [% IF enable_filename %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="filename">filename[% END %]
+     [% IF enable_title %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="title" CHECKED />title&nbsp; [% END %]
+     [% IF enable_description %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="description" />description&nbsp; [% END %]
+     [% IF enable_comment %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="comment" />comment&nbsp; [% END %]
+     [% IF enable_body %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="body" />body&nbsp; [% END %]
+     [% IF enable_filename %]<INPUT TYPE="checkbox" NAME="text_group" VALUE="filename" />filename[% END %]
  </TD>
 </TR>
 </TABLE>
 
-<INPUT TYPE="submit" NAME=".submit" VALUE="Submit">
-<INPUT TYPE="hidden" NAME=".cgifields" VALUE="state_group">
-<INPUT TYPE="hidden" NAME=".cgifields" VALUE="text_group">
+<INPUT TYPE="submit" NAME=".submit" VALUE="Submit" />
+<INPUT TYPE="hidden" NAME=".cgifields" VALUE="state_group" />
+<INPUT TYPE="hidden" NAME=".cgifields" VALUE="text_group" />
 
 </FORM>
 
