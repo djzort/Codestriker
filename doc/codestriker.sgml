@@ -1144,7 +1144,7 @@ PPM> install mod_perl
           For PPM2:
 <programlisting>
 C:\> ppm
-PPM> set location http://theoryx5.uwinnipeg.ca/ppmpackages
+PPM> set repository oi http://theoryx5.uwinnipeg.ca/ppmpackages
 PPM> set save
 PPM> install mod_perl
 </programlisting>
