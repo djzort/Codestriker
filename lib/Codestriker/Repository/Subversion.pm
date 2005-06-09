@@ -44,8 +44,8 @@ sub retrieve ($$$\$) {
     # Replace any spaces with %20 uri friendly escapes.
     $filename =~ s/ /%20/g;
 
-    my $cmd = "svn cat --non-interactive --no-auth-cache " . $self->{userCmdLine} .
-              " --revision $revision " .
+    my $cmd = "\"$Codestriker::svn\" cat --non-interactive --no-auth-cache " .
+	      $self->{userCmdLine} . " --revision $revision " .
               "\"" . $self->{repository_url} . "/$filename\"";
 
     my $write_stdin_fh = new FileHandle;
@@ -108,8 +108,8 @@ sub getDiff ($$$$$) {
     my $filename = $module_name;
     $filename =~ s/ /%20/g;
 
-    my $cmd = "svn cat --non-interactive --no-auth-cache " . $self->{userCmdLine} .
-              " --revision HEAD " .
+    my $cmd = "\"$Codestriker::svn\" cat --non-interactive --no-auth-cache " .
+	      $self->{userCmdLine} . " --revision HEAD " .
               "\"" . $self->{repository_url} . "/$filename\"";
 
     my $write_stdin_fh = new FileHandle;
@@ -143,8 +143,8 @@ sub getDiff ($$$$$) {
     $read_stdout_fh->close();
     $read_stderr_fh->close();
 
-    $cmd = "svn diff --non-interactive --no-auth-cache " . $self->{userCmdLine} . 
-              " -r $start_tag:$end_tag " . 
+    $cmd = "\"$Codestriker::svn\" diff --non-interactive --no-auth-cache " .
+	      $self->{userCmdLine} . " -r $start_tag:$end_tag " . 
               "--old \"$self->{repository_url}\" \"$module_name\"";
 
     $write_stdin_fh = new FileHandle;
