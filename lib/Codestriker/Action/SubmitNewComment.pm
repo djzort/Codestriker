@@ -60,6 +60,9 @@ sub process($$$) {
     # Retrieve the appropriate topic details.
     my $topic = Codestriker::Model::Topic->new($topicid); 
 
+    # Fire the topic listener to indicate that the user has viewed the topic.
+    Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
+
     # Create the comment in the database.
     my $comment = Codestriker::Model::Comment->new();
     $comment->create($topicid, $line, $fn, $new,
