@@ -93,6 +93,9 @@ Version 1.9.0
   "xbinary".  Also handled Perforce diffs which contain unidiff style
   '---' and '+++' header lines.  From Hope Duryea <hope_duryea@yahoo.com>.
 
+* Filenames ending in ++, for example, filename.c++ could not be
+  loaded into the system, due to a bug introduced in 1.8.5.
+
 Version 1.8.5
 
 * Complete support for VSS repositories.  Topics linked to a VSS

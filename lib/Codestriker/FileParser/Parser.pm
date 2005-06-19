@@ -170,8 +170,9 @@ sub parse ($$$$$) {
     my @trimmed_diffs = ();
     foreach my $curr (@diffs) {
 	if ($curr->{filename} =~ /\.([^\.]+)(,v)?$/o) {
+	    my $ext = $1;
 	    push @trimmed_diffs, $curr
-		unless grep(/^$1$/, @Codestriker::exclude_file_types);
+		unless grep { $_ eq $ext } @Codestriker::exclude_file_types;
 	} else {
 	    # No extension on this file, add the diff in.
 	    push @trimmed_diffs, $curr;

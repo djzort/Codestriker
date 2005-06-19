@@ -550,6 +550,10 @@ $cvs = 'c:/gnu/bin/cvs';
 	  slashes.</emphasis>
 	</para>
 	<para>
+	 If you are using Subversion, make sure the
+	 <varname>$svn</varname> setting is set to the correct path.
+	</para>
+	<para>
 	 If you are using Perforce, make sure the
 	 <varname>$p4</varname> setting is set to the correct path.
 	</para>
