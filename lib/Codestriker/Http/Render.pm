@@ -976,6 +976,8 @@ sub _coloured_mode_start($) {
 				     "general_comment", undef);
     print " to topic.";
     print $query->p;
+
+    print $query->start_table() ;
 }
 
 # Render the initial start of the coloured table, with an empty row setting
