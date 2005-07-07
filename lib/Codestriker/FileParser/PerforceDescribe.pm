@@ -149,8 +149,6 @@ sub parse ($$$) {
 
 	# Skip the next blank line before the next chunk.
 	$line = <$fh>;
-	next unless defined $line;
-	$line = <$fh>;
     }
 
     # Finally, add any remaining TOC netries that are unaccounted for.
