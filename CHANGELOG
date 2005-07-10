@@ -1,4 +1,4 @@
-*** When upgrading, don't forget to: "cd bin ; ./checksetup.pl" ***
+*** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
 Version 1.9.0

@@ -36,7 +36,7 @@ sub get_database {
     if ($Codestriker::db =~ /^DBI:mysql/i) {
 	return Codestriker::DB::MySQL->new();
     } elsif ($Codestriker::db =~ /^DBI:Pg/i) {
-	return Codestriker::DB::PostgreSQL->new();
+	return Codestriker::DB::PostgreSQL->new($Codestriker::db);
     } elsif ($Codestriker::db =~ /^DBI:Odbc/i) {
 	return Codestriker::DB::ODBC->new();
     } elsif ($Codestriker::db =~ /^DBI:Oracle/i) {

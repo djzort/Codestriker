@@ -1003,9 +1003,12 @@ die "Unable to load Template module: $@\n" if $@;
 my $template_vars = {};
 
 # For Win32, don't enable tainting mode.  There are weird issues with
-# ActivePerl, and sometimes with IIS as well.
+# ActivePerl, and sometimes with IIS as well.  Make sure the Windows Perl
+# path is set correctly, as its location could be anywhere.
 if ($windows) {
-    $template_vars->{hash_ex_line} = '#!perl.exe -w';
+    my $perl = $^X;
+    $perl =~ s/\\/\//g;
+    $template_vars->{hash_ex_line} = '#!' . $perl . ' -w';
 } else {
     $template_vars->{hash_ex_line} = '#!/usr/bin/perl -wT';
 }

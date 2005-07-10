@@ -30,16 +30,23 @@ my $_TYPE = {
 # Create a new PostgreSQL database object.
 sub new {
     my $type = shift;
+    my $url = shift;
     
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     $self->{sequence_created} = 0;
+
+    # Determine which PostgreSQL driver to use.
+    $url =~ /^DBI:(Pg\w*):/;
+    $self->{driver} = $1;
+
     return bless $self, $type;
 }
 
 # Return the DBD module this is dependent on.
 sub get_module_dependencies {
-    return { name => 'DBD::Pg', version => '0' };
+    my $self = shift;
+    return { name => 'DBD::' . $self->{driver}, version => '0' };
 }
 
 sub getDBDModuleVer {
