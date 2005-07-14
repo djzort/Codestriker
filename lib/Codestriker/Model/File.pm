@@ -113,14 +113,21 @@ sub get_filetable($$$$$$$) {
     # Store the results in the referenced arrays.
     if ($success) {
 	my @data;
+        my @sequence;
 	while (@data = $select_file->fetchrow_array()) {
 	    push @$filename_array_ref, $data[0];
 	    push @$revision_array_ref, $data[1];
 	    push @$offset_array_ref, $data[2];
 	    push @$binary_array_ref, $data[3];
+	    push @sequence, $data[4];
+	}
+	$select_file->finish();
 
+	# This has to be called outside the loop above, as SQL Server
+	# doesn't allow nested selects... gggrrrr.
+	foreach my $file_id (@sequence) {
 	    # Now get the number of lines affected in this file
-	    my $numchanges = Codestriker::Model::Delta->get_delta_size($topicid, $data[4]);
+	    my $numchanges = Codestriker::Model::Delta->get_delta_size($topicid, $file_id);
 
 	    push @$numchanges_array_ref, $numchanges;
 	}
