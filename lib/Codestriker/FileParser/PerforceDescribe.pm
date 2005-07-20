@@ -189,9 +189,9 @@ sub _retrieve_file ($$) {
 			      \@text);
 	if ($#text >= 0) {
 	    if ($added) {
-		$entry->{new_linenumber} = $#text;
+		$entry->{new_linenumber} = 1;
 	    } else {
-		$entry->{old_linenumber} = $#text;
+		$entry->{old_linenumber} = 1;
 	    }
 	    for (my $i = 1; $i <= $#text; $i++) {
 		$entry->{text} .= ($added ? "+" : "-") . $text[$i] . "\n";
