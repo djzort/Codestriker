@@ -91,7 +91,6 @@ sub parse ($$$) {
     # Skip the lines until the first diff chunk.
     while (defined($line) && $line !~ /^==== /) {
 	$line = <$fh>;
-	return () unless defined $line;
     }
 
     # Now read the actual diff chunks.  Any entries not here will be added

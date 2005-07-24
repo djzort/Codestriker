@@ -1,0 +1,10 @@
+Change 3 by sits@sits2 on 2004/03/15 19:27:56
+
+	An example of a significant change, with new, modified and deleted
+	files, plus binary files too.
+
+Affected files ...
+
+... //depot/lib/Codestriker/Action/RepositoryFactory.pm#1 add
+
+Differences ...
