@@ -166,7 +166,7 @@ with
 
     [% IF comment.context != '' %]
     <TR CLASS="commentc">
-        <TD>&nbsp;[% comment.context %]</TD>
+        <TD><PRE>[% comment.context %]</PRE></TD>
     </TR>
     [% END %]
     [% last_fileline = comment.fileline %]
