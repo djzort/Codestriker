@@ -4,20 +4,6 @@
 
 <SCRIPT type="text/javascript">
 
-// FOR getCookie() and setCookie()
-// Original JavaScript code by Duncan Crombie: dcrombie at chirp.com.au
-function getCookie(name) {
-   var re = new RegExp(name + "=([^;]+)");
-   var value = re.exec(document.cookie);
-   return (value != null) ? unescape(value[1]) : null;
-}
-function setCookie(name, value, expirySeconds) {
-   if (!expirySeconds) expirySeconds = 60 * 60; // default to one hour
-   var now = new Date();
-   var expiry = new Date(now.getTime() + (expirySeconds * 1000))
-   document.cookie=name + "=" + escape(value) + "; expires=" + expiry.toGMTString();
-}
-
 // Store the form data in a browser cookie.
 function save_form_data() {
    var form = document.add_comment;
@@ -219,7 +205,7 @@ function add_other_reviewers() {
   <TD>
      <INPUT TYPE="text" NAME="comment_cc" SIZE=50 MAXLENGTH=150>
   </TD>
-  <TD><INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="opener.focus()"></TD>
+  <TD><INPUT TYPE="submit" NAME="submit" VALUE="Submit" ONCLICK="if (opener != null) opener.focus()"></TD>
  </TR>
  </TABLE>
 

@@ -6,7 +6,10 @@
 <H2>Comment submitted</H2>
 <P>
 <PRE>[% comment | html_entity %]
-</PRE><P>
+</PRE><P><P>
+
+View topic (<A HREF="[% view_topic_url %]">text</A> |
+<A HREF="[% view_comments_url %]">comments</A>)
 
 [%# Display a simple form for closing the comment popup window #%]
 <FORM METHOD="POST"  ENCTYPE="application/x-www-form-urlencoded">

@@ -1,6 +1,18 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.1
+
+* Correct problem introduced in 1.9.0 release where the email address
+  field in the add comment tooltip was not being stored correctly in
+  the Codestriker cookie.  For reviewers who have never created a
+  Codestriker topic, the email field not remember the previous value.
+  This has now been corrected.
+
+* When adding a comment via a link from an email, the confirmation
+  screen now contains links to the topic text and topic comments, for
+  convenience.
+
 Version 1.9.0
 
 * Now using overlib javascript library

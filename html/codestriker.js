@@ -23,6 +23,29 @@ function myOpen(url,name)
     windowHandle.focus();
 }
 
+// Retrieve the value of a cookie by name.
+function getCookie(name)
+{
+   var regexp = new RegExp(name + "=([^;]+)");
+   var value = regexp.exec(document.cookie);
+   return (value != null) ? value[1] : null;
+}
+
+// Set the value of the cookie to the specific value.
+function setCookie(name, value, expirySeconds)
+{
+   if (!expirySeconds) {
+       // Default to one hour
+       expirySeconds = 60 * 60;
+   }
+
+   var now = new Date();
+   var expiry = new Date(now.getTime() + (expirySeconds * 1000))
+   document.cookie = name + "=" + value +
+                     "; expires=" + expiry.toGMTString() +
+                     "; path=" + document.location.pathname;
+}
+
 // Edit open function.  Name is kept short to reduce output size.
 function eo(fn,line,newfile)
 {
@@ -222,6 +245,23 @@ function verify(comment_form, status_field)
         }
     }
 
+    // Make sure the email field is stored into the Codestriker
+    // cookie, so that it is remembered for the next add comment tooltip.
+    var cookie = getCookie('codestriker_cookie');
+    cs_email = comment_form.email.value;
+    var email_value = escape(cs_email);
+    if (cookie == null || cookie == '') {
+        cookie = 'email&' + email_value;
+    }
+    else if (cookie.match(/[&^]email&[^&]+/)) {
+        // Email field is already in cookie.
+        cookie = cookie.replace(/([&^])email&([^&]+)/, "$1email&" + email_value);
+    } else {
+        // Tack the email field onto the end.
+        cookie += '&email&' + email_value;
+    }
+    setCookie('codestriker_cookie', cookie, 10 * 356 * 24 * 60 * 60);
+
     // If we reached here, then all metrics have been set.  Send the 
     // request as an XMLHttpRequest, and return false so the browser
     // does nothing else.
@@ -376,3 +416,4 @@ function processReqChange()
         setStatusText('Request sent...');
     }
 }
+
