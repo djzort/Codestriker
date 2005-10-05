@@ -23,6 +23,22 @@ function myOpen(url,name)
     windowHandle.focus();
 }
 
+// Function for escaping value to be URL safe.  Also
+// make sure that potentially damaging punctuation
+// is escaped.  For example, a '+' character will be
+// interpreted as a space character when it is put into a URL.
+function extra_escape(value)
+{
+    value = escape(value);
+    value = value.replace(/\//g, "%2F");
+    value = value.replace(/\?/g, "%3F");
+    value = value.replace(/\=/g, "%3D");
+    value = value.replace(/\+/g, "%2B");
+    value = value.replace(/\&/g, "%26");
+    value = value.replace(/\@/g, "%40");
+    return value;
+}
+
 // Retrieve the value of a cookie by name.
 function getCookie(name)
 {
@@ -249,7 +265,7 @@ function verify(comment_form, status_field)
     // cookie, so that it is remembered for the next add comment tooltip.
     var cookie = getCookie('codestriker_cookie');
     cs_email = comment_form.email.value;
-    var email_value = escape(cs_email);
+    var email_value = extra_escape(cs_email);
     if (cookie == null || cookie == '') {
         cookie = 'email&' + email_value;
     }
@@ -266,20 +282,20 @@ function verify(comment_form, status_field)
     // request as an XMLHttpRequest, and return false so the browser
     // does nothing else.
     var params = 'action=submit_comment';
-    params += '&line=' + escape(comment_form.line.value);
-    params += '&topic=' + escape(comment_form.topic.value);
-    params += '&fn=' + escape(comment_form.fn.value);
-    params += '&new=' + escape(comment_form.newval.value);
-    params += '&comments=' + escape(comment_form.comments.value);
-    params += '&email=' + escape(comment_form.email.value);
-    params += '&comment_cc=' + escape(comment_form.comment_cc.value);
+    params += '&line=' + extra_escape(comment_form.line.value);
+    params += '&topic=' + extra_escape(comment_form.topic.value);
+    params += '&fn=' + extra_escape(comment_form.fn.value);
+    params += '&new=' + extra_escape(comment_form.newval.value);
+    params += '&comments=' + extra_escape(comment_form.comments.value);
+    params += '&email=' + extra_escape(comment_form.email.value);
+    params += '&comment_cc=' + extra_escape(comment_form.comment_cc.value);
     params += '&format=xml';
     
     for (var i = 0; i < top.cs_metric_data.length; i++) {
         var comment_param =
-            escape('comment_state_metric_' + top.cs_metric_data[i].name);
+            extra_escape('comment_state_metric_' + top.cs_metric_data[i].name);
         params += '&' + comment_param + '=' +
-                  escape(eval('comment_form.' + comment_param + '.value'));
+                  extra_escape(eval('comment_form.' + comment_param + '.value'));
     }
 
     setStatusText('Submitting comment...');

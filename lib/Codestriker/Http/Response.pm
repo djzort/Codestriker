@@ -385,6 +385,7 @@ sub generate_comment_declarations
 
 	    # Need to format the data appropriately for HTML display.
 	    my $data = HTML::Entities::encode($comment->{data});
+	    $data =~ s/\\/\\\\/mgo;
 	    $data =~ s/\'/\\\'/mgo;
 	    $data =~ s/\n/<br>/mgo;
 	    $data =~ s/ \s+/'&nbsp;' x (length($&)-1)/emgo;

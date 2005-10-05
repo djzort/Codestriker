@@ -1,6 +1,15 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.2
+
+* Comments containing '+' characters were changed into ' ' characters
+  when posted via AJAX.  Other potentially damaging characters are now
+  escaped.
+
+* Comments with '\' characters are now displayed correctly in all
+  cases within the tooltip window.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
