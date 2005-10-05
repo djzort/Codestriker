@@ -63,6 +63,9 @@ sub create_topic {
 						 Content_Type => 'form-data',
 						 Content => $content));
 
+    # Remove the temporary file.
+    unlink $tempfile_filename;
+
     # Indicate if the operation was successful.
     my $response_content = $response->content;
     my $rc = $response_content =~ /Topic URL: \<A HREF=\"(.*)\"/i;

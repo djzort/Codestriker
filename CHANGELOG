@@ -10,6 +10,10 @@ Version 1.9.2
 * Comments with '\' characters are now displayed correctly in all
   cases within the tooltip window.
 
+* Temporary files were not being deleted within the
+  CodestrikerClient.pm module (used for auto-creation of topics on CVS
+  commits).  Reported by Martin Apel <Martin.Apel@softlab.de>.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
