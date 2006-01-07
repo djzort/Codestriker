@@ -15,12 +15,16 @@ use strict;
 # Constructor, which takes as a parameter the repository url.
 sub new ($$) {
     my ($type, $repository_url, $user, $password) = @_;
-  
-    my $userCmdLine = "";
-    if (defined($user) && defined($password)) {
-        $userCmdLine = "--username $user --password $password ";
-    }
 
+    # Determine if there are additional parameters required for user
+    # authentication.
+    my @userCmdLine = ();
+    if (defined($user) && defined($password)) {
+        push @userCmdLine, '--username';
+	push @userCmdLine, $user;
+	push @userCmdLine, '--password';
+	push @userCmdLine, $password;
+    }
 
     # Make sure the repo url does not end in a /, the 
     # rest of the module assumes that it does not.
@@ -31,7 +35,7 @@ sub new ($$) {
 
     my $self = {};
     $self->{repository_url} = $repository_url;
-    $self->{userCmdLine} = $userCmdLine;
+    $self->{userCmdLine} = \@userCmdLine;
 
     bless $self, $type;
 }
@@ -44,15 +48,21 @@ sub retrieve ($$$\$) {
     # Replace any spaces with %20 uri friendly escapes.
     $filename =~ s/ /%20/g;
 
-    my $cmd = "\"$Codestriker::svn\" cat --non-interactive --no-auth-cache " .
-	      $self->{userCmdLine} . " --revision $revision " .
-              "\"" . $self->{repository_url} . "/$filename\"";
-
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
-   
-    my $pid = open3($write_stdin_fh,$read_stdout_fh,$read_stderr_fh,$cmd);
+
+    my @args = ();
+    push @args, 'cat';
+    push @args, '--non-interactive';
+    push @args, '--no-auth-cache';
+    push @args, @{ $self->{userCmdLine} };
+    push @args, '--revision';
+    push @args, $revision;
+    push @args, $self->{repository_url} . '/' . $filename;
+    
+    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+		    $Codestriker::svn, @args);
 
     # Read the data.
     for (my $i = 1; <$read_stdout_fh>; $i++) {
@@ -60,13 +70,12 @@ sub retrieve ($$$\$) {
 	$$content_array_ref[$i] = $_;
     }
 
-    # Log anything on standard error to apache error log
-    # along with the cmd that caused the error.
-
+    # Log anything on standard error to apache error log.
     my $buf;
     my $first_lines = 1;
     while (read($read_stderr_fh, $buf, 16384)) {
-        print STDERR "$cmd\n" if $first_lines;
+        print STDERR "$Codestriker::svn " .
+	    (join @args, ' ') . "\n" if $first_lines;
         $first_lines = 0;
 	print STDERR $buf;
      }
@@ -108,15 +117,21 @@ sub getDiff ($$$$$) {
     my $filename = $module_name;
     $filename =~ s/ /%20/g;
 
-    my $cmd = "\"$Codestriker::svn\" cat --non-interactive --no-auth-cache " .
-	      $self->{userCmdLine} . " --revision HEAD " .
-              "\"" . $self->{repository_url} . "/$filename\"";
-
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
     my $read_stderr_fh = new FileHandle;
 
-    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh, $cmd);
+    my @args = ();
+    push @args, 'cat';
+    push @args, '--non-interactive';
+    push @args, '--no-auth-cache';
+    push @args, @{ $self->{userCmdLine} };
+    push @args, '--revision';
+    push @args, 'HEAD';
+    push @args, $self->{repository_url} . '/' . $filename;
+
+    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+		    $Codestriker::svn, @args);
 
     while(<$read_stdout_fh>) {}
 
@@ -143,15 +158,22 @@ sub getDiff ($$$$$) {
     $read_stdout_fh->close();
     $read_stderr_fh->close();
 
-    $cmd = "\"$Codestriker::svn\" diff --non-interactive --no-auth-cache " .
-	      $self->{userCmdLine} . " -r $start_tag:$end_tag " . 
-              "--old \"$self->{repository_url}\" \"$module_name\"";
-
     $write_stdin_fh = new FileHandle;
     $read_stdout_fh = new FileHandle;
     $read_stderr_fh = new FileHandle;
 
-    $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh, $cmd);
+    @args = ();
+    push @args, 'cat';
+    push @args, '--non-interactive';
+    push @args, '--no-auth-cache';
+    push @args, @{ $self->{userCmdLine} };
+    push @args, '-r';
+    push @args, $start_tag . ':' . $end_tag,
+    push @args, '--old';
+    push @args, $self->{repository_url} . $module_name;
+
+    $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+		 $Codestriker::svn, @args);
 
     while(<$read_stdout_fh>) {
         my $line = $_;

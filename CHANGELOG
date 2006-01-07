@@ -3,6 +3,9 @@
 
 Version 1.9.2
 
+* Fixed problem with Subversion repositories on Win32, where
+  Codestriker was unable to launch the svn program.
+
 * Comments containing '+' characters were changed into ' ' characters
   when posted via AJAX.  Other potentially damaging characters are now
   escaped.
