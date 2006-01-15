@@ -93,7 +93,7 @@ sub process($$$) {
 					topic_title=>"Comment Submitted: " .
 					             "$topic->{title}",
 					email=>$email, 
-					repository=>$topic->{repository},
+					repository=>$Codestriker::repository_name_map->{$topic->{repository}},
 					load_anchor=>$anchor,
 					reload=>$reload, cache=>0);
                                     

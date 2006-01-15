@@ -23,7 +23,8 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtrack
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
-	      $project_states $rss_enabled
+	      $project_states $rss_enabled $repository_name_map $repository_url_map
+	      @valid_repository_names
 	      );
 
 # Version of Codestriker.
@@ -305,6 +306,25 @@ sub initialise($$) {
     if ( -f "$BASEDIR/codestriker_test.conf")
     {
 	do "$BASEDIR/codestriker_test.conf";
+    }
+
+    # Fill in $repository_name_map for those repository entries which don't have
+    # a mapping, with the same value as the repository value itself.
+    foreach my $repository (@valid_repositories) {
+	if (! exists $repository_name_map->{$repository}) {
+	    $repository_name_map->{$repository} = $repository;
+	}
+    }
+
+    # Define the equivalent list of valid repository names.
+    @valid_repository_names = ();
+    foreach my $repository (@valid_repositories) {
+	push @valid_repository_names, $repository_name_map->{$repository};
+    }
+
+    # Define the reverse mapping now for convenience.
+    foreach my $key (keys %${repository_name_map}) {
+	$repository_url_map->{$repository_name_map->{$key}} = $key;
     }
 }
 

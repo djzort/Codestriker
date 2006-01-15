@@ -7,9 +7,9 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.9.0</subtitle>
+    <subtitle>Version 1.9.2</subtitle>
     <legalnotice>
-      <para>Copyright (c) 2001, 2002, 2003, 2004</para>
+      <para>Copyright (c) 2001 - 2006</para>
     </legalnotice>
     <authorgroup>
       <author>
@@ -516,6 +516,27 @@ $use_compression = 0;
     );
         </programlisting>
         </para>
+	<para>
+	As explained by the comment in the codestriker.conf file,
+	sometimes there is a benefit for displaying a name instead of
+	a repository URL in the Codestriker UI.
+	<programlisting>
+# A mapping of repository URLs to names.  In any screen where a
+# repository is displayed, if there is a mapping for the repository
+# defined here, then the symbolic name will be displayed instead of
+# its raw URL.  This is useful when the URL contains sensitive
+# username/password information, or the symbolic name is more
+# meaningful to the end-user.  If there is no mapping defined for a
+# specific repository, its URL will be displayed.
+$repository_name_map =
+{
+    '/home/sits/cvs' => 'Local CVS',
+    ':pserver:sits:password@cvs.sourceforge.net:/cvsroot' => 'SF CVS'
+};
+
+	</programlisting>
+	</para>
+
 	<para>
 	  During a review, it is sometimes beneficial to see the
 	  revision history of a file, such as information provided by

@@ -218,7 +218,8 @@ sub send_topic_changed_email {
 
     # Check for repository change.
     if ($topic->{repository} ne $topic_orig->{repository}) {
-        $changes .= "The repository was changed to $topic->{repository}.\n";
+	my $value = $Codestriker::repository_name_map->{$topic->{repository}};
+        $changes .= "The repository was changed to $value.\n";
     }
 
     # Check for description change.

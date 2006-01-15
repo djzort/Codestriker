@@ -57,15 +57,15 @@ sub process($$$) {
     # Set the default repository to select.
     if (! (defined $vars->{'default_repository'}) ||
 	$vars->{'default_repository'} eq "") {
-	if ($#Codestriker::valid_repositories != -1) {
+	if ($#Codestriker::valid_repository_names != -1) {
 	    # Choose the first repository as the default selection.
 	    $vars->{'default_repository'} =
-		$Codestriker::valid_repositories[0];
+		$Codestriker::valid_repository_names[0];
 	}
     }
 
     # Indicate the list of valid repositories which can be choosen.
-    $vars->{'repositories'} = \@Codestriker::valid_repositories;
+    $vars->{'repositories'} = \@Codestriker::valid_repository_names;
 
     # Read the list of projects available to make that choice available
     # when a topic is created.

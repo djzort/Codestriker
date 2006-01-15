@@ -33,7 +33,7 @@ sub process($$$) {
     my $cc = $http_input->get('cc');
     my $topic_state = $http_input->get('topic_state');
     my $bug_ids = $http_input->get('bug_ids');
-    my $repository_url = $http_input->get('repository');
+    my $repository_name = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
 
     # Check if this action is allowed, and that the state is valid.
@@ -78,6 +78,13 @@ sub process($$$) {
 	$author = $topic->{author};
 	$reviewers = $topic->{reviewers};
 	$cc = $topic->{cc};
+    }
+
+    # Make sure the repository value is correct.
+    my $repository_url = $Codestriker::repository_url_map->{$repository_name};
+    if ($repository_url eq "") {
+	$feedback .= "Repository name \"$repository_name\" is unknown.\n" .
+	    "Update your codestriker.conf file with this entry.\n";
     }
 
     if ($feedback eq "") {

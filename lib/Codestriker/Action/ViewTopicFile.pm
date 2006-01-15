@@ -100,7 +100,7 @@ sub process($$$) {
 				    mode=>$mode,
 				    tabwidth=>$tabwidth,
 				    fview=>$fview,
-				    repository=>$topic->{repository}, 
+				    repository=>$Codestriker::repository_name_map->{$topic->{repository}}, 
                                     reload=>0, cache=>1);
 
     # Render the HTML header.

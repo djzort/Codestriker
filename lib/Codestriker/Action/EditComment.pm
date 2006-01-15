@@ -48,7 +48,7 @@ sub process($$$) {
 				    email=>$email, 
     				    mode=>$mode,
 				    tabwidth=>$tabwidth,
-				    repository=>$topic->{repository}, 
+				    repository=>$Codestriker::repository_name_map->{$topic->{repository}}, 
 				    reload=>0, cache=>0);
 
     # Create the hash for the template variables.

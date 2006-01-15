@@ -36,7 +36,7 @@ sub process($$$) {
     my $topic_file = $http_input->get('fh_filename');
     my $fh_mime_type = $http_input->get('fh_mime_type');
     my $bug_ids = $http_input->get('bug_ids');
-    my $repository_url = $http_input->get('repository');
+    my $repository_name = $http_input->get('repository');
     my $projectid = $http_input->get('projectid');
     my $project_name = $http_input->get('project_name');
     my $start_tag = $http_input->get('start_tag');
@@ -85,7 +85,7 @@ sub process($$$) {
     
     $http_response->generate_header(topic_title=>"Create New Topic",
 				    email=>$email, reviewers=>$reviewers,
-				    cc=>$cc, repository=>$repository_url,
+				    cc=>$cc, repository=>$repository_name,
 				    projectid=>$projectid,
 				    reload=>0, cache=>0);
 
@@ -101,7 +101,7 @@ sub process($$$) {
     $error_vars->{'topic_description'} = $topic_description;
     $error_vars->{'topic_title'} = $topic_title;
     $error_vars->{'bug_ids'} = $bug_ids;
-    $error_vars->{'default_repository'} = $repository_url;
+    $error_vars->{'default_repository'} = $repository_name;
     $error_vars->{'repositories'} = \@Codestriker::valid_repositories;
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
@@ -110,27 +110,25 @@ sub process($$$) {
     $error_vars->{'default_to_head'} = $default_to_head;
 
     my $repository = undef;
+    my $repository_url = undef;
     if (scalar(@Codestriker::valid_repositories)) {
 	# Set the repository to the default if it is not entered.
-	if ($repository_url eq "" || scalar(@Codestriker::valid_repositories) == 1) {
-	    $repository_url = $Codestriker::valid_repositories[0];
+	if ($repository_name eq "" || scalar(@Codestriker::valid_repository_names) == 1) {
+	    $repository_name = $Codestriker::valid_repository_names[0];
 	}
 
 	# Check if the repository argument is in fact a configured
         # repository.
-        my $configured = 0;
-        foreach my $rep ( @Codestriker::valid_repositories ) {
-            $configured = 1 if $repository_url eq $rep;
-        }
+        $repository_url = $Codestriker::repository_url_map->{$repository_name};
 
-        if ($configured) {
-	$repository =
-	    Codestriker::Repository::RepositoryFactory->get($repository_url);
+        if (defined $repository_url) {
+	    $repository =
+		Codestriker::Repository::RepositoryFactory->get($repository_url);
         }
 
 	if (! defined $repository) {
 	    $feedback .=
-		"The repository value \"$repository_url\" is invalid.\n" .
+		"The repository value set for \"$repository_name\" is invalid.\n" .
 		"Please correct this value in your codestriker.conf file, " .
 		"and try again.\n";
 	}
@@ -195,8 +193,10 @@ sub process($$$) {
 	if ($rc == $Codestriker::DIFF_TOO_BIG) {
 	    $feedback .= "Generated diff file is too big.\n";
 	} elsif ($rc == $Codestriker::UNSUPPORTED_OPERATION) {
-	    $feedback .= "Repository \"" . $repository->toString() .
+	    $feedback .= "Repository \"" . $repository_name .
 		"\" does not support tag retrieval, you have to use the text file upload.\n";
+	} elsif ($rc != $Codestriker::OK) {
+	    $feedback .= "Unexpected error $rc retrieving diff text.\n";
 	}
 
 	# Seek to the beginning of the temporary file so it can be parsed.

@@ -3,6 +3,14 @@
 
 Version 1.9.2
 
+* Created a new optional configuration parameter $repository_name_map
+  in codestriker.conf.  This allows for a user-defined repository name
+  to be displayed in the codestriker UI, rather than the full
+  repository URL.  This can be useful for hiding potentially sensitive
+  username/password information that might be a part of the repository
+  URL.  See the codestriker.conf file for more information.
+  Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
+
 * Fixed problem with Subversion repositories on Win32, where
   Codestriker was unable to launch the svn program.
 
