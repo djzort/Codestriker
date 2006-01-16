@@ -102,12 +102,13 @@ sub process($$$) {
     $error_vars->{'topic_title'} = $topic_title;
     $error_vars->{'bug_ids'} = $bug_ids;
     $error_vars->{'default_repository'} = $repository_name;
-    $error_vars->{'repositories'} = \@Codestriker::valid_repositories;
+    $error_vars->{'repositories'} = \@Codestriker::valid_repository_names;
     $error_vars->{'start_tag'} = $start_tag;
     $error_vars->{'end_tag'} = $end_tag;
     $error_vars->{'module'} = $module;
     $error_vars->{'obsoletes'} = $obsoletes;
     $error_vars->{'default_to_head'} = $default_to_head;
+    $error_vars->{'default_projectid'} = $projectid;
 
     my $repository = undef;
     my $repository_url = undef;

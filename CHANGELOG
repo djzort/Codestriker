@@ -11,6 +11,11 @@ Version 1.9.2
   URL.  See the codestriker.conf file for more information.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* If there was an error creating a topic, the selected project name
+  was not retained when the create topic screen was redisplayed.  This
+  has now been fixed.
+  Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
+
 * Fixed problem with Subversion repositories on Win32, where
   Codestriker was unable to launch the svn program.
 
