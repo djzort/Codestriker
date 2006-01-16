@@ -294,8 +294,8 @@ sub send_topic_changed_email {
         my $cc = "";
 
         # Send off the email to the revelant parties.
-        $self->_send_topic_email($topic, 0,$change_event_name , 1, $from, 
-				 $to, $cc, $bcc,$changes);
+        return $self->_send_topic_email($topic, 0, $change_event_name , 1,
+					$from, $to, $cc, $bcc, $changes);
     }
 }
 
@@ -425,7 +425,8 @@ sub _send_topic_email {
         $notes;
 
     # Send the email notification out.
-    $self->doit($new, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
+    return $self->doit($new, $topic->{topicid}, $from, $to, $cc, $bcc,
+		       $subject, $body);
 }
 
 # Send an email with the specified data.  Return a non-empty message if the

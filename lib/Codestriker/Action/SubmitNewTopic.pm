@@ -322,7 +322,7 @@ sub process($$$) {
     
     # Tell all of the topic listener classes that a topic has 
     # just been created.
-    Codestriker::TopicListeners::Manager::topic_create($topic);
+    $feedback = Codestriker::TopicListeners::Manager::topic_create($topic);
                       
     # Obtain a URL builder object and determine the URL to the topic.
     my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
@@ -336,6 +336,7 @@ sub process($$$) {
     $vars->{'topic_url'} = $topic_url;
     $vars->{'reviewers'} = $reviewers;
     $vars->{'cc'} = (defined $cc) ? $cc : "";
+    $vars->{'feedback'} = $feedback;
 
     my $template = Codestriker::Http::Template->new("submitnewtopic");
     $template->process($vars);

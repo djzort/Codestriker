@@ -20,6 +20,9 @@ Version 1.9.2
   will correctly display in the AJAX'ed window.  An example here is if
   $mailhost is incorrectly configured.
 
+* If there is an email problem while creating a topic, the error
+  message is now correctly displayed to the end-user.
+
 * Fixed problem with Subversion repositories on Win32, where
   Codestriker was unable to launch the svn program.
 
