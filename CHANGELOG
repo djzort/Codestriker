@@ -16,6 +16,10 @@ Version 1.9.2
   has now been fixed.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* If there is a problem when a comment is created, the error message
+  will correctly display in the AJAX'ed window.  An example here is if
+  $mailhost is incorrectly configured.
+
 * Fixed problem with Subversion repositories on Win32, where
   Codestriker was unable to launch the svn program.
 

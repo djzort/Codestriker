@@ -11,6 +11,7 @@ package Codestriker::Action::SubmitNewComment;
 
 use strict;
 
+use HTML::Entities ();
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
 use Codestriker::Model::Topic;
@@ -72,17 +73,18 @@ sub process($$$) {
     # Tell the listener classes that a comment has just been created.
     my $listener_response = 
     	Codestriker::TopicListeners::Manager::comment_create($topic, $comment);
-    if ( $listener_response ne '') {
-	$http_response->error($listener_response);
-    }
 
     if (defined $format && $format eq "xml") {
+	my $response = $listener_response ne '' ? $listener_response : 'OK';
+
 	print $query->header(-content_type=>'text/xml');
 	print "<?xml version=\"1.0\" encoding=\"UTF-8\" " .
 	            "standalone=\"yes\"?>\n";
 	print "<response><method>submitnewcomment</method>" .
-	    "<result>OK</result></response>\n";
+	    "<result>" . HTML::Entities::encode($response) .
+	    "</result></response>\n";
     } else {
+	$http_response->error($listener_response) if $listener_response ne '';
 	# Display a simple screen indicating that the comment has been
 	# registered.  Clicking the Close button simply dismisses the
 	# edit popup.  Leaving it # up will ensure the next editing

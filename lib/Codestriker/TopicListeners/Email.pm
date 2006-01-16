@@ -73,10 +73,8 @@ sub topic_create($$) {
         "The topic was created with the following files:\n\n" .
         join("\n",@filenames);
 
-    $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc, $bcc,
-			     $notes);
-
-    return '';
+    return $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc,
+				    $bcc, $notes);
 }
 
 sub topic_changed($$$$) {
@@ -157,9 +155,9 @@ sub topic_changed($$$$) {
     my @to_list = keys( %handled_addresses );
 
     if ( @to_list ) {
-        $self->send_topic_changed_email($user_that_made_the_change, 
-                    $topic_orig, $topic,@to_list);
-	}
+        return $self->send_topic_changed_email($user_that_made_the_change, 
+					       $topic_orig, $topic,@to_list);
+    }
 
     return '';
 }
@@ -396,11 +394,9 @@ sub comment_create($$$) {
     if ( $Codestriker::email_send_options->{comments_sent_to_topic_author} || 
          $comment->{cc} ne "")
     {
-	if (!$self->doit(0, $comment->{topicid}, $from, $to,
-			join(', ',@cc_recipients), $bcc,
-			$subject, $body)) {
-	    return "Failed to send topic creation email";
-        }
+	return $self->doit(0, $comment->{topicid}, $from, $to,
+			   join(', ',@cc_recipients), $bcc,
+			   $subject, $body);
     }
     
     return '';    
@@ -432,18 +428,18 @@ sub _send_topic_email {
     $self->doit($new, $topic->{topicid}, $from, $to, $cc, $bcc, $subject, $body);
 }
 
-# Send an email with the specified data.  Return false if the mail can't be
-# successfully delivered, true otherwise.
+# Send an email with the specified data.  Return a non-empty message if the
+# mail can't be successfully delivered, empty string otherwise.
 sub doit($$$$$$$$$) {
     my ($type, $new, $topicid, $from, $to, $cc, $bcc, $subject, $body) = @_;
 
-    return 1 if ($DEVNULL_EMAIL);
+    return '' if ($DEVNULL_EMAIL);
     
     my $smtp = Net::SMTP->new($Codestriker::mailhost);
-    defined $smtp || die "Unable to connect to mail server: $!";
+    defined $smtp || return "Unable to connect to mail server: $!";
 
     $smtp->mail($from);
-    $smtp->ok() || die "Couldn't set sender to \"$from\" $!, " .
+    $smtp->ok() || return "Couldn't set sender to \"$from\" $!, " .
 	$smtp->message();
 
     # $to has to be defined.
@@ -454,7 +450,7 @@ sub doit($$$$$$$$$) {
     for (my $i = 0; $i <= $#receiver; $i++) {
         if ($receiver[$i] ne "") {
 	$smtp->recipient($receiver[$i]);
-	$smtp->ok() || die "Couldn't send email to \"$receiver[$i]\" $!, " .
+	$smtp->ok() || return "Couldn't send email to \"$receiver[$i]\" $!, " .
 	    $smtp->message();
         } else {
             # Can't track down why, but sometimes an empty email address
@@ -486,12 +482,12 @@ sub doit($$$$$$$$$) {
     $smtp->datasend("\n");
     $smtp->datasend($body);
     $smtp->dataend();
-    $smtp->ok() || die "Couldn't send email $!, " . smtp->message();
+    $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
 
     $smtp->quit();
-    $smtp->ok() || die "Couldn't send email $!, " . smtp->message();
+    $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
 
-    return 1;
+    return '';
 }
 
 1;
