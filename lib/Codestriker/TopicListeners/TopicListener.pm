@@ -19,6 +19,16 @@ sub new {
     return bless $self, $type;
 }
 
+sub topic_pre_create($$) { 
+    my ($self, $user, $topic_title, $topic_description, $bug_ids,
+	$reviewers, $cc, $repository_url, $projectid) = @_;
+    
+    # Default version of function that does nothing, and allowed the
+    # event to continue.
+
+    return '';    
+}
+
 sub topic_create($$) { 
     my ($self, $user, $topic) = @_;
     

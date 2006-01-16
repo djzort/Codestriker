@@ -26,6 +26,27 @@ sub new {
     return bless $self, $type;
 }
 
+# Check that the nominated bugids exist in the bug database.
+sub topic_pre_create($$) { 
+    my ($self, $user, $topic_title, $topic_description, $bug_ids,
+	$reviewers, $cc, $repository_url, $projectid) = @_;
+
+    my $feedback = '';
+    if ($bug_ids ne '') {
+	my @bug_ids = split /, /, $bug_ids;
+	my $bug_db_connection =
+	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
+	foreach my $bug_id (@bug_ids) {
+	    if (!$bug_db_connection->bugid_exists($bug_id)) {
+		$feedback .= "Bug ID $bug_id does not exist.\n";
+	    }
+	}
+	$bug_db_connection->release_connection();
+    }
+
+    return $feedback;    
+}
+
 sub topic_create($$) { 
     my ($self, $topic) = @_;
 

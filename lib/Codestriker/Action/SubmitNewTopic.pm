@@ -82,7 +82,7 @@ sub process($$$) {
 	$feedback .= "Topic text specified using tags and uploaded file.\n";
 	$feedback .= "Please choose one topic text method, and try again.\n";
     }
-    
+
     $http_response->generate_header(topic_title=>"Create New Topic",
 				    email=>$email, reviewers=>$reviewers,
 				    cc=>$cc, repository=>$repository_name,
@@ -149,6 +149,12 @@ sub process($$$) {
     if ($found_project == 0) {
         $projectid = $projects[0]->{id};
     }
+
+    # Make sure all the conditions from the topic listeners are satisified.
+    $feedback .= Codestriker::TopicListeners::Manager::topic_pre_create
+	($email, $topic_title, $topic_description,
+	 $bug_ids, $reviewers, $cc,
+	 $repository_url, $projectid);
 
     # If there is a problem with the input, redirect to the create screen
     # with the message.

@@ -11,6 +11,9 @@ Version 1.9.2
   URL.  See the codestriker.conf file for more information.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* Creating a topic with an invalid bug ID is now shown as an error to
+  the user on the create topic screen.
+
 * If there was an error creating a topic, the selected project name
   was not retained when the create topic screen was redisplayed.  This
   has now been fixed.

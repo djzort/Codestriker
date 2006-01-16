@@ -17,6 +17,23 @@ use Codestriker::TopicListeners::HistoryRecorder;
 
 my @topic_listeners;
 
+sub topic_pre_create { 
+    _create_listeners();
+    
+    # Call all of the topic listeners that are created. If any of the
+    # topic listeners return a non-empty string, it is treated as a 
+    # request to reject the creation of the new topic.  Display the 
+    # returned string as the user error message.
+    my $returnValue = '';
+    
+    foreach my $listener (@topic_listeners) {
+       $returnValue .= $listener->topic_pre_create(@_);
+       last if length($returnValue);
+    }
+    
+    return $returnValue;
+}
+
 sub topic_create { 
     _create_listeners();
     

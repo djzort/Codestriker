@@ -34,6 +34,16 @@ sub release_connection($) {
     $self->{dbh}->disconnect;
 }
 
+# Return true if the specified bugid exists in the bug database,
+# false otherwise.
+sub bugid_exists($$) {
+    my ($self, $bugid) = @_;
+
+    # TODO: update this with the appropriate SQL statement.
+    return 1;
+}
+
+
 # Method for updating the bug with information that a code review has been
 # created/closed/committed against this bug.
 sub update_bug($$$$) {
