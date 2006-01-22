@@ -39,8 +39,8 @@ sub release_connection($) {
 sub bugid_exists($$) {
     my ($self, $bugid) = @_;
 
-    # TODO: update this with the appropriate SQL statement.
-    return 1;
+    return $self->{dbh}->selectrow_array('SELECT COUNT(*) FROM flyspray_tasks ' .
+					 'WHERE task_id = ?', {}, $bugid) != 0;
 }
 
 
