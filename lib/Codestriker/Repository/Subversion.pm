@@ -163,14 +163,15 @@ sub getDiff ($$$$$) {
     $read_stderr_fh = new FileHandle;
 
     @args = ();
-    push @args, 'cat';
+    push @args, 'diff';
     push @args, '--non-interactive';
     push @args, '--no-auth-cache';
     push @args, @{ $self->{userCmdLine} };
     push @args, '-r';
-    push @args, $start_tag . ':' . $end_tag,
+    push @args, $start_tag . ':' . $end_tag;
     push @args, '--old';
-    push @args, $self->{repository_url} . $module_name;
+    push @args, $self->{repository_url};
+    push @args, $module_name;
 
     $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 		 $Codestriker::svn, @args);
