@@ -21,7 +21,7 @@ my @filenames = <testtopictexts/*.txt>;
 
 foreach my $filename (@filenames)
 {
-    my $repo = '/home/sits/cvs';
+    my $repo = 'Local CVS';
 
     $filename =~ /\/([a-zA-Z]+)/;
 
@@ -29,7 +29,7 @@ foreach my $filename (@filenames)
 
     if ($repo_type eq "cvs")
     {
-        $repo = '/home/sits/cvs';
+        $repo = 'Local CVS';
     } 
     elsif ($repo_type eq "perforce")
     {
