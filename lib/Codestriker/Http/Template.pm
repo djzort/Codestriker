@@ -74,7 +74,8 @@ sub process($$) {
     $vars->{'projects_enabled'} = Codestriker->projects_disabled() ? 0 : 1;
 
     # Indicate if bug db integration is enabled.
-    $vars->{'bugdb_enabled'} = ($Codestriker::bug_db ne "") ? 1 : 0;
+    $vars->{'bugdb_enabled'} =
+	(defined $Codestriker::bug_db && $Codestriker::bug_db ne "") ? 1 : 0;
 
     # Indicate if antispam_email is enabled.
     $vars->{'antispam_email'} = $Codestriker::antispam_email;

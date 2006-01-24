@@ -22,17 +22,20 @@ sub new($$) {
     my $self = {};
     $self->{query} = $query;
 
-    # Determine what prefix is required wgen using relative URLs.
+    # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
     # else.
     my $browser = $ENV{'HTTP_USER_AGENT'};
-    $self->{url_prefix} = ($browser =~ m%^Mozilla/(\d)% && $1 <= 4) ?
-	$query->url(-relative=>1) : "";
+    $self->{url_prefix} = "";
+    if (defined $browser && $browser =~ m%^Mozilla/(\d)% && $1 <= 4) {
+	$self->{url_prefix} = $query->url(-relative=>1);
+    }
 
     # Check if the HTML files are accessible vi another URL (required for
     # sourceforge deployment).  Check $Codestriker::codestriker_css.
     my $htmlurl;
-    if ($Codestriker::codestriker_css ne "") {
+    if (defined $Codestriker::codestriker_css &&
+	$Codestriker::codestriker_css ne "") {
 	$htmlurl = $Codestriker::codestriker_css;
 	$htmlurl =~ s/\/codestriker\.css//;
     }
