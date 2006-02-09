@@ -27,7 +27,7 @@ sub filter {
 
     # If there is a link to a bug tracking system, automagically modify all
     # text of the form "[Bb]ug \d+" to a hyperlink for that bug record.
-    if ($Codestriker::bugtracker ne "") {
+    if (defined $Codestriker::bugtracker && $Codestriker::bugtracker ne "") {
 	$result =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${Codestriker::bugtracker}$3">$1$2$4<\/A>/mg;
     }
     
