@@ -213,7 +213,8 @@ sub generate_header {
 
     # Generate the URL to the codestriker CSS file.
     my $codestriker_css;
-    if ($Codestriker::codestriker_css ne "") {
+    if (defined $Codestriker::codestriker_css &&
+	$Codestriker::codestriker_css ne "") {
 	$codestriker_css = $Codestriker::codestriker_css;
     } else {
 	$codestriker_css = $query->url();
