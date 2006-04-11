@@ -11,6 +11,9 @@ Version 1.9.2
   URL.  See the codestriker.conf file for more information.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* Update CVS diff parser to handle rdiffs which have new/removed files
+  in them.
+
 * Creating a topic with an invalid bug ID is now shown as an error to
   the user on the create topic screen.
 

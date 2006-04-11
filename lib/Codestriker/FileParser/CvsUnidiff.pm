@@ -134,6 +134,9 @@ sub parse ($$$) {
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
+	} elsif ($line =~ /^\-\-\- nul/o) {
+	    # File has been added.
+	    $revision = $Codestriker::ADDED_REVISION;
 	} elsif ($line =~ /^\-\-\- (.*):(\d+\.[\d\.]+)\t/) {
 	    # This matchs a cvs rdiff file, extract the filename and revision.
 	    # It is assumed to match the repository specified, although there
