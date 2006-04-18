@@ -67,6 +67,10 @@ sub get ($$) {
 	# Perforce repository.
 	return Codestriker::Repository::Perforce->new($1, $2, $3, $4);
 
+    } elsif ($repository =~ /^\s*perforce:(.*)@(.*):(.*)\s*$/i) {
+	# Perforce repository with no password.
+	return Codestriker::Repository::Perforce->new($1, '', $2, $3);
+
     } elsif ($repository =~ /^\s*vss:(.*);(.*);(.*)$/i) {
 	# Visual Source Safe repository spec with SSDIR, user and password.
 	return Codestriker::Repository::Vss->new($2,$3,$1);

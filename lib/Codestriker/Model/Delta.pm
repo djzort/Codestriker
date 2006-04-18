@@ -148,9 +148,9 @@ sub get_deltas($$$) {
         $results[0]->{only_delta_in_file} = 1;
         for (my $i = 1; $i < scalar(@results); $i++) {
             if ($results[$i-1]->{filenumber} == $results[$i]->{filenumber}) {
-                # If the previous file has the same filenumber, then we know that
-                # neither the current file nor the previous file are the only
-                # deltas for the file.
+                # If the previous file has the same filenumber, then
+                # we know that neither the current file nor the
+                # previous file are the only deltas for the file.
                 $results[$i]->{only_delta_in_file} = 0;
                 $results[$i-1]->{only_delta_in_file} = 0;
             } else {

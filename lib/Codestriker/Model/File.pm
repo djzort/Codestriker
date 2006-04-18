@@ -9,9 +9,8 @@
 
 package Codestriker::Model::File;
 
-use Codestriker::Model::Delta;
-
 use strict;
+use Codestriker::Model::Delta;
 
 # Create the appropriate delta rows for this review.  Note this gets called
 # from Topic::create(), which controls the transaction commit/rollback.
@@ -105,7 +104,8 @@ sub get_filetable($$$$$$$) {
     # Setup the appropriate statement and execute it.
     my $select_file =
 	$dbh->prepare_cached('SELECT filename, revision, topicoffset, ' .
-			     'binaryfile, sequence FROM topicfile WHERE topicid = ? ' .
+			     'binaryfile, sequence FROM topicfile ' .
+			     'WHERE topicid = ? ' .
 			     'ORDER BY sequence');
     my $success = defined $select_file;
     $success &&= $select_file->execute($topicid);

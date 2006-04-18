@@ -57,7 +57,7 @@ sub get_connection {
 
 # Method for retrieving the list of current tables attached to the database.
 # For oracle, $dbh->tables doesn't work, need to retrieve data from the
-# user_tabels table.
+# user_tables table.
 sub get_tables() {
     my $self = shift;
 

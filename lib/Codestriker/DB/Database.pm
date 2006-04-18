@@ -17,6 +17,7 @@ use Codestriker::DB::PostgreSQL;
 use Codestriker::DB::MySQL;
 use Codestriker::DB::Oracle;
 use Codestriker::DB::ODBC;
+use Codestriker::DB::SQLite;
 
 # Print out creation statements before executing them if this is true.
 my $_DEBUG = 0;
@@ -41,6 +42,8 @@ sub get_database {
 	return Codestriker::DB::ODBC->new();
     } elsif ($Codestriker::db =~ /^DBI:Oracle/i) {
 	return Codestriker::DB::Oracle->new();
+    } elsif ($Codestriker::db =~ /^DBI:SQLite/i) {
+	return Codestriker::DB::SQLite->new();
     } else {
 	die "Unsupported database type: $Codestriker::db\n";
     }

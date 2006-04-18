@@ -1,3 +1,7 @@
+Starting perforce daemon as root:
+
+ p4d -d -r /var/db/perforce
+
 drop table commentdata;
 drop table commentstate;
 drop table commentstatehistory;

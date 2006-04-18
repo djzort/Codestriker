@@ -495,10 +495,10 @@ $use_compression = 0;
 
      # The next example is for a Perforce repository.  After the
      # leading :perforce identifier, the next two components are the
-     # Perforce user and client parameters.  The last two parameters
+     # Perforce user and password parameters.  The last two parameters
      # after the '@' symbol represent the host and port number of
      # the Perforce server.
-     'perforce:sits:sits2@localhost:1666',
+     'perforce:sits:password@localhost:1666',
 
      # The final example is a ClearCase repository, where the path is
      # the location of a shared snapshot view.  From this view, it

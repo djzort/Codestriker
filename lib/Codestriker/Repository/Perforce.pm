@@ -11,16 +11,18 @@ package Codestriker::Repository::Perforce;
 
 use strict;
 
-# Constructor, which takes as a parameter the client, hostname and port.
+# Constructor, which takes as a parameter the password, hostname and port.
 sub new ($$$$$) {
-    my ($type, $user, $client, $hostname, $port) = @_;
+    my ($type, $user, $password, $hostname, $port) = @_;
 
     my $self = {};
     $self->{user} = $user;
-    $self->{client} = $client;
+    $self->{password} = $password;
     $self->{hostname} = $hostname;
     $self->{port} = $port;
-    $self->{root} = "perforce:${user}:${client}" . "@" . "${hostname}:${port}";
+    $self->{root} = "perforce:${user}" .
+	(defined $password && $password ne '' ? ":${password}" : '') .
+	"@" . "${hostname}:${port}";
     bless $self, $type;
 }
 
@@ -30,9 +32,12 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Open a pipe to the local CVS repository.
+    my $password = $self->{password};
     open(P4, "\"$Codestriker::p4\"" .
 	 " -p " . $self->{hostname} . ':' . $self->{port} .
-	 " -u " . $self->{user} . " -c " . $self->{client} .
+	 " -u " . $self->{user} .
+	 (defined $password && $password ne '' ?
+	  " -P " . $self->{password} : '') .
 	 " print -q \"$filename\"" . "#" . "$revision |")
 	|| die "Can't retrieve data using p4: $!";
 

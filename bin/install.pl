@@ -22,6 +22,7 @@
 
 use strict;
 use Config;
+use lib '../lib';
 
 # Now load up the required modules.  Do this is a lazy fashion so that Perl
 # doesn't try to grab this during compile time, otherwise nasty-looking
@@ -29,7 +30,6 @@ use Config;
 eval("use Cwd");
 eval("use CPAN");
 eval("use File::Path");
-eval("use lib '../lib'");
 eval("use Codestriker");
 eval("use Codestriker::DB::Database");
 eval("use Codestriker::DB::Column");
@@ -579,7 +579,6 @@ sub create_commentstate ($$$$)
     my $timestamp = Codestriker->get_timestamp(time);
     $insert->execute($topicid, $fileline, $filenumber, $filenew,
 		     $state, $version, $timestamp, $timestamp);
-    $insert->finish();
     print "Create commentstate\n";
     
     # Find out what the commentstateid is, and update the
@@ -751,7 +750,6 @@ if ($old_comment_table) {
 	print " Updating comment topicid $topicid offset $line...\n";
 	$insert->execute($topicoffset_map{"$topicid|$line"},
 			 $commentfield, $author, $creation_ts);
-	$insert->finish();
     }
     $stmt->finish();
 

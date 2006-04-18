@@ -11,6 +11,16 @@ Version 1.9.2
   URL.  See the codestriker.conf file for more information.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* Modified the way Perforce retrieves files from the depot, as servers
+  set with a security level of 2 or above were not receiving password
+  information.  This has been addressed by modifying the command line
+  to explictly pass in the password rather than the client workspace
+  name, which is ignored for these security levels.  The repository
+  configuration for Perforce has also been changed to use the password
+  in place of the client workspace name.  Perforce users should update
+  their configuration files appropriately.  Submitted by 
+  J Dickon Glanville <jdglanville@users.sourceforge.net>.
+
 * Update CVS diff parser to handle rdiffs which have new/removed files
   in them.
 
