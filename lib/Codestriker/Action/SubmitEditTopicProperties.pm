@@ -81,10 +81,13 @@ sub process($$$) {
     }
 
     # Make sure the repository value is correct.
-    my $repository_url = $Codestriker::repository_url_map->{$repository_name};
-    if ($repository_url eq "") {
-	$feedback .= "Repository name \"$repository_name\" is unknown.\n" .
-	    "Update your codestriker.conf file with this entry.\n";
+    my $repository_url = '';
+    if (defined $repository_name && $repository_name ne '') {
+	$repository_url = $Codestriker::repository_url_map->{$repository_name};
+	if ($repository_url eq "") {
+	    $feedback .= "Repository name \"$repository_name\" is unknown.\n" .
+		"Update your codestriker.conf file with this entry.\n";
+	}
     }
 
     if ($feedback eq "") {

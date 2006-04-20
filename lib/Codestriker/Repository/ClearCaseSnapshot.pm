@@ -86,7 +86,7 @@ sub retrieve ($$$\$) {
     }
 
     # If there was no error, this will be undefined
-    return $error_msg
+    return $error_msg;
 }
 
 # Retrieve the "root" of this repository.
