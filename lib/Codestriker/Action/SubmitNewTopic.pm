@@ -186,6 +186,8 @@ sub process($$$) {
 	    $temp_topic_fh = tempfile();
 	    $temp_error_fh = tempfile();
 	}
+#	binmode $temp_topic_fh, ':utf8';
+#	binmode $temp_error_fh, ':utf8';
 	
 	my $rc = $repository->getDiff($start_tag, $end_tag, $module,
 				      $temp_topic_fh, $temp_error_fh,

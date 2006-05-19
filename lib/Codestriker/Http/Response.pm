@@ -173,12 +173,12 @@ sub generate_header {
 	if ($cache) {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -content_encoding=>'x-gzip',
-				 -charset=>"ISO-8859-1",
+				 -charset=>"UTF-8",
 				 -vary=>'Accept-Encoding');
 	} else {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -expires=>'+1d',
-				 -charset=>"ISO-8859-1",
+				 -charset=>"UTF-8",
 				 -cache_control=>'no-store',
 				 -pragma=>'no-cache',
 				 -content_encoding=>'x-gzip',
@@ -195,11 +195,11 @@ sub generate_header {
     } else {
 	if ($cache) {
 	    print $query->header(-cookie=>$cookie_obj,
-					 -charset=>"ISO-8859-1");
+					 -charset=>"UTF-8");
 	} else {
 	    print $query->header(-cookie=>$cookie_obj,
 				 -expires=>'+1d',
-				 -charset=>"ISO-8859-1",
+				 -charset=>"UTF-8",
 				 -cache_control=>'no-store',
 				 -pragma=>'no-cache');
 	}

@@ -80,6 +80,9 @@ if ($windows == 0) {
     $ENV{'PATH'} = '';
 }
 
+# Make sure the STDOUT encoding is set to UTF8.
+binmode STDOUT, ':utf8';
+
 # Prototypes of subroutines used in this module.
 sub main();
 

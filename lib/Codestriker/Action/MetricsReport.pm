@@ -61,7 +61,7 @@ sub process_download($$$) {
 
     my $query = $http_response->get_query();
     print $query->header(-type=>'text/plain',
-			 -charset=>"ISO-8859-1",
+			 -charset=>"UTF-8",
 			 -attachment=>"metrics.csv",
 			 -filename=>"metrics.csv");
 

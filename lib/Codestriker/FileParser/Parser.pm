@@ -49,6 +49,7 @@ sub parse ($$$$$) {
     else {
 	$tmpfh = tempfile();
     }
+#    binmode $tmpfh, ':utf8';
     
     if (!$tmpfh) {
 	die "Unable to create temporary parse file: $!";

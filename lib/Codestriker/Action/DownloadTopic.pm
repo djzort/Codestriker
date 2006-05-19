@@ -31,7 +31,7 @@ sub process($$$) {
     # Dump the raw topic data as text/plain.
     print $query->header(-type=>'text/plain',
 			 -content_type=>'text/plain',
-			 -charset=>"ISO-8859-1",
+			 -charset=>"UTF-8",
 			 -attachment=>"topic${topicid}.txt",
 			 -filename=>"topic${topicid}.txt",
 			 -pragma=>"Cache",
