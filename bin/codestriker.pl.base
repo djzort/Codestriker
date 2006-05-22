@@ -12,7 +12,7 @@
 # This is the top level package which receives all HTTP requests, and
 # delegates it to the appropriate Action module.
 
-require 5.000;
+require 5.8.0;
 
 # Set this to the location of the Codestriker libraries on your system.
 # Ideally, this should be done in the apache configs, but trying to do this
@@ -81,7 +81,7 @@ if ($windows == 0) {
 }
 
 # Make sure the STDOUT encoding is set to UTF8.
-# binmode STDOUT, ':utf8';
+binmode STDOUT, ':utf8';
 
 # Prototypes of subroutines used in this module.
 sub main();
