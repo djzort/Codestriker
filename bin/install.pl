@@ -73,6 +73,10 @@ my $modules = [
         name => 'Net::SMTP', 
         version => '0' 
     }, 
+    {
+	name => 'MIME::QuotedPrint',
+	version => '0'
+    },
     { 
         name => 'DBI', 
         version => '1.13' 

@@ -81,7 +81,7 @@ if ($windows == 0) {
 }
 
 # Make sure the STDOUT encoding is set to UTF8.
-binmode STDOUT, ':utf8';
+# binmode STDOUT, ':utf8';
 
 # Prototypes of subroutines used in this module.
 sub main();

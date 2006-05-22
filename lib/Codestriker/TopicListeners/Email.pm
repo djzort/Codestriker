@@ -12,9 +12,11 @@ use strict;
 
 package Codestriker::TopicListeners::Email;
 
-use Codestriker::TopicListeners::TopicListener;
+use MIME::QuotedPrint qw(encode_qp);
 use Net::SMTP;
 use Sys::Hostname;
+
+use Codestriker::TopicListeners::TopicListener;
 
 # Separator to use in email.
 my $EMAIL_HR = "--------------------------------------------------------------";
@@ -477,11 +479,23 @@ sub doit($$$$$$$$$) {
 	$smtp->datasend("In-Reply-To: $message_id\n");
     }
 
-    $smtp->datasend("Subject: $subject\n");
+    # Make sure the subject is appropriately encoded to handle UTF-8
+    # characters.
+    # TODO: use Encode qw(encode);
+    # TODO: should be encode_qp(encode("UTF-8", $subject), '')
+    $smtp->datasend('Subject: =?UTF-8?Q?' . encode_qp($subject, '') .
+		    '?=' . "\n");
+
+    # Set the content type to be text/plain with UTF8 encoding, to handle
+    # unicode characters.
+    $smtp->datasend("Content-Type: text/plain; charset=\"utf-8\"\n");
+    $smtp->datasend("Content-Transfer-Encoding: quoted-printable\n");
 
     # Insert a blank line for the body.
     $smtp->datasend("\n");
-    $smtp->datasend($body);
+
+    # TODO: should be $smtp->datasend(encode_qp(encode("UTF-8", $body)));
+    $smtp->datasend(encode_qp($body));
     $smtp->dataend();
     $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
 
