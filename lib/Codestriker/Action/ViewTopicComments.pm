@@ -10,6 +10,7 @@
 package Codestriker::Action::ViewTopicComments;
 
 use strict;
+
 use Codestriker::Http::Template;
 use Codestriker::Http::Render;
 use Codestriker::Model::Comment;

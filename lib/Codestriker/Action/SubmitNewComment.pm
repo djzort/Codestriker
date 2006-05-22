@@ -105,7 +105,7 @@ sub process($$$) {
 	my $vars = {};
 	$vars->{'view_topic_url'} = $view_topic_url;
 	$vars->{'view_comments_url'} = $view_comments_url;
-	$vars->{'comment'} = $comments;
+	$vars->{'comment'} = $comment->{data};
 	
 	my $template = Codestriker::Http::Template->new("submitnewcomment");
 	$template->process($vars);

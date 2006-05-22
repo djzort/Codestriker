@@ -10,6 +10,7 @@
 package Codestriker::Model::Topic;
 
 use strict;
+use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
 use Codestriker::Model::File;
@@ -202,6 +203,11 @@ sub create($$$$$$$$$$$$) {
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
+    # Mark the user fields as UTF8.
+    $self->{title} = decode_utf8($title);
+    $self->{description} = decode_utf8($description);
+    $self->{document} = decode_utf8($document);
+
     die $dbh->errstr unless $success;
 }
 
@@ -321,12 +327,12 @@ sub read($$) {
     # successful.
     if ($success) {
 	$self->{author} = $author;
-	$self->{title} = $title;
+	$self->{title} = decode_utf8($title);
 	$self->{bug_ids} = join ', ', @bugs;
 	$self->{reviewers} = join ', ', @reviewers;
 	$self->{cc} = join ', ', @cc;
-	$self->{description} = $description;
-	$self->{document} = $document;
+	$self->{description} = decode_utf8($description);
+	$self->{document} = decode_utf8($document);
 	$self->{creation_ts} = $creationtime;
 	$self->{modified_ts} = $modifiedtime;
 	$self->{topic_state} = $Codestriker::topic_states[$state];
@@ -634,11 +640,11 @@ sub update($$$$$$$$$$) {
     }
 
     # Update the topic object's properties.
-    $self->{title} = $new_title;
+    $self->{title} = decode_utf8($new_title);
     $self->{author} = $new_author;
     $self->{repository} = $new_repository;
     $self->{project_id} = $new_projectid;
-    $self->{description} = $new_description;
+    $self->{description} = decode_utf8($new_description);
     $self->{modified_ts} = $modified_ts;
     $self->{topic_state} = $new_state;
     $self->{topic_state_id} = $new_stateid;

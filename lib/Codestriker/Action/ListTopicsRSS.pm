@@ -83,8 +83,8 @@ sub process($$$) {
 
 	my $comment_link = $url_builder->view_comments_url($topic->{topicid});
 
-	my $description = $topic->{description};
-	my $title        = $topic->{title};
+	my $description = decode_utf8($topic->{description});
+	my $title = decode_utf8($topic->{title});
 
         # Change to 1 to send out the list of files changes in the RSS description.
         if (0) {
@@ -110,7 +110,7 @@ sub process($$$) {
             description=>$description,
             author=> Codestriker->filter_email($topic->{author}),
             pubDate=>Codestriker->format_short_timestamp($topic->{creation_ts}),
-            category=>$topic->{project_name},
+            category=>decode_utf8($topic->{project_name}),
             comments=>$comment_link
             );
 

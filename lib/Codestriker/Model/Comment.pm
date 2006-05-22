@@ -10,6 +10,7 @@
 package Codestriker::Model::Comment;
 
 use strict;
+use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
 
@@ -130,7 +131,7 @@ sub create {
     $self->{filenumber} = $filenumber;
     $self->{filenew} = $filenew;
     $self->{author} = $author;
-    $self->{data} = $data;
+    $self->{data} = decode_utf8($data);
     $self->{date} = $timestamp;
     $self->{version} = $version;
     $self->{db_creation_ts} = $creation_ts;
@@ -301,7 +302,7 @@ sub read_all_comments_for_topic($$) {
 	while (@data = $select_comment->fetchrow_array()) {
 	    my $comment = Codestriker::Model::Comment->new();
 	    $comment->{topicid} =  $topicid;            
-	    $comment->{data} = $data[0];
+	    $comment->{data} = decode_utf8($data[0]);
 	    $comment->{author} = $data[1];
 	    $comment->{fileline} = $data[2];
 	    $comment->{filenumber} = $data[3];

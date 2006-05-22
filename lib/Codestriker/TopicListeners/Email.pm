@@ -14,7 +14,9 @@ package Codestriker::TopicListeners::Email;
 
 use MIME::QuotedPrint qw(encode_qp);
 use Net::SMTP;
+use MIME::Base64;
 use Sys::Hostname;
+use Encode qw(encode);
 
 use Codestriker::TopicListeners::TopicListener;
 
@@ -481,9 +483,8 @@ sub doit($$$$$$$$$) {
 
     # Make sure the subject is appropriately encoded to handle UTF-8
     # characters.
-    # TODO: use Encode qw(encode);
-    # TODO: should be encode_qp(encode("UTF-8", $subject), '')
-    $smtp->datasend('Subject: =?UTF-8?Q?' . encode_qp($subject, '') .
+    $smtp->datasend('Subject: =?UTF-8?Q?' .
+		    encode_qp(encode("UTF-8", $subject), '') .
 		    '?=' . "\n");
 
     # Set the content type to be text/plain with UTF8 encoding, to handle
@@ -494,8 +495,9 @@ sub doit($$$$$$$$$) {
     # Insert a blank line for the body.
     $smtp->datasend("\n");
 
-    # TODO: should be $smtp->datasend(encode_qp(encode("UTF-8", $body)));
-    $smtp->datasend(encode_qp($body));
+    # Encode the mail body using quoted-printable to handle unicode
+    # characters.
+    $smtp->datasend(encode_qp(encode("UTF-8", $body)));
     $smtp->dataend();
     $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
 

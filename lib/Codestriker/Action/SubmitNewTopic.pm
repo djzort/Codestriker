@@ -10,6 +10,7 @@
 package Codestriker::Action::SubmitNewTopic;
 
 use strict;
+use Encode;
 
 use File::Temp qw/ tempfile /;
 use FileHandle;
@@ -339,7 +340,7 @@ sub process($$$) {
     # Indicate to the user that the topic has been created and an email has
     # been sent.
     my $vars = {};
-    $vars->{'topic_title'} = $topic_title;
+    $vars->{'topic_title'} = $topic->{title};
     $vars->{'email'} = $email;
     $vars->{'topic_url'} = $topic_url;
     $vars->{'reviewers'} = $reviewers;

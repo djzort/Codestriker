@@ -46,7 +46,10 @@ sub get_connection {
 
     # Not all versions of MySQL upport transactions.  Its easiest for now to
     # just enable AUTO_COMMIT.
-    return $self->_get_connection(1, 1);
+    my $dbh = $self->_get_connection(1, 1);
+    $dbh->do("SET NAMES 'utf8'");
+    $dbh->do("SET character_set_results='utf8'");
+    return $dbh;
 }
 
 # Return the mapping for a specific type.

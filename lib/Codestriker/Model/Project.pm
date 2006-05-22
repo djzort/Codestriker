@@ -10,6 +10,7 @@
 package Codestriker::Model::Project;
 
 use strict;
+use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
 
@@ -93,8 +94,8 @@ sub list($$) {
 	while (@data = $select->fetchrow_array()) {
 	    my $project = {};
 	    $project->{id} = $data[0];
-	    $project->{name} = $data[1];
-	    $project->{description} = $data[2];
+	    $project->{name} = decode_utf8($data[1]);
+	    $project->{description} = decode_utf8($data[2]);
 	    $project->{version} = $data[3];
 	    $project->{state} = _state_id_to_string($data[4]);
 	    if (!defined $state || $project->{state} eq $state)
@@ -135,8 +136,8 @@ sub read($$) {
     if ($success) {
 	# Populate return object.
 	$project->{id} = $id;
-	$project->{name} = $name;
-	$project->{description} = $description;
+	$project->{name} = decode_utf8($name);
+	$project->{description} = decode_utf8($description);
 	$project->{version} = $version;
 	$project->{state} = _state_id_to_string($state);
     }
