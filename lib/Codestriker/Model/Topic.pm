@@ -203,11 +203,6 @@ sub create($$$$$$$$$$$$) {
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
-    # Mark the user fields as UTF8.
-    $self->{title} = decode_utf8($title);
-    $self->{description} = decode_utf8($description);
-    $self->{document} = decode_utf8($document);
-
     die $dbh->errstr unless $success;
 }
 

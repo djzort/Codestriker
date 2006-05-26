@@ -131,7 +131,7 @@ sub create {
     $self->{filenumber} = $filenumber;
     $self->{filenew} = $filenew;
     $self->{author} = $author;
-    $self->{data} = decode_utf8($data);
+    $self->{data} = $data;
     $self->{date} = $timestamp;
     $self->{version} = $version;
     $self->{db_creation_ts} = $creation_ts;
@@ -308,7 +308,7 @@ sub read_all_comments_for_topic($$) {
 	    $comment->{filenumber} = $data[3];
 	    $comment->{filenew} = $data[4];
 	    $comment->{date} = Codestriker->format_timestamp($data[5]);
-	    $comment->{filename} = $data[6];
+	    $comment->{filename} = decode_utf8($data[6]);
 	    $comment->{version} = $data[7];
 	    $comment->{id} = $data[8];
 	    $comment->{db_creation_ts} = $data[9];

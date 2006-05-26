@@ -28,7 +28,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtrack
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.9.2-alpha-6";
+$Codestriker::VERSION = "1.9.2-unicode-unstable";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";
@@ -473,9 +473,18 @@ sub set_differences($$$$)
 
 # Return true if project support has been enabled.
 sub projects_disabled {
-    return ((defined $Codestriker::allow_projects &&
-	     $Codestriker::allow_projects == 0) ||
-	    $#Codestriker::project_states == -1);
+    if (defined $Codestriker::project_states) {
+	return $#Codestriker::project_states == -1;
+    } elsif (defined $Codestriker::allow_projects) {
+	# Support for older codestriker.conf files.
+	if ($Codestriker::allow_projects) {
+	    $Codestriker::project_states = ('Open');
+	}
+	return $Codestriker::allow_projects == 0;
+    } else {
+	# Don't support projects if none of the above are defined.
+	return 1;
+    }
 }
 
 # Return true if there is more than one state associated with a project.

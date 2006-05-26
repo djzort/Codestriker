@@ -10,7 +10,6 @@
 package Codestriker::Action::SubmitNewTopic;
 
 use strict;
-use Encode;
 
 use File::Temp qw/ tempfile /;
 use FileHandle;
@@ -187,8 +186,8 @@ sub process($$$) {
 	    $temp_topic_fh = tempfile();
 	    $temp_error_fh = tempfile();
 	}
-#	binmode $temp_topic_fh, ':utf8';
-#	binmode $temp_error_fh, ':utf8';
+	binmode $temp_topic_fh, ':utf8';
+	binmode $temp_error_fh, ':utf8';
 	
 	my $rc = $repository->getDiff($start_tag, $end_tag, $module,
 				      $temp_topic_fh, $temp_error_fh,
@@ -219,6 +218,7 @@ sub process($$$) {
     my @deltas = ();
     if ($feedback eq "") {
 	# Try to parse the topic text into its diff chunks.
+	binmode $fh, ':utf8';
 	@deltas =
 	    Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
 						   $topicid, $topic_file);

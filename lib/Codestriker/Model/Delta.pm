@@ -10,6 +10,7 @@
 package Codestriker::Model::Delta;
 
 use strict;
+use Encode qw(decode_utf8);
 
 # Create the appropriate delta rows for this review. This gets called
 # by File::get_deltas. It passes in the result of a sql query on the
@@ -19,13 +20,13 @@ sub new {
     my $self = {};
     bless $self;
     
-    $self->{filename} = $_[1];
+    $self->{filename} = decode_utf8($_[1]);
     $self->{revision} = $_[2];
     $self->{binary} = $_[3];
     $self->{old_linenumber} = $_[4];
     $self->{new_linenumber} = $_[5];
     $self->{text} = $_[6];
-    $self->{description} = (defined $_[7]) ? $_[7] : "";
+    $self->{description} = (defined $_[7]) ? decode_utf8($_[7]) : "";
     $self->{filenumber} = $_[8];
     $self->{repmatch} = $_[9];
     $self->{only_delta_in_file} = 0;
