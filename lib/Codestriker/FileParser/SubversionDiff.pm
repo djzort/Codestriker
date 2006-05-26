@@ -25,6 +25,7 @@ sub parse ($$$) {
     my $line = <$fh>;
     while (defined($line)) {
 	# Values associated with the diff.
+	my $entry_type;
 	my $revision;
 	my $filename = "";
 	my $old_linenumber = -1;
@@ -33,12 +34,13 @@ sub parse ($$$) {
 	my $diff = "";
 
 	# Skip whitespace.
-	while (defined($line) && $line =~ /^\s*$/) {
+	while (defined($line) && $line =~ /^\s*$/o) {
 	    $line = <$fh>;
 	}
 	return @result unless defined $line;
 
 	# For SVN diffs, the start of the diff block is the Index line.
+	# For SVN look diffs, the start of the diff block contains the change type.
 	# Also check for presence of property set blocks.
 	while ($line =~ /^Property changes on: .*$/o) {
 	    $line = <$fh>;
@@ -46,9 +48,12 @@ sub parse ($$$) {
 		$line =~ /^___________________________________________________________________$/o;
 	    
 	    # Keep reading until we either get to an Index: line, a property
-	    # block, or the end of file.
+	    # block, an Added/Deleted/Modified lines or the end of file.
 	    while (defined $line &&
 		   $line !~ /^Index:/o &&
+		   $line !~ /^Added:/o &&
+		   $line !~ /^Deleted:/o &&
+		   $line !~ /^Modified:/o &&
 		   $line !~ /^Property changes on:/o) {
 		$line = <$fh>;
 	    }
@@ -59,8 +64,10 @@ sub parse ($$$) {
 	    }
 	}
 
-	return () unless $line =~ /^Index: (.*)$/o;
-	$filename = $1;
+	return () unless
+	    $line =~ /^(Index|Added|Modified|Deleted): (.*)$/o;
+	$entry_type = $1;
+	$filename = $2;
 	$line = <$fh>;
 
 	# The separator line appears next.
@@ -68,11 +75,8 @@ sub parse ($$$) {
 	$line = <$fh>;
 
 	# Check if the delta represents a binary file.
-	if ($line =~ /^Cannot display: file marked as a binary type\./) {
-	    # The next line indicates the mime type.
-	    $line = <$fh>;
-	    return () unless defined $line;
-	    return () unless $line =~ /^svn:mime\-type/;
+	if ($line =~ /^Cannot display: file marked as a binary type\./o ||
+	    $line =~ /^\(Binary files differ\)/o) {
 
 	    # If it is a new binary file, there will be some lines before
 	    # the next Index: line, or end of file.  In other cases, it is
@@ -80,15 +84,23 @@ sub parse ($$$) {
 	    # removed, and what revision it is based off.
 	    $line = <$fh>;
 	    my $count = 0;
-	    while (defined $line && $line !~ /^Index:/) {
+	    while (defined $line && $line !~ /^Index|Added|Modified|Deleted/o) {
 		$line = <$fh>;
 		$count++;
 	    }
 
 	    my $chunk = {};
 	    $chunk->{filename} = $filename;
-	    $chunk->{revision} = $count > 0 ? $Codestriker::ADDED_REVISION :
-		$Codestriker::PATCH_REVISION;
+	    if ($entry_type eq "Index") {
+		$chunk->{revision} = $count > 0 ? $Codestriker::ADDED_REVISION :
+		    $Codestriker::PATCH_REVISION;
+	    } elsif ($entry_type eq "Added") {
+		$chunk->{revision} = $Codestriker::ADDED_REVISION;
+	    } elsif ($entry_type eq "Deleted") {
+		$chunk->{revision} = $Codestriker::REMOVED_REVISION;
+	    } else {
+		$chunk->{revision} = $Codestriker::PATCH_REVISION;
+	    }
 	    $chunk->{old_linenumber} = -1;
 	    $chunk->{new_linenumber} = -1;
 	    $chunk->{binary} = 1;
@@ -100,17 +112,19 @@ sub parse ($$$) {
 	    # Try and read the base revision this change is against,
 	    # while handling new and removed files.
 	    my $base_revision = -1;
-	    if ($line =~ /^\-\-\- .*\s\([Rr]evision (\d+)\)/i) {
+	    if ($line =~ /^\-\-\- .*\s\(revision (\d+)\)/io ||
+		$line =~ /^\-\-\- .*\s\(rev (\d+)/io) {
 		$base_revision = $1;
-	    } elsif ($line !~ /^\-\-\- .*\s\(working copy\)/) {
+	    } elsif ($line !~ /^\-\-\- .*\s\(working copy\)/io) {
 		return ();
 	    }
 
 	    # Make sure the +++ line is present next.
 	    $line = <$fh>;
 	    return () unless defined $line;
-	    if ($line !~ /^\+\+\+ .*\s\(working copy\)/ &&
-		$line !~ /^\+\+\+ .*\s\([Rr]evision \d+\)/) {
+	    if ($line !~ /^\+\+\+ .*\s\(working copy\)/io &&
+		$line !~ /^\+\+\+ .*\s\(revision \d+\)/io &&
+		$line !~ /^\+\+\+ .*\s\(txn .*\)/io) {
 		return ();
 	    }
 

@@ -53,6 +53,9 @@ Version 1.9.2
   CodestrikerClient.pm module (used for auto-creation of topics on CVS
   commits).  Reported by Martin Apel <Martin.Apel@softlab.de>.
 
+* Added support for parsing diffs generated using Subversion's svnlook
+  program.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
