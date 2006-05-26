@@ -18,8 +18,8 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "text",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
+    $Codestriker::DB::Column::TYPE->{TEXT}	=> "ntext",
+    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "nvarchar",
     $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
     $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
     $Codestriker::DB::Column::TYPE->{DATETIME}	=> "datetime",
