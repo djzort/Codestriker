@@ -3,6 +3,12 @@
 
 Version 1.9.2
 
+* Codestriker now works with UTF-8 text, to support unicode character
+  input for topic titles, descriptions, comment text, and project
+  names and descriptions.  This required making Perl 5.8 as a
+  pre-requisite, as Perl 5.6 doesn't cut the mustard for unicode
+  processing.
+
 * Created a new optional configuration parameter $repository_name_map
   in codestriker.conf.  This allows for a user-defined repository name
   to be displayed in the codestriker UI, rather than the full
