@@ -473,7 +473,7 @@ sub set_differences($$$$)
 
 # Return true if project support has been enabled.
 sub projects_disabled {
-    if (defined $Codestriker::project_states) {
+    if (defined @Codestriker::project_states) {
 	return $#Codestriker::project_states == -1;
     } elsif (defined $Codestriker::allow_projects) {
 	# Support for older codestriker.conf files.
