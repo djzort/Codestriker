@@ -17,6 +17,8 @@ use strict;
 
 use FileHandle;
 use File::Temp qw/ tempfile /;
+use Encode;
+
 use Codestriker::FileParser::CvsUnidiff;
 use Codestriker::FileParser::SubversionDiff;
 use Codestriker::FileParser::PerforceDescribe;
@@ -29,9 +31,9 @@ use Codestriker::FileParser::UnknownFormat;
 
 # Given the content-type and the file handle, try to determine what files,
 # lines, revisions and diffs have been submitted in this review.
-sub parse ($$$$$) {
+sub parse ($$$$$$) {
     my ($type, $fh, $content_type, $repository, $topicid,
-	$uploaded_filename) = @_;
+	$uploaded_filename, $encoding) = @_;
 
     # Diffs found.
     my @diffs = ();
@@ -49,14 +51,15 @@ sub parse ($$$$$) {
     else {
 	$tmpfh = tempfile();
     }
-#    binmode $tmpfh, ':utf8';
+    binmode $tmpfh, ':utf8';
     
     if (!$tmpfh) {
 	die "Unable to create temporary parse file: $!";
     }
 
+    binmode $fh;
     while (<$fh>) {
-	my $line = $_;
+	my $line = decode($encoding, $_);
 	$line =~ s/\r\n/\n/go;
 	print $tmpfh $line;
     }

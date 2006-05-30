@@ -24,11 +24,11 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtrack
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
 	      $project_states $rss_enabled $repository_name_map $repository_url_map
-	      @valid_repository_names
+	      @valid_repository_names $topic_text_encoding
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.9.2-alpha-6";
+$Codestriker::VERSION = "1.9.2-alpha-7";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";

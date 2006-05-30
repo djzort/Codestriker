@@ -13,6 +13,8 @@ use strict;
 
 use File::Temp qw/ tempfile /;
 use FileHandle;
+use Encode;
+
 use Codestriker::Model::Topic;
 use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
@@ -215,13 +217,20 @@ sub process($$$) {
 	$fh = $temp_topic_fh;
     }
 
+    # Assume the topic text input file is set to UTF8 by default, unless
+    # it has been explicitly over-ridden in the codestriker.conf file.
+    my $encoding = 'utf8';
+    if (defined $Codestriker::topic_text_encoding &&
+	$Codestriker::topic_text_encoding ne '') {
+	$encoding = $Codestriker::topic_text_encoding;
+    }
+
     my @deltas = ();
     if ($feedback eq "") {
 	# Try to parse the topic text into its diff chunks.
-	binmode $fh, ':utf8';
 	@deltas =
 	    Codestriker::FileParser::Parser->parse($fh, "text/plain", $repository,
-						   $topicid, $topic_file);
+						   $topicid, $topic_file, $encoding);
 	if ($#deltas == -1) {
 	    # Nothing in the file, report an error.
 	    $feedback .= "Reviewable text in topic is empty.\n";
@@ -241,7 +250,7 @@ sub process($$$) {
     # If the topic text has been uploaded from a file, read from it now.
     if (defined $fh) {
 	while (<$fh>) {
-	    $topic_text .= $_;
+	    $topic_text .= decode($encoding, $_);
 	}
 	if ($topic_text eq "") {
 	    if (defined $temp_error_fh) {

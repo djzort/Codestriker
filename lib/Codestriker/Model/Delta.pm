@@ -25,7 +25,7 @@ sub new {
     $self->{binary} = $_[3];
     $self->{old_linenumber} = $_[4];
     $self->{new_linenumber} = $_[5];
-    $self->{text} = $_[6];
+    $self->{text} = decode_utf8($_[6]);
     $self->{description} = (defined $_[7]) ? decode_utf8($_[7]) : "";
     $self->{filenumber} = $_[8];
     $self->{repmatch} = $_[9];

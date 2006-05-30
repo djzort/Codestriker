@@ -99,6 +99,16 @@ my $modules = [
         name => 'XML::RSS', 
         version => '1.05',
         optional => 1
+    },
+    { 
+        name => 'Encode::Byte', 
+        version => '0',
+        optional => 0
+    },
+    { 
+        name => 'Encode::Unicode', 
+        version => '0',
+        optional => 0
     }
 ];
 
@@ -110,6 +120,22 @@ eval {
     $database = Codestriker::DB::Database->get_database();
     push @{$modules}, $database->get_module_dependencies();
 };
+
+# Check for various character encoding modules that are required.
+if (defined $Codestriker::topic_text_encoding) {
+    if ($Codestriker::topic_text_encoding =~ /euc\-cn|gb2312|hz|gbk/) {
+	push @{$modules}, { name => 'Encode::CN', version => '0' };
+    }
+    if ($Codestriker::topic_text_encoding =~ /jp|jis/) {
+	push @{$modules}, { name => 'Encode::JP', version => '0' };
+    }
+    if ($Codestriker::topic_text_encoding =~ /kr|johab/) {
+	push @{$modules}, { name => 'Encode::KR', version => '0' };
+    }
+    if ($Codestriker::topic_text_encoding =~ /big5/) {
+	push @{$modules}, { name => 'Encode::TW', version => '0' };
+    }
+}
 
 my %missing_optional = ();
 my %missing = ();
