@@ -161,6 +161,8 @@
 	  available for download from
 	  <ulink
 	  url="http://www.mysql.com">http://www.mysql.com</ulink>.
+          Make sure you use at least version 4.1 or above, as this
+          supports UTF8 databases.
 	  For Linux RedHat distributions, the necessary packages
 	  required are mysql, mysql-devel, mysql-server, which may or
 	  may not already be present on your system.  Depending on
@@ -187,7 +189,7 @@
 	  substitute a suitable database password instead of cspasswd
 	  as shown here.
 	  <programlisting>
-CREATE DATABASE codestrikerdb;
+CREATE DATABASE codestrikerdb CHARACTER SET utf8;
 
 GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,REFERENCES
  ON codestrikerdb.* TO codestriker@localhost IDENTIFIED BY 'cspasswd';
@@ -238,7 +240,7 @@ DROP DATABASE codestrikerdb;
 	  following commands:
 	  <programlisting>
 % createuser --username=postgres -d -A codestriker
-% createdb --username=codestriker codestrikerdb
+% createdb -E UTF8 --username=codestriker codestrikerdb
           </programlisting>
 	</para>
 	<para>
