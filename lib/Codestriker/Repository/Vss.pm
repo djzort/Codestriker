@@ -90,6 +90,7 @@ sub retrieve ($$$\$) {
     my $basefilename = $1;
     if (open(VSS, "$tempdir/$basefilename")) {
 	for (my $i = 1; <VSS>; $i++) {
+	    $_ = Codestriker::decode_topic_text($_);
 	    chop;
 	    $$content_array_ref[$i] = $_;
 	}

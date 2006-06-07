@@ -62,10 +62,11 @@ sub retrieve ($$$\$) {
             $error_msg = "Error from ClearTool: " . join(" ", @errorlines);
             close ERRORFILE;
         } else {
-            # Operation was succesful.  Load the file into the given array.
+            # Operation was successful.  Load the file into the given array.
             open CONTENTFILE, "<$tempfile"
                 || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
             for (my $i = 1; <CONTENTFILE>; $i++) {
+		$_ = Codestriker::decode_topic_text($_);
                 chop;
                 $$content_array_ref[$i] = $_;
             }

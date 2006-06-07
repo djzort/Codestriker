@@ -34,7 +34,7 @@ sub retrieve ($$$\$) {
     my $request = $self->{viewcvs_url} .
 	"/${filename}?rev=${revision}&content-type=text/plain";
     my $response = $ua->get($request);
-    my $content = $response->content;
+    my $content = Codestriker::decode_topic_text($response->content);
 
     # Store the content lines.
     my @content_lines = split /\n/, $content;

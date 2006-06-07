@@ -17,7 +17,6 @@ use strict;
 
 use FileHandle;
 use File::Temp qw/ tempfile /;
-use Encode;
 
 use Codestriker::FileParser::CvsUnidiff;
 use Codestriker::FileParser::SubversionDiff;
@@ -33,7 +32,7 @@ use Codestriker::FileParser::UnknownFormat;
 # lines, revisions and diffs have been submitted in this review.
 sub parse ($$$$$$) {
     my ($type, $fh, $content_type, $repository, $topicid,
-	$uploaded_filename, $encoding) = @_;
+	$uploaded_filename) = @_;
 
     # Diffs found.
     my @diffs = ();
@@ -59,7 +58,7 @@ sub parse ($$$$$$) {
 
     binmode $fh;
     while (<$fh>) {
-	my $line = decode($encoding, $_);
+	my $line = Codestriker::decode_topic_text($_);
 	$line =~ s/\r\n/\n/go;
 	print $tmpfh $line;
     }

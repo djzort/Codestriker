@@ -66,6 +66,7 @@ sub retrieve {
 
     # Read the data.
     for (my $i = 1; <CVS>; $i++) {
+	$_ = Codestriker::decode_topic_text($_);
 	chop;
 	$$content_array_ref[$i] = $_;
     }

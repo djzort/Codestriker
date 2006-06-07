@@ -10,6 +10,7 @@
 package Codestriker;
 
 use strict;
+use Encode;
 
 use Time::Local;
 
@@ -28,7 +29,7 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtrack
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.9.2-alpha-7";
+$Codestriker::VERSION = "1.9.2-alpha-8";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";
@@ -502,6 +503,20 @@ sub topic_readonly {
 	# Backwards compatibility for older configs.
         return $topic_state eq "Open" ? 0 : 1;
     }
+}
+
+# Decode the passed in string into UTF8.
+sub decode_topic_text {
+    my ($string) = @_;
+
+    # Assume input text is set to UTF8 by default, unless
+    # it has been explicitly over-ridden in the codestriker.conf file.
+    if ((! defined $Codestriker::topic_text_encoding) ||
+	$Codestriker::topic_text_encoding eq '') {
+	$Codestriker::topic_text_encoding = 'utf8';
+    }
+
+    return decode($Codestriker::topic_text_encoding, $string);
 }
 
 1;
