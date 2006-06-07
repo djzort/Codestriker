@@ -64,16 +64,18 @@ sub parse ($$$) {
 
 	# The separator line appears next, for diffs, but not rdiffs.
 	return @result unless defined $line;
-	if ($line =~ /^===================================================================$/) {
+	if ($line =~ /^===================================================================$/o) {
 	    $line = <$fh>;
 	}
 
 	# Now we expect the RCS line, whose filename should include the CVS
 	# repository, and if not, it is probably a new file, or it is a
-	# cvs rdiff.
+	# cvs rdiff.  Make the match for the repository root case insensitive
+	# since different Windoze CVS clients (Cygwin + CvsNT) may return different
+	# repository roots with different casing.
 	return () unless defined $line;
 	if (defined $repository_root &&
-	    $line =~ /^RCS file: $repository_root\/(.*),v$/) {
+	    $line =~ /^RCS file: $repository_root\/(.*),v$/i) {
 	    $repmatch = 1;
 	    $filename = $1;
 	    $line = <$fh>;

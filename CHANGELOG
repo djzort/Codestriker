@@ -62,6 +62,10 @@ Version 1.9.2
 * Added support for parsing diffs generated using Subversion's svnlook
   program.
 
+* Matching of CVS repository paths when parsing topic text is now
+  case insensitive to account for the different casing returned by the
+  Window clients: Cygwin and CvsNT.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
