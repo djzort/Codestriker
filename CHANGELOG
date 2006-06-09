@@ -66,6 +66,9 @@ Version 1.9.2
   case insensitive to account for the different casing returned by the
   Window clients: Cygwin and CvsNT.
 
+* Defining new entries in $comment_state_metrics in codestriker.conf
+  could not be used for existing topics.  This has now been fixed.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address

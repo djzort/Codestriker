@@ -412,12 +412,7 @@ sub change_state {
 			     'modified_ts = ? ' .
 			     'WHERE id = ?');
 
-    my $update_metrics =
-	$dbh->prepare_cached('UPDATE commentstatemetric SET value = ? ' .
-			     'WHERE id = ? AND name = ?');
-
-    my $success = defined $select_comments && defined $update_comments
-	&& defined $update_metrics;
+    my $success = defined $select_comments && defined $update_comments;
     my $rc = $Codestriker::OK;
 
     # Retrieve the current comment data.
@@ -443,15 +438,17 @@ sub change_state {
 	$rc = $Codestriker::STALE_VERSION;
     }
 
-    # Now update the version number for ocmmentstate, and the metric
-    # record itself.
+    # Now update the version number for commentstate.
     $self->{version} = $self->{version} + 1;
     $self->{metrics}->{$metric_name} = $metric_value;
     $self->{modified_ts} = Codestriker->format_timestamp($timestamp);
     $success &&= $update_comments->execute($self->{version},
 					   $timestamp,
 					   $id);
-    $success &&= $update_metrics->execute($metric_value, $id, $metric_name);
+
+    # Now update the commentstatemetric row for this metric.
+    my $metrics = [ { name => $metric_name, value => $metric_value } ];
+    update_comment_metrics($id, $metrics, $dbh);
     
     Codestriker::DB::DBI->release_connection($dbh, $success);
     
