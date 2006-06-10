@@ -15,7 +15,8 @@ use Encode;
 use Time::Local;
 
 # Export codestriker.conf configuration variables.
-use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtracker
+use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
+	      $gzip $cvs $svn $ssh $p4 $vss $bugtracker
 	      @valid_repositories $default_topic_create_mode $default_tabwidth
 	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
 	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
@@ -24,7 +25,8 @@ use vars qw ( $mailhost $use_compression $gzip $cvs $svn $ssh $p4 $vss $bugtrack
 	      $allow_delete $allow_searchlist $default_file_to_view
               $allow_projects $antispam_email $VERSION $title $BASEDIR
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
-	      $project_states $rss_enabled $repository_name_map $repository_url_map
+	      $project_states $rss_enabled
+	      $repository_name_map $repository_url_map
 	      @valid_repository_names $topic_text_encoding
 	      );
 

@@ -17,6 +17,7 @@ use Net::SMTP;
 use MIME::Base64;
 use Sys::Hostname;
 use Encode qw(encode);
+use Authen::SASL;
 
 use Codestriker::TopicListeners::TopicListener;
 
@@ -442,6 +443,11 @@ sub doit($$$$$$$$$) {
     
     my $smtp = Net::SMTP->new($Codestriker::mailhost);
     defined $smtp || return "Unable to connect to mail server: $!";
+
+    # Perform SMTP authentication if required.
+    if (defined $Codestriker::mailuser && defined $Codestriker::mailpasswd) {
+	$smtp->auth($Codestriker::mailuser, $Codestriker::mailpasswd);
+    }
 
     $smtp->mail($from);
     $smtp->ok() || return "Couldn't set sender to \"$from\" $!, " .

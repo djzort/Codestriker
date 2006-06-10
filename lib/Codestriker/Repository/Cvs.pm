@@ -19,8 +19,8 @@ sub build_local {
 
     my $self = {};
     $self->{cvsroot} = $cvsroot;
-    $self->{optional_prefix} =
-	defined $optional_prefix ? $optional_prefix : "";
+    $optional_prefix = "" unless defined $optional_prefix;
+    $self->{optional_prefix} = $optional_prefix;
     $self->{url} = "${optional_prefix}${cvsroot}";
     bless $self, $type;
 }
@@ -30,7 +30,8 @@ sub build_pserver {
     my ($type, $optional_args, $username, $password, $hostname, $cvsroot) = @_;
 
     my $self = {};
-    $self->{optional_args} = defined $optional_args ? $optional_args : "";
+    $optional_args = "" unless defined $optional_args;
+    $self->{optional_args} = $optional_args;
     $self->{username} = $username;
     $self->{password} = $password;
     $self->{hostname} = $hostname;
@@ -45,7 +46,8 @@ sub build_ext {
     my ($type, $optional_args, $username, $hostname, $cvsroot) = @_;
 
     my $self = {};
-    $self->{optional_args} = defined $optional_args ? $optional_args : "";
+    $optional_args = "" unless defined $optional_args;
+    $self->{optional_args} = $optional_args;
     $self->{username} = $username;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;

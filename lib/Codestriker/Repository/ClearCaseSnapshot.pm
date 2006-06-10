@@ -38,7 +38,14 @@ sub retrieve ($$$\$) {
     }
 
     # Create a temporary directory to store the results of 'cleartool get'.
-    my $tempdir = tempdir(); 
+    my $tempdir;
+    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
+    }
+    else {
+	$tempdir = tempdir(CLEANUP => 1);
+    }
+
     my $tempfile = File::Spec->catfile($tempdir, "Temp_YouCanDeleteThis");
     my $errorfile = File::Spec->catfile($tempdir, "Error_YouCanDeleteThis");
 

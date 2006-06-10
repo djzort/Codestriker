@@ -393,6 +393,20 @@ $dbpasswd = 'cspasswd';
 # comments.
 $mailhost = 'localhost';
            </programlisting>
+	   If your mail server requires SMTP authentication for
+	   sending emails, the username and password can be set via
+	   the
+	   <varname>$mailuser</varname> and
+	   <varname>$mailpasswd</varname> parameters.
+	  <programlisting>
+# Set the user and password parameters if $mailhost requires SMTP
+# authentication.  If commented out, it is assumed authentication is 
+# not required.
+$mailuser = 'smtpuser';
+$mailpasswd = 'smtppasswd';
+           </programlisting>
+	   If these values are commented out, it is assumed SMTP
+	   authentication is not required.
 	</para>
       </sect2>
 

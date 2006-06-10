@@ -69,6 +69,20 @@ Version 1.9.2
 * Defining new entries in $comment_state_metrics in codestriker.conf
   could not be used for existing topics.  This has now been fixed.
 
+* Support for sending email via SMTP authentication, via the optional
+  $mailuser and $mailpasswd configuration parameters in
+  codestriker.conf.  Contributed by "Hertz Wang" <wanghz@neusoft.com>.
+
+* The ClearCase Snapshot repository was not using the $tmpdir setting
+  in codestriker.conf if it was set when creating temporary files.
+  This has now been fixed.
+  Contributed by "John Farrelly (AT/LMI)" <john.farrelly@ericsson.com>.
+
+* Make sure the diffs in the topic are presented in a sorted order by
+  filename.  Some SCMs create topic texts in a "semi-sorted" order,
+  such as Subversion.
+  Contributed by "Vladimir Vysotsky" <vvysotsky@avistar.com>.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address

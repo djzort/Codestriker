@@ -166,6 +166,10 @@ sub parse ($$$$$$) {
     seek($fh, 0, 0) ||
 	die "Unable to seek to the start of the temporary file. $!";
 
+    # Sort the diff chunks by filename, then old linenumber.
+    @diffs = sort { $a->{filename} cmp $b->{filename} ||
+		    $a->{old_linenumber} <=> $b->{old_linenumber} } @diffs;
+
     # Only include those files whose extension is not in
     # @Codestriker::exclude_file_types, provided it is defined.
     return @diffs unless defined @Codestriker::exclude_file_types;

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/local/bin/perl -w
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -107,6 +107,11 @@ my $modules = [
     },
     { 
         name => 'Encode::Unicode', 
+        version => '0',
+        optional => 0
+    },
+    { 
+        name => 'Authen::SASL', 
         version => '0',
         optional => 0
     }
