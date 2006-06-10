@@ -1030,12 +1030,12 @@ my $template_vars = {};
 # For Win32, don't enable tainting mode.  There are weird issues with
 # ActivePerl, and sometimes with IIS as well.  Make sure the Windows Perl
 # path is set correctly, as its location could be anywhere.
+my $perl = $^X;
 if ($windows) {
-    my $perl = $^X;
     $perl =~ s/\\/\//g;
     $template_vars->{hash_ex_line} = '#!' . $perl . ' -w';
 } else {
-    $template_vars->{hash_ex_line} = '#!/usr/bin/perl -wT';
+    $template_vars->{hash_ex_line} = '#!' . $perl . ' -wT';
 }
 
 $template_vars->{codestriker_lib} = 'use lib \'' . cwd() . '/../lib\';';
