@@ -1700,6 +1700,8 @@ C:\Perl\bin\perl.exe "%s" %s
 	  modified so that the email which is sent after each commit
 	  which contains the diff of the commit, also includes the URL
 	  of the associated Codestriker topic that was created.
+	  <emphasis>Unfortunately, these scripts can only be executed
+	  on the UNIX platform.</emphasis>
 	</para>
 	<para>
 	  The <filename>commit_prep.pl</filename> and

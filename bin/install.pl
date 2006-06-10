@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
@@ -245,29 +245,19 @@ if (%missing) {
 
 	print <<EOF;
 
-These can be installed by doing the following in PPM 2.0 (the version of ppm is
-displayed when you start it up).
+These can be installed by doing the following in PPM:
 
 C:\> ppm
 
-PPM> set repository oi http://openinteract.sourceforge.net/ppmpackages
-PPM> set save
-PPM> install (package-name)
-
-For PPM 3.0:
-
 C:\> ppm
-PPM> rep add oi http://openinteract.sourceforge.net/ppmpackages
+PPM> rep add theory http://theoryx5.uwinnipeg.ca/cgi-bin/ppmserver?urn:/PPMServer58
 PPM> install (package-name)
 
 *NOTE* The Template package name may not be "Template" but "Template-Toolkit"
 when entering the commands above.
 
-http://openinteract.sourceforge.net/cgi-bin/twiki/view/OI/ActivePerlPackages
-has more information if you still have problems.
-
-Another repository of Perl packages is http://theoryx5.uwinnipeg.ca/ppmpackages
-which also has mod_perl for Win32.
+Go to http://theoryx5.uwinnipeg.ca/ppms if you have any installation problems.
+Other Win32 ppm repositories are listed there.
 
 The ActiveState default repository in PPM has almost all of the packages
 required.

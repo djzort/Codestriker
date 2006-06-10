@@ -47,8 +47,15 @@ sub get_connection {
     # Not all versions of MySQL upport transactions.  Its easiest for now to
     # just enable AUTO_COMMIT.
     my $dbh = $self->_get_connection(1, 1);
-    $dbh->do("SET NAMES 'utf8'");
-    $dbh->do("SET character_set_results='utf8'");
+
+    # Older MySQL 3.X installations don't support these commands.  Wrap them
+    # for now in a block and silently ignore the errors.
+    {
+	local $dbh->{RaiseError};
+	local $dbh->{PrintError};
+	$dbh->do("SET NAMES 'utf8'");
+	$dbh->do("SET character_set_results='utf8'");
+    }
     return $dbh;
 }
 
