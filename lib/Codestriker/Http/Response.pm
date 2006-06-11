@@ -372,8 +372,10 @@ sub generate_comment_declarations
 	# Add an add comment link.
 	my $key = $comment_locations[$index];
 	$key =~ /^(\-?\d+)\|(\-?\d+)\|(\d+)$/o;
-        $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
-	    "; void(0);\">Add Comment<\\/a> | ";
+	if (!Codestriker::topic_readonly($topic->{topic_state})) {
+	    $overlib_html .= "<a href=\"javascript:add_comment_tooltip($1,$2,$3)" .
+		"; void(0);\">Add Comment<\\/a> | ";
+	}
 
 	# Add a close link.
 	$overlib_html .= "<a href=\"javascript:hideElt(getElt(\\'overDiv\\')); void(0);\">Close<\\/a><p>";

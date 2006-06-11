@@ -61,6 +61,11 @@ sub process($$$) {
     # Retrieve the appropriate topic details.
     my $topic = Codestriker::Model::Topic->new($topicid); 
 
+    # Don't accept any new comments if the topic state is read only.
+    if (Codestriker::topic_readonly($topic->{topic_state})) {
+	$http_response->error("Topic state is read only");
+    }
+
     # Fire the topic listener to indicate that the user has viewed the topic.
     Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 

@@ -83,6 +83,12 @@ Version 1.9.2
   such as Subversion.
   Contributed by "Vladimir Vysotsky" <vvysotsky@avistar.com>.
 
+* Closed topics could still have comments added to them, by hovering
+  over an existing comment in the topic text view, and then clicking
+  the "Add Comment" link in the tooltip window.  This link has now
+  been removed if the topic is closed.
+  Contributed by ed.torbett@simulation-systems.co.uk.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
