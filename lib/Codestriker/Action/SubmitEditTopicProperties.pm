@@ -44,11 +44,6 @@ sub process($$$) {
     # Retrieve the current state of the topic.
     my $topic = Codestriker::Model::Topic->new($topicid);
 
-    # Create a clone of this topic, which will contain the original state of
-    # the topic, used for the topic listeners below.  Note we should really
-    # have a clone() method but for now... XXX.
-    my $topic_orig = Codestriker::Model::Topic->new($topicid);
-
     my $feedback = "";
     my $rc = $Codestriker::OK;
 
@@ -91,6 +86,12 @@ sub process($$$) {
     }
 
     if ($feedback eq "") {
+	# Create a clone of this topic, which will contain the
+	# original state of the topic, and the proposed new state,
+	# used for the topic listeners below.
+	my $topic_orig = Codestriker::Model::Topic->new($topicid);
+	my $topic_new = Codestriker::Model::Topic->new($topicid);
+
 	if ($topic_state eq "Deleted") {
 	    $rc = $topic->delete();
 	    if ($rc == $Codestriker::INVALID_TOPIC) {
@@ -109,24 +110,48 @@ sub process($$$) {
 	    return;
 	}
 	else {
-	    # The input looks good, update the database.
-	    $rc = $topic->update($topic_title, $author, $reviewers, $cc,
-				 $repository_url, $bug_ids, $projectid,
-				 $topic_description, $topic_state);
-	    if ($rc == $Codestriker::INVALID_TOPIC) {
-		$feedback .= "Topic no longer exists.\n";
-	    } elsif ($rc == $Codestriker::STALE_VERSION) {
-		$feedback .=
-		    "Topic was modified by another user, no changes done.\n";
-	    } elsif ($rc == $Codestriker::OK) {
-		$feedback .= "Topic properties successfully updated.\n";
+	    # Set the fields into the new topic object for checking.
+	    $topic_new->{title} = $topic_title;
+	    $topic_new->{author} = $author;
+	    $topic_new->{reviewers} = $reviewers;
+	    $topic_new->{cc} = $cc;
+	    $topic_new->{repository} = $repository_url;
+	    $topic_new->{bug_ids} = $bug_ids;
+	    $topic_new->{project_id} = $projectid;
+	    $topic_new->{description} = $topic_description;
+	    $topic_new->{topic_state} = $topic_state;
+
+	    # Make sure all the topic listeners are happy with this change
+	    # before allowing it.
+	    $feedback =
+		Codestriker::TopicListeners::Manager::topic_pre_changed($email,
+									$topic_orig,
+									$topic_new);
+	    if ($feedback eq '') {
+		# Topic listeners are happy with this change.
+		$rc = $topic->update($topic_title, $author, $reviewers, $cc,
+				     $repository_url, $bug_ids, $projectid,
+				     $topic_description, $topic_state);
+		if ($rc == $Codestriker::INVALID_TOPIC) {
+		    $feedback .= "Topic no longer exists.\n";
+		} elsif ($rc == $Codestriker::STALE_VERSION) {
+		    $feedback .=
+			"Topic was modified by another user, no changes done.\n";
+		} elsif ($rc == $Codestriker::OK) {
+		    $feedback .= "Topic properties successfully updated.\n";
+		}
+	    }
+	    else {
+		$rc = $Codestriker::LISTENER_ABORT;
 	    }
 	}
 
 	# Indicate to the topic listeners that the topic has changed.
-	Codestriker::TopicListeners::Manager::topic_changed($email,
-							    $topic_orig,
-							    $topic);
+	if ($rc == $Codestriker::OK) {
+	    Codestriker::TopicListeners::Manager::topic_changed($email,
+								$topic_orig,
+								$topic);
+	}
     }
 
     # Direct control to the appropriate action class, depending on the result

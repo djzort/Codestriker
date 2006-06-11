@@ -53,6 +53,7 @@ $Codestriker::INVALID_PROJECT = 4;
 $Codestriker::DUPLICATE_PROJECT_NAME = 5;
 $Codestriker::UNSUPPORTED_OPERATION = 6;
 $Codestriker::DIFF_TOO_BIG = 7;
+$Codestriker::LISTENER_ABORT = 8;
 
 # Revision number constants used in the filetable with special meanings.
 $Codestriker::ADDED_REVISION = "1.0";

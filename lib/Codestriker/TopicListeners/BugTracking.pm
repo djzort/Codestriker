@@ -78,6 +78,29 @@ sub topic_create($$) {
     return '';
 }
 
+# If the bugids have been changed, make sure they exist in the bug database.
+sub topic_pre_changed($$$) {
+    my ($self, $user, $topic_orig, $topic) = @_;
+
+    my $feedback = '';
+    if ($topic_orig->{bug_ids} ne $topic->{bug_ids}) {
+	# Make sure that the new bug IDs specified are valid, if they have
+	# changed.
+	my @bug_ids = split /, /, $topic->{bug_ids};
+	my $bug_db_connection =
+	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
+	foreach my $bug_id (@bug_ids) {
+	    if (!$bug_db_connection->bugid_exists($bug_id)) {
+		$feedback .= "Bug ID $bug_id does not exist.\n";
+	    }
+	}
+	$bug_db_connection->release_connection();
+    }
+    
+    return $feedback;
+}
+
+
 sub topic_changed($$$$) {
     my ($self, $user, $topic_orig, $topic) = @_;
 

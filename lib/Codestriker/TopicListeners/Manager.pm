@@ -51,6 +51,23 @@ sub topic_create {
     return $returnValue;
 }
 
+sub topic_pre_changed {
+    _create_listeners();
+    
+    # Call all of the topic listeners that are created. If any of the
+    # topic listeners return a non-empty string, it is treated as a 
+    # request to reject the requested state change, and display the 
+    # returned string as the user error message.
+    my $returnValue = '';
+    
+    foreach my $listener (@topic_listeners) {
+       $returnValue .= $listener->topic_pre_changed(@_);
+       last if length($returnValue);
+    }
+    
+    return $returnValue;
+}
+
 sub topic_changed {
     _create_listeners();
     

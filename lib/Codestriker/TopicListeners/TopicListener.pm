@@ -38,6 +38,15 @@ sub topic_create($$) {
     return '';    
 }
 
+sub topic_pre_changed($$$) {
+    my ($self, $user, $topic_orig, $topic) = @_;
+
+    # Default version of function that does nothing, and allowed the
+    # event to continue.
+    
+    return '';    
+}
+
 sub topic_changed($$$) {
     my ($self, $user, $topic_orig, $topic) = @_;
 
