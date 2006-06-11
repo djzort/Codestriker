@@ -137,9 +137,6 @@
 	  <para>unpacking and configuring Codestriker.</para>
 	</listitem>
       </itemizedlist>
-      Note for Win32 systems, only use Perl 5.6.X and Apache 1.X.
-      Perl 5.8.X and Apache 2.X have issues on Win32 which prevent
-      Codestriker working correctly.
     </para>
 
     <sect1 id="codestriker-database-creation">
@@ -163,6 +160,10 @@
 	  url="http://www.mysql.com">http://www.mysql.com</ulink>.
           Make sure you use at least version 4.1 or above, as this
           supports UTF8 databases.
+	  <emphasis>Note under Solaris, it seems at
+	  the time of writing that only the 32-bit version of Perl and
+	  MySQL (and DBD::mysql) can be used, the 64-bit versions
+	  don't work.</emphasis>
 	  For Linux RedHat distributions, the necessary packages
 	  required are mysql, mysql-devel, mysql-server, which may or
 	  may not already be present on your system.  Depending on
@@ -242,6 +243,11 @@ DROP DATABASE codestrikerdb;
 % createuser --username=postgres -d -A codestriker
 % createdb -E UTF8 --username=codestriker codestrikerdb
           </programlisting>
+          If the last command claims UTF8 is an unknown encoding, try
+          the value UNICODE.  If that still fails, you have a
+          distribution which wasn't configured with
+          --enable-multibyte.  Try downloading the latest version of
+          PostgreSQL.
 	</para>
 	<para>
 	  Make sure your <filename>pg_hba.conf</filename> file is
@@ -365,9 +371,12 @@ $db = 'DBI:mysql:dbname=codestrikerdb';
 <programlisting>
 $db = 'DBI:mysql:dbname=codestrikerdb;host=dbhost';
 </programlisting>
-        The database user and password also need to be specified.  If
-        your username was "codestriker", and the password was
-        "cspasswd", the settings would be just:
+        In this situation, you need to ensure that the webserver host
+        has permission to connect to the database on dbhost.  Check
+        the MySQL documentation for further details.  The database
+        user and password also need to be specified.  If your username
+        was "codestriker", and the password was "cspasswd", the
+        settings would be just:
 <programlisting>
 # Database user.
 $dbuser = 'codestriker';
@@ -456,6 +465,10 @@ $use_compression = 0;
 # in the application that ask for, or display repository information will
 # be hidden and lastly, it will be impossible to make a diff review topic
 # on files that already checked in.
+#
+# You also need to make sure that the user running your webserver has
+# permission to run the client SCM program (eg, cvs, p4, svn), and to
+# connect to the repository.
 @valid_repositories =
     (
      # Example CVSROOT of a CVS repository on the same machine as the
@@ -1037,8 +1050,6 @@ $metric_config = "none";
         Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
-        Only use Perl 5.6.X, as Perl 5.8.X for Win32 has issues that
-        prevent Codestriker from working correctly.
       </para>
       <para>
         To run <filename>install.pl</filename> under UNIX, do the
@@ -1175,20 +1186,16 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
 	  Apache.  For installing <command>mod_perl</command> under
 	  Windows, <ulink
 	  url="http://www.webmatrix.net/log/modperl-win32">http://www.webmatrix.net/log/modperl-win32</ulink>
-	  contains installation information.  For PPM3 users, you
+	  contains installation information.  You
 	  should be able to install it by typing:
 <programlisting>
 C:\> ppm
 PPM> rep add theory http://theoryx5.uwinnipeg.ca/ppmpackages
 PPM> install mod_perl
 </programlisting>
-          For PPM2:
-<programlisting>
-C:\> ppm
-PPM> set repository oi http://theoryx5.uwinnipeg.ca/ppmpackages
-PPM> set save
-PPM> install mod_perl
-</programlisting>
+          Note mod_perl has known to be a little flacky under Windows.
+          Make sure you get Codestriker working deployed as a CGI
+          script before trying to use mod_perl.
 	</para>
 	<para>
 	  The following shows the configuration settings for an Apache
@@ -2926,25 +2933,18 @@ C:\Project\> ssdiff.pl > topic.txt
       (including relevant contents of your apache error log file), and
       I'll be happy to help you out.
     </para>
-    <para>
-      If you see an error message like:
-      <programlisting>
-[Tue Jan  6 08:41:49 2004] [error] Bizarre copy of HASH in assign at
-/usr/lib/perl5/5.6.0/Carp/Heavy.pm line 79      
-      </programlisting>
-      This is apparently due to a bug in Perl 5.6.0.  If you upgrade
-      to Perl 5.6.1, the problem should go away.
-    </para>
   </chapter>
 
   <chapter>
     <title>Future Plans</title>
     <para>
       <itemizedlist>
+	<listitem><para>Respository-specific topic-creation fields</para></listitem>
+	<listitem><para>REST-style URLs</para></listitem>
+	<listitem><para>User authentication</para></listitem>
         <listitem><para>Web-based configuration</para></listitem>
         <listitem><para>Per-user preferences for email</para></listitem>
         <listitem><para>Ability to review formatted design documents</para></listitem>
-	<listitem><para>User authentication</para></listitem>
       </itemizedlist>             
     </para>
   </chapter>
