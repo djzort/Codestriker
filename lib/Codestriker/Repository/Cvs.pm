@@ -123,7 +123,7 @@ sub getDiff ($$$$$$) {
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
     my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 		    $Codestriker::cvs, '-q', '-d', $self->{url},
-		    'rdiff', '-u', $extra_options,
+		    'rdiff', $extra_options, '-u', 
 		    '-r', $start_tag, '-r', $end_tag, $module_name);
 
     # Ideally, we should use IO::Select, but that is broken on Win32.
