@@ -1193,7 +1193,7 @@ C:\> ppm
 PPM> rep add theory http://theoryx5.uwinnipeg.ca/ppmpackages
 PPM> install mod_perl
 </programlisting>
-          Note mod_perl has known to be a little flacky under Windows.
+          Note mod_perl has known to be a little flaky under Windows.
           Make sure you get Codestriker working deployed as a CGI
           script before trying to use mod_perl.
 	</para>
