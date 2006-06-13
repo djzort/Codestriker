@@ -89,6 +89,9 @@ Version 1.9.2
   been removed if the topic is closed.
   Contributed by ed.torbett@simulation-systems.co.uk.
 
+* Improved memory usage when integrated with very large LXR databases.
+  Contributed by Patrick Diamond <patrick_diamond@mailc.net>.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address

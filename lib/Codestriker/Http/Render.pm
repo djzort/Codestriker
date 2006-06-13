@@ -115,13 +115,12 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
     $self->{diff_current_revision} = "";
     $self->{diff_current_repmatch} = 0;
 
-    # Check if the repository has an associated LXR mapping, and if so, read
-    # all the identifiers into a massive hashtable (gasp!).
+    # Check if the repository has an associated LXR mapping, and if so, 
+    # setup a db connection and prepare a select statement.
     if (defined $repository) {
 	my $value = $Codestriker::lxr_map->{$repository->toString()};
 	if (defined $value) {
 	    my %lxr = %{ $value };
-	    my %idhash = ();
 
 	    my $passwd = $lxr{password};
 	    if (! defined $passwd) {
@@ -132,13 +131,10 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 				   {AutoCommit=>0, RaiseError=>1})
 		|| die "Couldn't connect to database: " . DBI->errstr;
 	    my $select_ids =
-		$dbh->prepare_cached('SELECT symname FROM symbols');
-	    $select_ids->execute();
-	    while (my ($identifier) = $select_ids->fetchrow_array()) {
-		$idhash{$identifier} = 1;
-	    }
-	    $dbh->disconnect;
-	    $self->{idhashref} = \%idhash;
+		$dbh->prepare_cached('SELECT count(symname) FROM symbols where symname = ?');
+	    $self->{idhashref} = {};
+	    $self->{idhashsth} = $select_ids;
+	    $self->{idhashdbh} = $dbh;
 	    $self->{lxr_base_url} = $lxr{url};
 	}
 	else {
@@ -151,9 +147,15 @@ sub new ($$$$$$$\%\@$$\@\@\@\@$$) {
 	$self->{idhashref} = undef;
     }
 
-
     bless $self, $type;
 }
+
+# cleanup, disconnect from the lxr database if connected
+sub DESTROY {
+    my $self = shift;
+    $self->{idhashdbh}->disconnect() if exists $self->{idhashdbh};
+} 
+
 
 # Given an identifier, wrap it within the appropriate <A HREF> tag if it
 # is a known identifier to LXR, otherwise just return the id.  To avoid
@@ -163,8 +165,22 @@ sub lxr_ident($$) {
     my ($self, $id) = @_;
 
     my $idhashref = $self->{idhashref};
+    
+    if (length($id) >= 4) {
+	
+	# Check if the id has not yet been found in lxr.
+    	if (not exists $idhashref->{$id}) {
+	    $idhashref->{$id} = 0;        # By default not found.
+	    my $sth = $self->{idhashsth}; # DB statement handle.
 
-    if (length($id) >= 4 && defined $$idhashref{$id}) {
+	    # Fetch ids from lxr and store in hash.
+	    $sth->execute($id);
+	    ($idhashref->{$id}) = $sth->fetchrow_array();
+        }
+    }
+
+    # Check if the id has been found in lxr.
+    if ($$idhashref{$id}) {
 	return "<A HREF=\"" . $self->{lxr_base_url} . "$id\" " .
 	    "CLASS=\"fid\">$id</A>";
     } else {
