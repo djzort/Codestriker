@@ -419,7 +419,7 @@ sub _send_topic_email {
 						    "", "", "",
 						    $query->url(), 0);
     
-    my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\" \n";
+    my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\"";
     my $body =
 	"Topic \"$topic->{title}\"\n" .
 	"Author: $topic->{author}\n" .
