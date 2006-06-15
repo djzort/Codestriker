@@ -246,7 +246,7 @@ This is a comma separated list of email addresses, which are the \
 people who need to review this code.  When the topic is created, \
 the new topic notification  email will be sent to these addresses.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=150 /></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="reviewers" VALUE="[% reviewers | html_entity %]" SIZE=50 MAXLENGTH=1024 /></TD>
 </TR>
 
 [%# The Cc input field #%]
@@ -258,7 +258,7 @@ This is a comma separated list of email addresses, which are \
 not intended to be reviewers, but typically a mailing list \
 to notify a number of people about the creation of a new topic.')">(?)</a></FONT>
 </TD>
- <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=150 /></TD>
+ <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=1024 /></TD>
 </TR>
 </TABLE>
 

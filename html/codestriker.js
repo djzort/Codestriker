@@ -201,7 +201,7 @@ function add_comment_html(file, line, new_value)
             '(add other reviewers)</a></font> </td>' +
             '<td>' +
 	    '<input type="text" name="comment_cc" size="25" ' +
-                    'maxlength="150"></td>\n' +
+                    'maxlength="1024"></td>\n' +
             '<td><input type="submit" name="submit" value="Submit"></td>' +
             '</tr></table></form></body></html>\n';
 

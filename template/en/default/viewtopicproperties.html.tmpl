@@ -95,7 +95,7 @@ function DeleteTopicConfirm()
   <td>Reviewers:</td>
   <td>
     <input type="text" name="reviewers" value="[% reviewers | html_entity %]"
-           size="50" maxlength="150"
+           size="50" maxlength="1024"
   	   [%# Check to see if the topic is open or not #%]
 	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %] />
   </td>
@@ -105,7 +105,7 @@ function DeleteTopicConfirm()
   <td>Cc:</td>
   <td>
     <input type="text" name="cc" value="[% cc | html_entity %]" 
-           size="50" maxlength="150"
+           size="50" maxlength="1024"
  	   [%# Check to see if the topic is open or not #%]
 	   [% IF antispam_email || topic_readonly != 0 %]readonly[% END %] />
   </td>
