@@ -18,6 +18,7 @@ use Codestriker::Repository::Subversion;
 use Codestriker::Repository::Perforce;
 use Codestriker::Repository::Vss;
 use Codestriker::Repository::ClearCaseSnapshot;
+use Codestriker::Repository::ClearCaseDynamic;
 
 # Factory method for retrieving a Repository object, given a descriptor.
 sub get ($$) {
@@ -82,7 +83,10 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*vss:(.*):(.*)$/i) {
 	# Older-style Visual Source Safe (VSS) repository spec.
 	return Codestriker::Repository::Vss->new($1,$2);
-
+    }
+    elsif ($repository =~ /^\s*clearcase:dyn:(.*)$/i) {
+	# ClearCase Dynamic repository.
+	return Codestriker::Repository::ClearCaseDynamic->new($1);
     } elsif ($repository =~ /^\s*clearcase:(.*)$/i) {
 	# ClearCase Snapshot repository.
 	return Codestriker::Repository::ClearCaseSnapshot->new($1);

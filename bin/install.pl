@@ -142,6 +142,12 @@ if (defined $Codestriker::topic_text_encoding) {
     }
 }
 
+# Check if the ClearCase::CtCmd module is required by checking if a
+# ClearCaseDynamic repository is defined.
+if (grep(/^clearcase:dyn/, @Codestriker::valid_repositories)) {
+    push @{$modules}, { name => 'ClearCase::CtCmd', version => '0' };
+}
+
 my %missing_optional = ();
 my %missing = ();
 foreach my $module (@{$modules}) {
