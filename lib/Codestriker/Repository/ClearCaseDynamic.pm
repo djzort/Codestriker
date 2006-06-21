@@ -18,10 +18,10 @@ use File::Spec;
 eval("use ClearCase::CtCmd");
 
 # Constructor.
-#   - viewname:vobs_dir - absolute path to the vobs dir (mount point on unix/drive letter on windows)
-#                This dynamic view should be mounted on the same host on which CodeStriker is
-#                running
-#     
+# viewname:vobs_dir - absolute path to the vobs dir
+#                     (mount point on unix/drive letter on windows)
+# This dynamic view should be mounted on the same host on which Codestriker
+# is running.
 sub new ($$)
 {
     my ($type, $url) = @_;
@@ -41,44 +41,56 @@ sub new ($$)
 sub retrieve ($$$\$)
 {
     my ($self, $filename, $revision, $content_array_ref) = @_;
-    my $full_element_name = File::Spec->catfile($self->{vobs_dir}, $filename);
 
-    if (defined($revision) && length($revision) > 0) {
-        $full_element_name = $full_element_name . '@@' . $revision;
+    # Set the current view to the repository's dynamic view name.
+    my $clearcase = ClearCase::CtCmd->new();
+    (my $status, my $stdout, my $error_msg) =
+	$clearcase->exec('setview', $self->{dynamic_view_name});
+
+    # Check the result of the setview command.
+    if ($status) {
+	$error_msg = "Failed to open view: " . $self->{dynamic_view_name} .
+	    ": $error_msg\n";
+	print STDERR "$error_msg\n";
+	return $error_msg;
     }
 
-    my $error_msg;
-    my $clearcase = ClearCase::CtCmd->new();
-    if ($clearcase->exec('setview', $self->{dynamic_view_name})) {
-
-	# If setview works, put the remaining code in an eval block
-	# to ensure the endview command is called.
-	eval {
-	    # Load the file into the given array.
-	    open CONTENTFILE, "$full_element_name"
-		|| die "Couldn't open file: $full_element_name: $!";
-	    for (my $i = 1; <CONTENTFILE>; $i++) {
-		chop;
-		$$content_array_ref[$i] = $_;
-	    }
-	    close CONTENTFILE;
-	};
-	if ($@) {
-	    $error_msg = $@;
+    # Execute the remaining code in an eval block to ensure the endview
+    # command is always called.
+    eval {
+	# Construct the filename in the view, based on its path and
+	# revision.
+	my $full_element_name = File::Spec->catfile($self->{vobs_dir},
+						    $filename);
+	if (defined($revision) && length($revision) > 0) {
+	    $full_element_name = $full_element_name . '@@' . $revision;
 	}
 
-	# Close the view.
+	# Load the file directly into the given array.
+	open CONTENTFILE, "$full_element_name"
+	    || die "Couldn't open file: $full_element_name: $!";
+	for (my $i = 1; <CONTENTFILE>; $i++) {
+	    chop;
+	    $$content_array_ref[$i] = $_;
+	}
+	close CONTENTFILE;
+    };
+    if ($@) {
+	# Something went wrong in the above code, record the error message
+	# and continue to ensure the view is closed.
+	$error_msg = $@;
+	print STDERR "$error_msg\n";
+    }
+
+    # Close the view.
+    ($status, $stdout, $error_msg) =
 	$clearcase->exec('endview', $self->{dynamic_view_name});
-    } else {
-	$error_msg = "Failed to open view: " . $self->{dynamic_view_name} . "\n";
+    if ($status) {
+	$error_msg = "Failed to close view: " . $self->{dynamic_view_name} .
+	    ": $error_msg\n";
+	print STDERR "$error_msg\n";
     }
     
-
-    if (defined($error_msg)) {
-       print STDERR "Error: $error_msg\n";
-    }
-
-    # If there was no error, this will be undefined.
     return $error_msg;
 }
 

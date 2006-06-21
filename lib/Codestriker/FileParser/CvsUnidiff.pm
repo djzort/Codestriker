@@ -112,12 +112,14 @@ sub parse ($$$) {
 	$line = <$fh>;
 	return () unless defined $line;
 
-
 	# If the diff is empty (since we may have used the -b flag), continue
 	# processing the next diff header back around this loop.  Note this is
 	# only an issue with cvs diffs.  Ordinary diffs just don't include
 	# a diff section if it is blank.
-	next if ($line =~ /^Index:/o);
+	while (defined $line && $line =~ /^\s*$/o) {
+	    $line = <$fh>;
+	}
+	next if (! defined $line) || ($line =~ /^Index:/o);
 
 	# Check for binary files being added, changed or removed.
 	if ($line =~ /^Binary files \/dev\/null and (.*) differ$/o) {

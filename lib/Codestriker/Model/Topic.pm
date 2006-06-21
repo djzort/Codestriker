@@ -635,11 +635,11 @@ sub update($$$$$$$$$$) {
     }
 
     # Update the topic object's properties.
-    $self->{title} = decode_utf8($new_title);
+    $self->{title} = $new_title;
     $self->{author} = $new_author;
     $self->{repository} = $new_repository;
     $self->{project_id} = $new_projectid;
-    $self->{description} = decode_utf8($new_description);
+    $self->{description} = $new_description;
     $self->{modified_ts} = $modified_ts;
     $self->{topic_state} = $new_state;
     $self->{topic_state_id} = $new_stateid;

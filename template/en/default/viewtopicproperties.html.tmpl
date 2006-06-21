@@ -33,7 +33,7 @@ function DeleteTopicConfirm()
 </script>
 
 [%# Create a form to allow the topic's properties to be changed #%]
-<form method="post" enctype="application/x-www-form-urlencoded" name="form">
+<form method="post" name="form" enctype="multipart/form-data" accept-charset="UTF-8">
 
 <input type="hidden" name="action" value="edit_topic_properties" />
 <input type="hidden" name="topic" value="[% topicid %]" />
@@ -54,9 +54,7 @@ function DeleteTopicConfirm()
     <input type="text" name="topic_title" 
            value="[% title | html_entity %]" size="70"
 		[%# Check to see if the topic is open or not #%]
-        [% IF topic_readonly != 0 %]
-			readonly
-		[% END %]
+		[% IF topic_readonly != 0 %]readonly[% END %]
 		    maxlength="70"/>
   </td>
 </tr>

@@ -529,11 +529,11 @@ $use_compression = 0;
      # the Perforce server.
      'perforce:sits:password@localhost:1666',
 
-     # The final example is a ClearCase repository, where the path is
+     # The next example is a ClearCase repository, where the path is
      # the location of a shared snapshot view.  From this view, it
      # should be  possible to a file of any version can be 
      # retrieved from the vob using the "cleartool get" command.  It
-     # is important that this snapshot view is accessible with  the
+     # is important that this snapshot view is accessible with the
      # same path specification for all developers.  This is because
      # a diff file created by a developer will refer to the snapshot
      # view, and will allow Codestriker to retrieve specific files
@@ -541,7 +541,10 @@ $use_compression = 0;
      # It is also important that the user account running the
      # webserver process has permission to access to the snapshot
      # view.
-     'clearcase:c:\\stuff\\view_name\\vob_name'
+     'clearcase:c:\\stuff\\view_name\\vob_name',
+
+     # The next example is a repository based off a ClearCase dynamic view.
+     'clearcase:dyn:c:\\stuff\\dynamic_view_name\\vob_name'
     );
         </programlisting>
         </para>
