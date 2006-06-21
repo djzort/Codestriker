@@ -36,7 +36,9 @@
         against the review comments.  Once all reviewers have
         finished, the author has all review comments available in a
         structured fashion.  All information is stored in a relational
-        database, which Codestriker can search over.
+        database, which Codestriker can search over.  All text is
+        stored internally as UTF-8, which supports reviews in
+        all major languages.
       </para>
       <para>
         Special support is provided for integration with 
@@ -760,6 +762,27 @@ $lxr_map =
 	</para>
       </sect2>
       <sect2>
+        <title>Topic Text Encoding</title>
+	<para>
+	  Codestriker stores the topic text, description and comments
+          as UTF-8.  When creating a topic, Codestriker needs to be
+          told what encoding your files are stored in.  By default,
+          Codestriker assumes it is UTF-8 (compatible with ASCII).
+          If your source code files are stored in another encoding
+          (for example, gb2312 for a Chinese team), this needs to be
+          specified in the <varname>$topic_text_encoding</varname>
+          variable.
+	  <programlisting>
+# Character encoding to use when reading topic text.  Default is utf8
+# (compatible with ASCII) if not set, but this can be over-ridden here.
+# List of example encoding names can be retrieved from the following
+# URL: http://perldoc.perl.org/Encode/Supported.html.
+#$topic_text_encoding = 'utf8';
+#$topic_text_encoding = 'gb2312';
+	  </programlisting>
+	</para>
+      </sect2>
+      <sect2>
         <title>Deployment Options</title>
 	<para>
 	  There are a number of other options which affect how
@@ -1193,7 +1216,7 @@ Alias /codestrikerhtml/ "C:/codestriker/codestriker-X.Y.Z/html/"
 	  should be able to install it by typing:
 <programlisting>
 C:\> ppm
-PPM> rep add theory http://theoryx5.uwinnipeg.ca/ppmpackages
+PPM> rep add theory http://theoryx5.uwinnipeg.ca/cgi-bin/ppmserver?urn:/PPMServer58
 PPM> install mod_perl
 </programlisting>
           Note mod_perl has known to be a little flaky under Windows.

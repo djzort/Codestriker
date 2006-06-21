@@ -10,6 +10,7 @@
 package Codestriker::Model::MetricStats;
 
 use strict;
+use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
 
@@ -257,6 +258,10 @@ sub get_raw_metric_data {
 	    FROM topic, project
 	    WHERE topic.id = ? AND 
 		  topic.projectid = project.id',{}, $topicid);
+
+    # Decode topic title and project name.
+    $basic_topic_info[2] = decode_utf8($basic_topic_info[2]);
+    $basic_topic_info[5] = decode_utf8($basic_topic_info[5]);
 
     if ($basic_topic_info[3] < @Codestriker::topic_states) {
 	$basic_topic_info[3] = 
