@@ -67,7 +67,7 @@ sub retrieve ($$$\$)
 	}
 
 	# Load the file directly into the given array.
-	open CONTENTFILE, "$full_element_name"
+	open (CONTENTFILE, "$full_element_name")
 	    || die "Couldn't open file: $full_element_name: $!";
 	for (my $i = 1; <CONTENTFILE>; $i++) {
 	    chop;

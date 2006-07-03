@@ -63,14 +63,14 @@ sub retrieve ($$$\$) {
             # If there was an error, the message will be in the error file.
             # Read in that file and store it in the "$error_msg" variable
             # so that we can return it to the caller.
-            open ERRORFILE, "<$errorfile"
+            open (ERRORFILE, "<$errorfile")
                 || die "ClearTool returned an error, but Codestriker couldn't read from the error file.";
             my (@errorlines) = <ERRORFILE>;
             $error_msg = "Error from ClearTool: " . join(" ", @errorlines);
             close ERRORFILE;
         } else {
             # Operation was successful.  Load the file into the given array.
-            open CONTENTFILE, "<$tempfile"
+            open (CONTENTFILE, "<$tempfile")
                 || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
             for (my $i = 1; <CONTENTFILE>; $i++) {
 		$_ = Codestriker::decode_topic_text($_);
