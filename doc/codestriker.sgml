@@ -549,7 +549,7 @@ $use_compression = 0;
      # The clearcase identifier is followed by the dyn indicator,
      # followed by the view name, followed by the location where the
      # view is loaded.
-     'clearcase:dyn:c:\\stuff\\dynamic_view_name\\vob_name'
+     # 'clearcase:dyn:viewname:/vobs'
     );
         </programlisting>
         </para>
