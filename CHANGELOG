@@ -17,6 +17,10 @@ Version 1.9.2
   URL.  See the codestriker.conf file for more information.
   Submitted by Edwin Fine <edwin.m.fine@verizon.com>.
 
+* New repository module for linking to ClearCase dynamic views.  See
+  the configuration file and/or manual for example configurations.
+  Submitted by Avinandan Sengupta <avinandan.sengupta@gmail.com>.
+
 * Modified the way Perforce retrieves files from the depot, as servers
   set with a security level of 2 or above were not receiving password
   information.  This has been addressed by modifying the command line
