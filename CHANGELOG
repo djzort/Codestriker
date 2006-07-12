@@ -96,6 +96,10 @@ Version 1.9.2
 * Improved memory usage when integrated with very large LXR databases.
   Contributed by Patrick Diamond <patrick_diamond@mailc.net>.
 
+* Newer versions of the Subversion client (1.3.2) were returning
+  warning text that was not parsed correctly.  This has now been
+  fixed.  Contributed by Vladimir Sizikov <vsizikov@gmail.com>.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address

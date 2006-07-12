@@ -143,7 +143,7 @@ sub getDiff ($$$$$) {
     while(<$read_stderr_fh>) {
         my $line = $_;
 
-        if ($line =~ /^svn: URL '.*' refers to a directory/) {
+        if ($line =~ /^svn:.*URL '.*' refers to a directory/) {
             $directory = $module_name;
         }
     }
