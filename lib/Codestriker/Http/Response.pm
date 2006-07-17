@@ -193,6 +193,9 @@ sub generate_header {
 	select(GZIP);
 	$output_compressed = 1;
     } else {
+        # Make sure the STDOUT encoding is set to UTF8.  Not needed
+        # when the data is being sent as compressed bytes.
+	binmode STDOUT, ':utf8';
 	if ($cache) {
 	    print $query->header(-cookie=>$cookie_obj,
 					 -charset=>"UTF-8");
