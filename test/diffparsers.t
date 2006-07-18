@@ -33,7 +33,7 @@ foreach my $filename (@filenames)
     } 
     elsif ($repo_type eq "perforce")
     {
-        $repo = 'perforce:sits:sits2@localhost:1666';
+        $repo = 'perforce:sits@localhost:1666';
     }
     elsif ($repo_type eq "clearcase")
     {
