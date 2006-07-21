@@ -339,7 +339,7 @@ sub table { return Codestriker::DB::Table->new(@_); }
 my $topic_table =
   table(name => "topic",
 	columns => [col(name=>"id", type=>$INT32, pk=>1),
-		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"author", type=>$VARCHAR, length=>200),
 		    col(name=>"title", type=>$VARCHAR, length=>255),
 		    col(name=>"description", type=>$TEXT),
 		    col(name=>"document", type=>$TEXT),
@@ -361,7 +361,7 @@ my $topic_table =
 my $topichistory_table =
   table(name => "topichistory",
 	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
-		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"author", type=>$VARCHAR, length=>200),
 		    col(name=>"title", type=>$VARCHAR, length=>255),
 		    col(name=>"description", type=>$TEXT, length=>255),
 		    col(name=>"state", type=>$INT16),
@@ -371,7 +371,7 @@ my $topichistory_table =
 		    col(name=>"projectid", type=>$INT32),
 		    col(name=>"reviewers", type=>$TEXT),
 		    col(name=>"cc", type=>$TEXT, mandatory=>0),
-		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255, mandatory=>0)
+		    col(name=>"modified_by_user", type=>$VARCHAR, length=>200, mandatory=>0)
 		   ],
 	indexes => [dbindex(name=>"th_idx", column_names=>["topicid"])]);
 	
@@ -379,7 +379,7 @@ my $topichistory_table =
 my $topicviewhistory_table =
   table(name => "topicviewhistory",
 	columns => [col(name=>"topicid", type=>$INT32),
-		    col(name=>"email", type=>$VARCHAR, length=>255, mandatory=>0),
+		    col(name=>"email", type=>$VARCHAR, length=>200, mandatory=>0),
 		    col(name=>"creation_ts", type=>$DATETIME)
 		   ],
 	indexes => [dbindex(name=>"tvh_idx", column_names=>["topicid"])]);
@@ -389,7 +389,7 @@ my $topicviewhistory_table =
 my $topicusermetric_table =
   table(name => "topicusermetric",
 	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
-		    col(name=>"email", type=>$VARCHAR, length=>255, pk=>1),
+		    col(name=>"email", type=>$VARCHAR, length=>200, pk=>1),
 		    col(name=>"metric_name", type=>$VARCHAR, length=>80, pk=>1),
 		    col(name=>"value", type=>$FLOAT)
 		   ],
@@ -422,7 +422,7 @@ my $commentdata_table =
   table(name => "commentdata",
 	columns => [col(name=>"commentstateid", type=>$INT32),
 		    col(name=>"commentfield", type=>$TEXT),
-		    col(name=>"author", type=>$VARCHAR, length=>255),
+		    col(name=>"author", type=>$VARCHAR, length=>200),
 		    col(name=>"creation_ts", type=>$DATETIME)
 		   ],
 	indexes => [dbindex(name=>"comment_idx",
@@ -465,14 +465,14 @@ my $commentstatehistory_table =
 		    col(name=>"metric_value", type=>$VARCHAR, length=>80),
 		    col(name=>"version", type=>$INT32, pk=>1),
 		    col(name=>"modified_ts", type=>$DATETIME),
-		    col(name=>"modified_by_user", type=>$VARCHAR, length=>255)
+		    col(name=>"modified_by_user", type=>$VARCHAR, length=>200)
 		    ]);
 
 # Indicate what participants there are in a topic.
 my $participant_table =
   table(name => "participant",
 	columns => [col(name=>"topicid", type=>$INT32, pk=>1),
-		    col(name=>"email", type=>$VARCHAR, length=>255, pk=>1),
+		    col(name=>"email", type=>$VARCHAR, length=>200, pk=>1),
 		    col(name=>"type", type=>$INT16, pk=>1),
 		    col(name=>"state", type=>$INT16),
 		    col(name=>"modified_ts", type=>$DATETIME),

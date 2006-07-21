@@ -351,14 +351,14 @@ sub _untaint_comma_digits($$) {
 sub _untaint_email($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*[-_\w\.]{1,255}(\@[-_\w\.]{1,255})?[\s]*');
+    $self->_untaint($name, '[\s]*[-_\w\.]{1,200}(\@[-_\w\.]{1,200})?[\s]*');
 }
 
 # Untaint a list of email addresses.
 sub _untaint_emails($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*([-_\w\.]{1,255}(\@[-_\w\.]{1,255})?[\s,;]*){1,100}[\s]*');
+    $self->_untaint($name, '[\s]*([-_\w\.]{1,200}(\@[-_\w\.]{1,200})?[\s,;]*){1,100}[\s]*');
 }
 
 # Untaint a list of bug ids.
