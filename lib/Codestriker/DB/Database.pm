@@ -62,7 +62,7 @@ sub _get_connection {
 				$Codestriker::dbpasswd,
 				{AutoCommit=>$auto_commit,
 				 RaiseError=>$raise_error,
-				 LongReadLen=>1024000});
+				 LongReadLen=>10240000});
 
     # Return the new connection.
     return $self->{dbh};
