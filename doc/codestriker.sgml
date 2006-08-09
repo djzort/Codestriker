@@ -1,4 +1,4 @@
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+s<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
 
 <!-- Note the /usr/share/sgml/docbook/sgml-dtd-3.1/dbnotn.mod file had
   to be modified to accept PNG images (simple change).  Should migrate to
@@ -1078,7 +1078,8 @@ $metric_config = "none";
       <para>
         Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
-        url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.
+        url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.  Note if you are using IIS as your web-server, please
+        see <xref linkend="IIS configuration"> on appropriate ActivePerl releases.
       </para>
       <para>
         To run <filename>install.pl</filename> under UNIX, do the
@@ -1115,8 +1116,9 @@ $metric_config = "none";
         url="http://httpd.apache.org">http://httpd.apache.org</ulink>),
         which is available for download for both UNIX and Window
         platforms.  Apache should be already available for most UNIX
-        distributions.  Apache 1.X is recommended for Win32 systems,
-        as 2.X may have issues with running Codestriker.
+        distributions.  Apache 1.X or 2.X can be used for Win32 systems
+        deploying Codestriker as a CGI script.  For Win32 mod_perl
+        installations, Apache 1.X is recommended.
       </para>
       <para>
         <emphasis>Note any Codestriker or Apache configuration changes
@@ -1318,11 +1320,15 @@ PerlSwitches -T
       </sect2>
     </sect1>
 
-    <sect1>
+    <sect1 id="IIS configuration">
       <title>IIS configuration</title>
       <para>
         This section deals with deploying Codestriker under IIS, as
-        a CGI script.  These instructions were performed on a
+        a CGI script.  <emphasis>At the time of writing, the current version of ActivePerl (5.8.8.817)
+        contains a version of CGI.pm which is broken for IIS deployments.
+        Use <ulink
+        url="http://downloads.activestate.com/ActivePerl/Windows/5.8/ActivePerl-5.8.7.813-MSWin32-x86-148120.msi">http://downloads.activestate.com/ActivePerl/Windows/5.8/ActivePerl-5.8.7.813-MSWin32-x86-148120.msi</ulink> instead.</emphasis>
+        These instructions were performed on a
         Windows 2000 machine, so hopefully this provides an indication
         as to what needs to be performed for other Win32
         configurations.  Startup the IIS configuration application by
