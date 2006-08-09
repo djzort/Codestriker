@@ -1079,7 +1079,7 @@ $metric_config = "none";
         Perl is available by default for all UNIX systems.  For
         Windows, you can download it for free from <ulink
         url="http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl">http://www.activestate.com/Products/Download/Download.plex?id=ActivePerl</ulink>.  Note if you are using IIS as your web-server, please
-        see <xref linkend="IIS configuration"> on appropriate ActivePerl releases.
+        see <xref linkend="IIS-configuration"> on appropriate ActivePerl releases.
       </para>
       <para>
         To run <filename>install.pl</filename> under UNIX, do the
@@ -1320,7 +1320,7 @@ PerlSwitches -T
       </sect2>
     </sect1>
 
-    <sect1 id="IIS configuration">
+    <sect1 id="IIS-configuration">
       <title>IIS configuration</title>
       <para>
         This section deals with deploying Codestriker under IIS, as
