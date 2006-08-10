@@ -77,7 +77,7 @@ my $modules = [
     }, 
     {
 	name => 'MIME::QuotedPrint',
-	version => '0'
+	version => '2.14'
     },
     { 
         name => 'DBI', 
