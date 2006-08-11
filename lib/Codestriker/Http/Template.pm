@@ -20,8 +20,9 @@ sub new($$) {
 
     my $self = {};
     $self->{name} = $name;
-    $self->{template} =
-	Template->new({
+
+    # Template configuration.
+    my $config = {
 	    # Location of templates.
 	    INCLUDE_PATH => 
 		$Codestriker::BASEDIR . "/template/en/custom:" .
@@ -35,14 +36,18 @@ sub new($$) {
 	    # DIRECTIVE %]).
 	    PRE_CHOMP => 1,
 	    TRIM => 1, 
-	    
-	    # Where to compile the templates.
-	    COMPILE_DIR => $Codestriker::BASEDIR . '/cgi-bin/data/',
 
 	    # Codestriker-specific plugins.
 	    PLUGIN_BASE => 'Codestriker::Template::Plugin'
-	    })
-	|| die Template->error();
+    };
+
+    # If the Codestriker tmpdir has been defined, use that for
+    # location for generating the templates.
+    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
+        $config->{COMPILE_DIR} = $Codestriker::tmpdir;
+    }
+
+    $self->{template} =	Template->new($config) || die Template->error();
 
     return bless $self, $type;
 }

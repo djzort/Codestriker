@@ -100,6 +100,11 @@ Version 1.9.2
   warning text that was not parsed correctly.  This has now been
   fixed.  Contributed by Vladimir Sizikov <vsizikov@gmail.com>.
 
+* Make sure the generated Template Toolkit files are stored in 
+  the web server's temporary directory, or $Codestriker::tmpdir if
+  that is defined.  Previously, the temporary files were being stored
+  in sub-directories of cgi-bin.
+
 Version 1.9.1
 
 * Correct problem introduced in 1.9.0 release where the email address
