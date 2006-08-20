@@ -10,6 +10,7 @@
 package Codestriker::Model::Project;
 
 use strict;
+use Carp;
 use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
@@ -259,5 +260,46 @@ sub delete($$) {
 	return $rc;
     }
 }
+
+# Determine the number of open topics in the specified project.
+sub num_open_topics {
+    my ($type, $id) = @_;
+
+    my $dbh = Codestriker::DB::DBI->get_connection();
+    my $count;
+    eval {
+	$count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
+				       'FROM topic ' .
+				       'WHERE topic.projectid = ? ' .
+				       'AND topic.state = 0', {}, $id);
+    };
+    Codestriker::DB::DBI->release_connection($dbh, 1);
+    if ($@) {
+	carp "Problem retrieving count of open topics in project: $@";
+    }
+
+    return $count;
+}
+
+# Determine the number of topics in the specified project.
+sub num_topics {
+    my ($type, $id) = @_;
+
+    my $dbh = Codestriker::DB::DBI->get_connection();
+    my $count;
+    eval {
+	$count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
+				       'FROM topic ' .
+				       'WHERE topic.projectid = ? ', {}, $id);
+    };
+    Codestriker::DB::DBI->release_connection($dbh, 1);
+
+    if ($@) {
+	carp "Problem retrieving count of topics in project: $@";
+    }
+
+    return $count;
+}
+
 
 1;

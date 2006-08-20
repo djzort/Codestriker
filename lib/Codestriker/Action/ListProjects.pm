@@ -43,6 +43,16 @@ sub process($$$) {
     # Go through all of the projects, and construct an edit_project URL.
     foreach my $project (@projects) {
 	$project->{edit_url} = $url_builder->edit_project_url($project->{id});
+	$project->{num_open_topics} =
+	    Codestriker::Model::Project->num_open_topics($project->{id});
+	$project->{open_topic_list_url} =
+	    $url_builder->list_topics_url('', '', '', '', '', '', '', '', '',
+					  '', [0], [$project->{id}], '');
+	$project->{num_topics} =
+	    Codestriker::Model::Project->num_topics($project->{id});
+	$project->{topic_list_url} =
+	    $url_builder->list_topics_url('', '', '', '', '', '', '', '', '',
+					  '', undef, [$project->{id}], '');
     }
     $vars->{'projects'} = \@projects;
 

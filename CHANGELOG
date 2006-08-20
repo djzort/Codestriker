@@ -1,6 +1,13 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.3
+
+* The project list screen now displays for each project, the total
+  number of open topics, and the total number of topics.  Clicking on
+  the count will go to the topic list screen with the relevant topics
+  displayed.
+
 Version 1.9.2
 
 * Codestriker now works with UTF-8 text, to support unicode character

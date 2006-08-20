@@ -19,6 +19,8 @@
   <th>Name</th>
   <th>Description</th>
   <th>State</th>
+  <th># Open Topics</th>
+  <th># Topics</th>
 </tr>
 
 [% FOREACH project = projects %]
@@ -30,11 +32,13 @@
 </TD>
 <TD>[% project.description | html_entity %]</TD>
 <TD>[% project.state | html_entity %]</TD>
+<TD align="right"><a href="[% project.open_topic_list_url %]">[% project.num_open_topics %]</a></TD>
+<TD align="right"><a href="[% project.topic_list_url %]">[% project.num_topics %]</a></TD>
 </TR>
 [% END %]
 
 <tr class="tlh">
-  <td colspan="3">&nbsp;</td>
+  <td colspan="5">&nbsp;</td>
 </tr>
 </TABLE>
 
