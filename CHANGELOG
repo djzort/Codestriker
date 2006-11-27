@@ -8,6 +8,11 @@ Version 1.9.3
   the count will go to the topic list screen with the relevant topics
   displayed.
 
+* Modified the VSS repository handler so that topics can be created
+  by either entering in labels or version numbers in the start and
+  end tag fields when creating a topic.  Previously, only labels
+  were supported.
+
 Version 1.9.2
 
 * Codestriker now works with UTF-8 text, to support unicode character
