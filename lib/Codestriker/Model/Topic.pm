@@ -1018,13 +1018,14 @@ sub delete($) {
     # Now do the deed.
     $success &&= $select->execute($self->{topicid});
     if ($success) {
-	while (my ($commentstateid) = $select->fetchrow_array()) {
+        foreach my $commentstate (@{$select->fetchall_arrayref()}) {
+            my $commentstateid = $commentstate->[0];
 	    $success &&= $delete_comments->execute($commentstateid);
 	    $success &&= $commentstate_history->execute($commentstateid);
             $success &&= $delete_commentstate_metric->execute($commentstateid);
-	}
-	$success &&= $select->finish();
+        }
     }
+
     $success &&= $delete_commentstate->execute($self->{topicid});
     $success &&= $delete_topic->execute($self->{topicid});
     $success &&= $delete_comments->execute($self->{topicid});

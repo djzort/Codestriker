@@ -183,7 +183,7 @@ sub get_list_of_actual_topic_participants {
 
     my @actual_user_list = ();
     foreach my $user ( @$actual_user_list_ref ) {
-        push @actual_user_list,$user->[0] if $user->[0] ne "";
+        push @actual_user_list,$user->[0] if defined $user->[0] && $user->[0] ne "";
     }
 
     # Close the connection, and check for any database errors.
