@@ -47,7 +47,7 @@ sub new($$) {
         $config->{COMPILE_DIR} = $Codestriker::tmpdir;
     }
 
-    $self->{template} =	Template->new($config) || die Template->error();
+    $self->{template} = Template->new($config) || die Template->error();
 
     return bless $self, $type;
 }

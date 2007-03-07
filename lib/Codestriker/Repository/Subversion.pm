@@ -110,7 +110,7 @@ sub toString ($) {
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $stdout_fh, $stderr_fh) = @_;
 
-    # Make sure the moduel does not end or start with a /
+    # Make sure the module does not end or start with a /
     $module_name =~ s/\/$//;
     $module_name =~ s/^\///;
 

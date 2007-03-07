@@ -112,19 +112,16 @@ sub parse ($$$) {
 	    # Try and read the base revision this change is against,
 	    # while handling new and removed files.
 	    my $base_revision = -1;
-	    if ($line =~ /^\-\-\- .*\s\(revision (\d+)\)/io ||
-		$line =~ /^\-\-\- .*\s\(rev (\d+)/io) {
+	    if ($line =~ /^\-\-\- .*\s.* (\d+)/io) {
 		$base_revision = $1;
-	    } elsif ($line !~ /^\-\-\- .*\s\(working copy\)/io) {
+	    } elsif ($line !~ /^\-\-\- .*/io) {
 		return ();
 	    }
 
 	    # Make sure the +++ line is present next.
 	    $line = <$fh>;
 	    return () unless defined $line;
-	    if ($line !~ /^\+\+\+ .*\s\(working copy\)/io &&
-		$line !~ /^\+\+\+ .*\s\(revision \d+\)/io &&
-		$line !~ /^\+\+\+ .*\s\(txn .*\)/io) {
+	    if ($line !~ /^\+\+\+ .*/io) {
 		return ();
 	    }
 
