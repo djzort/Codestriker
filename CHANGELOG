@@ -17,6 +17,9 @@ Version 1.9.3
   which was responsible for generating invalid links.  This has now
   been fixed.
 
+* Better handling of parsing Subversion diffs which were generated on
+  non-English systems.
+
 Version 1.9.2
 
 * Codestriker now works with UTF-8 text, to support unicode character
