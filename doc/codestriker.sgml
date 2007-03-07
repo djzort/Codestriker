@@ -1,15 +1,11 @@
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
-
-<!-- Note the /usr/share/sgml/docbook/sgml-dtd-3.1/dbnotn.mod file had
-  to be modified to accept PNG images (simple change).  Should migrate to
-  Docbook 4 eventually. -->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.2//EN">
 
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.9.2</subtitle>
+    <subtitle>Version 1.9.3</subtitle>
     <legalnotice>
-      <para>Copyright (c) 2001 - 2006</para>
+      <para>Copyright (c) 2001 - 2007</para>
     </legalnotice>
     <authorgroup>
       <author>

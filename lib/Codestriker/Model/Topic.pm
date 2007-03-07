@@ -333,7 +333,7 @@ sub read($$) {
 	$self->{topic_state} = $Codestriker::topic_states[$state];
 	$self->{topic_state_id} = $state;
 	$self->{project_id} = $projectid;
-	$self->{project_name} = $projectname;
+	$self->{project_name} = decode_utf8($projectname);
 	$self->{start_tag} = $start_tag;
 	$self->{end_tag} = $end_tag;
 	$self->{module} = $module;
@@ -923,7 +923,7 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
             
             # This is a bit heavy, but the search screen does need much 
             # of the information in the topic object, it is much cleaner
-            # to just return a fully formed topic object, rathe than a 
+            # to just return a fully formed topic object, rather than a 
             # array tunned. If performace is an issue, then the topic
             # object should use lazy instatation to don't pull data from
             # the database unless it is needed.

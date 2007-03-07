@@ -9,6 +9,7 @@
 package Codestriker::Model::Metrics;
 
 use strict;
+use Encode qw(decode_utf8);
 
 use Codestriker::DB::DBI;
 
@@ -822,13 +823,13 @@ sub _get_topic_history_rows {
 
 	    my %entry = ( 
 	      author=>$author,
-	      title=>$title,
-	      description=>$description,
+	      title=>decode_utf8($title),
+	      description=>decode_utf8($description),
 	      state=>$state,
 	      modified_ts=>$modified_ts,
 	      version=>$version,
 	      repository=>$repository,
-	      project=>$project,
+	      project=>decode_utf8($project),
 	      reviewers=>$reviewers,
 	      cc=>$cc, 
 	      modified_by=>$modified_by

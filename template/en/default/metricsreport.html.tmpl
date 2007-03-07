@@ -25,7 +25,7 @@
     [% FOREACH user_metrics %]
 
     <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
-	<td>[% name | html %]</td>
+	<td>[% name | html_entity %]</td>
 	<td>[% IF date_last_authored != '' %][% date_last_authored %][% ELSE %]&nbsp;[% END %]</td>
 	<td>[% IF date_last_participated != '' %][% date_last_participated %][% ELSE %]&nbsp;[% END %]</td>
 	<td>[% IF total_codestriker_time != '' %][% total_codestriker_time %][% ELSE %]&nbsp;[% END %]</td>
@@ -57,7 +57,7 @@
 	[%# Now display each enumerated value for this comment type #%]
 	[% FOREACH result = comment_metric.results %]
         <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
-	    <td>[% result.name | html %]</td>
+	    <td>[% result.name | html_entity %]</td>
 
 	    [% FOREACH count = result.counts %]
 	        <td>[% count %]</td>
@@ -91,7 +91,7 @@
     [% FOREACH topic_metrics %]
 
     <tr class="[% loop.count() % 2 == 1 ? 'tl1' : 'tl2' %]">
-	<td>[% name | html %]</td>
+	<td>[% name | html_entity %]</td>
 
 	[% FOREACH scount = counts %]
 	    <td>[% scount %]</td>

@@ -13,6 +13,10 @@ Version 1.9.3
   end tag fields when creating a topic.  Previously, only labels
   were supported.
 
+* The uri filter in the Template Toolkit changed its behaviour in 2.16,
+  which was responsible for generating invalid links.  This has now
+  been fixed.
+
 Version 1.9.2
 
 * Codestriker now works with UTF-8 text, to support unicode character

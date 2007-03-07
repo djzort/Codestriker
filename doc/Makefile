@@ -13,7 +13,8 @@ DVIPDF=dvipdf
 DVIPS=dvips
 RM=/bin/rm -f
 CP=/bin/cp
-PNG2EPS=png2eps
+PNG2PNM=pngtopnm
+PNM2PS=pnmtops
 
 # String output by $(JADETEX) when there are undefined references.
 UNDEFINED_REFERENCES=LaTeX Warning: There were undefined references
@@ -74,7 +75,7 @@ EPS_FILES=$(PNG_FILES:.png=.eps)
 
 # Build a EPS file from a PNG file.
 %.eps: %.png
-	$(PNG2EPS) $< > $@
+	$(PNG2PNM) $< | $(PNM2PS) > $@
 
 install: $(HTML_TARGETS) $(PDF_TARGETS) $(EPS_FILES)
 	$(CP) $(PDF_TARGETS) *.html *.png ../html
