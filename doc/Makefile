@@ -14,7 +14,7 @@ DVIPS=dvips
 RM=/bin/rm -f
 CP=/bin/cp
 PNG2PNM=pngtopnm
-PNM2PS=pnmtops
+PNM2PS=pnmtops -noturn
 
 # String output by $(JADETEX) when there are undefined references.
 UNDEFINED_REFERENCES=LaTeX Warning: There were undefined references
