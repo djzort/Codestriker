@@ -221,7 +221,7 @@ sub generate_header {
 	$codestriker_css = $Codestriker::codestriker_css;
     } else {
 	$codestriker_css = $query->url();
-	$codestriker_css =~ s/codestriker\/codestriker\.pl/codestrikerhtml\/codestriker\.css/;
+	$codestriker_css =~ s/\/[\w\-]+\/codestriker\.pl/\/codestrikerhtml\/codestriker\.css/;
     }
 
     my $overlib_js = $codestriker_css;
