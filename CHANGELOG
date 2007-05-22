@@ -1,6 +1,11 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.4
+
+* Emit a javascript warning if the external javascript files could
+  not be loaded.  This usually occurs due to apache misconfiguration.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

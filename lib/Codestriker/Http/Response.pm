@@ -274,6 +274,14 @@ sub generate_header {
 	}
 	$i++;
     }
+
+    # Check that the external javascript files were loaded, and if not
+    # output an error message.  This is usually due to a
+    # misconfiguration.
+    print "    if ('function' != typeof window.add_comment_html) {\n";
+    print "        alert('Oh oh... can\\'t find codestriker.js, please check your apache config.');\n";
+    print "    }\n";
+
     print "</script>\n";
 
     # Output the comment declarations if the $comments array is defined.
