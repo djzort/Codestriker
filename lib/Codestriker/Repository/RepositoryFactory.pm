@@ -55,7 +55,11 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*(https?:\/\/.*cvsweb\.cgi)\/*\s+(.*?)\/*\s*$/i) {
 	# CVS web repository.
 	return Codestriker::Repository::CvsWeb->new($1, $2);
-
+    } elsif ($repository =~ /^\s*(svn:\/\/.*)\s*;(.*);(.*)$/i) {
+        # Subversion repository using svnserver with username and password.
+	return Codestriker::Repository::Subversion->new($1, $2, $3);
+    } elsif ($repository =~ /^\s*(svn:\/\/.*)\s*$/i) {
+	return Codestriker::Repository::Subversion->new($1);
     } elsif ($repository =~ /^\s*svn:(.*)\s*;(.*);(.*)$/i) {
 	# Subversion repository with username and password
 	return Codestriker::Repository::Subversion->new($1, $2, $3);

@@ -6,6 +6,11 @@ Version 1.9.4
 * Emit a javascript warning if the external javascript files could
   not be loaded.  This usually occurs due to apache misconfiguration.
 
+* Allow subversion repositories that communicate using the Subversion
+  protocol to be specified in @valid_repositories as
+  'svn://my.subversion.server/repos/product/trunk' rather than
+  'svn:svn://my.subversion.server/repos/product/trunk'.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
