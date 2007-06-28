@@ -54,6 +54,7 @@ sub parse ($$$) {
 		   $line !~ /^Added:/o &&
 		   $line !~ /^Deleted:/o &&
 		   $line !~ /^Modified:/o &&
+		   $line !~ /^Copied:/o &&
 		   $line !~ /^Property changes on:/o) {
 		$line = <$fh>;
 	    }
@@ -65,7 +66,7 @@ sub parse ($$$) {
 	}
 
 	return () unless
-	    $line =~ /^(Index|Added|Modified|Deleted): (.*)$/o;
+	    $line =~ /^(Index|Added|Modified|Copied|Deleted): (.*)$/o;
 	$entry_type = $1;
 	$filename = $2;
 	$line = <$fh>;

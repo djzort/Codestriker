@@ -11,6 +11,8 @@ Version 1.9.4
   'svn://my.subversion.server/repos/product/trunk' rather than
   'svn:svn://my.subversion.server/repos/product/trunk'.
 
+* Support subversion diff files which contain "Copied:" entries.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
