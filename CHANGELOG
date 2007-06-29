@@ -15,6 +15,10 @@ Version 1.9.4
 
 * Improved patch file parsing for handling binary file changes.
 
+* Ensure emails sent contain the header "MIME-Version: 1.0" for
+  RFC2045 conformance.  Submitted by Vadim Zeitlin
+  <vadz@users.sourceforge.net>.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

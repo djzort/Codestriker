@@ -497,6 +497,7 @@ sub doit($$$$$$$$$) {
     # unicode characters.
     $smtp->datasend("Content-Type: text/plain; charset=\"utf-8\"\n");
     $smtp->datasend("Content-Transfer-Encoding: quoted-printable\n");
+    $smtp->datasend("MIME-Version: 1.0\n");
 
     # Insert a blank line for the body.
     $smtp->datasend("\n");
