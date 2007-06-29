@@ -33,6 +33,7 @@
 <table width="100%">
 
     [%# Display the table header #%]
+    [% SET number_columns = 7 %]
     <tr class="tlh">
         <th colspan="2"><a href="[% list_sort_url | html_entity %]&amp;topic_sort_change=title">Title</a></th>
         <th><a href="[% list_sort_url | html_entity %]&amp;topic_sort_change=author">Author</a></th>
@@ -40,10 +41,12 @@
         <th>Cc</th>
         <th><a href="[% list_sort_url | html_entity %]&amp;topic_sort_change=created">Created</a></th>
         [% FOREACH commentmetric = commentmetrics %]
+            [% SET number_columns = number_columns + 1 %]
             <th>[% commentmetric.value | html_entity %]</th>
         [% END %]
 	[% IF bugdb_enabled != 0 %]
-        <th>Bug IDs</th>
+            <th>Bug IDs</th>
+            [% SET number_columns = number_columns + 1 %]
 	[% END %]
         <th><a href="[% list_sort_url | html_entity %]&amp;topic_sort_change=state">State</a></th>
     </tr>
@@ -71,7 +74,7 @@
     [% END %]
 
     <tr class="tlh">
-        <td colspan="8">&nbsp;</td>
+        <td colspan="[% number_columns %]">&nbsp;</td>
     </tr>
 </table>
 

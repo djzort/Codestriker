@@ -21,6 +21,10 @@ Version 1.9.4
 
 * CSS cleanups from Kannan Goundan <cakoose@users.sourceforge.net>.
 
+* Bottom coloured row on topic list screen didn't extend across full
+  width of browser window if bug-tracking or custom comment metrics
+  were defined.  This has now been fixed.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
