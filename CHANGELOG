@@ -13,6 +13,8 @@ Version 1.9.4
 
 * Support subversion diff files which contain "Copied:" entries.
 
+* Improved patch file parsing for handling binary file changes.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

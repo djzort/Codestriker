@@ -1,0 +1,13 @@
+diff -rNu tmp/b1 tmp2/b1
+--- tmp/b1	2007-06-25 13:18:01.010674300 +0200
++++ tmp2/b1	2007-06-25 13:18:11.073401100 +0200
+@@ -1 +1 @@
+-hi
++hi2
+Files tmp/b1.exe and tmp2/b1.exe differ
+diff -rNu tmp/f1 tmp2/f1
+--- tmp/f1	2007-06-25 13:11:41.722741900 +0200
++++ tmp2/f1	2007-06-25 13:12:20.016828700 +0200
+@@ -1 +1 @@
+-some file text
++some file text a

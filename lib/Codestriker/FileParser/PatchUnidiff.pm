@@ -51,7 +51,8 @@ sub parse ($$) {
         # Unfortunately, when you provide the "-N" argument to diff,
         # it doesn't indicate new files or removed files properly.  Without
         # the -N argument, it then indicates "Only in ...".
-        if ($line =~ /^Binary files .* and (.*) differ$/) {
+        if ($line =~ /^Binary files .* and (.*) differ$/ ||
+	    $line =~ /^Files .* and (.*) differ$/) {
             $filename = $1;
             $binary = 1;
         } elsif ($line =~ /^Only in (.*): (.*)$/) {
