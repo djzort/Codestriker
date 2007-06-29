@@ -1,5 +1,11 @@
 /* CSS for codestriker */
 
+BODY {background-color: #eeeeee;}
+
+/* Links */
+A:link    {color: blue;}
+A:visited {color: purple;}
+
 /* File heading */
 TD.file {background-color: #cccccc; font-family: Helvetica, Arial; font-size: medium}
 
@@ -144,3 +150,6 @@ A.tab {text-decoration: none}
 /* Styles for error field in comment posting tooltip. */
 span.hidden {display: none}
 span.error {display: inline; color: red}
+
+span.feedback {color: red;}
+span.obsolete-header {color: red; font-weight: bold;}

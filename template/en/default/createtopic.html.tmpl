@@ -5,7 +5,7 @@
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
-    <font color="red">[% feedback %]</font>
+    <span class="feedback">[% feedback %]</span>
 [% END %]
 
 <P>
@@ -16,7 +16,7 @@
 
 [%# Show any topics that this topic will obsolete #%]
 [% IF obsoleted_topics.size > 0 %]
-<font color="red"><strong>Topics to obsolete:</strong></font>
+<span style="obsolete-header">Topics to obsolete:</span>
 [% FOREACH topic = obsoleted_topics %]
 <a href="[% topic.view_url %]">[% topic.title | html_entity %]</a>[% IF ! loop.last() %],[% END %]
 

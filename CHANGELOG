@@ -19,6 +19,8 @@ Version 1.9.4
   RFC2045 conformance.  Submitted by Vadim Zeitlin
   <vadz@users.sourceforge.net>.
 
+* CSS cleanups from Kannan Goundan <cakoose@users.sourceforge.net>.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
