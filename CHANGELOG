@@ -25,6 +25,10 @@ Version 1.9.4
   width of browser window if bug-tracking or custom comment metrics
   were defined.  This has now been fixed.
 
+* Place a clear divider between comment blocks on the view topic
+  comments screen, as suggested by Nikita V. Borodikhin
+  <eliterr@users.sourceforge.net> to minimise confusion.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
