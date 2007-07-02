@@ -29,6 +29,10 @@ Version 1.9.4
   comments screen, as suggested by Nikita V. Borodikhin
   <eliterr@users.sourceforge.net> to minimise confusion.
 
+* The topic comments tab count would incorrectly display the number
+  of comment threads rather than the number of comments, when viewing
+  the topic text.  This has now been fixed.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

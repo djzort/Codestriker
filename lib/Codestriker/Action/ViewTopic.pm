@@ -44,13 +44,11 @@ sub process($$$) {
     # many distinct comment lines are there.
     my @comments = $topic->read_comments();
     my %comment_map = ();
-    my $number_comments = 0;
     foreach my $comment (@comments) {
 	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
 	    $comment->{filenew};
 	if (! exists $comment_map{$key}) {
 	    $comment_map{$key} = 1;
-	    $number_comments++;
 	}
     }
 
@@ -152,9 +150,6 @@ sub process($$$) {
 
     # Obtain the link to download the actual document text.
     $vars->{'download_url'} = $url_builder->download_url($topicid);
-
-    # Indicate how many comments there are.
-    $vars->{'number_comments'} = $number_comments;
 
     # Fire the template on the topic heading information.
     my $template = Codestriker::Http::Template->new("viewtopic");
