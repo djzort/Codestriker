@@ -33,6 +33,8 @@ Version 1.9.4
   of comment threads rather than the number of comments, when viewing
   the topic text.  This has now been fixed.
 
+* Handle Subversion files which contain @ in the filename.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

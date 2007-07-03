@@ -31,7 +31,9 @@ sub new ($$) {
     $repository_url =~ s/[\\\/]^//;
     
     # Replace any spaces with %20 uri friendly escapes.
+    # Ditto with @ symbols, so Subversion doesn't interpret it as a peg.
     $repository_url =~ s/ /%20/g;
+    $repository_url =~ s/\@/%40/g;
 
     my $self = {};
     $self->{repository_url} = $repository_url;
@@ -46,7 +48,9 @@ sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
     # Replace any spaces with %20 uri friendly escapes.
+    # Ditto with @ symbols, so Subversion doesn't interpret it as a peg.
     $filename =~ s/ /%20/g;
+    $filename =~ s/\@/%40/g;
 
     my $read_data;
     my $read_stdout_fh = new FileHandle;
@@ -102,8 +106,10 @@ sub getDiff ($$$$$) {
     $module_name =~ s/^\///;
 
     # Replace any spaces with %20 uri friendly escapes.
+    # Ditto with @ symbols, so Subversion doesn't interpret it as a peg.
     my $filename = $module_name;
     $filename =~ s/ /%20/g;
+    $filename =~ s/\@/%40/g;
 
     my $write_stdin_fh = new FileHandle;
     my $read_stdout_fh = new FileHandle;
@@ -126,9 +132,16 @@ sub getDiff ($$$$$) {
     my $directory;
 
     # TODO: need a better way of detecting this, since Chinese users
-    # receive a different output string.  svn info might be better,
-    # it can tell you if it is a file or directory.
-    # svn propget svn:mime-type could be a way.
+    # receive a different output string.  Kind is either a file or
+    # directory from what I have seen.
+    # C:\Program Files\svn-win32-1.4.4\bin>svn info --xml http://svn.collab.net/repos/svn/trunk/tools/README
+# <?xml version="1.0"?>
+# <info>
+# <entry
+#   kind="file"
+#    path="README"
+#   revision="25631">
+# <url>http://svn.collab.net/repos/svn/trunk/tools/README</url>
 
     # If there is an error about it being a directory, then use the
     # module name as a directory.
