@@ -14,6 +14,9 @@ use Encode;
 
 use Time::Local;
 use IPC::Open3;
+use File::Temp qw/ tempdir /;
+use File::Path;
+use Fatal qw / open close waitpid /;
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
@@ -535,33 +538,50 @@ sub execute_command {
     # is not defined.
     $stderr_fh = \*STDERR unless defined $stderr_fh;
 
-    if (exists $ENV{'MOD_PERL'}) {
-	# The open3() call simply doesn't work under mod_perl/apache2,
-	# so we need to use open() instead, which is a pain since we lose
-	# error information.
-	my $command_line = "\"$command\"";
-	foreach my $arg (@args) {
-	    $command_line .= " \"$arg\"";
-	}
-	my $received_data = 0;
-	if (open(COMMAND, "$command_line |")) {
-	    while (<COMMAND>) {
-		print $stdout_fh $_;
-		$received_data = 1;
+    my $command_tmpdir;
+    eval {
+	if (exists $ENV{'MOD_PERL'}) {
+	    # The open3() call doesn't work under mod_perl/apache2,
+	    # so create a command which stores the stdout and stderr
+	    # into temporary files.
+	    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+		$command_tmpdir = tempdir(DIR => $Codestriker::tmpdir);
+	    } else {
+		$command_tmpdir = tempdir();
 	    }
-	}
-	if (!$received_data) {
-	    print $stderr_fh "Command failed: $!\n";
-	    print $stderr_fh "$command_line\n";
-	    print $stderr_fh "Check your webserver error log for more information.\n";
-	}
-    } else {
-	my $write_stdin_fh = new FileHandle;
-	my $read_stdout_fh = new FileHandle;
-	my $read_stderr_fh = new FileHandle;
 
-	# Open3 throws an exception on failure.
-	eval {
+	    # Build up the command string with naive quoting.
+	    my $command_line = "\"$command\"";
+	    foreach my $arg (@args) {
+		$command_line .= " \"$arg\"";
+	    }
+
+	    my $stdout_filename = "$command_tmpdir/stdout.txt";
+	    my $stderr_filename = "$command_tmpdir/stderr.txt";
+
+	    # Thankfully this works under Windows.
+	    my $system_line = "$command_line > \"$stdout_filename\" 2> \"$stderr_filename\"";
+	    system($system_line) == 0 || croak "Failed to execute $system_line: $!\n";
+
+	    open(TMP_STDOUT, $stdout_filename);
+	    binmode TMP_STDOUT;
+	    while (<TMP_STDOUT>) {
+		print $stdout_fh $_;
+	    }
+	    binmode TMP_STDERR;
+
+	    open(TMP_STDERR, $stderr_filename);
+	    while (<TMP_STDERR>) {
+		print $stderr_fh $_;
+	    }
+
+	    close TMP_STDOUT;
+	    close TMP_STDERR;
+	} else {
+	    my $write_stdin_fh = new FileHandle;
+	    my $read_stdout_fh = new FileHandle;
+	    my $read_stderr_fh = new FileHandle;
+
 	    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
 			    $command, @args);
 
@@ -578,12 +598,20 @@ sub execute_command {
 	    
 	    # Wait for the process to terminate.
 	    waitpid($pid, 0);
-	};
-	if ($@) {
-	    print $stderr_fh "Command failed: $@\n";
-	    print $stderr_fh "$command " . join(' ', @args) . "\n";
-	    print $stderr_fh "Check your webserver error log for more information.\n";
 	}
+    };
+    if ($@) {
+	my $error_string = "Command failed: $@\n";
+	$error_string .= "$command " . join(' ', @args) . "\n";
+	$error_string .= "Check your webserver error log for more information.\n";
+	print $stderr_fh $error_string;
+	print STDERR $error_string;
+	flush STDERR;
+    }
+
+    # Make sure the temporary directory is removed if it was created.
+    if (defined $command_tmpdir) {
+	rmtree($command_tmpdir);
     }
 
     # Flush the output file handles.
