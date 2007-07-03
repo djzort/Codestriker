@@ -13,6 +13,7 @@ use strict;
 use Encode;
 
 use Time::Local;
+use IPC::Open3;
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
@@ -520,6 +521,74 @@ sub decode_topic_text {
     }
 
     return decode($Codestriker::topic_text_encoding, $string);
+}
+
+# Function for running an external command, and handles the subtle
+# issues for different web servers environments.
+sub execute_command {
+    my $stdout_fh = shift;
+    my $stderr_fh = shift;
+    my $command = shift;
+    my @args = @_;
+
+    # Write error messages to STDERR if the file handle for error messages
+    # is not defined.
+    $stderr_fh = \*STDERR unless defined $stderr_fh;
+
+    if (exists $ENV{'MOD_PERL'}) {
+	# The open3() call simply doesn't work under mod_perl/apache2,
+	# so we need to use open() instead, which is a pain since we lose
+	# error information.
+	my $command_line = "\"$command\"";
+	foreach my $arg (@args) {
+	    $command_line .= " \"$arg\"";
+	}
+	my $received_data = 0;
+	if (open(COMMAND, "$command_line |")) {
+	    while (<COMMAND>) {
+		print $stdout_fh $_;
+		$received_data = 1;
+	    }
+	}
+	if (!$received_data) {
+	    print $stderr_fh "Command failed: $!\n";
+	    print $stderr_fh "$command_line\n";
+	    print $stderr_fh "Check your webserver error log for more information.\n";
+	}
+    } else {
+	my $write_stdin_fh = new FileHandle;
+	my $read_stdout_fh = new FileHandle;
+	my $read_stderr_fh = new FileHandle;
+
+	# Open3 throws an exception on failure.
+	eval {
+	    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+			    $command, @args);
+
+	    # Ideally, we should use IO::Select, but that is broken on Win32.
+	    # This is not ideal, but read first from stdout.  If that is empty,
+	    # then an error has occurred, and that can be read from stderr.
+	    my $buf = "";
+	    while (read($read_stdout_fh, $buf, 16384)) {
+		print $stdout_fh $buf;
+	    }
+	    while (read($read_stderr_fh, $buf, 16384)) {
+		print $stderr_fh $buf;
+	    }
+	    
+	    # Wait for the process to terminate.
+	    waitpid($pid, 0);
+	};
+	if ($@) {
+	    print $stderr_fh "Command failed: $@\n";
+	    print $stderr_fh "$command " . join(' ', @args) . "\n";
+	    print $stderr_fh "Check your webserver error log for more information.\n";
+	}
+    }
+
+    # Flush the output file handles.
+    $stdout_fh->flush;
+    $stderr_fh->flush;
 }
 
 1;

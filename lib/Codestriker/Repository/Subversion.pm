@@ -48,10 +48,9 @@ sub retrieve ($$$\$) {
     # Replace any spaces with %20 uri friendly escapes.
     $filename =~ s/ /%20/g;
 
-    my $write_stdin_fh = new FileHandle;
+    my $read_data;
     my $read_stdout_fh = new FileHandle;
-    my $read_stderr_fh = new FileHandle;
-
+    open($read_stdout_fh, '>', \$read_data) || die "Can't create in-memory fh: $!";
     my @args = ();
     push @args, 'cat';
     push @args, '--non-interactive';
@@ -60,28 +59,16 @@ sub retrieve ($$$\$) {
     push @args, '--revision';
     push @args, $revision;
     push @args, $self->{repository_url} . '/' . $filename;
-    
-    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
-		    $Codestriker::svn, @args);
+    Codestriker::execute_command($read_stdout_fh, undef,
+				 $Codestriker::svn, @args);
 
-    # Read the data.
+    # Process the data for the topic.
+    open($read_stdout_fh, '<', \$read_data) || die "Can't create in-memory fh: $!";
     for (my $i = 1; <$read_stdout_fh>; $i++) {
 	$_ = Codestriker::decode_topic_text($_);
 	chop;
 	$$content_array_ref[$i] = $_;
     }
-
-    # Log anything on standard error to apache error log.
-    my $buf;
-    my $first_lines = 1;
-    while (read($read_stderr_fh, $buf, 16384)) {
-        print STDERR "$Codestriker::svn " .
-	    (join @args, ' ') . "\n" if $first_lines;
-        $first_lines = 0;
-	print STDERR $buf;
-     }
-      
-    waitpid($pid, 0);
 }
 
 # Retrieve the "root" of this repository.
@@ -137,6 +124,11 @@ sub getDiff ($$$$$) {
     while(<$read_stdout_fh>) {}
 
     my $directory;
+
+    # TODO: need a better way of detecting this, since Chinese users
+    # receive a different output string.  svn info might be better,
+    # it can tell you if it is a file or directory.
+    # svn propget svn:mime-type could be a way.
 
     # If there is an error about it being a directory, then use the
     # module name as a directory.

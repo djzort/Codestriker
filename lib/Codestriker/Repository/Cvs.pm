@@ -11,7 +11,6 @@ package Codestriker::Repository::Cvs;
 
 use strict;
 use FileHandle;
-use IPC::Open3;
 
 # Factory method for creating a local CVS repository object.
 sub build_local {
@@ -62,17 +61,30 @@ sub retrieve {
 
     # Open a pipe to the CVS repository.
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
-    open(CVS, "\"$Codestriker::cvs\" -q -d \"" . $self->{url} .
-	 "\" co -p -r $revision \"$filename\" |")
-	|| die "Can't open connection to pserver CVS repository: $!";
 
-    # Read the data.
-    for (my $i = 1; <CVS>; $i++) {
+    my $read_data;
+    my $read_stdout_fh = new FileHandle;
+    open($read_stdout_fh, '>', \$read_data) || die "Can't create in-memory fh: $!";
+    my @args = ();
+    push @args, '-q';
+    push @args, '-d';
+    push @args, $self->{url};
+    push @args, 'co';
+    push @args, '-p';
+    push @args, '-r';
+    push @args, $revision;
+    push @args, $filename;
+    Codestriker::execute_command($read_stdout_fh, undef,
+				 $Codestriker::cvs, @args);
+
+    # Process the data for the topic.
+    open($read_stdout_fh, '<', \$read_data) || die "Can't create in-memory fh: $!";
+    for (my $i = 1; <$read_stdout_fh>; $i++) {
 	$_ = Codestriker::decode_topic_text($_);
 	chop;
 	$$content_array_ref[$i] = $_;
     }
-    close CVS;
+    close $read_stdout_fh;
 }
 
 # Retrieve the "root" of this repository.
@@ -117,33 +129,12 @@ sub getDiff ($$$$$$) {
     # Cheat - having two '-u's changes nothing.
     my $extra_options = $default_to_head ? '-u' : '-f';
 
-    my $write_stdin_fh = new FileHandle;
-    my $read_stdout_fh = new FileHandle;
-    my $read_stderr_fh = new FileHandle;
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
-    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
-		    $Codestriker::cvs, '-q', '-d', $self->{url},
-		    'rdiff', $extra_options, '-u', 
-		    '-r', $start_tag, '-r', $end_tag, $module_name);
 
-    # Ideally, we should use IO::Select, but that is broken on Win32.
-    # With CVS, read first from stdout.  If that is empty, then an
-    # error has occurred, and that can be read from stderr.
-    my $buf = "";
-    while (read($read_stdout_fh, $buf, 16384)) {
-	print $stdout_fh $buf;
-    }
-    while (read($read_stderr_fh, $buf, 16384)) {
-	print $stderr_fh $buf;
-    }
-
-    # Wait for the process to terminate.
-    waitpid($pid, 0);
-
-    # Flush the output file handles.
-    $stdout_fh->flush;
-    $stderr_fh->flush;
-
+    Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::cvs,
+				 '-q', '-d', $self->{url}, 'rdiff',
+				 $extra_options, '-u', '-r', $start_tag,
+				 '-r', $end_tag, $module_name);
     return $Codestriker::OK;
 }
 
