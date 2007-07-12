@@ -560,8 +560,10 @@ sub execute_command {
 	    my $stderr_filename = "$command_tmpdir/stderr.txt";
 
 	    # Thankfully this works under Windows.
-	    my $system_line = "$command_line > \"$stdout_filename\" 2> \"$stderr_filename\"";
-	    system($system_line) == 0 || croak "Failed to execute $system_line: $!\n";
+	    my $system_line =
+		"$command_line > \"$stdout_filename\" 2> \"$stderr_filename\"";
+	    system($system_line) == 0 ||
+		croak "Failed to execute $system_line: $!\n";
 
 	    open(TMP_STDOUT, $stdout_filename);
 	    binmode TMP_STDOUT;
@@ -600,18 +602,17 @@ sub execute_command {
 	    waitpid($pid, 0);
 	}
     };
-    if ($@) {
-	my $error_string = "Command failed: $@\n";
-	$error_string .= "$command " . join(' ', @args) . "\n";
-	$error_string .= "Check your webserver error log for more information.\n";
-	print $stderr_fh $error_string;
-	print STDERR $error_string;
-	flush STDERR;
-    }
+    my $exception = $@;
 
     # Make sure the temporary directory is removed if it was created.
     if (defined $command_tmpdir) {
 	rmtree($command_tmpdir);
+    }
+
+    if ($exception) {
+	croak("Command failed: $@\n",
+	      "$command " . join(' ', @args) . "\n",
+	      "Check your webserver error log for more information.\n");
     }
 
     # Flush the output file handles.

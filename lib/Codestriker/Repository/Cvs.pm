@@ -11,6 +11,7 @@ package Codestriker::Repository::Cvs;
 
 use strict;
 use FileHandle;
+use Fatal qw / open close /;
 
 # Factory method for creating a local CVS repository object.
 sub build_local {
@@ -64,7 +65,7 @@ sub retrieve {
 
     my $read_data;
     my $read_stdout_fh = new FileHandle;
-    open($read_stdout_fh, '>', \$read_data) || die "Can't create in-memory fh: $!";
+    open($read_stdout_fh, '>', \$read_data);
     my @args = ();
     push @args, '-q';
     push @args, '-d';
@@ -78,7 +79,7 @@ sub retrieve {
 				 $Codestriker::cvs, @args);
 
     # Process the data for the topic.
-    open($read_stdout_fh, '<', \$read_data) || die "Can't create in-memory fh: $!";
+    open($read_stdout_fh, '<', \$read_data);
     for (my $i = 1; <$read_stdout_fh>; $i++) {
 	$_ = Codestriker::decode_topic_text($_);
 	chop;
