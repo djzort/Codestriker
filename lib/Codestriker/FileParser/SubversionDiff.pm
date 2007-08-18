@@ -42,7 +42,7 @@ sub parse ($$$) {
 	# For SVN diffs, the start of the diff block is the Index line.
 	# For SVN look diffs, the start of the diff block contains the change type.
 	# Also check for presence of property set blocks.
-	while ($line =~ /^Property changes on: .*$/o) {
+	while ($line =~ /^.*Property changes on: .*$/o) {
 	    $line = <$fh>;
 	    return () unless defined $line &&
 		$line =~ /^___________________________________________________________________$/o;
@@ -50,12 +50,12 @@ sub parse ($$$) {
 	    # Keep reading until we either get to an Index: line, a property
 	    # block, an Added/Deleted/Modified lines or the end of file.
 	    while (defined $line &&
-		   $line !~ /^Index:/o &&
-		   $line !~ /^Added:/o &&
-		   $line !~ /^Deleted:/o &&
-		   $line !~ /^Modified:/o &&
-		   $line !~ /^Copied:/o &&
-		   $line !~ /^Property changes on:/o) {
+		   $line !~ /^.*Index:/o &&
+		   $line !~ /^.*Added:/o &&
+		   $line !~ /^.*Deleted:/o &&
+		   $line !~ /^.*Modified:/o &&
+		   $line !~ /^.*Copied:/o &&
+		   $line !~ /^.*Property changes on:/o) {
 		$line = <$fh>;
 	    }
 	    
@@ -66,7 +66,7 @@ sub parse ($$$) {
 	}
 
 	return () unless
-	    $line =~ /^(Index|Added|Modified|Copied|Deleted): (.*)$/o;
+	    $line =~ /^.*(Index|Added|Modified|Copied|Deleted): (.*)$/o;
 	$entry_type = $1;
 	$filename = $2;
 	$line = <$fh>;

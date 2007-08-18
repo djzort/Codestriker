@@ -51,7 +51,7 @@ sub read_unidiff_text($$$$) {
 		# read. Note Perforce diffs can contain empty lines.
 		if ($num_matched_old_lines >= $number_old_lines &&
 		    $num_matched_new_lines >= $number_new_lines) {
-		    last unless $line =~ /^ /o || $line =~ /^$/o;
+		    last unless $line =~ /^\s*$/o;
 		}
 		else {
 		    if ($line =~ /^\-/o) {
