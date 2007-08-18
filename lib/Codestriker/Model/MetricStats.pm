@@ -39,7 +39,7 @@ sub get_basic_user_metrics {
 
     # Get the list of authors.
     my $author_list = $dbh->selectall_arrayref(
-	    'SELECT author,MAX(modified_ts),COUNT(id)
+	    'SELECT LOWER(author),MAX(modified_ts),COUNT(id)
 	     FROM topic 
 	     WHERE modified_ts >= ?
 	     GROUP BY author
@@ -67,15 +67,15 @@ sub get_basic_user_metrics {
     # Get the list of participants from all these topics. You need to 
     # submit at least one comment to be counted.
     my $participant_list = $dbh->selectall_arrayref(
-	    'SELECT commentdata.author, 
+	    'SELECT LOWER(commentdata.author), 
 		    MAX(topic.modified_ts), 
 		    COUNT(DISTINCT topic.id)
 	     FROM commentdata, commentstate, topic 
 	     WHERE topic.modified_ts >= ? AND 
 		   topic.id = commentstate.topicid AND 
-		   topic.author <> commentdata.author AND
+		   LOWER(topic.author) <> LOWER(commentdata.author) AND
 		   commentdata.commentstateid = commentstate.id
-	     GROUP BY commentdata.author
+	     GROUP BY LOWER(commentdata.author)
 	     ORDER BY 2 desc',{}, $date);
      
     foreach my $row (@$participant_list) {
@@ -126,7 +126,7 @@ sub calculate_topic_view_time_for_user {
     my $select_topic = $dbh->prepare_cached('SELECT creation_ts ' .
 					    'FROM topicviewhistory ' .
 					    'WHERE creation_ts > ? AND ' .
-					    'email = ? ' .
+					    'LOWER(email) = LOWER(?) ' .
 					    'ORDER BY creation_ts');
 
     $select_topic->execute($date,$user);
@@ -250,7 +250,7 @@ sub get_raw_metric_data {
 
     my @basic_topic_info = $dbh->selectrow_array('
 	    SELECT topic.id, 
-		   topic.author, 
+		   LOWER(topic.author), 
 		   topic.title, 
 		   topic.state, 
 		   topic.creation_ts, 
@@ -452,9 +452,9 @@ sub get_topic_metrics {
 
     # Get total.
     my @total = _get_monthly_metrics(12,
-	'select \'Total Topics\', count(topic.id) 
-	from topic
-	where topic.creation_ts >  ? and
+	'SELECT \'Total Topics\', COUNT(topic.id) 
+	FROM topic
+	WHERE topic.creation_ts >  ? AND
 	      topic.creation_ts <= ?');
 
     push @metrics, @total;

@@ -179,7 +179,7 @@ sub get_list_of_actual_topic_participants {
 
     my $actual_user_list_ref = 
          $dbh->selectall_arrayref(
-	        'SELECT DISTINCT email FROM topicviewhistory ' .
+	        'SELECT DISTINCT LOWER(email) FROM topicviewhistory ' .
 	        'WHERE topicid = ?',{}, $self->{topicid});
 
     my @actual_user_list = ();
@@ -206,25 +206,25 @@ sub get_complete_list_of_topic_participants {
 
 
     my @metric_user_list = @{ $dbh->selectall_arrayref('
-	    SELECT distinct email 
-	    from participant where topicid = ?',{}, $self->{topicid})};
+	    SELECT distinct LOWER(email) 
+	    from participant WHERE topicid = ?',{}, $self->{topicid})};
 
     push @metric_user_list, @{ $dbh->selectall_arrayref('
-	    SELECT author from topic where id = ?',{}, $self->{topicid})};
+	    SELECT LOWER(author) FROM topic WHERE id = ?',{}, $self->{topicid})};
 
     push @metric_user_list, @{ $dbh->selectall_arrayref('
-	    SELECT distinct email from topicusermetric 
-	    where topicid = ?',{}, $self->{topicid})};
+	    SELECT DISTINCT LOWER(email) FROM topicusermetric 
+	    WHERE topicid = ?',{}, $self->{topicid})};
     
     push @metric_user_list, @{ $dbh->selectall_arrayref(
-	    'SELECT distinct author from commentdata, commentstate ' .
-	    'where commentstate.topicid = ? and 
+	    'SELECT DISTINCT LOWER(author) FROM commentdata, commentstate ' .
+	    'WHERE commentstate.topicid = ? AND
 		   commentstate.id = commentdata.commentstateid ',
 		   {}, $self->{topicid})};
 
     push @metric_user_list, @{ $dbh->selectall_arrayref(
-	    'SELECT distinct email from topicviewhistory ' .
-	    'where topicid = ? and email is not null',{}, $self->{topicid})};
+	    'SELECT DISTINCT LOWER(email) FROM topicviewhistory ' .
+	    'WHERE topicid = ? AND email IS NOT NULL',{}, $self->{topicid})};
 
     # remove the duplicates.
 
@@ -336,7 +336,7 @@ sub get_user_metrics {
 	    my $select_user_metrics = 
 		$dbh->prepare_cached('SELECT metric_name, value ' .
 				     'FROM topicusermetric ' .
-				     'WHERE topicid = ? and email = ? ' .
+				     'WHERE topicid = ? AND LOWER(email) = LOWER(?) ' .
 				     'ORDER BY metric_name');
 
 	    $select_user_metrics->execute($self->{topicid}, $username);
@@ -709,7 +709,7 @@ sub _get_built_in_user_metrics {
     my $select_topic = $dbh->prepare_cached('SELECT creation_ts ' .
 					    'FROM topicviewhistory ' .
 					    'WHERE topicid = ? AND ' .
-					    'email = ? ' .
+					    'LOWER(email) = LOWER(?) ' .
 					    'ORDER BY creation_ts');
 
     $select_topic->execute($self->{topicid}, $username);
@@ -807,9 +807,9 @@ sub _get_topic_history_rows {
 						'topichistory.version, ' .
 						'topichistory.repository, ' .
 						'project.name, ' .
-						'topichistory.reviewers, ' .
-						'topichistory.cc, ' .
-						'topichistory.modified_by_user ' .
+						'LOWER(topichistory.reviewers), ' .
+						'LOWER(topichistory.cc), ' .
+						'LOWER(topichistory.modified_by_user) ' .
 						'FROM topichistory, project ' .
 						'WHERE topichistory.topicid = ? AND ' .
 						'topichistory.projectid = project.id ' .
@@ -926,7 +926,7 @@ sub _store_user_metrics {
 						    email, 
 						    metric_name, 
 						    value) ' .
-			     'VALUES (?, ?, ?, ? )');
+			     'VALUES (?, LOWER(?), ?, ? )');
 
     foreach my $user (keys %{$self->{usermetrics}}) {
 	my @metrics = $self->get_user_metrics($user);
