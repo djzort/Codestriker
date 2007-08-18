@@ -35,6 +35,16 @@ Version 1.9.4
 
 * Handle Subversion files which contain @ in the filename.
 
+* Codestriker now behaves correctly under mod_perl when retrieving
+  data externally from an SCM system, such as when the Parallel link
+  is clicked, or when a topic is created directly from the SCM.
+
+* Creating Subversion topics directly from the SCM now works correctly
+  in non-English locales.
+
+* When calculating metrics, make sure email addresses are handled in
+  a case-insensitive manner.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
