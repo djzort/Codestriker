@@ -45,6 +45,8 @@ Version 1.9.4
 * When calculating metrics, make sure email addresses are handled in
   a case-insensitive manner.
 
+* Handle topic text that starts with the UTF-8 BOM.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

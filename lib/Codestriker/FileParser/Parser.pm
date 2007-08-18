@@ -57,7 +57,13 @@ sub parse ($$$$$$) {
     }
 
     binmode $fh;
+    my $first_line = 1;
     while (<$fh>) {
+	if ($first_line) {
+	    # Remove the UTF8 BOM if it exists.
+	    s/^\xEF\xBB\xBF//o;	
+	    $first_line = 0;
+	}
 	my $line = Codestriker::decode_topic_text($_);
 	$line =~ s/\r\n/\n/go;
 	print $tmpfh $line;
