@@ -293,12 +293,13 @@ sub _set_property_from_cookie($$$) {
 }
 
 # Untaint the specified property, against the expected regular expression.
+# Remove leading and trailing whitespace.
 sub _untaint($$$) {
     my ($self, $name, $regexp) = @_;
 
     my $value = $self->{$name};
     if (defined $value && $value ne "") {
-	if ($value =~ /^(${regexp})$/) {
+	if ($value =~ /^\s*(${regexp})\s*$/) {
 	    # Untaint the value.
 	    $self->{$name} = $1;
 	} else {

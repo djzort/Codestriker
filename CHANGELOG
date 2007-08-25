@@ -43,7 +43,8 @@ Version 1.9.4
   in non-English locales.
 
 * When calculating metrics, make sure email addresses are handled in
-  a case-insensitive manner.
+  a case-insensitive manner.  Also remove trailing/leading whitespace
+  from the addresses.
 
 * Handle topic text that starts with the UTF-8 BOM.
 
