@@ -52,6 +52,17 @@ Version 1.9.4
   locale.  See http://marc.info/?l=subversion-users&m=118725115412403&w=3
   for more information.
 
+* Handle the different text types that may be present in a Perforce diff.
+  Submitted by Russell Cattelan <cattelan@thebarn.com>.
+	
+* Defined the "noconnection" option for $bug_db in codestriker.conf
+  so that it is possible to define what bug IDs are associated with
+  a topic, without updating an actual bug database when the topic
+  is created/closed.  If $bugtracker is defined in codestriker.conf,
+  then links will be created on the topic properties screen to the
+  associated bug records.  Submitted by Russell Cattelan
+  <cattelan@thebarn.com>.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

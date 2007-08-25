@@ -85,7 +85,7 @@ sub process($$$) {
     $vars->{'bug_ids'} = $topic->{bug_ids};
     if (defined $topic->{bug_ids} && $topic->{bug_ids} ne "" &&
 	defined $Codestriker::bugtracker) {
-	my @bug_id_array = split ',', $topic->{bug_ids};
+	my @bug_id_array = split /[\s,]+/, $topic->{bug_ids};
 	$vars->{'bug_id_array'} = \@bug_id_array;
 	$vars->{'bugtracker'} = $Codestriker::bugtracker;
     }

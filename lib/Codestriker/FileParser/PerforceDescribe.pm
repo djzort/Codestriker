@@ -122,7 +122,7 @@ sub parse ($$$) {
 	$line = <$fh>;
 	next unless defined $line;
 
-	if ($filetype eq "text") {
+	if ($filetype =~ /.*text/) {
 	    # Now read the entire diff chunk.
 	    # Note there may be an optional '---' and '+++' lines
 	    # before the chunk.
