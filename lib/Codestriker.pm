@@ -35,7 +35,7 @@ use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
 	      );
 
 # Version of Codestriker.
-$Codestriker::VERSION = "1.9.4";
+$Codestriker::VERSION = "1.9.4-rc2";
 
 # Default title to display on each Codestriker screen.
 $Codestriker::title = "Codestriker $Codestriker::VERSION";

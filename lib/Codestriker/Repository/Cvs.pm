@@ -55,6 +55,20 @@ sub build_ext {
     bless $self, $type;
 }
 
+# Factory method for creating an SSPI CVS repository object.
+sub build_sspi {
+    my ($type, $username, $password, $hostname, $cvsroot) = @_;
+
+    my $self = {};
+    $self->{optional_args} = "";
+    $self->{username} = $username;
+    $self->{hostname} = $hostname;
+    $self->{cvsroot} = $cvsroot;
+    $self->{url} = ":sspi:${username}:${password}\@${hostname}:${cvsroot}";
+    bless $self, $type;
+}
+
+
 # Retrieve the data corresponding to $filename and $revision.  Store each line
 # into $content_array_ref.
 sub retrieve {

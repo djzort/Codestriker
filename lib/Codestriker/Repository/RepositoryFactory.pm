@@ -48,6 +48,12 @@ sub get ($$) {
 	# Pserver repository.
 	return Codestriker::Repository::Cvs->build_ext($1, $2, $3, $4);
 
+    } elsif ($repository =~ /^\s*:sspi:(.*):(.*)@(.*):([A-z]:[\\\/].*?)\\*\s*(.*)\s*$/i) {
+	# NT SSPI CVS repository.  Example:
+	# :sspi:MYNTDOMAIN\jdoe:password@mycvsserver:c:\repository_on_server
+	# :sspi:<host address>:\ANDCVS 
+	return Codestriker::Repository::Cvs->build_sspi($1, $2, $3, $4);
+
     } elsif ($repository =~ /^\s*(https?:\/\/.*viewcvs\.cgi)\/*\s+(.*?)\/*\s*$/i) {
 	# View CVS repository.
 	return Codestriker::Repository::ViewCvs->new($1, $2);
