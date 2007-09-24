@@ -474,7 +474,7 @@ sub error($$) {
 	    "</result></response>\n";
     }
     else {
-	if (! $self->{generated_header}) {
+	if (! $self->{header_generated}) {
 	    print $query->header,
 	    $query->start_html(-title=>'Codestriker error',
 			       -bgcolor=>'white');
