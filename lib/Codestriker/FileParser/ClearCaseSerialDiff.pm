@@ -38,10 +38,12 @@ sub parse ($$$) {
     my $line = <$fh>;
     while (defined($line)) {
 	# Skip any heading or trailing whitespace contained in the review
-	# text, in addition to the "Files are identical" lines, which happen
-	# due to the way review texts are generated.
+	# text, in addition to the "Files/Directories are identical" lines,
+	# which happen due to the way review texts are generated.
 	while (defined($line) &&
-	       ($line =~ /^\s*$/o || $line =~ /^Files are identical$/)) {
+	       ($line =~ /^\s*$/o ||
+		$line =~ /^Files are identical$/o ||
+	        $line =~ /^Directories are identical$/o)) {
 	    $line = <$fh>;
 	}
 	return @result unless defined $line;
@@ -62,7 +64,7 @@ sub parse ($$$) {
 		# This is very simple for now, but will need to be more
 		# sophisticated later.
 		if (defined $repository_root &&
-		    $filename =~ /^$repository_root[\/\\](.*)$/) {
+		    $filename =~ /^$repository_root[\/\\](.*)$/o) {
 		    $filename = $1;
 		    $repmatch = 1;
 		} else {
@@ -99,7 +101,7 @@ sub parse ($$$) {
 		# This is very simple for now, but will need to be more
 		# sophisticated later.
 		if (defined $repository_root &&
-		    $filename =~ /^$repository_root[\/\\](.*)$/) {
+		    $filename =~ /^$repository_root[\/\\](.*)$/o) {
 		    $filename = $1;
 		}
 
@@ -119,7 +121,8 @@ sub parse ($$$) {
 		$line = <$fh>;
 		while (defined $line &&
 		       $line !~ /^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*$/o) {
-		    if ($line !~ /^Files are identical$/o) {
+		    if ($line !~ /^Files are identical$/o &&
+			$line !~ /^Directories are identical$/o) {
 			$text .= "+$line";
 		    }
 		    $line = <$fh>;

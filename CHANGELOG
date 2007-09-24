@@ -63,6 +63,10 @@ Version 1.9.4
   associated bug records.  Submitted by Russell Cattelan
   <cattelan@thebarn.com>.
 
+* Handle ClearCase diffs which contain "Directories are identical"
+  lines in them.  Submitted by Steve Kinsman
+  <skinsman@users.sourceforge.net>.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total
