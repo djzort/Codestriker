@@ -27,7 +27,6 @@ require 5.8.0;
 
 use strict;
 
-use Config;
 use CGI qw/:standard :html3/;
 use CGI::Carp 'fatalsToBrowser';
 
@@ -72,12 +71,10 @@ if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
 # Set the PATH to something sane if we aren't running under windows.
 # For a lot of annoying reasons, we can't run Codestriker in
 # tainted mode under Win32.
-my $osname = $Config{'osname'};
-my $windows = (defined $osname && $osname eq "MSWin32") ? 1 : 0;
-if ($windows == 0) {
-    $ENV{'PATH'} = '/bin:/usr/bin';
-} else {
+if (Codestriker::is_windows()) {
     $ENV{'PATH'} = '';
+} else {
+    $ENV{'PATH'} = '/bin:/usr/bin';
 }
 
 # Prototypes of subroutines used in this module.

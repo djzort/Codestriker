@@ -67,6 +67,9 @@ Version 1.9.4
   lines in them.  Submitted by Steve Kinsman
   <skinsman@users.sourceforge.net>.
 
+* Support for using the ClearCase dynamic view under Windows.	
+  Submitted by Steve Kinsman <skinsman@users.sourceforge.net>.
+
 Version 1.9.3
 
 * The project list screen now displays for each project, the total

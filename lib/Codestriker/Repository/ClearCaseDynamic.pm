@@ -27,9 +27,8 @@ sub new ($$)
     my ($type, $url) = @_;
 
     my $self = {};
-    $_ = $url;
     
-    /(.*):(.*)/;
+    $url =~ /([^:]*):(.*)/;
     $self->{dynamic_view_name} = $1;
     $self->{vobs_dir} = $2;
 
@@ -41,18 +40,24 @@ sub new ($$)
 sub retrieve ($$$\$)
 {
     my ($self, $filename, $revision, $content_array_ref) = @_;
+    my $error_msg = '';
+    my $clearcase;
 
-    # Set the current view to the repository's dynamic view name.
-    my $clearcase = ClearCase::CtCmd->new();
-    (my $status, my $stdout, my $error_msg) =
-	$clearcase->exec('setview', $self->{dynamic_view_name});
+    # Check if we are running under Windows, which doesn't support
+    # the setview and endview commands.
+    if (! Codestriker::is_windows()) {
+	# Set the current view to the repository's dynamic view name.
+	$clearcase = ClearCase::CtCmd->new();
+	(my $status, my $stdout, $error_msg) =
+	    $clearcase->exec('setview', $self->{dynamic_view_name});
 
-    # Check the result of the setview command.
-    if ($status) {
-	$error_msg = "Failed to open view: " . $self->{dynamic_view_name} .
-	    ": $error_msg\n";
-	print STDERR "$error_msg\n";
-	return $error_msg;
+	# Check the result of the setview command.
+	if ($status) {
+	    $error_msg = "Failed to open view: " . $self->{dynamic_view_name} .
+		": $error_msg\n";
+	    print STDERR "$error_msg\n";
+	    return $error_msg;
+	}
     }
 
     # Execute the remaining code in an eval block to ensure the endview
@@ -83,12 +88,14 @@ sub retrieve ($$$\$)
     }
 
     # Close the view.
-    ($status, $stdout, $error_msg) =
-	$clearcase->exec('endview', $self->{dynamic_view_name});
-    if ($status) {
-	$error_msg = "Failed to close view: " . $self->{dynamic_view_name} .
-	    ": $error_msg\n";
-	print STDERR "$error_msg\n";
+    if (! Codestriker::is_windows()) {
+	(my $status, my $stdout, $error_msg) =
+	    $clearcase->exec('endview', $self->{dynamic_view_name});
+	if ($status) {
+	    $error_msg = "Failed to close view: " . $self->{dynamic_view_name} .
+		": $error_msg\n";
+	    print STDERR "$error_msg\n";
+	}
     }
     
     return $error_msg;
@@ -112,7 +119,8 @@ sub getViewUrl ($$$) {
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return "clearcase:dyn:" . $self->{dynamic_view_name} . ":" . $self->{vobs_dir};
+    return "clearcase:dyn:" . $self->{dynamic_view_name} .
+	":" . $self->{vobs_dir};
 }
 
 # Given a start tag, end tag and a module name, store the text into

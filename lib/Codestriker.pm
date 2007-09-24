@@ -11,6 +11,7 @@ package Codestriker;
 
 use strict;
 use Encode;
+use Config;
 
 use Time::Local;
 use IPC::Open3;
@@ -334,6 +335,12 @@ sub initialise($$) {
     foreach my $key (keys %${repository_name_map}) {
 	$repository_url_map->{$repository_name_map->{$key}} = $key;
     }
+}
+
+# Determine if we are running under Windows.
+sub is_windows() {
+    my $osname = $Config{'osname'};
+    return defined $osname && $osname eq "MSWin32";
 }
 
 # Returns the current time in a format suitable for a DBI timestamp value.
