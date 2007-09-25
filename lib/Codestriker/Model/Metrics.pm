@@ -807,9 +807,9 @@ sub _get_topic_history_rows {
 						'topichistory.version, ' .
 						'topichistory.repository, ' .
 						'project.name, ' .
-						'LOWER(topichistory.reviewers), ' .
-						'LOWER(topichistory.cc), ' .
-						'LOWER(topichistory.modified_by_user) ' .
+						'topichistory.reviewers, ' .
+						'topichistory.cc, ' .
+						'topichistory.modified_by_user ' .
 						'FROM topichistory, project ' .
 						'WHERE topichistory.topicid = ? AND ' .
 						'topichistory.projectid = project.id ' .
@@ -830,9 +830,9 @@ sub _get_topic_history_rows {
 	      version=>$version,
 	      repository=>$repository,
 	      project=>decode_utf8($project),
-	      reviewers=>$reviewers,
-	      cc=>$cc, 
-	      modified_by=>$modified_by
+	      reviewers=>lc($reviewers),
+	      cc=>lc($cc), 
+	      modified_by=>lc($modified_by)
 	      );
 
 	    push @history_list, \%entry;
