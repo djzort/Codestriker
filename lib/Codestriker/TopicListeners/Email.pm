@@ -506,10 +506,10 @@ sub doit($$$$$$$$$) {
     # characters.
     $smtp->datasend(encode_qp(encode("UTF-8", $body)));
     $smtp->dataend();
-    $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
+    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
 
     $smtp->quit();
-    $smtp->ok() || return "Couldn't send email $!, " . smtp->message();
+    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
 
     return '';
 }
