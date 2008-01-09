@@ -489,9 +489,13 @@ sub doit($$$$$$$$$) {
 
     # Make sure the subject is appropriately encoded to handle UTF-8
     # characters.
-    $smtp->datasend('Subject: =?UTF-8?Q?' .
-		    encode_qp(encode("UTF-8", $subject), '') .
-		    '?=' . "\n");
+    $subject = encode_qp(encode("UTF-8", $subject), "");
+
+    # RFC 2047 fixup that is a documented deviation from quoted-printable
+    $subject =~ s/\?/=3F/g;
+    $subject =~ s/_/=5F/g;
+    $subject =~ s/ /_/g;
+    $smtp->datasend("Subject: =?UTF-8?Q?${subject}?=\n");
 
     # Set the content type to be text/plain with UTF8 encoding, to handle
     # unicode characters.

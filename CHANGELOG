@@ -6,6 +6,9 @@ Version 1.9.5
 * Allow the ability to specify just a filename (for the module field)
   and a revision number (for the start or end tag) to create a review
   for a specific version of a file in a subversion repository.
+
+* Make sure the email subject field properly encodes underscores and
+  question marks.  Submitted by jon787@users.sourceforge.net.
 	
 Version 1.9.4
 
