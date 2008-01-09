@@ -17,7 +17,6 @@ use Net::SMTP;
 use MIME::Base64;
 use Sys::Hostname;
 use Encode qw(encode);
-use Authen::SASL;
 
 use Codestriker::TopicListeners::TopicListener;
 
@@ -445,7 +444,10 @@ sub doit($$$$$$$$$) {
     defined $smtp || return "Unable to connect to mail server: $!";
 
     # Perform SMTP authentication if required.
-    if (defined $Codestriker::mailuser && defined $Codestriker::mailpasswd) {
+    if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
+	defined $Codestriker::mailpasswd) {
+	eval 'use Authen::SASL';
+	die "Unable to load Authen::SASL module: $@\n" if $@;
 	$smtp->auth($Codestriker::mailuser, $Codestriker::mailpasswd);
     }
 

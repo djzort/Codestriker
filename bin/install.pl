@@ -109,11 +109,6 @@ my $modules = [
         name => 'Encode::Unicode', 
         version => '0',
         optional => 0
-    },
-    { 
-        name => 'Authen::SASL', 
-        version => '0',
-        optional => 0
     }
 ];
 
@@ -125,6 +120,16 @@ eval {
     $database = Codestriker::DB::Database->get_database();
     push @{$modules}, $database->get_module_dependencies();
 };
+
+# Check if Authen::SASL is required.
+if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
+    defined $Codestriker::mailpasswd) {
+    # The next statement is a no-op, but it stops perl from issuing
+    # a warning about mailpasswd only being used once.  Unlike the
+    # username, the password could be empty.
+    $Codestriker::mailpasswd = $Codestriker::mailpasswd;
+    push @{$modules}, { name => 'Authen::SASL', version => '0' };
+}
 
 # Check for various character encoding modules that are required.
 if (defined $Codestriker::topic_text_encoding) {

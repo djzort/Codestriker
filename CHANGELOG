@@ -9,6 +9,10 @@ Version 1.9.5
 
 * Make sure the email subject field properly encodes underscores and
   question marks.  Submitted by jon787@users.sourceforge.net.
+
+* Only require Authen::SASL as a pre-requisite if SMTP authentication
+  is needed.  For some deployments, installing Authen::SASL can be
+  inconvenient.
 	
 Version 1.9.4
 
