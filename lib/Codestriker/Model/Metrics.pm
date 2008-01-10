@@ -716,7 +716,7 @@ sub _get_built_in_user_metrics {
 
     my $total_time = $self->calculate_topic_view_time($select_topic);
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     if ($total_time == 0) {
 	$total_time = "";
@@ -838,7 +838,7 @@ sub _get_topic_history_rows {
 	    push @history_list, \%entry;
 	}
 
-	Codestriker::DB::DBI->release_connection($dbh);
+	Codestriker::DB::DBI->release_connection($dbh, 1);
 
 	$self->{topichistoryrows} = \@history_list;
 
@@ -914,11 +914,10 @@ sub _store_user_metrics {
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    # flush out the user metrics from the topic,
+    # Flush out the user metrics from the topic.
     my $delete_alluser_metric =
 	$dbh->prepare_cached('DELETE FROM topicusermetric ' .
 			     'WHERE topicid = ?');
-
     $delete_alluser_metric->execute($self->{topicid});
 
     my $insert_user_metric =
@@ -943,6 +942,7 @@ sub _store_user_metrics {
 	    }
 	}
     }
+
 
     # Close the connection, and check for any database errors.
     Codestriker::DB::DBI->release_connection($dbh, 1);

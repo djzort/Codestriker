@@ -134,7 +134,7 @@ sub calculate_topic_view_time_for_user {
     my $total_time = 
 	Codestriker::Model::Metrics->calculate_topic_view_time($select_topic);
 
-    Codestriker::DB::DBI->release_connection($dbh);
+    Codestriker::DB::DBI->release_connection($dbh, 1);
 
     $total_time = sprintf("%1.1f",$total_time / (60*60));
 
