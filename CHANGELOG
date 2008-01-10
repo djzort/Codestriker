@@ -7,6 +7,9 @@ Version 1.9.5
   and a revision number (for the start or end tag) to create a review
   for a specific version of a file in a subversion repository.
 
+* Fixed database code which was preventing user metrics being updated
+  under SQL Server.
+
 * Make sure the email subject field properly encodes underscores and
   question marks.  Submitted by jon787@users.sourceforge.net.
 
