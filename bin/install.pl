@@ -675,7 +675,7 @@ $database->add_field('commentstatehistory', 'metric_value', $TEXT);
 $database->add_field('project', 'state', $INT16);
 
 # If we are using MySQL, and we are upgrading from a version of the database
-# which used "text" instead of "mediumtext" for certain fields, update the
+# which used "text" instead of "longtext" for certain fields, update the
 # appropriate table columns.
 if ($Codestriker::db =~ /^DBI:mysql/i) {
     # Check that document field in topic is up-to-date.

@@ -64,6 +64,9 @@ sub _get_connection {
 				 RaiseError=>$raise_error,
 				 LongReadLen=>10240000});
 
+    # To see debugging from the DBI driver.
+    # $self->{dbh}->{TraceLevel} = 1;
+
     # Return the new connection.
     return $self->{dbh};
 }

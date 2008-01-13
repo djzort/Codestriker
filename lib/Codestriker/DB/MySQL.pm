@@ -18,7 +18,7 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "mediumtext",
+    $Codestriker::DB::Column::TYPE->{TEXT}	=> "longtext",
     $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
     $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
     $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
@@ -56,6 +56,7 @@ sub get_connection {
 	$dbh->do("SET NAMES 'utf8'");
 	$dbh->do("SET character_set_results='utf8'");
     }
+    $dbh->do("SET max_allowed_packet=128000000");
     return $dbh;
 }
 
