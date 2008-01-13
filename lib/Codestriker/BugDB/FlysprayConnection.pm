@@ -47,7 +47,7 @@ sub bugid_exists($$) {
 # Method for updating the bug with information that a code review has been
 # created/closed/committed against this bug.
 sub update_bug($$$$) {
-    my ($self, $bugid, $comment) = @_;
+    my ($self, $bugid, $comment, $topic_url) = @_;
 
     # Create the necessary prepared statements.
     my $insert_comment =

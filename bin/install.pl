@@ -131,6 +131,13 @@ if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
     push @{$modules}, { name => 'Authen::SASL', version => '0' };
 }
 
+# Check if TestDirector is being used, and if so, ensure the required
+# modules are loaded.
+if (defined $Codestriker::bug_db &&
+    $Codestriker::bug_db eq 'testdirector') {
+    push @{$modules}, { name => 'Win32::OLE', version => '0' };
+}
+
 # Check for various character encoding modules that are required.
 if (defined $Codestriker::topic_text_encoding) {
     if ($Codestriker::topic_text_encoding =~ /euc\-cn|gb2312|hz|gbk/) {

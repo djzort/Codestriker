@@ -16,6 +16,9 @@ Version 1.9.5
 * Only require Authen::SASL as a pre-requisite if SMTP authentication
   is needed.  For some deployments, installing Authen::SASL can be
   inconvenient.
+
+* Support for TestDirector as a supported bug tracking system.
+  Submitted by rob_webset@users.sourceforge.net.
 	
 Version 1.9.4
 

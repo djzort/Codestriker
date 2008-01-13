@@ -135,3 +135,6 @@ mysql> select modified_ts, creation_ts from topic where id=7168516;
 +----------------+----------------+
 1 row in set (0.00 sec)
 
+Subversion test, retrieve from collab win-tests.py revision 25651.
+
+Also do diff 25651 25653

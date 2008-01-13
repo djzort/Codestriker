@@ -13,6 +13,7 @@ use strict;
 use Codestriker::BugDB::BugzillaConnection;
 use Codestriker::BugDB::FlysprayConnection;
 use Codestriker::BugDB::NoConnection;
+use Codestriker::BugDB::TestDirectorConnection;
 
 # Factory method for retrieving a BugDBConnection object.
 sub getBugDBConnection ($) {
@@ -23,6 +24,8 @@ sub getBugDBConnection ($) {
 	return Codestriker::BugDB::BugzillaConnection->get_connection();
     } elsif ($dbtype eq "flyspray") {
 	return Codestriker::BugDB::FlysprayConnection->get_connection();
+    } elsif ($dbtype eq "testdirector") {
+	return Codestriker::BugDB::TestDirectorConnection->get_connection();
     } elsif ($dbtype =~ /^noconnect/) {
 	return Codestriker::BugDB::NoConnection->get_connection();
     } else {
