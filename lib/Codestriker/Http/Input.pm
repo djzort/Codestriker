@@ -304,7 +304,7 @@ sub _untaint($$$) {
 	    $self->{$name} = $1;
 	} else {
 	    my $error_message = "Input parameter $name has invalid value: " .
-		"\"$value\"";
+		HTML::Entities::encode($value);
 	    $self->{http_response}->error($error_message);
 	}
     } else {
