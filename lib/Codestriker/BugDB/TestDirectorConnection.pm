@@ -11,7 +11,8 @@ package Codestriker::BugDB::TestDirectorConnection;
 
 use strict;
 
-use Win32::OLE;
+# Optional dependency for people who don't use this module.
+eval("use Win32::OLE;");
 
 # Static method for building a database connection.
 sub get_connection($) {

@@ -17,6 +17,7 @@ use FileHandle;
 use Codestriker::Model::Topic;
 use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
+use Codestriker::Repository::ScmBug;
 use Codestriker::FileParser::Parser;
 use Codestriker::Model::Project;
 use Codestriker::TopicListeners::Manager;
@@ -54,7 +55,9 @@ sub process($$$) {
     # Indicate whether the topic text needs to be retrieved by the repository
     # object.
     my $retrieve_text_from_rep = 0;
-    if (($start_tag ne "" || $end_tag ne "") && $module ne "") {
+    if ((($start_tag ne "" || $end_tag ne "") && $module ne "") ||
+	(defined $Codestriker::scmbug_host && $Codestriker::scmbug_host ne '' &&
+	 $bug_ids ne '')) {
 	$retrieve_text_from_rep = 1;
 
 	# Check if this action is permitted.
@@ -189,10 +192,22 @@ sub process($$$) {
 	}
 	binmode $temp_topic_fh;
 	binmode $temp_error_fh;
-	
-	my $rc = $repository->getDiff($start_tag, $end_tag, $module,
-				      $temp_topic_fh, $temp_error_fh,
-				      $default_to_head);
+
+	my $rc;
+	if ($start_tag eq '' && $end_tag eq '' && $module eq '') {
+	    # Retrieve the diff from ScmBug and the repository object.
+	    my $scmbug = Codestriker::Repository::ScmBug->new($Codestriker::scmbug_hostname,
+							      $Codestriker::scmbug_port,
+							      $repository);
+	    $rc = $scmbug->getDiff($bug_ids, $temp_topic_fh, $temp_error_fh,
+				   $default_to_head);
+	    
+	} else {
+	    # Retrieve the diff directly from the repository object.
+	    $rc = $repository->getDiff($start_tag, $end_tag, $module,
+				       $temp_topic_fh, $temp_error_fh,
+				       $default_to_head);
+	}
 
 	# Make sure the data has been flushed to disk.
 	$temp_topic_fh->flush;

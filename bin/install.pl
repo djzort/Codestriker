@@ -138,6 +138,14 @@ if (defined $Codestriker::bug_db &&
     push @{$modules}, { name => 'Win32::OLE', version => '0' };
 }
 
+# Check that the necessary modules are present if ScmBug is used.
+if (defined $Codestriker::scmbug_hostname &&
+    $Codestriker::scmbug_hostname ne '') {
+    push @{$modules}, { name => 'XML::Simple', version => '0' };
+    push @{$modules}, { name => 'ScmBug::Connection', version => '0' };
+    push @{$modules}, { name => 'ScmBug::Common', version => '0' };
+}
+
 # Check for various character encoding modules that are required.
 if (defined $Codestriker::topic_text_encoding) {
     if ($Codestriker::topic_text_encoding =~ /euc\-cn|gb2312|hz|gbk/) {
