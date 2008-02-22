@@ -41,11 +41,6 @@ sub process($$$) {
 	$http_response->error("Invalid project state: $project_state");
     }
 
-    # Check if this action is allowed.
-    if ($project_state eq "Deleted") {
-	$http_response->error("This function has been disabled");
-    }
-
     # Check that the appropriate fields have been filled in.
     my $id = $http_input->get('projectid');
     my $name = $http_input->get('project_name');
