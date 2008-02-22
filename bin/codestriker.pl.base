@@ -23,6 +23,7 @@ require 5.8.0;
 # effectively "pre-load" all of the Codestriker modules in the system, as the
 # modules below load all of their supporting modules.  That is why the
 # template plugins are "pre-loaded" here.
+[% scmbug_lib %]
 [% codestriker_lib %]
 
 use strict;

@@ -56,7 +56,7 @@ sub process($$$) {
     # object.
     my $retrieve_text_from_rep = 0;
     if ((($start_tag ne "" || $end_tag ne "") && $module ne "") ||
-	(defined $Codestriker::scmbug_host && $Codestriker::scmbug_host ne '' &&
+	(defined $Codestriker::scmbug_hostname && $Codestriker::scmbug_hostname ne '' &&
 	 $bug_ids ne '')) {
 	$retrieve_text_from_rep = 1;
 

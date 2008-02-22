@@ -140,10 +140,11 @@ if (defined $Codestriker::bug_db &&
 
 # Check that the necessary modules are present if ScmBug is used.
 if (defined $Codestriker::scmbug_hostname &&
-    $Codestriker::scmbug_hostname ne '') {
-    push @{$modules}, { name => 'XML::Simple', version => '0' };
-    push @{$modules}, { name => 'ScmBug::Connection', version => '0' };
-    push @{$modules}, { name => 'ScmBug::Common', version => '0' };
+    defined $Codestriker::scmbug_lib_dir &&
+    $Codestriker::scmbug_hostname ne '' &&
+    $Codestriker::scmbug_lib_dir ne '') {
+    push @INC, $Codestriker::scmbug_lib_dir;
+    push @{$modules}, { name => 'ScmBug::ActivityUtilities', version => '0' };
 }
 
 # Check for various character encoding modules that are required.
@@ -1062,6 +1063,12 @@ if ($windows) {
     $template_vars->{hash_ex_line} = '#!' . $perl . ' -w';
 } else {
     $template_vars->{hash_ex_line} = '#!' . $perl . ' -wT';
+}
+
+# Check if the Scmbug library location needs to be added
+if (defined $Codestriker::scmbug_lib_dir &&
+    $Codestriker::scmbug_lib_dir ne '') {
+    $template_vars->{scmbug_lib} = 'use lib \'' . $Codestriker::scmbug_lib_dir . '\';';
 }
 
 $template_vars->{codestriker_lib} = 'use lib \'' . cwd() . '/../lib\';';
