@@ -124,7 +124,7 @@ sub topic_changed($$$$) {
 	    "State changed to \"$newstate\" by $user\n";
             
 	for (my $i = 0; $i <= $#ids; $i++) {
-	    $bug_db_connection->update_bug($ids[$i], $text, $topic_url);
+	    $bug_db_connection->update_bug($ids[$i], $text, $topic_url, $topic->{topic_state});
 	}
 	$bug_db_connection->release_connection();
     }

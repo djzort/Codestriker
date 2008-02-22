@@ -1045,6 +1045,9 @@ sub delete($) {
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
 
+    # Update the topic state to deleted
+    $self->{topic_state} = "Deleted";
+
     # Indicate the success of the operation.
     return $success ? $Codestriker::OK : $Codestriker::INVALID_TOPIC;
 }

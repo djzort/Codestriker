@@ -73,9 +73,9 @@ sub bugid_exists($$) {
 }
 
 # Method for updating the bug with information that a code review has been
-# created/closed/committed against this bug.
-sub update_bug($$$$) {
-    my ($self, $bugid, $comment, $topic_url) = @_;
+# created/closed/committed/deleted against this bug.
+sub update_bug($$$$$) {
+    my ($self, $bugid, $comment, $topic_url, $topic_state) = @_;
 
     # Now get the bug out of Test Director.
     my $bug = $self->_retrieve_bug_record($bugid);
@@ -94,10 +94,14 @@ sub update_bug($$$$) {
     $full_comment .= "</BODY></HTML>\n";
 
     if (defined $bug->Attachments) {
-        my $attach = $bug->Attachments->AddItem([$topic_url,
-						 "TDATT_INTERNET",
-						 $full_comment]);
-        $attach->post();
+        if( $topic_state eq "Deleted" ) {
+            $self->_update_bug_delete( $bug->Attachments, $topic_url );
+        } else {
+            my $attach = $bug->Attachments->AddItem([$topic_url,
+						     "TDATT_INTERNET",
+						     $full_comment]);
+            $attach->post();
+        }
     }
     else
     {
@@ -105,5 +109,28 @@ sub update_bug($$$$) {
         $bug->post();
     }
 }
+
+# Method for updating the bug with information that a code review has been
+# deleted against this bug.
+sub _update_bug_delete($$$) {
+    my ($self, $attachments, $topic_url) = @_;
+
+    if( $attachments ) {
+	my $attachment_list = $attachments->NewList("");
+
+	my $attach_counter = 1;
+	while ( $attach_counter <= $attachment_list->Count ) {
+	    my $attachment = $attachment_list->Item($attach_counter);
+
+	    if( $attachment->Name eq $topic_url ) {
+	        # Remove the attachment for the deleted topic
+		$attachments->RemoveItem($attachment->ID);
+	    }
+	    $attach_counter++;
+	}
+	$attachments->post();
+    }
+}
+
 
 1;
