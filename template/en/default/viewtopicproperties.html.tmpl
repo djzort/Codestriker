@@ -84,7 +84,11 @@ function DeleteTopicConfirm()
     Links:
     [% FOREACH bug = bug_id_array %]
         [% IF loop.count() != 1 %], [% END %]
-        <a href="[% bugtracker %][% bug %]">Bug [% bug %]</a>
+	    [% IF bugtracker != "" %]
+            	<a href="[% bugtracker %][% bug %]">Bug [% bug %]</a>
+	    [% ELSE %]
+            	Bug [% bug %]
+	    [% END %]
     [% END %]
   </td>
 </tr>

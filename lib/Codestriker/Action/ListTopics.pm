@@ -146,10 +146,14 @@ sub process($$$) {
 
         # bug ids
 	my @accum_bugs = split /, /, $topic->{bug_ids};
-	for ( my $index = 0; $index < scalar(@accum_bugs); ++$index) {
-	    $accum_bugs[$index] =
-		$query->a({href=>"$Codestriker::bugtracker$accum_bugs[$index]"},
-                    $accum_bugs[$index]);
+	for (my $index = 0; $index < scalar(@accum_bugs); ++$index) {
+	    # Allow for no direct web link to a bug.
+	    if (defined $Codestriker::bugtracker &&
+                $Codestriker::bugtracker ne '') {
+	        $accum_bugs[$index] =
+		    $query->a({href=>"$Codestriker::bugtracker$accum_bugs[$index]"},
+      	                      $accum_bugs[$index]);
+	    }
 	}
 	$template_topic->{'bugids'} = join ', ', @accum_bugs;
 
