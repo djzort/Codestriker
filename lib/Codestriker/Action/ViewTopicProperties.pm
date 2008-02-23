@@ -88,6 +88,8 @@ sub process($$$) {
 	my @bug_id_array = split /[\s,]+/, $topic->{bug_ids};
 	$vars->{'bug_id_array'} = \@bug_id_array;
 	$vars->{'bugtracker'} = $Codestriker::bugtracker;
+    } else {
+	$vars->{'bugtracker'} = '';
     }
 
     $vars->{'document_reviewers'} = 
