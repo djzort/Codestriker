@@ -78,8 +78,9 @@ function DeleteTopicConfirm()
 <tr class="tt1">
   <td>Bug IDs:</td>
   <td>
+    [%# Set to readonly if topic generated from BugIDs #%]
     <input type="text" name="bug_ids" value="[% bug_ids %]"
-           size="30" maxlength="50" [% IF topic_readonly != 0 %]readonly[% END %] />
+           size="30" maxlength="50" [% IF topic_readonly != 0 || (start_tag == '' && end_tag == '' && module == '') %]readonly[% END %] />
     Links:
     [% FOREACH bug = bug_id_array %]
         [% IF loop.count() != 1 %], [% END %]
