@@ -3,9 +3,9 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.9.3</subtitle>
+    <subtitle>Version 1.9.5</subtitle>
     <legalnotice>
-      <para>Copyright (c) 2001 - 2007</para>
+      <para>Copyright (c) 2001 - 2008</para>
     </legalnotice>
     <authorgroup>
       <author>
@@ -629,16 +629,14 @@ $cvs = 'c:/gnu/bin/cvs';
 	  been resolved, Codestriker can add in a link to the code
 	  review topic, which shows the actual code which fixed the
 	  bug (and any important decisions made in the Codestriker
-	  comments).  Currently, there is support for Bugzilla and Flyspray,
-	  but it is not difficult to add in support for other systems.
+	  comments).  Currently, there is support for Bugzilla, Flyspray
+	  and TestDirector, but it is not difficult to add in support
+          for other systems.
 	</para>
 	<para>
-	  If you don't use Bugzilla (<ulink
-	  url="http://bugzilla.mozilla.org">http://bugzilla.mozilla.org</ulink>)
-          or Flyspray,
-	  you can skip this section, as by default, there is no
-	  linking to a bug tracking system.  An example configuration
-	  could be as follows:
+	  If you don't use a bugtracker you can skip this section,
+          as by default, there is no linking to a bug tracking system.
+	  An example configuration could be as follows:
 	  <programlisting>
 # Bug tracking type.
 $bug_db = 'bugzilla';
@@ -1057,6 +1055,33 @@ $metric_config = "none";
           RSS link on the topic list page, which can be used as a URL
           into your RSS reader, to keep track of new topics being
           added to the system.
+	</para>
+      </sect2>
+      <sect2>
+        <title>Scmbug Integration</title>
+        <para>
+	  It is possible for Codestriker to integrate with ScmBug
+	  (<ulink url="http://www.mkgnu.net/?q=scmbug">http://www.mkgnu.net/?q=scmbug</ulink>).
+	  This allows users to generate a topic based on the changes
+	  done under a given bug ID (or list of bug IDs).  An example
+	  configuration is:
+<programlisting>
+$scmbug_hostname = 'localhost';
+$scmbug_port = 3872;
+$scmbug_lib_dir = 'C:/Program Files/Scmbug/share/scmbug/lib';
+</programlisting>
+	</para>
+        <para>
+          This would match the default settings used by Scmbug on
+          Windows.  Where <varname>$scmbug_hostname</varname> and
+	  <varname>$scmbug_port</varname> are the host
+          and port of the machine where Scmbug is running.  The
+          <varname>$scmbug_lib_dir</varname> points to the lib
+          directory under the Scmbug installation.  If Scmbug is
+          running on a separate machine a copy of the Scmbug lib
+          directory needs to be staged on the same machine as
+          codestriker and the <varname>$scmbug_lib_dir</varname>
+          variable made to point at this.
 	</para>
       </sect2>
     </sect1>
@@ -1989,6 +2014,17 @@ C:\Project\> ssdiff.pl > topic.txt
 	  SourceSafe repository which indicates the files of interest.
 	  An example value could be <filename>$/Project/Gui</filename>,
 	  which would work on all files located within that path.
+	</para>
+      </sect2>
+      <sect2>
+        <title>Creating Topics from Bug IDs</title>
+	<para>
+	  If you have Codestriker configured to make use of Scmbug
+	  integration it is possible to generate a Topic by entering a
+	  list of bug IDs (comma separated).  To generate the topic in
+	  this way, ensure that the Start Tag, End Tag and Module
+	  fields are left blank and that the relevant bug IDs are
+	  entered into the Bug IDs field.
 	</para>
       </sect2>
     </sect1>
