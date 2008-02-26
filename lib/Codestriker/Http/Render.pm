@@ -413,43 +413,48 @@ sub delta_file_header ($$$$) {
 
 	if ($file_url eq "") {
 	    # Output the header without hyperlinking the filename.
-	    $cell = $query->td({-class=>'file', -colspan=>'3'},
-			       "Diff for ",
-			       $query->a({name=>$filename},
-					 $filename),
-			       $revision_text);
+	    $cell = "Diff for " . 
+		$query->a({name=>$filename},
+			  $filename) .
+			  $revision_text;
 	}
 	else {
 	    # Link the filename to the repository system with more information
 	    # about it.
-	    $cell = $query->td({-class=>'file', -colspan=>'3'},
-			       "Diff for ",
-			       $query->a({href=>$file_url,
-					  name=>$filename},
-					 $filename),
-			       $revision_text);
+	    $cell = "Diff for " .
+		$query->a({href=>$file_url,
+			   name=>$filename},
+			  $filename) .
+			  $revision_text;
 	}
 
 	# Output the "back to contents" link and some browsing links
 	# for visiting the previous and next file (<<, >>), in
 	# addition to the "add file-level comment" link.
 
-	print $query->Tr($cell,     # = file header     
-		         $query->td({-class=>'file', align=>'right'},
-				    "$add_file_level_comment_text ",
-				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
-			            $query->a({href=>$contents_url},"[Top]"),
-			            ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
+	print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
+				    $query->table({-width=>'100%'},
+				        $query->Tr(
+					    $query->td({align=>'left'}, $cell),
+					    $query->td({align=>'right'},
+						       "$add_file_level_comment_text ",
+						       ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
+						       $query->a({href=>$contents_url},"[Top]"),
+						       ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : ""))))));
     } else {
 	# No match in repository, or a new file.
-	print $query->Tr($query->td({-class=>'file', -colspan=>'3'},
-				    "File ",
-				    $query->a({name=>$filename},$filename)),
-			 $query->td({-class=>'file', align=>'right'},
-				    "$add_file_level_comment_text ",
-				    ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
-				    $query->a({href=>$contents_url},"[Top]"),
-				    ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : "")));
+	print $query->Tr($query->td({-class=>'file', -colspan=>'4'},
+				    $query->table({-width=>'100%'},
+					$query->Tr(
+					    $query->td({align=>'left'},
+						       "File ",
+						       $query->a({name=>$filename},
+								 $filename)),
+					    $query->td({align=>'right'},
+						       "$add_file_level_comment_text ",
+						       ($bwd_url ne "" ? $query->a({href=>$bwd_url},"[<<]") : ""),
+						       $query->a({href=>$contents_url},"[Top]"),
+						       ($fwd_url ne "" ? $query->a({href=>$fwd_url},"[>>]") : ""))))));
     }
 
 }

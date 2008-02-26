@@ -27,6 +27,10 @@ Version 1.9.5
 * Make sure if an invalid CGI parameter value is specified that its
   value is encoded when displaying the generic error page.  Reported
   by amalakar@users.sourceforge.net.
+
+* Make sure very long filenames don't move the diff display far to the
+  right of the view topic page.  Fix suggested by
+  rob_webset@users.sourceforge.net.
 	
 Version 1.9.4
 
