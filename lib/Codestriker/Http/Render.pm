@@ -18,9 +18,6 @@ use HTML::Entities ();
 # against.
 my $CONTEXT_COLOUR = "red";
 
-sub _normal_mode_start( $ );
-sub _normal_mode_finish( $ );
-sub _coloured_mode_start( $ );
 sub _coloured_mode_finish( $ );
 
 # New lines within a diff block.
@@ -841,18 +838,6 @@ sub render_comment_link {
     return $query->a($params, $text);
 }
 
-# Start hook called when about to start rendering to a page.
-sub start($) {
-    my ($self) = @_;
-
-    # Now create the start of the rendering tables.
-    if ($self->{mode} == $Codestriker::NORMAL_MODE) {
-	$self->_normal_mode_start();
-    } else {
-	$self->_coloured_mode_start();
-    }
-}
-
 # Finished hook called when finished rendering to a page.
 sub finish($) {
     my ($self) = @_;
@@ -863,18 +848,6 @@ sub finish($) {
     }
 
     $self->_print_legend();
-}
-
-# Start topic view display hook for normal mode.
-sub _normal_mode_start($) {
-    my ($self) = @_;
-    print "<PRE>\n";
-}
-
-# Finish topic view display hook for normal mode.
-sub _normal_mode_finish($) {
-    my ($self) = @_;
-    print "</PRE>\n";
 }
 
 # Private functon to print the diff legend out at the bottom of the topic text page.
@@ -899,26 +872,6 @@ sub _print_legend($) {
 		     $query->td({-class=>'af'},
 				"Added"));
     print $query->end_table(), "\n";
-}
-
-
-# Start topic view display hook for coloured mode.  This displays a simple
-# legend, displays the files involved in the review, and opens up the initial
-# table.
-sub _coloured_mode_start($) {
-    my ($self) = @_;
-
-    my $query = $self->{query};
-
-    
-    # Render the "Add comment to topic" link.
-    print $query->p;
-    print $self->render_comment_link(-1, -1, 1, "Add General Comment",
-				     "general_comment", undef);
-    print " to topic.";
-    print $query->p;
-
-    print $query->start_table() ;
 }
 
 # Render the initial start of the coloured table, with an empty row setting

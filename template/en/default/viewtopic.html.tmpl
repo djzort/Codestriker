@@ -93,6 +93,13 @@
 
 </table>
 
+[% USE CommentLine query = query comment_hash = comment_hash
+                   comment_location_map = comment_location_map
+                   mode = mode %]
+
+<p>
+[% FILTER $CommentLine filenumber = -1 line = -1 new = 1 %]Add General Comment[% END %] to topic.
+
 [%# The perl script takes control from here, rendering the topic data. #%]
 
 

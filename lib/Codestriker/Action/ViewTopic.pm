@@ -227,6 +227,30 @@ sub process($$$) {
     }
     $vars->{'filetable'} = \@filetable;
 
+    # Pass in existing comment information.
+    # Build a hash from filenumber|fileline|new -> comment array, so that
+    # when rendering, lines can be coloured appropriately.  Also build a list
+    # of what points in the review have a comment.  Also record a mapping
+    # from filenumber|fileline|new -> the comment number.
+    my %comment_hash = ();
+    my @comment_locations = ();
+    my %comment_location_map = ();
+    for (my $i = 0; $i <= $#comments; $i++) {
+	my $comment = $comments[$i];
+	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+	    $comment->{filenew};
+	if (! exists $comment_hash{$key}) {
+	    push @comment_locations, $key;
+	    $comment_location_map{$key} = $#comment_locations;
+	}
+        push @{ $comment_hash{$key} }, $comment;
+    }
+
+    $vars->{'query'} = $query;
+    $vars->{'comment_hash'} = \%comment_hash;
+    $vars->{'comment_locations'} = \@comment_locations;
+    $vars->{'comment_location_map'} = \%comment_location_map;
+
     # Fire the template for generating the view topic screen.
     my $template = Codestriker::Http::Template->new("viewtopic");
     $template->process($vars);
@@ -250,11 +274,7 @@ sub process($$$) {
 						\@numchanges, -1,
 						$brmode, $fview);
 
-    # Display the data that is being reviewed.
-    $render->start();
-
     # Retrieve the delta set comprising this review.
-
     my $old_filename = "";
     
     # Determine which deltas are to be retrieved.
