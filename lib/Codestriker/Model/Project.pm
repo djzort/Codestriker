@@ -238,19 +238,14 @@ sub delete($$) {
     } else {
 	# Delete the topics in this project.
 	my @sort_order;
-	my @topic_query_results;
-	Codestriker::Model::Topic->query("", "", "", "",
-					 "", $id, "",
-					 "", "",
-					 "", "", "",
-					 \@sort_order, \@topic_query_results);
+	my @topics = Codestriker::Model::Topic->query("", "", "", "",
+						      "", $id, "",
+						      "", "", "", "", "",
+						      \@sort_order );
 	
 	# Delete each of the topics for this project
-	for (my $index = 0; $index <= $#topic_query_results; $index++) {
-	    my $topic_row = $topic_query_results[$index];
-	    my $topicid = $topic_row->{id};
-	    my $topic_delete = Codestriker::Model::Topic->new($topicid);
-	    $topic_delete->delete();
+	foreach my $topic ( @topics ) {
+	    $topic->delete();
 	}
 
 	# Now delete the project.
