@@ -136,8 +136,6 @@ sub process($$$) {
 		$fview = -1;
 	    }
     }
-    $vars->{'mode'} = $mode;
-    $vars->{'brmode'} = $brmode;
     $vars->{'states'} = \@Codestriker::topic_states;
     $vars->{'default_state'} = $topic->{state};
 
@@ -151,58 +149,90 @@ sub process($$$) {
     # Obtain the link to download the actual document text.
     $vars->{'download_url'} = $url_builder->download_url($topicid);
 
-    # Fire the template on the topic heading information.
+    # Obtain the links for the different viewing modes.
+    $vars->{'coloured_mode_url'} =
+	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE,
+			       $brmode, $fview);
+    $vars->{'coloured_mono_mode_url'} =
+	$url_builder->view_url($topicid, -1,
+			       $Codestriker::COLOURED_MONO_MODE, $brmode, $fview);
+    $vars->{'br_normal_mode_url'} =
+	$url_builder->view_url($topicid, -1, $mode,
+			       $Codestriker::LINE_BREAK_NORMAL_MODE, $fview);
+    $vars->{'br_assist_mode_url'} =
+	$url_builder->view_url($topicid, -1, $mode,
+			       $Codestriker::LINE_BREAK_ASSIST_MODE, $fview);
+
+    # Set template variables relating to coloured mode.
+    if ($mode == $Codestriker::COLOURED_MODE) {
+	$vars->{'mode'} = 'coloured';
+    } elsif ($mode == $Codestrikier::COLOURED_MONO_MODE) {
+	$vars->{'mode'} = 'coloured_mono';
+    } else {
+	$vars->{'mode'} = 'unknown';
+    }
+
+    # Set template variables relating to line breaking mode.
+    if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
+	$vars->{'brmode'} = 'normal';
+    } elsif ($brmode == $Codestriker::LINE_BREAK_ASSIST_MODE) {
+	$vars->{'brmode'} = 'assist';
+    } else {
+	$vars->{'brmode'} = 'unknown';
+    }
+
+    # Set varibles relating to tab-width setting.
+    my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
+    $vars->{'tabwidth'} = $tabwidth;
+    $vars->{'newtabwidth'} = $newtabwidth;
+    $vars->{'change_tabwidth_url'} =
+	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
+					"", "", 0, $brmode, $fview);
+
+    # Set the display all, display single URLs.
+    $vars->{'display_all_files_url'} =
+	$url_builder->view_url($topicid, -1, $mode, $brmode, -1);
+    $vars->{'display_single_file_url'} =
+	$url_builder->view_url($topicid, -1, $mode, $brmode, 0);
+    $vars->{'fview'} = $fview;
+
+    # Setup the filetable template variable for displaying the table of
+    # contents.
+    my @filetable = ();
+    for (my $i = 0; $i <= $#filenames; $i++) {
+	my $filerow = {};
+	my $filename = $filenames[$i];
+	$filerow->{filename} = $filename;
+	$filerow->{numchanges} = $numchanges[$i];
+	$filerow->{href_filename_url} = 
+	    $url_builder->view_url($topicid, -1, $mode, $brmode, $i) .
+	    "#" . $filename;
+        $filerow->{anchor_filename_url} =
+	    $url_builder->view_url($topicid, -1, $mode, $brmode, -1) .
+	    "#" . $filename;
+	$filerow->{binary} = $binary[$i];
+
+	my $revision = $revisions[$i];
+	if ($revision eq $Codestriker::ADDED_REVISION) {
+	    $filerow->{revision} = 'added';
+	} elsif ($revision eq $Codestriker::REMOVED_REVISION) {
+	    $filerow->{revision} = 'removed';
+	} elsif ($revision eq $Codestriker::PATCH_REVISION) {
+	    $filerow->{revision} = 'patch';
+	} else {
+	    $filerow->{revision} = $revision;
+	}
+	
+	push @filetable, $filerow;
+    }
+    $vars->{'filetable'} = \@filetable;
+
+    # Fire the template for generating the view topic screen.
     my $template = Codestriker::Http::Template->new("viewtopic");
     $template->process($vars);
 
     # The rest of the output is non-template driven, as it is quite
     # complex.
-
-    # Give the user the option of swapping between diff view modes.
-    # If there are no files associated with the review, remove this
-    # option.
-    my $coloured_url =
-	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE,
-			       $brmode, $fview);
-    my $coloured_mono_url =
-	$url_builder->view_url($topicid, -1,
-			       $Codestriker::COLOURED_MONO_MODE, $brmode, $fview);
-    my $br_normal_url =
-	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_NORMAL_MODE, $fview);
-    my $br_assist_url =
-	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_ASSIST_MODE, $fview);
-	
-    if ($mode == $Codestriker::COLOURED_MODE) {
-	print " View in " .
-	    $query->a({href=>$coloured_mono_url}, "monospace font") .
-	    " | ";
-    } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
-	print " View in " .
-	    $query->a({href=>$coloured_url}, "variable-width font") .
-	    " | ";
-    }
-
-    if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
-	print " View with " .
-	    $query->a({href=>$br_assist_url}, "minimal screen width") . ".";
-    } elsif ($brmode == $Codestriker::LINE_BREAK_ASSIST_MODE) {
-	print " View with " .
-	    $query->a({href=>$br_normal_url}, "minimal line breaks") . ".";
-    }
-    print " | ";
-
-    # Display the option to change the tab width.
-    my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
-    my $change_tabwidth_url;
-    $change_tabwidth_url =
-	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
-					"", "", 0, $brmode, $fview);
-
-    print " Tab width set to $tabwidth (";
-    print $query->a({href=>"$change_tabwidth_url"},"change to $newtabwidth");
-    print ")\n";
 
     print $query->p if ($mode == $Codestriker::NORMAL_MODE);
 

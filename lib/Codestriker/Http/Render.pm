@@ -909,88 +909,8 @@ sub _coloured_mode_start($) {
     my ($self) = @_;
 
     my $query = $self->{query};
-    my $topic = $self->{topic};
-    my $mode = $self->{mode};
-    my $brmode = $self->{brmode};
-    my $fview = $self->{fview};
-    my $display_all_url =
-	$self->{url_builder}->view_url($topic, -1, $mode, $brmode, -1);
-    my $display_single_url =
-	$self->{url_builder}->view_url($topic, -1, $mode, $brmode, 0);
 
     
-    # Print out the "table of contents".
-    my $filenames = $self->{filenames_ref};
-    my $revisions = $self->{revisions_ref};
-    my $binaries = $self->{binaries_ref};
-    my $numchanges = $self->{numchanges_ref};
-
-    print $query->p;
-    print $query->start_table({-cellspacing=>'0', -cellpadding=>'0',
-			       -border=>'0'}), "\n";
-    
-	       
-    # Include a link to view all files in a topic, if we are in single
-    # display mode.
-    if ($fview != -1) {
-    	print $query->Tr($query->td($query->a({name=>"contents"},
-					      "Files in Topic: ("),
-				    $query->a({href=>$display_all_url},
-					      "view all files"), ")"),
-			 $query->td("&nbsp;")), "\n";
-    }
-    else {
-	print $query->Tr($query->td($query->a({name=>"contents"},
-					      "Files in Topic:")),
-			 $query->td("&nbsp;")), "\n";
-    }
-    
-    my $url_builder = $self->{url_builder};
-    for (my $i = 0; $i <= $#$filenames; $i++) {
-	my $filename = $$filenames[$i];
-	my $revision = $$revisions[$i];
-	my $numchange = $$numchanges[$i];
-	my $href_filename =
-	    $url_builder->view_url($topic, -1, $mode, $brmode, $i) .
-	    "#" . "$filename";
-	my $anchor_filename =
-	    $url_builder->view_url($topic, -1, $mode, $brmode, -1) .
-	    "#" . "$filename";
-	my $tddata = $$binaries[$i] ? $filename :
-	    $query->a({href=>$href_filename}, "$filename");
-
-	if ($fview == -1) {
-	    # Add a jump to link for the all files view.
-	    $tddata = "[" . $query->a({href=>$anchor_filename}, "Jump to") . "] " . $tddata;
-	}
-
-	my $lineData = "";
-
-	if ($numchange ne "") {
-	    $lineData = "&nbsp; <FONT size=-1>{$numchange}</FONT>";
-	}
-
-	my $class = "";
-	$class = "af" if ($revision eq $Codestriker::ADDED_REVISION);
-	$class = "rf" if ($revision eq $Codestriker::REMOVED_REVISION);
-	$class = "cf" if ($revision eq $Codestriker::PATCH_REVISION);
- 	if ($revision eq $Codestriker::ADDED_REVISION ||
- 	    $revision eq $Codestriker::REMOVED_REVISION ||
- 	    $revision eq $Codestriker::PATCH_REVISION) {
- 	    # Added, removed or patch file.
-	    print $query->Tr($query->td({-class=>"$class", -colspan=>'2'},
-					$tddata),
-			     $query->td({-class=>"$class"}, $lineData)) . "\n";
- 	} else {
- 	    # Modified file.
- 	    print $query->Tr($query->td({-class=>'cf'}, $tddata),
- 			     $query->td({-class=>'cf'}, "&nbsp; $revision"),
-			     $query->td({-class=>'cf'}, $lineData)) .
- 			     "\n";
- 	}
-    }
-    print $query->end_table() . "\n";
-
     # Render the "Add comment to topic" link.
     print $query->p;
     print $self->render_comment_link(-1, -1, 1, "Add General Comment",

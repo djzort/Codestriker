@@ -12,10 +12,88 @@
 
 <p>
 
-[%# Display the "Download topic text" link #%]
-<a href="[% download_url %]">Download topic text</a> |
+[%# Display the "Download topic text" link. #%]
+<a href="[% download_url %]">Download topic text</a>
 
-[%# The perl script takes control from here, rendering the topic data #%]
+[%# Display the different coloured viewing modes #%]
+[% IF mode == "coloured" %]
+| View in <a href="[% coloured_mono_mode_url %]">monospace font</a>
+[% ELSIF mode == "coloured_mono" %]
+| View in <a href="[% coloured_mode_url %]">variable-width font</a>
+[% END %]
+
+[%# Display the different line breaking modes. #%]
+[% IF brmode == "normal" %]
+| View with <a href="[% br_assist_mode_url %]">minimal screen width</a>
+[% ELSIF brmode == "assist" %]
+| View with <a href="[% coloured_mode_url %]">minimal line breaks</a>
+[% END %]
+
+[%# Display the different tab-width options #%]
+| Tab width set to [% tabwidth %]
+(<a href="[% change_tabwidth_url %]">change to [% newtabwidth %]</a>)
+
+[%# Display the files in a table which are a part of this topic. #%]
+[%# Display the view all files link if required. #%]
+<p>
+<table cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td><a name="contents">Files in Topic:</a>
+    [% IF fview != -1 %]
+            (<a href="[% display_all_files_url %]">view all files</a>)
+    [% END %]
+	</td><td>&nbsp;</td>
+    </tr>
+
+    [%# Now display a row per file which is a part of this review. #%]
+    [% FOREACH file = filetable %]
+    [% FLUSH IF loop.count() % 10 == 1 %]
+
+    <tr>
+        [%# Determine what CSS style to apply to the line. #%]
+        [% SET rowstyle = "cf" %]
+        [% IF file.revision == "added" %][% SET rowstyle = "af" %]
+        [% ELSIF file.revision == "removed" %][% SET rowstyle = "rf" %]
+        [% ELSIF file.revision == "patch" %][% SET rowstyle = "pf" %]
+        [% END %]
+
+	[% IF rowstyle != "cf" %]
+            <td colspan="2" class="[% rowstyle %]">
+        [% ELSE %]
+	    <td class="[% rowstyle %]">
+	[% END %]
+
+        [%# Display the jump to link in the case when all files are displayed. #%]
+	[% IF fview == -1 %]
+	    [<a href="[% file.anchor_filename_url %]">Jump to</a>]
+        [% END %]
+
+        [%# Display the filename with an internal link if its not binary. #%]
+	[% IF file.binary %]
+	    [% file.filename %]
+        [% ELSE %]
+	    <a href="[% file.href_filename_url %]">[% file.filename %]</a>
+        [% END %]
+	    </td>
+
+	[%# Display the revision information for modified files. #%]
+	[% IF rowstyle == "cf" %]
+	    <td class="[% rowstyle %]">&nbsp;[% file.revision %]</td>
+        [% END %]
+
+        [%# Display the numchange information for the file. #%]
+	    <td class="[% rowstyle %]">
+            &nbsp;
+        [% IF file.numchanges != "" %]
+	    <font size="-1">{[% file.numchanges %]}</font>
+	[% END %]
+	    </td>
+    </tr>
+    [% END %]
+
+</table>
+
+[%# The perl script takes control from here, rendering the topic data. #%]
 
 
 

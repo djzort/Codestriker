@@ -54,6 +54,9 @@ TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
 /* Changed file */
 TD.cf {background-color: #ffff77}
 
+/* Patch file */
+TD.pf {background-color: #ffff77}
+
 /* Changed blank text */
 TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
 
