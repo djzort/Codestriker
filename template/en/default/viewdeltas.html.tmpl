@@ -1,0 +1,100 @@
+[%# HTML for rendering a set of deltas. #%]
+
+[% SET diff_current_filename = "" %]
+[% SET filenumber = 0 %]
+[% FOREACH delta = deltas %]
+[% FLUSH IF loop.count() % 10 == 1 %]
+    [%# Check if a heading for the current diff needs to be output. #%]
+    [% IF delta.filename != diff_current_filename %]
+
+    [%# Close off the previous table from the previous filename. #%]
+    [% IF loop.count() != 0 %]
+    </table>
+    [% END %]
+
+    <table width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+	    <td class="file" align="left">
+	    [% IF delta.repository_file_view_url != "" %]
+	      File 
+	           <a href="[% delta.repository_file_view_url %]">
+		      [% delta.filename | html_entity %]
+	           </a>
+	    [% ELSE %]
+              File [% delta.filename | html_entity %]
+	    [% END %]
+	    </td>
+
+            <td class="file" align="right">
+                [% delta.add_file_comment_element %]
+                [% IF delta.previous_file_url != "" %]
+                <a href="[% delta.previous_file_url %]">[&lt;&lt;]</a>
+                [% END %]
+                <a href="#contents">[Top]</a>
+                [% IF delta.next_file_url != "" %]
+                <a href="[% delta.next_file_url %]">[&gt;&gt;]</a>
+                [% END %]
+            </td>
+        </tr>
+
+	[%# Output the diff description if it is present. #%]
+	[% IF delta.description != "" %]
+	<tr>
+	  <td class="line" colspan="2">[% delta.description | html_entity %]</td>
+	  <td class="line" colspan="2">[% delta.description | html_entity %]</td>
+	</tr>
+	[% END %]
+    </table>
+    [% filenumber = filenumber + 1 %]
+    
+    [%# Make sure all the diffs are aligned in the same table. #%]
+    <table width="100%" cellspacing="0" cellpadding="0" border="0">
+    [% END %]
+
+    [%# Now output the delta header. #%]
+    [% SET diff_current_filename = delta.filename %]
+      <tr>
+	<td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+      [% IF delta.view_old_full_url != "" %]
+      [%# Display heading with links to retrieve the entire file #%]
+        <td class="line" colspan="2">
+	  <a href="javascript: myOpen('[% delta.view_old_full_url %]', 'Codestriker')">
+	    Line [% delta.old_linenumber %]
+	  </a>
+	  |
+	  <a href="javascript: myOpen('[% delta.view_old_full_both_url %]', 'Codestriker')">
+	    Parallel
+	  </a>
+	</td>
+        <td class="line" colspan="2">
+	  <a href="javascript: myOpen('[% delta.view_new_full_url %]', 'Codestriker')">
+	    Line [% delta.new_linenumber %]
+	  </a>
+	  |
+	  <a href="javascript: myOpen('[% delta.view_new_full_both_url %]', 'Codestriker')">
+	    Parallel
+	  </a>
+	</td>
+      [% ELSE %]
+      [%# Just display the line numbers for the delta without any links. #%]
+        <td class="line" colspan="2">Line [% delta.old_linenumber %]</td>
+        <td class="line" colspan="2">Line [% delta.new_linenumber %]</td>
+      [% END %]
+      </tr>
+    
+      [%# Now output the delta itself. #%]
+      [% FOREACH line = delta.lines %]
+      [% FLUSH IF loop.count() % 10 == 1 %]
+      <tr>
+	<td>[% line.old_data_line %]</td>
+	<td class="[% line.old_data_class %]">[% line.old_data %]</td>
+	<td>[% line.new_data_line %]</td>
+	<td class="[% line.new_data_class %]">[% line.new_data %]</td>
+      </tr>
+      [% END %]
+[% END %]
+
+[%# Close off the table from the last file's delta set. #%]
+    </table>

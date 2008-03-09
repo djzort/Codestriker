@@ -219,6 +219,4 @@ sub metric_report_download_raw_data {
     return $self->{query}->url() . "?action=metrics_download";
 }
 
-
-
 1;

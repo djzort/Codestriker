@@ -11,10 +11,13 @@ package Codestriker::Action::ViewTopic;
 
 use strict;
 
+use HTML::Entities ();
+
 use Codestriker::Model::Topic;
 use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
 use Codestriker::Http::Render;
+use Codestriker::Http::DeltaRenderer;
 use Codestriker::Repository::RepositoryFactory;
 use Codestriker::TopicListeners::Manager;
 
@@ -227,29 +230,78 @@ sub process($$$) {
     }
     $vars->{'filetable'} = \@filetable;
 
-    # Pass in existing comment information.
-    # Build a hash from filenumber|fileline|new -> comment array, so that
-    # when rendering, lines can be coloured appropriately.  Also build a list
-    # of what points in the review have a comment.  Also record a mapping
-    # from filenumber|fileline|new -> the comment number.
-    my %comment_hash = ();
-    my @comment_locations = ();
-    my %comment_location_map = ();
-    for (my $i = 0; $i <= $#comments; $i++) {
-	my $comment = $comments[$i];
-	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
-	    $comment->{filenew};
-	if (! exists $comment_hash{$key}) {
-	    push @comment_locations, $key;
-	    $comment_location_map{$key} = $#comment_locations;
-	}
-        push @{ $comment_hash{$key} }, $comment;
+    # Determine which deltas are to be retrieved.
+    my @deltas = ();
+    if ($fview != -1) {
+	# Get only the deltas for the selected file.    
+        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, $fview);
+    }
+    else {
+	# Get the whole delta data.
+        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, -1);
     }
 
-    $vars->{'query'} = $query;
-    $vars->{'comment_hash'} = \%comment_hash;
-    $vars->{'comment_locations'} = \@comment_locations;
-    $vars->{'comment_location_map'} = \%comment_location_map;
+    my $delta_renderer =
+	Codestriker::Http::Delta->new($topic, \@comments, \@deltas, $query,
+				      $mode, $brmode);
+
+    # Set the add general comment URL.
+    $vars->{'add_general_comment_element'} =
+	$delta_renderer->comment_link(-1, -1, 1, "Add General Comment");
+
+    # Set the per-delta URL links, such as adding a file-level comment,
+    # and links to the previous/next file.
+    my $filenumber = 0;
+    my $current_filename = "";
+    foreach my $delta (@deltas) {
+	$delta->{add_file_comment_element} =
+	    $delta_renderer->comment_link($filenumber, -1, 1, "[Add File Comment]");
+
+	# Determine if the file has a link to a repository system,
+	# and if so, create the appropriate links.
+	if ($delta->{repmatch} &&
+	    $delta->{revision} ne $Codestriker::ADDED_REVISION &&
+	    $delta->{revision} ne $Codestriker::PATCH_REVISION &&
+	    defined $repository) {
+	    $delta->{repository_file_view_url} =
+		$repository->getViewUrl($delta->{filename});
+	    $delta->{view_old_full_url} =
+		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
+					    $mode, 0);
+	    $delta->{view_old_both_full_url} =
+		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
+					    $mode, 1);
+	    $delta->{view_new_full_url} =
+		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
+					    $mode, 0);
+	    $delta->{view_new_both_full_url} =
+		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
+					    $mode, 1);
+	}
+
+	# Create the next/previous file URL links.
+	if ($current_filename ne $delta->{filename}) {
+	    if ($filenumber > 0) {
+		$delta->{previous_file_url} =
+		    $url_builder->view_url($topicid, -1, $mode, $brmode,
+					   $filenumber-1) . "#" . $filenames[$filenumber-1];
+	    }
+	    if ($filenumber < $#filenames) {
+		$delta->{next_file_url} =
+		    $url_builder->view_url($topicid, -1, $mode, $brmode,
+					   $filenumber+1) . "#" . $filenames[$filenumber+1];
+	    }
+
+	    # Keep track of the current filename being processed.
+	    $filenumber++;
+	    $current_filename = $delta->{filename};
+	}
+    }
+
+    # Annotate the deltas appropriately so that they can be easily rendered.
+    $delta_renderer->annotate_deltas();
+
+    $vars->{'deltas'} = \@deltas;
 
     # Fire the template for generating the view topic screen.
     my $template = Codestriker::Http::Template->new("viewtopic");
@@ -277,17 +329,6 @@ sub process($$$) {
     # Retrieve the delta set comprising this review.
     my $old_filename = "";
     
-    # Determine which deltas are to be retrieved.
-    my @deltas = ();
-    if ($fview != -1) {
-	# Get only the deltas for the selected file.    
-        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, $fview);
-    }
-    else {
-	# Get the whole delta data.
-        @deltas = Codestriker::Model::Delta->get_delta_set($topicid, -1);
-    }
-
     # Now render the selected deltas.
     for (my $i = 0; $i <= $#deltas; $i++) {
 	my $delta =  $deltas[$i];
@@ -307,6 +348,7 @@ sub process($$$) {
     # Fire the topic listener to indicate that the user has viewed the topic.
     Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
 }
+
 
 # This function is used by all of the view topic tabs to fill out the
 # common template items that are required by all, in addition to the view

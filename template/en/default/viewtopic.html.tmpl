@@ -70,15 +70,15 @@
 
         [%# Display the filename with an internal link if its not binary. #%]
 	[% IF file.binary %]
-	    [% file.filename %]
+	    [% file.filename | html_entity %]
         [% ELSE %]
-	    <a href="[% file.href_filename_url %]">[% file.filename %]</a>
+	    <a href="[% file.href_filename_url %]">[% file.filename | html_entity %]</a>
         [% END %]
 	    </td>
 
 	[%# Display the revision information for modified files. #%]
 	[% IF rowstyle == "cf" %]
-	    <td class="[% rowstyle %]">&nbsp;[% file.revision %]</td>
+	    <td class="[% rowstyle %]">&nbsp;[% file.revision | html_entity %]</td>
         [% END %]
 
         [%# Display the numchange information for the file. #%]
@@ -90,6 +90,7 @@
 	    </td>
     </tr>
     [% END %]
+    </table>
 
 </table>
 
@@ -98,7 +99,9 @@
                    mode = mode %]
 
 <p>
-[% FILTER $CommentLine filenumber = -1 line = -1 new = 1 %]Add General Comment[% END %] to topic.
+<span class="general_comment">[% add_general_comment_element %]</span>
+
+[% PROCESS viewdeltas.html.tmpl deltas = deltas %]
 
 [%# The perl script takes control from here, rendering the topic data. #%]
 
