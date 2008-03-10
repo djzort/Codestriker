@@ -7,15 +7,18 @@
 
 # Object for handling the computation of a delta for displaying to HTML.
 
-package Codestriker::Http::Delta;
+package Codestriker::Http::DeltaRenderer;
 
 use strict;
 
-use HTML::Entities ();
+use Codestriker::Http::HtmlEntityLineFilter;
+use Codestriker::Http::TabToNbspLineFilter;
+use Codestriker::Http::LineBreakLineFilter;
 
 # Constructor.
 sub new {
-    my ($type, $topic, $comments, $deltas, $query, $mode, $brmode) = @_;
+    my ($type, $topic, $comments, $deltas, $query, $mode, $brmode,
+	$tabwidth) = @_;
 
     my $self = {};
     $self->{topic} = $topic;
@@ -24,6 +27,7 @@ sub new {
     $self->{query} = $query;
     $self->{mode} = $mode;
     $self->{brmode} = $brmode;
+    $self->{tabwidth} = $tabwidth;
 
     # Build a hash from filenumber|fileline|new -> comment array, so that
     # when rendering, lines can be coloured appropriately.  Also build a list
@@ -46,7 +50,22 @@ sub new {
     $self->{comment_locations} = \@comment_locations;
     $self->{comment_location_map} = \%comment_location_map;
 
+    # Record list of line filter objects to apply to each line of code.
+    # Setup some default filters.
+    @{$self->{line_filters}} = ();
+    push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+    push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
+    push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
+
     bless $self, $type;
+}
+
+# Add a line filter to this delta-renderer, which will be called for each
+# line that is to be rendered.
+sub add_line_filter
+{
+    my ($self, $line_filter) = @_;
+    push @{$self->{line_filters}}, $line_filter;
 }
 
 # Render $text with the appropriate anchor attributes set for
@@ -122,14 +141,6 @@ sub annotate_deltas
 	for (my $i = 0; $i <= $#diff_lines; $i++) {
 	    my $data = $diff_lines[$i];
 
-	    # TODO: make these text transformations as plugins.
-	    # TODO: perform syntax highlighting.
-	    # TODO: perform LXR linking.
-	    # TODO: tab adjust.
-	    # TODO: line breaking.
-	    # Escape the data.
-	    $data = HTML::Entities::encode($data);
-	    
 	    if ($data =~ /^\-(.*)$/o) {
 		# Line corresponding to old code.
 		push @{ $self->{diff_old_lines} }, $1;
@@ -160,12 +171,12 @@ sub annotate_deltas
 		my $line = {};
 		my $data_class =
 		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-		$line->{old_data} = $data;
+		$line->{old_data} = $self->_apply_line_filters($data);
 		$line->{old_data_line} =
 		    $self->comment_link($self->{filenumber}, $old_linenumber,
 					0, $old_linenumber);
 		$line->{old_data_class} = $data_class;
-		$line->{new_data} = $data;
+		$line->{new_data} = $self->_apply_line_filters($data);
 		$line->{new_data_line} =
 		    $self->comment_link($self->{filenumber}, $new_linenumber,
 					1, $new_linenumber);
@@ -269,15 +280,30 @@ sub _render_changes
 	}
 	
 	my $line = {};
-	$line->{old_data} = $old_data;
+	$line->{old_data} = $self->_apply_line_filters($old_data);
 	$line->{old_data_line} =
 	    $self->comment_link($self->{filenumber}, $old_data_line, 0, $old_data_line);
 	$line->{old_data_class} = $render_old_colour;
-	$line->{new_data} = $new_data;
+	$line->{new_data} = $self->_apply_line_filters($new_data);
 	$line->{new_data_line} =
 	    $self->comment_link($self->{filenumber}, $new_data_line, 1, $new_data_line);
 	$line->{new_data_class} = $render_new_colour;
 	push @{$self->{lines}}, $line;
+    }
+
+    # Apply all of the line filters to the line of text supplied.
+    sub _apply_line_filters {
+	my ($self, $text) = @_;
+
+	# TODO: perform syntax highlighting.
+	# TODO: perform LXR linking.
+	foreach my $line_filter (@{$self->{line_filters}}) {
+	    $text = $line_filter->filter($text);
+	}
+	    
+	# Unconditionally add a &nbsp; at the start for better alignment.
+	# Fix so count isn't stuffed.
+	return "&nbsp;" . $text;
     }
 }
 

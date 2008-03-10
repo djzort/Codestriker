@@ -242,8 +242,8 @@ sub process($$$) {
     }
 
     my $delta_renderer =
-	Codestriker::Http::Delta->new($topic, \@comments, \@deltas, $query,
-				      $mode, $brmode);
+	Codestriker::Http::DeltaRenderer->new($topic, \@comments, \@deltas, $query,
+					      $mode, $brmode, $tabwidth);
 
     # Set the add general comment URL.
     $vars->{'add_general_comment_element'} =
