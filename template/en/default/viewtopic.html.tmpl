@@ -103,6 +103,19 @@
 
 [% PROCESS viewdeltas.html.tmpl deltas = deltas %]
 
+[%# Output the legend at the bottom. #%]
+
+<table cellspacing="0" cellpadding="0" border="0">
+    <tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td colspan="2">Legend:</td></tr>
+    <tr><td class="rf">Removed</td><td class="rb">&nbsp;</td></tr>
+    <tr><td colspan="2" align="center" class="cf">Changed</td></tr>
+    <tr><td class="ab">&nbsp;</td><td class="af">Added</td></tr>
+</table>
+
+<p>
+<span class="general_comment">[% add_general_comment_element %] to topic.</span>
+
 [%# The perl script takes control from here, rendering the topic data. #%]
 
 
