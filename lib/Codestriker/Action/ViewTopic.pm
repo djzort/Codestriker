@@ -268,13 +268,13 @@ sub process($$$) {
 	    $delta->{view_old_full_url} =
 		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
 					    $mode, 0);
-	    $delta->{view_old_both_full_url} =
+	    $delta->{view_old_full_both_url} =
 		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
 					    $mode, 1);
 	    $delta->{view_new_full_url} =
 		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
 					    $mode, 0);
-	    $delta->{view_new_both_full_url} =
+	    $delta->{view_new_full_both_url} =
 		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
 					    $mode, 1);
 	}
