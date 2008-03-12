@@ -42,7 +42,7 @@ sub process($$$) {
 
     # Retrieve the corresponding repository object.
     my $repository =
-	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+	Codestriker::Repository::RepositoryFactory->get($topic->{repository});
 
     # Retrieve the deltas corresponding to this file.
     my @deltas = Codestriker::Model::Delta->get_deltas($topicid, $fn);
@@ -66,25 +66,6 @@ sub process($$$) {
 			      "$revision: $!");
     }
 
-    # This could be done more efficiently, but for now, read through the
-    # file, and determine the longest line length for the resulting
-    # data that is to be viewed.  Note it is not 100% accurate, but it will
-    # do for now, to reduce the resulting page size.
-    my $max_line_length = $filedata_max_line_length;
-    for (my $d = 0; $d <= $#deltas; $d++) {
-	my @difflines = split /\n/, $deltas[$d]->{text};
-	for (my $i = 0; $i <= $#difflines; $i++) {
-	    my $line = $difflines[$i];
-	    if ($line =~ /^\s(.*)$/o || $line =~ /^\+(.*)$/o ||
-		$line =~ /^\-(.*)$/o) {
-		my $line_length = length($1);
-		if ($line_length > $max_line_length) {
-		    $max_line_length = $line_length;
-		}
-	    }
-	}
-    }
-
     # Output the new file, with the deltas applied.
     my $title;
     if ($parallel) {
@@ -103,85 +84,69 @@ sub process($$$) {
 				    repository=>$Codestriker::repository_name_map->{$topic->{repository}}, 
                                     reload=>0, cache=>1);
 
-    # Render the HTML header.
-    my $vars = {};
-    $vars->{'closehead'} = 1;
-
-    my $header = Codestriker::Http::Template->new("header");
-    $header->process($vars);
-
-    my $max_digit_width = length($#filedata);
-
-    # Create a new render object to perform the line rendering.
-    my @toc_filenames = ();
-    my @toc_revisions = ();
-    my @toc_binaries = ();
-    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $render =
-	Codestriker::Http::Render->new($query, $url_builder, $parallel,
-				       $max_digit_width, $topicid, $mode,
-				       \@comments, $tabwidth,
-				       $repository, \@toc_filenames,
-				       \@toc_revisions, \@toc_binaries,
-				       undef, $max_line_length, $brmode,
-				       $fview);
-    # Prepare the output.
-
-    if ($parallel) {
-	$render->print_coloured_table();
+    # Need to create a single delta object that combines all of the deltas
+    # together.
+    my $merged_delta = {};
+    if (@deltas > 0) {
+	my $delta = $deltas[0];
+	$merged_delta->{filename} = $delta->{filename};
+	$merged_delta->{revision} = $delta->{revision};
+	$merged_delta->{binary} = $delta->{binary};
+	$merged_delta->{filenumber} = $delta->{filenumber};
+	$merged_delta->{repmatch} = $delta->{repmatch};
+	$merged_delta->{old_linenumber} = 1;
+	$merged_delta->{new_linenumber} = 1;
+	$merged_delta->{only_delta_in_file} = 1;
     }
-    else {
-	print "<PRE class=\"ms\">\n";
-    }
-
-    # Read through all the deltas, and apply them to the original form of the
-    # file.
-    my $delta = undef;
+    
+    # Now compute the delta text of all the merged deltas.
+    my $delta_text = "";
+    my $old_linenumber = 1;
     for (my $delta_index = 0; $delta_index <= $#deltas; $delta_index++) {
-	$delta = $deltas[$delta_index];
+	my $delta = $deltas[$delta_index];
 
 	# Output those lines leading up to the start of the next delta.
 	# Build up a delta with no changes, and render it.
-	my $delta_text = "";
 	my $next_delta_linenumber = $delta->{old_linenumber};
-	for (my $i = $render->{old_linenumber};
-	     $i < $next_delta_linenumber; $i++) {
+	for (my $i = $old_linenumber; $i < $next_delta_linenumber; $i++) {
 	    $delta_text .= " $filedata[$i]\n";
+	    $old_linenumber++;
 	}
-	$render->delta_text($filename, $fn, $revision,
-			    $render->{old_linenumber},
-			    $render->{new_linenumber},
-			    $delta_text, 0, $new, 0);
-			    
-	# Render the actual change delta.
-	$render->delta_text($filename, $fn, $revision,
-			    $delta->{old_linenumber},
-			    $delta->{new_linenumber}, $delta->{text}, 1,
-			    $new, 1);
+
+	# Keep track of the old linenumber so the blanks between the
+	# deltas can be filled in.
+	my @diff_lines = split /\n/, $delta->{text};
+	foreach my $line (@diff_lines) {
+	    if ($line =~ /^\-/o || $line =~ /^\s/o) {
+		$old_linenumber++;
+	    }
+	}
+
+	# Add the text of this delta to the final text.
+	$delta_text .= $delta->{text};
     }
 
-    # Render the tail part of the file, again by building up a delta.
-    my $delta_text = "";
-    for (my $i = $render->{old_linenumber}; $i <= $#filedata; $i++) {
+    # Add the text from the tail-end of the file.
+    for (my $i = $old_linenumber; $i <= $#filedata; $i++) {
 	$delta_text .= " $filedata[$i]\n";
     }
-    $render->delta_text($filename, $fn, $revision, $render->{old_linenumber},
-			$render->{new_linenumber}, $delta_text, 0, $new, 0);
-    
-    # Close off the rendering.    
-    if ($parallel) {
-	print $query->end_table();
-    }
-    else {
-	print "</PRE>\n";
-    }
 
-    # Render the HTML trailer.
-    my $trailer = Codestriker::Http::Template->new("trailer");
-    $trailer->process();
+    # Now update the merged delta with this text.
+    $merged_delta->{text} = $delta_text;
 
-    print $query->end_html();
+    # Render this delta.
+    my @merged_deltas = ();
+    push @merged_deltas, $merged_delta;
+    my $delta_renderer =
+	Codestriker::Http::DeltaRenderer->new($topic, \@comments,
+					      \@merged_deltas, $query,
+					      $mode, $brmode, $tabwidth);
+    $delta_renderer->annotate_deltas();
 
+    my $vars = {};
+    $vars->{'deltas'} = \@merged_deltas;
+    my $template = Codestriker::Http::Template->new("viewtopicfile");
+    $template->process($vars);
     $http_response->generate_footer();
 
     # Fire the topic listener to indicate that the user has viewed the topic.
