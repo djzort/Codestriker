@@ -99,7 +99,8 @@
                    mode = mode %]
 
 <p>
-<span class="general_comment">[% add_general_comment_element %]</span>
+<span class="general_comment">[% add_general_comment_element %] to topic.</span>
+<p>
 
 [% PROCESS viewdeltas.html.tmpl deltas = deltas %]
 
@@ -116,7 +117,11 @@
 <p>
 <span class="general_comment">[% add_general_comment_element %] to topic.</span>
 
-[%# The perl script takes control from here, rendering the topic data. #%]
+[% PROCESS trailer.html.tmpl %]
+
+</body>
+</html>
+
 
 
 

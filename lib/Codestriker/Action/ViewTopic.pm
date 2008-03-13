@@ -16,7 +16,6 @@ use HTML::Entities ();
 use Codestriker::Model::Topic;
 use Codestriker::Model::Comment;
 use Codestriker::Http::UrlBuilder;
-use Codestriker::Http::Render;
 use Codestriker::Http::DeltaRenderer;
 use Codestriker::Repository::RepositoryFactory;
 use Codestriker::TopicListeners::Manager;
@@ -306,43 +305,6 @@ sub process($$$) {
     # Fire the template for generating the view topic screen.
     my $template = Codestriker::Http::Template->new("viewtopic");
     $template->process($vars);
-
-    # The rest of the output is non-template driven, as it is quite
-    # complex.
-
-    print $query->p if ($mode == $Codestriker::NORMAL_MODE);
-
-    # Number of characters the line number should take, need the real lines
-    # not the number of changed lines.
-    my @document = split /\n/, $topic->{document};
-    my $max_digit_width = length($#document+1);
-
-    # Build the render which will be used to build this page.
-    my $render = Codestriker::Http::Render->new($query, $url_builder, 1,
-						$max_digit_width, $topicid,
-						$mode, \@comments, $tabwidth,
-						$repository, \@filenames,
-						\@revisions, \@binary,
-						\@numchanges, -1,
-						$brmode, $fview);
-
-    # Retrieve the delta set comprising this review.
-    my $old_filename = "";
-    
-    # Now render the selected deltas.
-    for (my $i = 0; $i <= $#deltas; $i++) {
-	my $delta =  $deltas[$i];
-	$render->delta($delta);
-    }
-
-    $render->finish();
-
-    # Render the HTML trailer.
-    my $trailer = Codestriker::Http::Template->new("trailer");
-    $trailer->process();
-
-    print $query->end_html();
-
     $http_response->generate_footer();
 
     # Fire the topic listener to indicate that the user has viewed the topic.
