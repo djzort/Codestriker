@@ -1,0 +1,26 @@
+[%# HTML for rendering a delta header. #%]
+
+        <tr>
+	    <td class="file" align="left">
+	    [% IF delta.repository_file_view_url != "" %]
+	      File 
+	           <a href="[% delta.repository_file_view_url %]">
+		      [% delta.filename | html_entity %]
+	           </a>
+	    [% ELSE %]
+              File [% delta.filename | html_entity %]
+	    [% END %]
+            (Revision [% delta.revision %])
+	    </td>
+
+            <td class="file" align="right">
+                [% delta.add_file_comment_element %]
+                [% IF delta.previous_file_url != "" %]
+                <a href="[% delta.previous_file_url %]">[&lt;&lt;]</a>
+                [% END %]
+                <a href="#contents">[Top]</a>
+                [% IF delta.next_file_url != "" %]
+                <a href="[% delta.next_file_url %]">[&gt;&gt;]</a>
+                [% END %]
+            </td>
+        </tr>

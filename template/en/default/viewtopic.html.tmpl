@@ -102,7 +102,8 @@
 <span class="general_comment">[% add_general_comment_element %] to topic.</span>
 <p>
 
-[% PROCESS viewdeltas.html.tmpl deltas = deltas %]
+[%# Render the delta header in the footer if only one file is being viewed. #%]
+[% PROCESS viewdeltas.html.tmpl deltas = deltas render_header_in_footer = fview != -1 %]
 
 [%# Output the legend at the bottom. #%]
 
