@@ -14,7 +14,7 @@
 
     <table width="100%" cellspacing="0" cellpadding="0" border="0">
 
-        [% PROCESS viewdeltaheader.html.tmpl delta = delta %]
+        [% PROCESS viewdeltaheader.html.tmpl delta = delta render_anchor = 1 %]
 
 	[%# Output the diff description if it is present. #%]
 	[% IF delta.description != "" %]
@@ -82,6 +82,6 @@
 
 [% IF render_header_in_footer %]
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
-[% PROCESS viewdeltaheader.html.tmpl delta = delta %]
+[% PROCESS viewdeltaheader.html.tmpl delta = delta render_anchor = 0 %]
 </table>
 [% END %]

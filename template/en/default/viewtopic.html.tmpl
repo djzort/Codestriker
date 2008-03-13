@@ -65,7 +65,7 @@
 
         [%# Display the jump to link in the case when all files are displayed. #%]
 	[% IF fview == -1 %]
-	    [<a href="[% file.anchor_filename_url %]">Jump to</a>]
+	    [<a href="#[% file.filename %]">Jump to</a>]
         [% END %]
 
         [%# Display the filename with an internal link if its not binary. #%]

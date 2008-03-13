@@ -2,13 +2,13 @@
 
         <tr>
 	    <td class="file" align="left">
+            [% IF render_anchor %]<a name="[% delta.filename %]">File</a> [% ELSE %]File [% END %]
 	    [% IF delta.repository_file_view_url != "" %]
-	      File 
 	           <a href="[% delta.repository_file_view_url %]">
 		      [% delta.filename | html_entity %]
 	           </a>
 	    [% ELSE %]
-              File [% delta.filename | html_entity %]
+                   [% delta.filename | html_entity %]
 	    [% END %]
             (Revision [% delta.revision %])
 	    </td>

@@ -209,9 +209,6 @@ sub process($$$) {
 	$filerow->{href_filename_url} = 
 	    $url_builder->view_url($topicid, -1, $mode, $brmode, $i) .
 	    "#" . $filename;
-        $filerow->{anchor_filename_url} =
-	    $url_builder->view_url($topicid, -1, $mode, $brmode, -1) .
-	    "#" . $filename;
 	$filerow->{binary} = $binary[$i];
 
 	my $revision = $revisions[$i];
