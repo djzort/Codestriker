@@ -169,31 +169,66 @@ sub get_deltas($$$) {
     return @results;
 }
 
+# Determine the offset of $target_line within the delta text. or -1
+# if it can't be located.
+sub find_line_offset {
+    my ($self, $targetline, $new) = @_;
 
-# This function looks at the delta, and will return 1 if the delta looks like
-# it is a delta for a completly new file. This happens when a new file is added
-# to SCM system, or the user updated a plain old text document to be reviewed
-# without diffs. We need this function because we want to format this case
-# special.
-sub is_delta_new_file
-{
-    my $self = shift;
-    
-    # All of the following must be true:
-    # - one delta for the entire file
-    # - delta must start at line 1 (0ld, and new)
-    my $is_new_file = 0;
-    if ($self->{only_delta_in_file} &&
-	$self->{old_linenumber} == 0 &&
-	$self->{new_linenumber} == 1) {
-	# All of the delta text lines must start with +.
-	my @lines = split '\n', $self->{text};
-	if ( scalar( grep !/^\+/, @lines ) == 0) {
-	    $is_new_file = 1;
+    # Break the text into lines.
+    my @document = split /\n/, $self->{text};
+
+    # Calculate the location of the target line within the diff chunk.
+    my $offset;
+    my $old_linenumber = $self->{old_linenumber};
+    my $new_linenumber = $self->{new_linenumber};
+    for ($offset = 0; $offset <= $#document; $offset++) {
+
+	my $data = $document[$offset];
+
+	# Check if the target line as been found.
+	if ($data =~ /^ /o) {
+	    last if ($new && $new_linenumber == $targetline);
+	    last if ($new == 0 && $old_linenumber == $targetline);
+	    $old_linenumber++;
+	    $new_linenumber++;
+	} elsif ($data =~ /^\+/o) {
+	    last if ($new && $new_linenumber == $targetline);
+	    $new_linenumber++;
+	} elsif ($data =~ /^\-/o) {
+	    last if ($new == 0 && $old_linenumber == $targetline);
+	    $old_linenumber++;
 	}
     }
-    
-    return $is_new_file;
+
+    if (($new && $new_linenumber == $targetline) ||
+	($new == 0 && $old_linenumber == $targetline)) {
+	return $offset;
+    } else {
+	# No match was found.
+	return -1;
+    }
+}
+
+# Retrieve the textual context for the delta at the specified line and
+# context width.
+sub retrieve_context {
+    my ($self, $targetline, $new, $context, $text) = @_;
+
+    my $offset = $self->find_line_offset($targetline, $new);
+    if ($offset == -1) {
+	return -1;
+    }
+
+    # Get the minimum and maximum line numbers for this context, and return
+    # the data.
+    my @document = split /\n/, $self->{text};
+    my $min_line = ($offset - $context < 0 ? 0 : $offset - $context);
+    my $max_line = $offset + $context;
+    for (my $i = $min_line; $i <= $max_line && $i <= $#document; $i++) {
+	push @{ $text }, $document[$i];
+    }
+
+    return $offset - $min_line;
 }
 
 1;

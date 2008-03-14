@@ -12,7 +12,6 @@ package Codestriker::Action::ViewTopicComments;
 use strict;
 
 use Codestriker::Http::Template;
-use Codestriker::Http::Render;
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
 
@@ -121,13 +120,16 @@ sub process($$$) {
                                 $comment->{fileline} , 
                                 $comment->{filenew});
 
-                $comment->{context} = Codestriker::Http::Render->get_context(
-                                                $comment->{fileline} , 
-                                                $show_context, 1,
-                                                $delta->{old_linenumber},
-                                                $delta->{new_linenumber},
-                                                $delta->{text}, 
-                                                $comment->{filenew});
+		my @text = ();
+		my $offset = $delta->retrieve_context($comment->{fileline}, $comment->{filenew},
+						      $show_context, \@text);
+		for (my $i = 0; $i <= $#text; $i++) {
+		    $text[$i] = HTML::Entities::encode($text[$i]);
+		    if ($i == $offset) {
+			$text[$i] = "<font color=\"red\">" . $text[$i] . "</font>";
+		    }
+		}
+                $comment->{context} = $offset == -1 ? "" : (join "\n", @text);
        }
     }
 

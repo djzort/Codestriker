@@ -169,14 +169,15 @@ sub annotate_deltas
 
 		# Now render the line which is present on both sides.
 		my $line = {};
+		$data = $self->_apply_line_filters($data);
 		my $data_class =
 		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-		$line->{old_data} = $self->_apply_line_filters($data);
+		$line->{old_data} = $data;
 		$line->{old_data_line} =
 		    $self->comment_link($self->{filenumber}, $old_linenumber,
 					0, $old_linenumber);
 		$line->{old_data_class} = $data_class;
-		$line->{new_data} = $self->_apply_line_filters($data);
+		$line->{new_data} = $data;
 		$line->{new_data_line} =
 		    $self->comment_link($self->{filenumber}, $new_linenumber,
 					1, $new_linenumber);
@@ -184,6 +185,17 @@ sub annotate_deltas
 		push @{$self->{lines}}, $line;
 		$old_linenumber++;
 		$new_linenumber++;
+	    }
+
+	    # Check if the delta corresponds to a new file.  This is true
+	    # if there is only one delta for the whole file, there are no
+	    # old lines, and the diff strarts at 0,1.
+	    $delta->{new_file} = 
+		$delta->{only_delta_in_file} &&	$old_linenumber == 0 &&
+		$delta->{old_linenumber} == 0 && $delta->{new_linenumber} == 1;
+	    if ($delta->{new_file}) {
+		$delta->{new_file_class} =
+		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
 	    }
 	}
 
@@ -280,13 +292,17 @@ sub _render_changes
 	}
 	
 	my $line = {};
-	$line->{old_data} = $self->_apply_line_filters($old_data);
-	$line->{old_data_line} =
-	    $self->comment_link($self->{filenumber}, $old_data_line, 0, $old_data_line);
+	if (defined $old_data) {
+	    $line->{old_data} = $self->_apply_line_filters($old_data);
+	    $line->{old_data_line} =
+		$self->comment_link($self->{filenumber}, $old_data_line, 0, $old_data_line);
+	}
 	$line->{old_data_class} = $render_old_colour;
-	$line->{new_data} = $self->_apply_line_filters($new_data);
-	$line->{new_data_line} =
-	    $self->comment_link($self->{filenumber}, $new_data_line, 1, $new_data_line);
+	if (defined $new_data) {
+	    $line->{new_data} = $self->_apply_line_filters($new_data);
+	    $line->{new_data_line} =
+		$self->comment_link($self->{filenumber}, $new_data_line, 1, $new_data_line);
+	}
 	$line->{new_data_class} = $render_new_colour;
 	push @{$self->{lines}}, $line;
     }

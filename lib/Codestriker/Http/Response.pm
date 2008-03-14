@@ -403,7 +403,7 @@ sub generate_comment_declarations
 	    $data =~ s/\'/\\\'/mgo;
 	    $data =~ s/\n/<br>/mgo;
 	    $data =~ s/ \s+/'&nbsp;' x (length($&)-1)/emgo;
-	    $data = Codestriker::Http::Render::tabadjust($tabwidth, $data, 1);
+	    $data = Codestriker::tabadjust($tabwidth, $data, 1);
 
 	    # Show each comment with the author and date in bold.
 	    $overlib_html .= "<b>Comment from $comment->{author} ";

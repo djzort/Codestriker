@@ -15,7 +15,6 @@ use File::Temp qw/ tempfile /;
 use FileHandle;
 
 use Codestriker::Model::Topic;
-use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
 use Codestriker::Repository::ScmBug;
 use Codestriker::FileParser::Parser;

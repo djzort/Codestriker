@@ -370,14 +370,18 @@ sub comment_create($$$) {
 						 $comment->{filenumber}, 
 						 $comment->{fileline}, 
 						 $comment->{filenew});
-	$body .=
-	     Codestriker::Http::Render->get_context($comment->{fileline}, 
-						    $email_context, 0,
-						    $delta->{old_linenumber},
-						    $delta->{new_linenumber},
-						    $delta->{text}, 
-						    $comment->{filenew})
-	. "\n";
+	my @text = ();
+	my $offset = $delta->retrieve_context($comment->{fileline}, $comment->{filenew}, 
+					      $email_context, \@text);
+	for (my $i = 0; $i <= $#text; $i++) {
+	    if ($i == $offset) {
+		$text[$i] = "* " . $text[$i];
+	    } else {
+		$text[$i] = "  " . $text[$i];
+	    }
+	}
+	$body .= join "\n", @text;
+	$body .= "\n\n";
 	$body .= "$EMAIL_HR";
     }
     $body .= "\n\n";

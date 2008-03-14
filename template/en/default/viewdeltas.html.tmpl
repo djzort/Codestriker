@@ -30,14 +30,15 @@
     <table width="100%" cellspacing="0" cellpadding="0" border="0">
     [% END %]
 
-    [%# Now output the delta header. #%]
+    [%# Now output the delta header if its not a new file. #%]
     [% SET diff_current_filename = delta.filename %]
       <tr>
 	<td colspan="4">&nbsp;</td>
       </tr>
       <tr>
-      [% IF delta.view_old_full_url != "" %]
-      [%# Display heading with links to retrieve the entire file #%]
+      [% IF !delta.new_file %]
+        [% IF delta.view_old_full_url != "" %]
+        [%# Display heading with links to retrieve the entire file #%]
         <td class="line" colspan="2">
 	  <a href="javascript: myOpen('[% delta.view_old_full_url %]', 'Codestriker')">
 	    Line [% delta.old_linenumber %]
@@ -56,10 +57,11 @@
 	    Parallel
 	  </a>
 	</td>
-      [% ELSE %]
-      [%# Just display the line numbers for the delta without any links. #%]
+        [% ELSE %]
+        [%# Just display the line numbers for the delta without any links. #%]
         <td class="line" colspan="2">Line [% delta.old_linenumber %]</td>
         <td class="line" colspan="2">Line [% delta.new_linenumber %]</td>
+        [% END %]
       [% END %]
       </tr>
     
@@ -67,10 +69,15 @@
       [% FOREACH line = delta.lines %]
       [% FLUSH IF loop.count() % 10 == 1 %]
       <tr>
+	[% IF delta.new_file %]
+	<td>[% line.new_data_line %]</td>
+	<td class="[% delta.new_file_class %]" colspan="3">[% line.new_data %]</td>
+	[% ELSE %]
 	<td>[% line.old_data_line %]</td>
 	<td class="[% line.old_data_class %]">[% line.old_data %]</td>
 	<td>[% line.new_data_line %]</td>
 	<td class="[% line.new_data_class %]">[% line.new_data %]</td>
+	[% END %]
       </tr>
       [% END %]
       <tr><td colspan="4">&nbsp;</td></tr>

@@ -13,7 +13,6 @@ use strict;
 
 use Codestriker::Model::File;
 use Codestriker::Model::Comment;
-use Codestriker::Http::Render;
 use Codestriker::Repository::RepositoryFactory;
 
 # If the input is valid, display the topic.
@@ -58,10 +57,8 @@ sub process($$$) {
     my @comments = $topic->read_comments();
 
     # Load the appropriate original form of this file into memory.
-    my ($filedata_max_line_length, @filedata);
-    if (!_read_repository_file($filename, $revision, $tabwidth,
-			       $repository, \@filedata,
-			       \$filedata_max_line_length)) {
+    my @filedata;
+    if (!$repository->retrieve($filename, $revision, \@filedata)) {
 	$http_response->error("Couldn't get repository data for $filename " .
 			      "$revision: $!");
     }
@@ -151,29 +148,6 @@ sub process($$$) {
 
     # Fire the topic listener to indicate that the user has viewed the topic.
     Codestriker::TopicListeners::Manager::topic_viewed($email, $topic);
-}
-
-# Read the specified repository file and revision into memory.  Return true if
-# successful, false otherwise.
-sub _read_repository_file ($$$$$$) {
-    my ($filename, $revision, $tabwidth, $repository, $data_array_ref,
-	$maxline_length_ref) = @_;
-
-    # Read the file data.
-    $repository->retrieve($filename, $revision, $data_array_ref);
-
-    # Determine the maximum line length, and replace tabs with spaces.
-    $$maxline_length_ref = 0;
-    for (my $i = 1; $i <= $#$data_array_ref; $i++) {
-	$$data_array_ref[$i] =
-	    Codestriker::Http::Render::tabadjust($tabwidth,
-						 $$data_array_ref[$i], 0);
-	my $line_length = length($$data_array_ref[$i]);
-	if ($line_length > $$maxline_length_ref) {
-	    $$maxline_length_ref = $line_length;
-	}
-    }
-    return 1;
 }
 
 1;

@@ -11,7 +11,6 @@ package Codestriker::Action::EditComment;
 
 use strict;
 use Codestriker::Model::Topic;
-use Codestriker::Http::Render;
 
 # Create an appropriate form for adding a comment to a topic.
 sub process($$$) {
@@ -83,16 +82,17 @@ sub process($$$) {
 	# Retrieve the context for a comment made against a specific line.
 	my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
 							 $line, $new);
-	
-    $vars->{'context'} =
-	$query->pre(
-	    Codestriker::Http::Render->get_context($line, 
-						   $context, 1,
-						   $delta->{old_linenumber},
-						   $delta->{new_linenumber},
-						   $delta->{text},
-						   $new)) .
-						       $query->p . "\n";
+
+	my @text = ();
+	my $offset = $delta->retrieve_context($line, $new, $context, \@text);
+	for (my $i = 0; $i <= $#text; $i++) {
+	    $text[$i] = HTML::Entities::encode($text[$i]);
+	    if ($i == $offset) {
+		$text[$i] = "<font color=\"red\">" . $text[$i] . "</font>";
+	    }
+	}
+
+	$vars->{'context'} = $query->pre(join '\n', @text) . $query->p;
     }
 
     # Display the comments which have been made for this line number

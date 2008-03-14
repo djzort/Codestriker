@@ -627,5 +627,22 @@ sub execute_command {
     $stderr_fh->flush;
 }
 
+# Replace the passed in string with the correct number of spaces, for
+# alignment purposes.
+sub tabadjust ($$$) {
+    my ($tabwidth, $input, $htmlmode) = @_;
+
+    $_ = $input;
+    if ($htmlmode) {
+	1 while s/\t+/'&nbsp;' x
+	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
+    }
+    else {
+	1 while s/\t+/' ' x
+	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
+    }
+    return $_;
+}
+
 1;
 

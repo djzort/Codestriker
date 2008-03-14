@@ -22,7 +22,7 @@ sub filter {
     $text =~ s/ \s+/'&nbsp;' x (length($&)-1)/emgo;
 
     # Replace tabs.
-    $text = Codestriker::Http::Render::tabadjust($tabwidth, $text, 1);
+    $text = Codestriker::tabadjust($tabwidth, $text, 1);
     
     return $text;
 }

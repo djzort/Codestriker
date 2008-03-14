@@ -15,7 +15,6 @@ use HTML::Entities ();
 use Codestriker::Model::Comment;
 use Codestriker::Model::File;
 use Codestriker::Model::Topic;
-use Codestriker::Http::Render;
 
 # If the input is valid, create the appropriate topic into the database.
 sub process($$$) {

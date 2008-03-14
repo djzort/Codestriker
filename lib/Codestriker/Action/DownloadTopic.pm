@@ -11,7 +11,6 @@ package Codestriker::Action::DownloadTopic;
 
 use strict;
 
-use Codestriker::Http::Render;
 use Codestriker::Model::Topic;
 
 # If the input is valid, display the topic.
