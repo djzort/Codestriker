@@ -1,11 +1,6 @@
 </head>
 <body onload="view_topic_on_load_handler();">
 
-[%# Screen for displaying the heading information of a topic.  The
-    actual view topic data is still generated directly from the perl
-    script, as it is complex HTML that doesn't need to be
-    customised. #%]
-
 [% PROCESS viewtopicheader.html.tmpl version = version 
    help = "x504.html#VIEW-TOPIC" topicview = 1 topicproperties = 0
    topiccomments = 0 topicinfo = 0 closehead = 0 %]

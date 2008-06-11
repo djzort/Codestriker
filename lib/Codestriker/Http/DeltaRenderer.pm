@@ -136,7 +136,6 @@ sub annotate_deltas
 	@{$self->{diff_old_lines_numbers}} = ();
 	@{$self->{diff_new_lines}} = ();
 	@{$self->{diff_new_lines_numbers}} = ();
-	$self->{filenumber} = 0;
 	$self->{current_filename} = "";
 	for (my $i = 0; $i <= $#diff_lines; $i++) {
 	    my $data = $diff_lines[$i];
@@ -159,7 +158,7 @@ sub annotate_deltas
 		$data =~ s/^\s//;
 		
 		# Render what has been currently recorded.
-		$self->_render_changes();
+		$self->_render_changes($delta->{filenumber});
 		
 		# Now that the diff changeset has been rendered, remove the state data.
 		@{$self->{diff_old_lines}} = ();
@@ -174,12 +173,12 @@ sub annotate_deltas
 		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
 		$line->{old_data} = $data;
 		$line->{old_data_line} =
-		    $self->comment_link($self->{filenumber}, $old_linenumber,
+		    $self->comment_link($delta->{filenumber}, $old_linenumber,
 					0, $old_linenumber);
 		$line->{old_data_class} = $data_class;
 		$line->{new_data} = $data;
 		$line->{new_data_line} =
-		    $self->comment_link($self->{filenumber}, $new_linenumber,
+		    $self->comment_link($delta->{filenumber}, $new_linenumber,
 					1, $new_linenumber);
 		$line->{new_data_class} = $data_class;
 		push @{$self->{lines}}, $line;
@@ -200,14 +199,13 @@ sub annotate_deltas
 	}
 
 	# Render any remaining diff segments.
-	$self->_render_changes();
+	$self->_render_changes($delta->{filenumber});
 
 	# Store the processed lines with the delta object for rendering.
 	@{$delta->{lines}} = @{$self->{lines}};
 
 	if ($self->{current_filename} ne $delta->{filename}) {
 	    # Keep track of the current filename being processed.
-	    $self->{filenumber}++;
 	    $self->{current_filename} = $delta->{filename};
 	}
     }
@@ -216,7 +214,7 @@ sub annotate_deltas
 # Annotate any accumlated diff changes.
 sub _render_changes
 {
-    my ($self) = @_;
+    my ($self, $filenumber) = @_;
 
     # Determine the class to use for displaying the comments.
     my ($old_col, $old_notpresent_col, $new_col, $new_notpresent_col);
@@ -295,13 +293,13 @@ sub _render_changes
 	if (defined $old_data) {
 	    $line->{old_data} = $self->_apply_line_filters($old_data);
 	    $line->{old_data_line} =
-		$self->comment_link($self->{filenumber}, $old_data_line, 0, $old_data_line);
+		$self->comment_link($filenumber, $old_data_line, 0, $old_data_line);
 	}
 	$line->{old_data_class} = $render_old_colour;
 	if (defined $new_data) {
 	    $line->{new_data} = $self->_apply_line_filters($new_data);
 	    $line->{new_data_line} =
-		$self->comment_link($self->{filenumber}, $new_data_line, 1, $new_data_line);
+		$self->comment_link($filenumber, $new_data_line, 1, $new_data_line);
 	}
 	$line->{new_data_class} = $render_new_colour;
 	push @{$self->{lines}}, $line;

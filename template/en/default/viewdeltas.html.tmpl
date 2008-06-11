@@ -1,7 +1,6 @@
 [%# HTML for rendering a set of deltas. #%]
 
 [% SET diff_current_filename = "" %]
-[% SET filenumber = 0 %]
 [% FOREACH delta = deltas %]
 [% FLUSH IF loop.count() % 10 == 1 %]
     [%# Check if a heading for the current diff needs to be output. #%]
@@ -24,7 +23,6 @@
 	</tr>
 	[% END %]
     </table>
-    [% filenumber = filenumber + 1 %]
     
     [%# Make sure all the diffs are aligned in the same table. #%]
     <table width="100%" cellspacing="0" cellpadding="0" border="0">
