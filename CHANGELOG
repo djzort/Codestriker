@@ -31,6 +31,9 @@ Version 1.9.5
 * Make sure very long filenames don't move the diff display far to the
   right of the view topic page.  Fix suggested by
   rob_webset@users.sourceforge.net.
+  
+* The edit comment page has been updated so that the topic name is
+  linked back to the associated view topic page. 
 	
 Version 1.9.4
 
