@@ -14,11 +14,12 @@ use strict;
 use Codestriker::Http::HtmlEntityLineFilter;
 use Codestriker::Http::TabToNbspLineFilter;
 use Codestriker::Http::LineBreakLineFilter;
+use Codestriker::Http::LxrLineFilter;
 
 # Constructor.
 sub new {
     my ($type, $topic, $comments, $deltas, $query, $mode, $brmode,
-	$tabwidth) = @_;
+		$tabwidth, $repository) = @_;
 
     my $self = {};
     $self->{topic} = $topic;
@@ -52,8 +53,14 @@ sub new {
 
     # Record list of line filter objects to apply to each line of code.
     # Setup some default filters.
+    my $lxr_config = defined $repository ?
+		$Codestriker::lxr_map->{$repository->toString()} : undef;
+    
     @{$self->{line_filters}} = ();
     push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+    if (defined $lxr_config) {
+	    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
+    }
     push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
     push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
 
@@ -126,8 +133,6 @@ sub annotate_deltas
 
 	# Now process the text so that the display code has minimal work to do.
 	# Also apply appropriate transformations to the line as required.
-	# TODO: put this into a proper module/plugin framework to make it easier
-	# to extend/modify.
 	my @diff_lines = split /\n/, $delta->{text};
 	my $old_linenumber = $delta->{old_linenumber};
 	my $new_linenumber = $delta->{new_linenumber};

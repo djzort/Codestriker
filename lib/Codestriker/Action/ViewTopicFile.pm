@@ -137,7 +137,7 @@ sub process($$$) {
     my $delta_renderer =
 	Codestriker::Http::DeltaRenderer->new($topic, \@comments,
 					      \@merged_deltas, $query,
-					      $mode, $brmode, $tabwidth);
+					      $mode, $brmode, $tabwidth, $repository);
     $delta_renderer->annotate_deltas();
 
     my $vars = {};
