@@ -16,6 +16,8 @@ use Codestriker::Http::LineFilter;
 
 @Codestriker::Http::LxrLineFilter::ISA =
     ("Codestriker::Http::LineFilter");
+    
+# TODO: close the database handle correctly.    
 
 # Take the LXR configuration as a parameter and create a connection to the LXR database
 # for symbol lookup.
@@ -32,21 +34,25 @@ sub new {
     	$lxr_config->{password} : $lxr_config->{passwd};
 	$self->{dbh} = DBI->connect($lxr_config->{db}, $lxr_config->{user},
 								$password,
-								{AutoCommit=>0, RaiseError=>1})
+								{AutoCommit=>0, RaiseError=>0, PrintError=>0})
 		|| die "Couldn't connect to LXR database: " . DBI->errstr;
 
 	# Create the appropriate prepared statement for retrieving LXR symbols.
 	# Depending on the LXR deployment, the table name is either "symbols"
-	# or "lxr_symbols".		
-	eval
-	{
-	    $self->{select_ids} =
+	# or "lxr_symbols".  Try to determine this silently.		
+    $self->{select_ids} =
 			$self->{dbh}->prepare_cached('SELECT count(symname) FROM symbols where symname = ?');
-	};
-    if ($@) {
+	my $success = defined $self->{select_ids};
+	$success &&= $self->{select_ids}->execute('test');
+	$success &&= $self->{select_ids}->finish;
+	if (! $success) {
 	    $self->{select_ids} =
 			$self->{dbh}->prepare_cached('SELECT count(symname) FROM lxr_symbols where symname = ?');
-    }	
+    }
+
+    # Re-enable error reporting again.    
+    $self->{dbh}->{RaiseError} = 1;	
+    $self->{dbh}->{PrintError} = 1;	
 
 	# Cache for storing which IDs have been found.
 	$self->{idhash} = {};
@@ -79,7 +85,7 @@ sub lxr_ident($$) {
 
     # Check if the id has been found in lxr.
     if ($count > 0) {
-		return '<a href=\"' . $self->{url} . $id . '\" class=\"fid\">' . $id . '</a>';
+		return '<a href="' . $self->{url} . $id . '" class="fid">' . $id . '</a>';
     } else {
 		return $id;
     }
@@ -123,6 +129,7 @@ sub filter {
 				$newdata .= $token;
 	    	} elsif ($token eq "nbsp" || $token eq "quot" || $token eq "amp" ||
 		    	$token eq "lt" || $token eq "gt") {
+		    	# TODO: is this still needed?	
 				# HACK - ignore potential HTML entities.  This needs to be
 				# done in a smarter fashion later.
 				$newdata .= $token;
@@ -146,5 +153,16 @@ sub filter {
 
     return $newdata;
 }
+
+# Ensure the prepared statements and database connection to LXR is closed.
+sub DESTROY {
+	my ($self) = @_;
+
+    $self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
+
+	$self->{select_ids}->finish;	
+	$self->{dbh}->disconnect;
+}
+
 
 1;

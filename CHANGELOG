@@ -33,7 +33,11 @@ Version 1.9.5
   rob_webset@users.sourceforge.net.
   
 * The edit comment page has been updated so that the topic name is
-  linked back to the associated view topic page. 
+  linked back to the associated view topic page.
+  
+* Added support for LXR 0.9.5, which renamed the database tables to
+  contain an lxr_ prefix by default.  Support for older LXR databases
+  will still work by default.   
 	
 Version 1.9.4
 

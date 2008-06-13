@@ -108,7 +108,7 @@ sub getViewUrl ($$$) {
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return "svn:" . $self->getRoot();
+    return $self->{repository_string};
 }
 
 # Given a Subversion URL, determine if it refers to a directory or a file.

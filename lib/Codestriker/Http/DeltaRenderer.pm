@@ -58,11 +58,11 @@ sub new {
     
     @{$self->{line_filters}} = ();
     push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+    push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
+    push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
     if (defined $lxr_config) {
 	    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
     }
-    push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
 
     bless $self, $type;
 }
@@ -315,7 +315,6 @@ sub _render_changes
 	my ($self, $text) = @_;
 
 	# TODO: perform syntax highlighting.
-	# TODO: perform LXR linking.
 	foreach my $line_filter (@{$self->{line_filters}}) {
 	    $text = $line_filter->filter($text);
 	}
