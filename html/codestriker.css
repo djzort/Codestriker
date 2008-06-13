@@ -113,7 +113,11 @@ TR.tl1 {background-color: #cccccc; font-family: Helvetica, Arial}
 TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
 
 /* Colour to use for matching identifier */
-A.fid {color: #777777; text-decoration: none}
+/* A.fid {color: #777777; text-decoration: none} */
+A.fid:link { color: inherit; text-decoration: none }
+A.fid:visited { color: inherit; text-decoration: none }
+A.fid:visited:hover { text-decoration: underline; }
+A.fid:link:hover { text-decoration: underline; }
 
 /* Style comment listings. */
 TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial} /* space */
