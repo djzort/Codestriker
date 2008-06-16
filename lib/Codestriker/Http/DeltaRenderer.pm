@@ -59,10 +59,10 @@ sub new {
     @{$self->{line_filters}} = ();
     push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
     push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
-    if (defined $lxr_config) {
-	    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
-    }
+    #push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
+    #if (defined $lxr_config) {
+	#    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
+    #}
 
     bless $self, $type;
 }
@@ -131,9 +131,34 @@ sub annotate_deltas
 
     foreach my $delta (@{ $self->{deltas} }) {
 
-	# Now process the text so that the display code has minimal work to do.
-	# Also apply appropriate transformations to the line as required.
+	# Split the delta into the left and right side so that text filtering
+	# can be applied.
 	my @diff_lines = split /\n/, $delta->{text};
+	for (my $i = 0; $i <= $#diff_lines; $i++) {
+	    my $data = $diff_lines[$i];
+
+	    if ($data =~ /^\-(.*)$/o) {
+		# Line corresponding to old code.
+		$delta->{diff_old_lines} .= "$1\n";
+	    } elsif ($data =~ /^\+(.*)$/o) {
+		# Line corresponding to new code.
+		$delta->{diff_new_lines} .= "$1\n";
+	    } elsif ($data =~ /^\\/) {
+		# A diff comment such as "No newline at end of file" - ignore it.
+	    } else {
+		# Line corresponding to both sides. Strip the first space off
+		# the diff for proper alignment.
+		$data =~ s/^\s//;
+		$delta->{diff_old_lines} .= "$data\n";
+		$delta->{diff_new_lines} .= "$data\n";
+	    }
+	}
+
+	# Apply the line filters through the delta text.
+	$self->_apply_line_filters($delta);
+	
+	# Now go through the delta text again to determine what lines are to be
+	# rendered.
 	my $old_linenumber = $delta->{old_linenumber};
 	my $new_linenumber = $delta->{new_linenumber};
 	@{$self->{lines}} = ();
@@ -142,25 +167,29 @@ sub annotate_deltas
 	@{$self->{diff_new_lines}} = ();
 	@{$self->{diff_new_lines_numbers}} = ();
 	$self->{current_filename} = "";
+	my $old_index = 0;
+	my $new_index = 0;
+	my @filtered_old_lines = split /\n/, $delta->{diff_old_lines};
+	my @filtered_new_lines = split /\n/, $delta->{diff_new_lines};
 	for (my $i = 0; $i <= $#diff_lines; $i++) {
 	    my $data = $diff_lines[$i];
 
-	    if ($data =~ /^\-(.*)$/o) {
+	    if ($data =~ /^\-/o) {
 		# Line corresponding to old code.
-		push @{ $self->{diff_old_lines} }, $1;
+		push @{ $self->{diff_old_lines} }, $filtered_old_lines[$old_index++];
 		push @{ $self->{diff_old_lines_numbers} }, $old_linenumber;
 		$old_linenumber++;
 	    } elsif ($data =~ /^\+(.*)$/o) {
 		# Line corresponding to new code.
-		push @{ $self->{diff_new_lines} }, $1;
+		push @{ $self->{diff_new_lines} }, $filtered_new_lines[$new_index++];
 		push @{ $self->{diff_new_lines_numbers} }, $new_linenumber;
 		$new_linenumber++;
 	    } elsif ($data =~ /^\\/) {
 		# A diff comment such as "No newline at end of file" - ignore it.
 	    } else {
-		# Line corresponding to both sides. Strip the first space off
-		# the diff for proper alignment.
-		$data =~ s/^\s//;
+		# Line corresponding to both sides.
+		$data = $filtered_old_lines[$old_index++];
+		$new_index++;
 		
 		# Render what has been currently recorded.
 		$self->_render_changes($delta->{filenumber});
@@ -173,7 +202,6 @@ sub annotate_deltas
 
 		# Now render the line which is present on both sides.
 		my $line = {};
-		$data = $self->_apply_line_filters($data);
 		my $data_class =
 		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
 		$line->{old_data} = $data;
@@ -189,7 +217,7 @@ sub annotate_deltas
 		push @{$self->{lines}}, $line;
 		$old_linenumber++;
 		$new_linenumber++;
-	    }
+	}
 
 	    # Check if the delta corresponds to a new file.  This is true
 	    # if there is only one delta for the whole file, there are no
@@ -200,8 +228,8 @@ sub annotate_deltas
 	    if ($delta->{new_file}) {
 		$delta->{new_file_class} =
 		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-	    }
-	}
+	   }
+    }
 
 	# Render any remaining diff segments.
 	$self->_render_changes($delta->{filenumber});
@@ -213,7 +241,7 @@ sub annotate_deltas
 	    # Keep track of the current filename being processed.
 	    $self->{current_filename} = $delta->{filename};
 	}
-    }
+}	
 }
 
 # Annotate any accumlated diff changes.
@@ -296,13 +324,13 @@ sub _render_changes
 	
 	my $line = {};
 	if (defined $old_data) {
-	    $line->{old_data} = $self->_apply_line_filters($old_data);
+	    $line->{old_data} = $old_data;
 	    $line->{old_data_line} =
 		$self->comment_link($filenumber, $old_data_line, 0, $old_data_line);
 	}
 	$line->{old_data_class} = $render_old_colour;
 	if (defined $new_data) {
-	    $line->{new_data} = $self->_apply_line_filters($new_data);
+	    $line->{new_data} = $new_data;
 	    $line->{new_data_line} =
 		$self->comment_link($filenumber, $new_data_line, 1, $new_data_line);
 	}
@@ -312,16 +340,16 @@ sub _render_changes
 
     # Apply all of the line filters to the line of text supplied.
     sub _apply_line_filters {
-	my ($self, $text) = @_;
+	my ($self, $delta) = @_;
 
 	# TODO: perform syntax highlighting.
 	foreach my $line_filter (@{$self->{line_filters}}) {
-	    $text = $line_filter->filter($text);
+	    $line_filter->filter($delta);
 	}
 	    
 	# Unconditionally add a &nbsp; at the start for better alignment.
 	# Fix so count isn't stuffed.
-	return "&nbsp;" . $text;
+	# return "&nbsp;" . $text;
     }
 }
 

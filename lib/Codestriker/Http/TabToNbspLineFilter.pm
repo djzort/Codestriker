@@ -28,14 +28,22 @@ sub new {
 }
 
 # Convert tabs to the appropriate number of &nbsp; entities.
-sub filter {
+sub _filter {
     my ($self, $text) = @_;
-    
+
     my $tabwidth = $self->{tabwidth};
     1 while $text =~ s/\t+/'&nbsp;' x
 	(length($&) * $tabwidth - length($`) % $tabwidth)/eo;
 
     return $text;
+}
+
+# Convert tabs to the appropriate number of &nbsp; entities.
+sub filter {
+    my ($self, $delta) = @_;
+    
+    $delta->{diff_old_lines} = $self->_filter($delta->{diff_old_lines});
+    $delta->{diff_new_lines} = $self->_filter($delta->{diff_new_lines});
 }
 
 1;

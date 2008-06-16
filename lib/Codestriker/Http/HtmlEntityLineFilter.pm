@@ -25,9 +25,10 @@ sub new {
 
 # Escape all HTML entities so that they are displayed correctly.
 sub filter {
-    my ($self, $text) = @_;
+    my ($self, $delta) = @_;
     
-    return HTML::Entities::encode($text);
+    $delta->{diff_old_lines} = HTML::Entities::encode($delta->{diff_old_lines});
+    $delta->{diff_new_lines} = HTML::Entities::encode($delta->{diff_new_lines});
 }
 
 1;

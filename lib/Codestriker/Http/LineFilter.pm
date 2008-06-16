@@ -19,10 +19,9 @@ sub new {
 }
 
 sub filter {
-    my ($self, $text) = @_;
+    my ($self, $delta) = @_;
     
     # Default is a no-op.
-    return $text;
 }
 
 1;

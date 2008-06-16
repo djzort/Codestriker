@@ -5,43 +5,38 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Line filter for handling line-breaks.
+# Line filter for converting tabs to the appropriate number of &nbsp;
 # entities.
 
-package Codestriker::Http::LineBreakLineFilter;
+package Codestriker::Http::HighlightLineFilter;
 
 use strict;
 
 use Codestriker::Http::LineFilter;
 
-@Codestriker::Http::LineBreakLineFilter::ISA =
+@Codestriker::Http::HighlightLineFilter::ISA =
     ("Codestriker::Http::LineFilter");
 
-# Take the linebreak mode as a parameter.
+# Take the desired tabwidth as a parameter.
 sub new {
-    my ($type, $brmode) = @_;
+    my ($type, $highlight) = @_;
 
     my $self = Codestriker::Http::LineFilter->new();
-    $self->{brmode} = $brmode;
+    $self->{highlight} = $highlight;
 
     return bless $self, $type;
 }
 
-# Convert the spaces appropriately for line-breaking.
+# Convert tabs to the appropriate number of &nbsp; entities.
 sub _filter {
     my ($self, $text) = @_;
-    
-    if ($self->{brmode} == $Codestriker::LINE_BREAK_ASSIST_MODE) {
-	$text =~ s/^(\s+)/my $sp='';for(my $i=0;$i<length($1);$i++){$sp.='&nbsp;'}$sp;/ge;
-    }
-    else {
-	$text =~ s/ /&nbsp;/g;
-    }
+
+	
 
     return $text;
 }
 
-# Convert the spaces appropriately for line-breaking.
+# Convert tabs to the appropriate number of &nbsp; entities.
 sub filter {
     my ($self, $delta) = @_;
     
