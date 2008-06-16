@@ -247,9 +247,9 @@ sub process($$$) {
 
     # Set the per-delta URL links, such as adding a file-level comment,
     # and links to the previous/next file.
-    my $filenumber = 0;
     my $current_filename = "";
     foreach my $delta (@deltas) {
+    my $filenumber = $delta->{filenumber};	
 	$delta->{add_file_comment_element} =
 	    $delta_renderer->comment_link($filenumber, -1, 1, "[Add File Comment]");
 
@@ -276,8 +276,7 @@ sub process($$$) {
 	}
 
 	# Create the next/previous file URL links.
-	if ($current_filename ne $delta->{filename}) {
-	    if ($filenumber > 0) {
+    if ($filenumber > 0) {
 		$delta->{previous_file_url} =
 		    $url_builder->view_url($topicid, -1, $mode, $brmode,
 					   $filenumber-1) . "#" . $filenames[$filenumber-1];
@@ -288,10 +287,7 @@ sub process($$$) {
 					   $filenumber+1) . "#" . $filenames[$filenumber+1];
 	    }
 
-	    # Keep track of the current filename being processed.
-	    $filenumber++;
 	    $current_filename = $delta->{filename};
-	}
     }
 
     # Annotate the deltas appropriately so that they can be easily rendered.
