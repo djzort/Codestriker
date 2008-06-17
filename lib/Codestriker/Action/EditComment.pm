@@ -92,7 +92,7 @@ sub process($$$) {
 	    }
 	}
 
-	$vars->{'context'} = $query->pre(join '\n', @text) . $query->p;
+	$vars->{'context'} = $query->pre(join "\n", @text) . $query->p;
     }
 
     # Display the comments which have been made for this line number
