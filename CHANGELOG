@@ -38,7 +38,10 @@ Version 1.9.5
 * Added support for LXR 0.9.5, which renamed the database tables to
   contain an lxr_ prefix by default.  Support for older LXR databases
   will still work by default.  LXR entities are now rendered in black text,
-  the same as program code, but an underline is shown when hovered over.     
+  the same as program code, but an underline is shown when hovered over.
+  
+* Updated the Subversion diff parser so that it correctly identifies new
+  files, rather than treating them as modified files. 
 	
 Version 1.9.4
 

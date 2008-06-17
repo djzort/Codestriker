@@ -113,7 +113,7 @@ sub parse ($$$) {
 	    # Try and read the base revision this change is against,
 	    # while handling new and removed files.
 	    my $base_revision = -1;
-	    if ($line =~ /^\-\-\- .*\s.* (\d+)/io) {
+	    if ($line =~ /^\-\-\- .*\s.*\(.*?(\d+)\)/io) {
 		$base_revision = $1;
 	    } elsif ($line !~ /^\-\-\- .*/io) {
 		return ();
