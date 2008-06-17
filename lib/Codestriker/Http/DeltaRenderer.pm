@@ -52,20 +52,21 @@ sub new {
     $self->{comment_locations} = \@comment_locations;
     $self->{comment_location_map} = \%comment_location_map;
 
-    # Record list of line filter objects to apply to each line of code.
-    # Setup some default filters.
-    my $lxr_config = defined $repository ?
-		$Codestriker::lxr_map->{$repository->toString()} : undef;
-    
+    # If the highlighter has been configured, use that for converting the
+    # code to html.
     @{$self->{line_filters}} = ();
-    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlight);
-    
-    #push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
-    #push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    #push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
-    #if (defined $lxr_config) {
-	#    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
-    #}
+    if (defined $Codestriker::highlighter && $Codestriker::highlighter ne '') {
+	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter);
+    } else {
+    	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+    	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
+    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
+	    my $lxr_config = defined $repository ?
+			$Codestriker::lxr_map->{$repository->toString()} : undef;
+    	if (defined $lxr_config) {
+		    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
+    	}
+    }
 
     bless $self, $type;
 }
