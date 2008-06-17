@@ -341,6 +341,13 @@ EOF
     }
 }
 
+# Issue a warning to the user if the highlight binary is not available.
+if (! (defined $Codestriker::highlighter) || $Codestriker::highlighter eq '') {
+	print STDERR "\nWARNING: \$highlighter variable is not set in codestriker.conf.\n";
+	print STDERR "No syntax highlighting will be performed.\n";
+	print STDERR "Download from http://www.andre-simon.de/ and\n";
+	print STDERR " set \$highlighter to location of executable.\n\n";
+}
 
 # Obtain a database connection.
 my $dbh = $database->get_connection();
