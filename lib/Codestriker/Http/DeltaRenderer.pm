@@ -15,6 +15,7 @@ use Codestriker::Http::HtmlEntityLineFilter;
 use Codestriker::Http::TabToNbspLineFilter;
 use Codestriker::Http::LineBreakLineFilter;
 use Codestriker::Http::LxrLineFilter;
+use Codestriker::Http::HighlightLineFilter;
 
 # Constructor.
 sub new {
@@ -57,8 +58,10 @@ sub new {
 		$Codestriker::lxr_map->{$repository->toString()} : undef;
     
     @{$self->{line_filters}} = ();
-    push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
-    push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
+    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlight);
+    
+    #push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+    #push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
     #push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
     #if (defined $lxr_config) {
 	#    push @{$self->{line_filters}}, Codestriker::Http::LxrLineFilter->new($lxr_config);
