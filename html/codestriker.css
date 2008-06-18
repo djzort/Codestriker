@@ -161,17 +161,17 @@ span.feedback {color: red;}
 span.obsolete-header {color: red; font-weight: bold;}
 
 /* Styles for highlight program. */
-.hl.num { color:#0000ff; }
-.hl.esc { color:#000080; font-weight:bold; }
-.hl.str { color:#008000; }
-.hl.dstr { color:#008000; }
-.hl.slc { color:#008080; }
-.hl.com { color:#008080; }
-.hl.dir { color:#008200; }
-.hl.sym { color:#000000; }
-.hl.line { color:#555555; }
-.hl.mark	{ background-color:#ffffbb;}
-.hl.kwa { color:#000080; font-weight:bold; }
-.hl.kwb { color:#000080; font-weight:bold; }
-.hl.kwc { color:#000000; }
-.hl.kwd { color:#000000; }
+SPAN.num { color:#0000ff; }
+SPAN.esc { color:#000080; font-weight:bold; }
+SPAN.str { color:#008000; }
+SPAN.dstr { color:#008000; }
+SPAN.slc { color:#008080; }
+SPAN.com { color:#008080; }
+SPAN.dir { color:#008200; }
+SPAN.sym { color:#000000; }
+SPAN.line { color:#555555; }
+SPAN.mark	{ background-color:#ffffbb;}
+SPAN.kwa { color:#000080; font-weight:bold; }
+SPAN.kwb { color:#000080; font-weight:bold; }
+SPAN.kwc { color:#000000; }
+SPAN.kwd { color:#000000; }
