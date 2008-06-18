@@ -163,8 +163,8 @@ span.obsolete-header {color: red; font-weight: bold;}
 /* Styles for highlight program. */
 SPAN.num { color:#0000ff; }
 SPAN.esc { color:#000080; font-weight:bold; }
-SPAN.str { color:#008000; }
-SPAN.dstr { color:#008000; }
+SPAN.str { color:#008000; font-weight:bold; }
+SPAN.dstr { color:#008000; font-weight:bold; }
 SPAN.slc { color:#008080; }
 SPAN.com { color:#008080; }
 SPAN.dir { color:#008200; }
