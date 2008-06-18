@@ -51,6 +51,11 @@ sub _filter {
     push @args, '-t';
     push @args, $self->{tabwidth};
     Codestriker::execute_command($read_stdout_fh, undef, $self->{highlight}, @args);
+    if ($read_data eq "") {
+    	# Assume this occurred because the filename was an unsupported type.
+    	# Just return the text appropriately encoded for html output.
+    	$read_data = HTML::Entities::encode($text);
+    }
     
     # Delete the temp file.
     unlink $input_filename;
