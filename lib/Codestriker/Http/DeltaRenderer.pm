@@ -56,11 +56,12 @@ sub new {
     # code to html.
     @{$self->{line_filters}} = ();
     if (defined $Codestriker::highlighter && $Codestriker::highlighter ne '') {
-	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter);
+	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
+    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode, 1);
     } else {
     	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
     	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode);
+    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode, 0);
 	    my $lxr_config = defined $repository ?
 			$Codestriker::lxr_map->{$repository->toString()} : undef;
     	if (defined $lxr_config) {
@@ -108,7 +109,7 @@ sub comment_link
 	# Determine what comment number this anchor refers to.
 	$comment_number = $comment_location_map{$anchor};
 	$text = $query->span({-id=>"c$comment_number"}, "") .
-	    $query->span({-class=>"com"}, $text);
+	    $query->span({-class=>"comment"}, $text);
 
 	# Determine what the next comment in line is.
 	my $index = -1;

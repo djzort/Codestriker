@@ -21,10 +21,11 @@ use Codestriker::Http::LineFilter;
 
 # Take the desired tabwidth as a parameter.
 sub new {
-    my ($type, $highlight) = @_;
+    my ($type, $highlight, $tabwidth) = @_;
 
     my $self = Codestriker::Http::LineFilter->new();
     $self->{highlight} = $highlight;
+    $self->{tabwidth} = $tabwidth;
 
     return bless $self, $type;
 }
@@ -39,7 +40,7 @@ sub _filter {
 	close $input_text_fh;
 	
 	# Execute the highlight command, and store the stdout into $read_data.
-	my $read_data;	
+	my $read_data = "";	
     my $read_stdout_fh = new FileHandle;
     open($read_stdout_fh, '>', \$read_data);
     my @args = ();
@@ -47,6 +48,8 @@ sub _filter {
     push @args, $input_filename;
     push @args, '--xhtml';
     push @args, '-f';
+    push @args, '-t';
+    push @args, $self->{tabwidth};
     Codestriker::execute_command($read_stdout_fh, undef, $self->{highlight}, @args);
     
     # Delete the temp file.

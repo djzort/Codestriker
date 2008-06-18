@@ -84,6 +84,8 @@ sub retrieve ($$$\$) {
 	chop;
 	$$content_array_ref[$i] = $_;
     }
+    
+    return $Codestriker::OK;
 }
 
 # Retrieve the "root" of this repository.

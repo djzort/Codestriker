@@ -19,10 +19,11 @@ use Codestriker::Http::LineFilter;
 
 # Take the linebreak mode as a parameter.
 sub new {
-    my ($type, $brmode) = @_;
+    my ($type, $brmode, $inspan) = @_;
 
     my $self = Codestriker::Http::LineFilter->new();
     $self->{brmode} = $brmode;
+    $self->{inspan} = $inspan;
 
     return bless $self, $type;
 }
@@ -32,10 +33,22 @@ sub _filter {
     my ($self, $text) = @_;
     
     if ($self->{brmode} == $Codestriker::LINE_BREAK_ASSIST_MODE) {
-	$text =~ s/^(\s+)/my $sp='';for(my $i=0;$i<length($1);$i++){$sp.='&nbsp;'}$sp;/ge;
+    	# TODO: fix this for highlighted version.
+		$text =~ s/^(\s+)/my $sp='';for(my $i=0;$i<length($1);$i++){$sp.='&nbsp;'}$sp;/ge;
     }
     else {
-	$text =~ s/ /&nbsp;/g;
+		if ($self->{inspan}) {
+			my @lines = split /\n/, $text;
+			my $result = "";
+			foreach my $line (@lines) {
+				$line =~ s/^( [ ]+)/('&nbsp;' x length($1))/eo;
+				$line =~ s/(>[^<]*?)( [ ]+)/$1 . ('&nbsp;' x length($2))/eog;
+				$result .= $line . "\n";
+			} 
+			$text = $result;
+		} else {
+			$text =~ s/ /&nbsp;/g;
+		}     	
     }
 
     return $text;
