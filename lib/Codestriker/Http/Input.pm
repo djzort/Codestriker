@@ -71,7 +71,6 @@ sub process($) {
     $self->{filename} = decode_utf8($query->param('filename'));
     $self->{linenumber} = $query->param('linenumber');
     $self->{mode} = $query->param('mode');
-    $self->{brmode} = $query->param('brmode');  
     $self->{fview} = $query->param('fview');
     $self->{bug_ids} = $query->param('bug_ids');
     $self->{new} = $query->param('new');

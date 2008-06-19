@@ -1,3 +1,4 @@
+
 ###############################################################################
 # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
 # sits@users.sourceforge.net
@@ -28,7 +29,6 @@ sub process($$$) {
     
     my $topicid = $http_input->get('topic');
     my $mode = $http_input->get('mode');
-    my $brmode = $http_input->get('brmode');
     my $fview = $http_input->get('fview');
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
@@ -129,9 +129,6 @@ sub process($$$) {
     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
 	$mode = $Codestriker::COLOURED_MODE;
     }
-    if (! defined $brmode) {
-        $brmode = $Codestriker::default_topic_br_mode;
-    }
     if (! defined $fview) {
 	    $fview = $Codestriker::default_file_to_view;
 	    if (! defined $fview) {
@@ -153,11 +150,10 @@ sub process($$$) {
 
     # Obtain the links for the different viewing modes.
     $vars->{'coloured_mode_url'} =
-	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE,
-			       $brmode, $fview);
+	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE, $fview);
     $vars->{'coloured_mono_mode_url'} =
 	$url_builder->view_url($topicid, -1,
-			       $Codestriker::COLOURED_MONO_MODE, $brmode, $fview);
+			       $Codestriker::COLOURED_MONO_MODE, $fview);
     $vars->{'br_normal_mode_url'} =
 	$url_builder->view_url($topicid, -1, $mode,
 			       $Codestriker::LINE_BREAK_NORMAL_MODE, $fview);
@@ -174,28 +170,19 @@ sub process($$$) {
 	$vars->{'mode'} = 'unknown';
     }
 
-    # Set template variables relating to line breaking mode.
-    if ($brmode == $Codestriker::LINE_BREAK_NORMAL_MODE) {
-	$vars->{'brmode'} = 'normal';
-    } elsif ($brmode == $Codestriker::LINE_BREAK_ASSIST_MODE) {
-	$vars->{'brmode'} = 'assist';
-    } else {
-	$vars->{'brmode'} = 'unknown';
-    }
-
     # Set varibles relating to tab-width setting.
     my $newtabwidth = ($tabwidth == 4) ? 8 : 4;
     $vars->{'tabwidth'} = $tabwidth;
     $vars->{'newtabwidth'} = $newtabwidth;
     $vars->{'change_tabwidth_url'} =
 	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
-					"", "", 0, $brmode, $fview);
+					"", "", 0, $fview);
 
     # Set the display all, display single URLs.
     $vars->{'display_all_files_url'} =
-	$url_builder->view_url($topicid, -1, $mode, $brmode, -1);
+	$url_builder->view_url($topicid, -1, $mode, -1);
     $vars->{'display_single_file_url'} =
-	$url_builder->view_url($topicid, -1, $mode, $brmode, 0);
+	$url_builder->view_url($topicid, -1, $mode, 0);
     $vars->{'fview'} = $fview;
 
     # Setup the filetable template variable for displaying the table of
@@ -207,7 +194,7 @@ sub process($$$) {
 	$filerow->{filename} = $filename;
 	$filerow->{numchanges} = $numchanges[$i];
 	$filerow->{href_filename_url} = 
-	    $url_builder->view_url($topicid, -1, $mode, $brmode, $i) .
+	    $url_builder->view_url($topicid, -1, $mode, $i) .
 	    "#" . $filename;
 	$filerow->{binary} = $binary[$i];
 
@@ -239,7 +226,7 @@ sub process($$$) {
 
     my $delta_renderer =
 	Codestriker::Http::DeltaRenderer->new($topic, \@comments, \@deltas, $query,
-					      $mode, $brmode, $tabwidth, $repository);
+					      $mode, $tabwidth, $repository);
 
     # Set the add general comment URL.
     $vars->{'add_general_comment_element'} =
@@ -278,12 +265,12 @@ sub process($$$) {
 	# Create the next/previous file URL links.
     if ($filenumber > 0) {
 		$delta->{previous_file_url} =
-		    $url_builder->view_url($topicid, -1, $mode, $brmode,
+		    $url_builder->view_url($topicid, -1, $mode,
 					   $filenumber-1) . "#" . $filenames[$filenumber-1];
 	    }
 	    if ($filenumber < $#filenames) {
 		$delta->{next_file_url} =
-		    $url_builder->view_url($topicid, -1, $mode, $brmode,
+		    $url_builder->view_url($topicid, -1, $mode,
 					   $filenumber+1) . "#" . $filenames[$filenumber+1];
 	    }
 

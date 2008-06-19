@@ -17,7 +17,7 @@ $UrlBuilder::NEW_FILE = 1;
 $UrlBuilder::BOTH_FILES = 2;
 
 # Constructor for this class.
-sub new($$) {
+sub new {
     my ($type, $query) = @_;
     my $self = {};
     $self->{query} = $query;
@@ -50,46 +50,44 @@ sub new($$) {
 }
 
 # Create the URL for viewing a topic with a specified tabwidth.
-sub view_url_extended ($$$$$$$$$$) {
+sub view_url_extended {
     my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
-	$updated, $brmode, $fview) = @_;
+	$updated, $fview) = @_;
     
     return ($prefix ne "" ? $prefix : $self->{query}->url()) .
 	"?topic=$topic&action=view" .
 	($updated ? "&updated=$updated" : "") .
 	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
 	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
-	((defined $brmode && $brmode ne "") ? "&brmode=$brmode" : "") .
 	((defined $fview && $fview ne "") ? "&fview=$fview" : "") .
 	((defined $email && $email ne "") ? "&email=$email" : "") .
 	($line != -1 ? "#${line}" : "");
 }
 
 # Create the URL for viewing a topic.
-sub view_url ($$$$$$) {
-    my ($self, $topic, $line, $mode, $brmode, $fview) = @_;
+sub view_url {
+    my ($self, $topic, $line, $mode, $fview) = @_;
     if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
-    if (!(defined $brmode)) { $brmode = $Codestriker::default_topic_br_mode; }
     if (!(defined $fview)) { $fview = $Codestriker::default_file_to_view; }
     return $self->view_url_extended($topic, $line, $mode, "", "", "",
-				    undef, $brmode, $fview);
+				    undef, $fview);
 }
 
 # Create the URL for downloading the topic text.
-sub download_url ($$) {
+sub download_url {
     my ($self, $topic) = @_;
     return $self->{query}->url() . "?action=download&topic=$topic";
 }
 
 # Create the URL for creating a topic.
-sub create_topic_url ($$) {
+sub create_topic_url {
     my ($self, $obsoletes) = @_;
     return $self->{query}->url() . "?action=create" .
 	(defined $obsoletes ? "&obsoletes=$obsoletes" : "");
 }	    
 
 # Create the URL for editing a topic.
-sub edit_url ($$$$$$$) {
+sub edit_url {
     my ($self, $filenumber, $line, $new, $topic, $context,
 	$anchor, $prefix) = @_;
     return ($prefix ne "" ? $prefix : $self->{url_prefix}) .
@@ -99,7 +97,7 @@ sub edit_url ($$$$$$$) {
 }
 
 # Create the URL for viewing a new file.
-sub view_file_url ($$$$$$$) {
+sub view_file_url {
     my ($self, $topic, $filenumber, $new, $line, $mode, $parallel) = @_;
     if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
     return $self->{url_prefix} . "?action=view_file&fn=$filenumber&" .
@@ -107,20 +105,20 @@ sub view_file_url ($$$$$$$) {
 }
 
 # Create the URL for the search page.
-sub search_url ($) {
+sub search_url {
     my ($self) = @_;
     return $self->{query}->url() . "?action=search";
 }
 
 # Create the URL for the documentation page.
-sub doc_url ($) {
+sub doc_url {
     my ($self) = @_;
     return $self->{htmldir};
 }
 
 # Create the URL for listing the topics (and topic search). See
 # _list_topics_url for true param list.
-sub list_topics_url ($$$$$$$$$$$\@\@$) {
+sub list_topics_url {
     my ($self) = @_;
 
     shift @_; # peal off self.
@@ -130,7 +128,7 @@ sub list_topics_url ($$$$$$$$$$$\@\@$) {
 
 # Create the URL for listing the topics (and topic search) via RSS. See
 # _list_topics_url for true param list.
-sub list_topics_url_rss ($$$$$$$$$$$\@\@$) {
+sub list_topics_url_rss {
     my ($self) = @_;
 
     shift @_; # peal off self.
@@ -139,7 +137,7 @@ sub list_topics_url_rss ($$$$$$$$$$$\@\@$) {
 }
 
 # Create the URL for listing the topics.
-sub _list_topics_url ($$$$$$$$$$$$\@\@$) {
+sub _list_topics_url {
     my ($self, $action,$sauthor, $sreviewer, $scc, $sbugid, $stext,
 	$stitle, $sdescription, $scomments, $sbody, $sfilename,
 	$state_array_ref, $project_array_ref, $content) = @_;
@@ -165,35 +163,35 @@ sub _list_topics_url ($$$$$$$$$$$$\@\@$) {
 
 
 # Construct a URL for editing a specific project.
-sub edit_project_url ($$) {
+sub edit_project_url {
     my ($self, $projectid) = @_;
 
     return $self->{query}->url() . "?action=edit_project&projectid=$projectid";
 }
 
 # Construct a URL for listing all projects.
-sub list_projects_url ($) {
+sub list_projects_url {
     my ($self) = @_;
 
     return $self->{query}->url() . "?action=list_projects";
 }
 
 # Construct a URL for creating a project.
-sub create_project_url ($) {
+sub create_project_url {
     my ($self) = @_;
 
     return $self->{query}->url() . "?action=create_project";
 }
 
 # Create the URL for viewing comments.
-sub view_comments_url ($$) {
+sub view_comments_url {
     my ($self, $topic) = @_;
 
     return $self->{query}->url() . "?action=list_comments&topic=$topic";
 }
 
 # Create the URL for viewing the topic properties.
-sub view_topic_properties_url ($$) {
+sub view_topic_properties_url {
     my ($self, $topic) = @_;
 
     return $self->{query}->url() .
@@ -201,7 +199,7 @@ sub view_topic_properties_url ($$) {
 }
 
 # Create the URL for viewing the topic metrics.
-sub view_topicinfo_url ($$) {
+sub view_topicinfo_url {
     my ($self, $topic) = @_;
 
     return $self->{query}->url() . "?action=viewinfo&topic=$topic";

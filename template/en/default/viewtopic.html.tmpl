@@ -17,13 +17,6 @@
 | View in <a href="[% coloured_mode_url %]">variable-width font</a>
 [% END %]
 
-[%# Display the different line breaking modes. #%]
-[% IF brmode == "normal" %]
-| View with <a href="[% br_assist_mode_url %]">minimal screen width</a>
-[% ELSIF brmode == "assist" %]
-| View with <a href="[% coloured_mode_url %]">minimal line breaks</a>
-[% END %]
-
 [%# Display the different tab-width options #%]
 | Tab width set to [% tabwidth %]
 (<a href="[% change_tabwidth_url %]">change to [% newtabwidth %]</a>)

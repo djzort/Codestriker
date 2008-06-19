@@ -28,7 +28,6 @@ sub process($$$) {
     my $fn = $http_input->get('fn');
     my $new = $http_input->get('new');
     my $parallel = $http_input->get('parallel');
-    my $brmode = $http_input->get('brmode');
     my $fview = $http_input->get('fview');
 
     # Check if this action is allowed.
@@ -137,7 +136,7 @@ sub process($$$) {
     my $delta_renderer =
 	Codestriker::Http::DeltaRenderer->new($topic, \@comments,
 					      \@merged_deltas, $query,
-					      $mode, $brmode, $tabwidth, $repository);
+					      $mode, $tabwidth, $repository);
     $delta_renderer->annotate_deltas();
 
     my $vars = {};

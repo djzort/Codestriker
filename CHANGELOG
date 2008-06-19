@@ -47,7 +47,11 @@ Version 1.9.5
   the same as program code, but an underline is shown when hovered over.
   
 * Updated the Subversion diff parser so that it correctly identifies new
-  files, rather than treating them as modified files. 
+  files, rather than treating them as modified files.
+  
+* Removed the "View with minimal screen width" / "View with minimal
+  link break" options from the view topic screen.  If the browser window
+  is not wide enough, lines will wrap if possible.
 	
 Version 1.9.4
 

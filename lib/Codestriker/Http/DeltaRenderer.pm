@@ -19,7 +19,7 @@ use Codestriker::Http::HighlightLineFilter;
 
 # Constructor.
 sub new {
-    my ($type, $topic, $comments, $deltas, $query, $mode, $brmode,
+    my ($type, $topic, $comments, $deltas, $query, $mode,
 		$tabwidth, $repository) = @_;
 
     my $self = {};
@@ -28,7 +28,6 @@ sub new {
     $self->{deltas} = $deltas;
     $self->{query} = $query;
     $self->{mode} = $mode;
-    $self->{brmode} = $brmode;
     $self->{tabwidth} = $tabwidth;
 
     # Build a hash from filenumber|fileline|new -> comment array, so that
@@ -57,11 +56,11 @@ sub new {
     @{$self->{line_filters}} = ();
     if (defined $Codestriker::highlighter && $Codestriker::highlighter ne '') {
 	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
-    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode, 1);
+    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
     } else {
     	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
     	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new($brmode, 0);
+    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
 	    my $lxr_config = defined $repository ?
 			$Codestriker::lxr_map->{$repository->toString()} : undef;
     	if (defined $lxr_config) {
