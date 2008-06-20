@@ -16,10 +16,16 @@ use Codestriker;
 
 # Create a new template.
 sub new($$) {
-    my ($type, $name) = @_;
+    my ($type, $name, $ttype) = @_;
 
     my $self = {};
     $self->{name} = $name;
+    
+    if (defined $ttype && $ttype ne "") {
+    	$self->{type} = $ttype;
+    } else {
+    	$self->{type} = "html";
+    }
 
     # Template configuration.
     my $config = {
@@ -123,7 +129,7 @@ sub process($$) {
     $vars->{'doc_url'} = $url_builder->doc_url();
 
     my $data = "";
-    my $rc = $self->{template}->process($self->{name} . ".html.tmpl",
+    my $rc = $self->{template}->process($self->{name} . "." . $self->{type} . ".tmpl",
 					$vars, \$data);
     die $self->{template}->error() if (!defined $rc || $rc == 0);
     print $data;

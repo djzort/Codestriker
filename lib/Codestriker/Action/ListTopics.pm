@@ -13,8 +13,22 @@ use strict;
 use Codestriker::Http::Template;
 use Codestriker::Model::Topic;
 
-# If the input is valid, list the appropriate topics.
+# find out which format to display the list in
 sub process($$$) {
+    my ($type, $http_input, $http_response) = @_;
+
+    my $format = $http_input->get('format');
+
+    if (defined $format && $format eq "xml") {
+	process_xml($type, $http_input, $http_response);
+    } else {
+	process_default($type, $http_input, $http_response);
+    }
+}
+
+
+# If the input is valid, list the appropriate topics.
+sub process_default($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
@@ -225,6 +239,36 @@ sub process($$$) {
 
     $http_response->generate_footer();
 }
+
+
+# If the input is valid, display the topic.
+sub process_xml($$$) {
+    my ($self, $http_input, $http_response) = @_;
+
+    my $sbugid = $http_input->get('sbugid') || "";
+    my $sauthor = $http_input->get('sauthor') || "";
+    my $sreviewer = $http_input->get('sreviewer') || "";
+    my $scc = $http_input->get('scc') || "";
+    my $stext = $http_input->get('stext') || "";
+
+    my @sort_order;
+    my @topics = Codestriker::Model::Topic->query($sauthor,
+    						  $sreviewer,
+    						  $scc,
+    						  $sbugid,
+						  "", "",
+						  $stext,
+						  "", "", "", "", "",
+						  \@sort_order );
+
+    my $var;
+    $var->{ alltopics } = \@topics;
+
+    # Fire the template for generating the view topic screen.
+    my $template = Codestriker::Http::Template->new("listtopics", "xml");
+    $template->process($var);
+}
+
 
 # Process the input and return the parts that will feed into the topic
 # list query. Returns in the same order that the topic query function
