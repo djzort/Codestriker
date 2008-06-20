@@ -73,4 +73,28 @@ sub create_topic {
     return $rc ? $1 : undef;
 }
 
+# Retrieve the details of a topic in XML format
+# Filtered based on a bugid
+sub get_topics_xml {
+    my ($self, $bugid, $author, $reviewer, $cc, $text) = @_;
+
+    # Perform the HTTP Post.
+    my $ua = new LWP::UserAgent;
+    my $content = [ action => 'list_topics',
+		    format => 'xml',
+		    sbugid => $bugid,
+		    sauthor => $author,
+		    sreviewer => $reviewer,
+		    scc => $cc,
+		    stext => $text];
+
+    my $response =
+	$ua->request(HTTP::Request::Common::POST($self->{url},
+						 Content_Type => 'form-data',
+						 Content => $content));
+
+    return $response->content;
+}
+
+
 1;
