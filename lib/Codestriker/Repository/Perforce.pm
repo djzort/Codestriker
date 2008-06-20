@@ -78,7 +78,17 @@ sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name,
 	$stdout_fh, $stderr_fh) = @_;
 
-    return $Codestriker::UNSUPPORTED_OPERATION;
+    # Currently diff retrievals are only supported for a single tag.
+	if ($start_tag ne '' && $end_tag ne '') {
+		print $stderr_fh, "Diff retrieval cannot be performed with both tags defined.\n";
+	    return $Codestriker::OK;
+	}
+	my $tag = $start_tag ne '' ? $start_tag : $end_tag;
+
+    Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::p4,
+                 '-u', $self->{user}, '-P', $self->{password}, 'describe',
+                 '-du', $tag);
+    return $Codestriker::OK;
 }
 
 1;
