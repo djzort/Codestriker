@@ -91,6 +91,34 @@ sub lxr_ident($$) {
     }
 }
 
+# Break up the string into potential identifies, and see if lxr can process
+# them.
+sub _handle_identifiers {
+    my ($self, $text) = @_;
+ 
+    # Break the string into potential identifiers, and look them up to see
+    # if they can be hyperlinked to an LXR lookup.
+    my @data_tokens = split /([_A-z]\w+)/, $text;
+    my $newdata = "";
+    foreach my $token (@data_tokens) {
+		if ($token =~ /^[_A-z]/) {
+	    	if ($token eq "nbsp" || $token eq "quot" || $token eq "amp" ||
+		    	$token eq "lt" || $token eq "gt") {
+		    	# TODO: is this still needed?	
+				# HACK - ignore potential HTML entities.  This needs to be
+				# done in a smarter fashion later.
+				$newdata .= $token;
+	    	} else {
+				$newdata .= $self->lxr_ident($token);
+	    	}
+		} else {
+	    	$newdata .= $token;
+		}
+    }
+
+    return $newdata;
+}
+
 # Ensure the prepared statements and database connection to LXR is closed.
 sub DESTROY {
 	my ($self) = @_;

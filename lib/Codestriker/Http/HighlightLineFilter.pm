@@ -33,7 +33,7 @@ sub new {
 # Convert tabs to the appropriate number of &nbsp; entities.
 sub _filter {
     my ($self, $text, $extension) = @_;
-
+    
 	# Create a temporary file which will contain the delta text to highlight.
 	my ($input_text_fh, $input_filename) = tempfile(SUFFIX => $extension);
 	print $input_text_fh $text;

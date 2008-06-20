@@ -14,7 +14,7 @@ use strict;
 
 use Codestriker::Http::LineFilter;
 
-@Codestriker::Http::HtmlEntityLineFilter::ISA =
+@Codestriker::Http::TabToNbspLineFilter::ISA =
     ("Codestriker::Http::LineFilter");
 
 # Take the desired tabwidth as a parameter.
@@ -36,14 +36,6 @@ sub _filter {
 	(length($&) * $tabwidth - length($`) % $tabwidth)/eo;
 
     return $text;
-}
-
-# Convert tabs to the appropriate number of &nbsp; entities.
-sub filter {
-    my ($self, $delta) = @_;
-    
-    $delta->{diff_old_lines} = $self->_filter($delta->{diff_old_lines});
-    $delta->{diff_new_lines} = $self->_filter($delta->{diff_new_lines});
 }
 
 1;

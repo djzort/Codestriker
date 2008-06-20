@@ -21,7 +21,8 @@ sub new {
 sub filter {
     my ($self, $delta) = @_;
     
-    # Default is a no-op.
+    $delta->{diff_old_lines} = $self->_filter($delta->{diff_old_lines});
+    $delta->{diff_new_lines} = $self->_filter($delta->{diff_new_lines});
 }
 
 1;

@@ -14,6 +14,7 @@ use strict;
 use Codestriker::Http::HtmlEntityLineFilter;
 use Codestriker::Http::TabToNbspLineFilter;
 use Codestriker::Http::LineBreakLineFilter;
+use Codestriker::Http::HighlightLineFilter;
 use Codestriker::Http::HighlightedLxrLineFilter;
 use Codestriker::Http::NonHighlightedLxrLineFilter;
 
@@ -62,14 +63,14 @@ sub new {
 	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
     	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
     	if (defined $lxr_config) {
-		    push @{$self->{line_filters}}, Codestriker::Http::HighlighedLxrLineFilter->new($lxr_config);
+		    push @{$self->{line_filters}}, Codestriker::Http::HighlightedLxrLineFilter->new($lxr_config);
     	}
     } else {
     	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
     	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
     	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
     	if (defined $lxr_config) {
-		    push @{$self->{line_filters}}, Codestriker::Http::NonHighlighedLxrLineFilter->new($lxr_config);
+		    push @{$self->{line_filters}}, Codestriker::Http::NonHighlightedLxrLineFilter->new($lxr_config);
     	}
     }
 
@@ -143,6 +144,8 @@ sub annotate_deltas
 	# Split the delta into the left and right side so that text filtering
 	# can be applied.
 	my @diff_lines = split /\n/, $delta->{text};
+	$delta->{diff_old_lines} = "";
+	$delta->{diff_new_lines} = "";
 	for (my $i = 0; $i <= $#diff_lines; $i++) {
 	    my $data = $diff_lines[$i];
 

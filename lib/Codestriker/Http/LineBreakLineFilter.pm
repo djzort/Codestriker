@@ -36,12 +36,4 @@ sub _filter {
     return $text;
 }
 
-# Convert the spaces appropriately for line-breaking.
-sub filter {
-    my ($self, $delta) = @_;
-    
-    $delta->{diff_old_lines} = $self->_filter($delta->{diff_old_lines});
-    $delta->{diff_new_lines} = $self->_filter($delta->{diff_new_lines});
-}
-
 1;
