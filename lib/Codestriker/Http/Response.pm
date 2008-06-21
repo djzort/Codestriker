@@ -215,25 +215,31 @@ sub generate_header {
     $title = HTML::Entities::encode($title);
 
     # Generate the URL to the codestriker CSS file.
-    my $codestriker_css;
+    my $codestriker_css = $query->url();
     if (defined $Codestriker::codestriker_css &&
 	$Codestriker::codestriker_css ne "") {
-	$codestriker_css = $Codestriker::codestriker_css;
+		if ($Codestriker::codestriker_css =~ /[\/\\]/o) {
+			# Assume CSS file is specified with absolute path.
+			$codestriker_css = $Codestriker::codestriker_css;
+		} else {
+			# Assume CSS file is in case html directory, just under
+			# a different name.
+			$codestriker_css =~ s/\/.+?\/codestriker\.pl/\/codestrikerhtml\/$Codestriker::codestriker_css/;
+		}
     } else {
-	$codestriker_css = $query->url();
-	$codestriker_css =~ s/\/[\w\-]+\/codestriker\.pl/\/codestrikerhtml\/codestriker\.css/;
+    	# Use the default CSS file.
+	$codestriker_css =~ s/\/.+?\/codestriker\.pl/\/codestrikerhtml\/codestriker\.css/;
     }
 
-    my $overlib_js = $codestriker_css;
-    $overlib_js =~ s/codestriker.css/overlib.js/o;
-    my $overlib_centerpopup_js = $codestriker_css;
-    $overlib_centerpopup_js =~ s/codestriker.css/overlib_centerpopup.js/o;
-    my $overlib_draggable_js = $codestriker_css;
-    $overlib_draggable_js =~ s/codestriker.css/overlib_draggable.js/o;
-    my $xbdhtml_js = $codestriker_css;
-    $xbdhtml_js =~ s/codestriker.css/xbdhtml.js/o;
-    my $codestriker_js = $codestriker_css;
-    $codestriker_js =~ s/codestriker.css/codestriker.js/o;
+    
+    my $codestrikerhtml_path = $codestriker_css;
+    $codestrikerhtml_path =~ s/\/[\w\-]*.css/\//;
+    my $overlib_js = $codestrikerhtml_path . "overlib.js";
+    my $overlib_centerpopup_js = $codestrikerhtml_path . "overlib_centerpopup.js";
+    my $overlib_draggable_js = $codestrikerhtml_path . "overlib_draggable.js";
+    my $xbdhtml_js = $codestrikerhtml_path . "xbdhtml.js";
+    my $codestriker_js = $codestrikerhtml_path . "codestriker.js";
+    
 
     # Print the basic HTML header header, with the inclusion of the scripts.
     print '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">';

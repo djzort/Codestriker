@@ -31,13 +31,14 @@ sub new {
 	$self->{url_prefix} = $query->url(-relative=>1);
     }
 
-    # Check if the HTML files are accessible vi another URL (required for
+    # Check if the HTML files are accessible via another URL (required for
     # sourceforge deployment).  Check $Codestriker::codestriker_css.
     my $htmlurl;
     if (defined $Codestriker::codestriker_css &&
-	$Codestriker::codestriker_css ne "") {
+	$Codestriker::codestriker_css ne "" &&
+	$Codestriker::codestriker_css =~ /[\/\\]/o) {
 	$htmlurl = $Codestriker::codestriker_css;
-	$htmlurl =~ s/\/codestriker\.css//;
+	$htmlurl =~ s/\/.+?\.css//;
     }
     else {
 	# Standard Codestriker deployment.

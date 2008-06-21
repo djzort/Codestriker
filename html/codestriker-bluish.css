@@ -1,0 +1,173 @@
+/* CSS for codestriker */
+
+BODY {background-color: #fff;}
+
+H1 {font-family: Tahoma, Verdana, Bitstream Vera Sans, sans-serif;}
+
+/* Links */
+A:link    {color: #081020;}
+A:visited {color: #101828;}
+
+/* File heading */
+TD.file {background-color: #cccccc; font-family: Georgia, serif; font-size: medium}
+
+/* Line heading */
+TD.line {background-color: #99cccc; font-family: Georgia, serif; font-size: medium}
+
+/* Normal text */
+TD.n {font-family: Georgia, serif; font-size: smaller}
+
+/* Normal text monospaced */
+TD.msn {font-family: monospace; font-size: smaller}
+
+/* Added text */
+TD.a {background-color: #abd; font-family: Georgia, serif; font-size: smaller}
+
+/* Added text monospaced */
+TD.msa {background-color: #abd; font-family: monospace; font-size: smaller}
+
+/* Added file */
+TD.af {background-color: #abd}
+
+/* Added blank text */
+TD.ab {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
+
+/* Added blank text monospaced */
+TD.msab {background-color: #cccccc; font-family: monospace; font-size: smaller}
+
+/* Removed text */
+TD.r {background-color: #ff9999; font-family: Georgia, serif; font-size: smaller}
+
+/* Removed text monospaced */
+TD.msr {background-color: #ff9999; font-family: monospace; font-size: smaller}
+
+/* Removed file */
+TD.rf {background-color: #ff9999}
+
+/* Removed blank text */
+TD.rb {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
+
+/* Changed text */
+TD.c {background-color: #ffff77; font-family: Georgia, serif; font-size: smaller}
+
+/* Changed text monospaced */
+TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
+
+/* Changed file */
+TD.cf {background-color: #ffff77}
+
+/* Changed blank text */
+TD.cb {background-color: #eeee77; font-family: Georgia, serif; font-size: smaller}
+
+/* Changed blank text monospaced */
+TD.mscb {background-color: #eeee77; font-family: monospace; font-size: smaller}
+
+/* Line number with comment */
+SPAN.comment {color: #ff0000; font-family: Georgia, serif; font-size: smaller}
+
+/* Line number with no comment */
+SPAN.nocom {font-family: Georgia, serif; font-size: smaller}
+
+/* Monospaced line with added text */
+SPAN.msa {background-color: #abd; font-family: monospace; font-size: medium}
+
+/* Monospaced line with removed text */
+SPAN.msr {background-color: #ff9999; font-family: monospace; font-size: medium}
+
+/* Monospaced line with changed text */
+SPAN.msc {background-color: #ffff77; font-family: monospace; font-size: medium}
+
+/* Monospaced line with normal text */
+SPAN.ms {font-family: monospace; font-size: medium}
+
+/* Monospaced line number with comment */
+SPAN.mscom {color: #ff0000; font-family: monospace; font-size: medium}
+/* Monospaced line number with no comment */
+SPAN.msnocom {font-family: monospace; font-size: medium}
+
+/* Smaller monospaced line number with comment */
+SPAN.smscom {color: #ff0000; font-family: monospace; font-size: smaller}
+
+/* Smaller monospaced line number with no comment */
+SPAN.smsnocom {font-family: monospace; font-size: smaller}
+
+/* File heading */
+SPAN.file_comment {background-color: #cccccc; font-family: Georgia, serif; font-size: medium; color: #ff0000}
+
+/* General heading */
+SPAN.general_comment {color: #ff0000}
+
+/* Style used for rendering data within popup window */
+PRE.ms {font-family: monospace; font-size: medium}
+
+/* Styles to use for topic list display */
+
+/* Topic list heading */
+TR.tlh {background-color: #abd; font-family: Georgia, serif}
+
+/* Topic list row type 1 */
+TR.tl1 {background-color: #cccccc; font-family: Georgia, serif}
+
+/* Topic list row type 1 */
+TR.tl2 {background-color: #eeeeee; font-family: Georgia, serif}
+
+/* Colour to use for matching identifier */
+A.fid {color: #777777; text-decoration: none}
+
+/* Style comment listings. */
+TR.comments {background-color: #abd; font-family: Georgia, serif} /* space */
+TR.commenth {background-color: #cccccc; font-family: Georgia, serif} /* header */
+TR.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
+TD.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
+TR.commentc {background-color: #eeeeee; font-family: monospace} /* context */
+
+/* Style for topic title headings. */
+
+/* Topic title heading */
+TR.tth {background-color: #abd; font-family: Georgia, serif}
+TD.tth {background-color: #abd; font-family: Georgia, serif}
+
+/* Topic title row type 0 */
+TR.tt0 {background-color: #cccccc; font-family: Georgia, serif}
+TD.tt0 {background-color: #cccccc; font-family: Georgia, serif}
+
+/* Topic title row type 1 */
+TR.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
+TD.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
+
+/* Codestriker heading */
+TD.heading {text-align: center; background-color: #246; font-family: Georgia, serif; font-size: x-large}
+A.heading {text-decoration: none; color: #ffffff; background-color: transparent;}
+
+/* Codestriker top-level menu */
+DIV.menu {font-family: Georgia, serif}
+
+/* Tabbing styles */
+TR.tab {background-color: #abd; font-family: Georgia, serif}
+TD.selected {background-color: #abd}
+TD.notselected {background-color: #cccccc}
+TD.space {background-color: #eeeeee}
+A.tab {text-decoration: none}
+
+/* Styles for error field in comment posting tooltip. */
+span.hidden {display: none}
+span.error {display: inline; color: red}
+
+span.feedback {color: red;}
+span.obsolete-header {color: red; font-weight: bold;}
+
+/* Styles for highlight program. */
+SPAN.num { color:#0000ff; }
+SPAN.esc { color:#000080; font-weight:bold; }
+SPAN.str { color:#008000; font-weight:bold; }
+SPAN.dstr { color:#008000; font-weight:bold; }
+SPAN.slc { color:#008080; }
+SPAN.com { color:#008080; }
+SPAN.dir { color:#008200; }
+SPAN.sym { color:#000000; }
+SPAN.line { color:#555555; }
+SPAN.mark	{ background-color:#ffffbb;}
+SPAN.kwa { color:#000080; font-weight:bold; }
+SPAN.kwb { color:#000080; font-weight:bold; }
+SPAN.kwc { color:#000000; }
+SPAN.kwd { color:#000000; } 	  	 
