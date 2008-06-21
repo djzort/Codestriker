@@ -58,6 +58,13 @@ Version 1.9.5
   For example, //depot/src/tools/unittests/python/ can be set
   as the module name, and 12736 (the changeset number) can be set
   in either the start or end tag field.  
+  
+* Added a new CSS file as a part of the distribution which provides a
+  bluish scheme, called codestriker-bluish.css is the html directory.
+  This CSS file can be set from within codestriker.conf and was
+  contributed by Kannan Goundan <cakoose@users.sourceforge.net>.
+  The ability to easily change which CSS file to use was submitted by 
+  rob_webset@users.sourceforge.net.  
 	
 Version 1.9.4
 
