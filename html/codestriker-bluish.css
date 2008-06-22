@@ -112,7 +112,10 @@ TR.tl1 {background-color: #cccccc; font-family: Georgia, serif}
 TR.tl2 {background-color: #eeeeee; font-family: Georgia, serif}
 
 /* Colour to use for matching identifier */
-A.fid {color: #777777; text-decoration: none}
+A.fid:link { color: inherit; text-decoration: none }
+A.fid:visited { color: inherit; text-decoration: none }
+A.fid:visited:hover { text-decoration: underline; }
+A.fid:link:hover { text-decoration: underline; }
 
 /* Style comment listings. */
 TR.comments {background-color: #abd; font-family: Georgia, serif} /* space */
