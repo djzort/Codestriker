@@ -215,7 +215,7 @@ sub generate_header {
     $title = HTML::Entities::encode($title);
 
     # Generate the URL to the codestriker CSS file.
-    my $codestriker_css = $query->url();
+    my $codestriker_css;
     if (defined $Codestriker::codestriker_css &&
 	$Codestriker::codestriker_css ne "") {
 		if ($Codestriker::codestriker_css =~ /[\/\\]/o) {
@@ -224,11 +224,13 @@ sub generate_header {
 		} else {
 			# Assume CSS file is in case html directory, just under
 			# a different name.
-			$codestriker_css =~ s/\/.+?\/codestriker\.pl/\/codestrikerhtml\/$Codestriker::codestriker_css/;
+			$codestriker_css = $query->url();
+			$codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/$Codestriker::codestriker_css#;
 		}
     } else {
     	# Use the default CSS file.
-	$codestriker_css =~ s/\/.+?\/codestriker\.pl/\/codestrikerhtml\/codestriker\.css/;
+			$codestriker_css = $query->url();
+	$codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/codestriker.css#;
     }
 
     
