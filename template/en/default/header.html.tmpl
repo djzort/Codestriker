@@ -5,25 +5,21 @@
 
 [%# Header HTML code to appear on each screen, after <body> tag. #%]
 
-<table width="100%" border="0">
-<tr>
-  <td class="heading">
-      <a class="heading" href="[% list_url | html_entity %]">[% main_title | html_entity %]</a>
-  </td>
-</tr>
-</table>
+<div id="header">
+  <div class="heading">
+    <a href="[% list_url | html_entity %]">[% main_title | html_entity %]</a>
+  </div>
 
-[% IF displaymenu != 0 %]
-<p>
-<div class="menu">
-  <a href="[% list_url | html_entity %]">List all open topics</a>
-  [% IF list_open_topics_in_project_url != "" %]
-  | <a href="[% list_open_topics_in_project_url | html_entity %]">List open topics in project</a>
+  [% IF displaymenu != 0 %]
+  <div class="menu">
+    <a href="[% list_url | html_entity %]">List all open topics</a>
+    [% IF list_open_topics_in_project_url != "" %]
+    | <a href="[% list_open_topics_in_project_url | html_entity %]">List open topics in project</a>
+    [% END %]
+    | <a href="[% create_topic_url | html_entity %]">Create new topic</a>
+    [% IF searchlist_enabled != 0 %] | <a href="[% search_url | html_entity %]">Search</a> [% END %]
+    [% IF help != "" %] | <a href="[% doc_url | html_entity %]/[% help %]">Help</a>[% END %]
+  </div>
   [% END %]
-  | <a href="[% create_topic_url | html_entity %]">Create new topic</a>
-  [% IF searchlist_enabled != 0 %] | <a href="[% search_url | html_entity %]">Search</a> [% END %]
-  [% IF help != "" %] | <a href="[% doc_url | html_entity %]/[% help %]">Help</a>[% END %]
 </div>
-[% END %]
 
-<hr />
