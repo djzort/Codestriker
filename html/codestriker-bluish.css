@@ -63,10 +63,18 @@ TD.cb {background-color: #eeee77; font-family: Georgia, serif; font-size: smalle
 TD.mscb {background-color: #eeee77; font-family: monospace; font-size: smaller}
 
 /* Line number with comment */
-SPAN.comment {color: #ff0000; font-family: Georgia, serif; font-size: smaller}
+A.comment { color: #ff0000; font-family: Georgia, serif; font-size: smaller}
+A.comment:link { color: ff0000; text-decoration: none }
+A.comment:visited { color: inherit; text-decoration: none }
+A.comment:visited:hover { text-decoration: underline; }
+A.comment:link:hover { text-decoration: underline; }
 
 /* Line number with no comment */
-SPAN.nocom {font-family: Georgia, serif; font-size: smaller}
+A.nocom { font-family: Georgia, serif; font-size: smaller}
+A.nocom:link { color: inherit; text-decoration: none }
+A.nocom:visited { color: inherit; text-decoration: none }
+A.nocom:visited:hover { text-decoration: underline; }
+A.nocom:link:hover { text-decoration: underline; }
 
 /* Monospaced line with added text */
 SPAN.msa {background-color: #abd; font-family: monospace; font-size: medium}
@@ -82,14 +90,17 @@ SPAN.ms {font-family: monospace; font-size: medium}
 
 /* Monospaced line number with comment */
 SPAN.mscom {color: #ff0000; font-family: monospace; font-size: medium}
+SPAN.mscom:link { color: inherit; text-decoration: none }
+SPAN.mscom:visited { color: inherit; text-decoration: none }
+SPAN.mscom:visited:hover { text-decoration: underline; }
+SPAN.mscom:link:hover { text-decoration: underline; }
+
 /* Monospaced line number with no comment */
 SPAN.msnocom {font-family: monospace; font-size: medium}
-
-/* Smaller monospaced line number with comment */
-SPAN.smscom {color: #ff0000; font-family: monospace; font-size: smaller}
-
-/* Smaller monospaced line number with no comment */
-SPAN.smsnocom {font-family: monospace; font-size: smaller}
+SPAN.msnocom:link { color: inherit; text-decoration: none }
+SPAN.msnocom:visited { color: inherit; text-decoration: none }
+SPAN.msnocom:visited:hover { text-decoration: underline; }
+SPAN.msnocom:link:hover { text-decoration: underline; }
 
 /* File heading */
 SPAN.file_comment {background-color: #cccccc; font-family: Georgia, serif; font-size: medium; color: #ff0000}
@@ -139,17 +150,18 @@ TR.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
 TD.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
 
 /* Codestriker heading */
-TD.heading {text-align: center; background-color: #246; font-family: Georgia, serif; font-size: x-large}
-A.heading {text-decoration: none; color: #ffffff; background-color: transparent;}
+#header {margin-bottom: 1em; font-family: sans-serif;}
+#header .heading {background-color: #404D6C; color: white; font-size: 110%; -moz-border-radius-topleft: 5px; -moz-border-radius-topright: 5px; margin: 0; padding: 0.5em; vertical-align: bottom; font-weight: bold;}
+#header .heading a {text-decoration: none; color: inherit; background-color: transparent;}
 
 /* Codestriker top-level menu */
-DIV.menu {font-family: Georgia, serif}
+#header .menu {font-size: 85%; border-left: 1px solid silver; border-right: 1px solid silver; border-bottom: 1px solid silver; -moz-border-radius-bottomleft: 5px; -moz-border-radius-bottomright: 5px; padding: 0.5em}
 
 /* Tabbing styles */
 TR.tab {background-color: #abd; font-family: Georgia, serif}
 TD.selected {background-color: #abd}
 TD.notselected {background-color: #cccccc}
-TD.space {background-color: #eeeeee}
+TD.space {background-color: white}
 A.tab {text-decoration: none}
 
 /* Styles for error field in comment posting tooltip. */

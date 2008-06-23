@@ -108,13 +108,9 @@ sub comment_link
     # it.
     my %comment_hash = %{ $self->{comment_hash} };
     my %comment_location_map = %{ $self->{comment_location_map} };
-    my $comment_number = undef;
     my $query = $self->{query};
     if (exists $comment_hash{$anchor}) {
-	# Determine what comment number this anchor refers to.
-	$comment_number = $comment_location_map{$anchor};
-	$text = $query->span({-id=>"c$comment_number"}, "") .
-	    $query->span({-class=>"comment"}, $text);
+	$params->{class} = "comment";
 
 	# Determine what the next comment in line is.
 	my $index = -1;
@@ -127,7 +123,7 @@ sub comment_link
 	    "return overlib(comment_text[$index],STICKY,DRAGGABLE,ALTCUT);";
 	$params->{onmouseout} = "return nd();";
     } else {
-	$text = $query->span({-class=>"nocom"}, $text);
+    	$params->{class} = "nocom";
     }
 
     return $query->a($params, $text);
@@ -333,7 +329,8 @@ sub _render_changes
 	} elsif (! defined $old_data && defined $new_data) {
 	    $render_old_colour = $old_notpresent_col;
 	}
-	
+
+    my %comment_location_map = %{ $self->{comment_location_map} };
 	my $line = {};
 	if (defined $old_data) {
 	    $line->{old_data} = $old_data;

@@ -365,7 +365,7 @@ sub generate_comment_declarations
 	    $previous_url .= '#' . $previous;
 	    $overlib_html .= "<a href=\"javascript:window.location=\\'$previous_url\\'; ";
 	    if ($fview == -1 || $fview == $previous_fview) {
-		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$previous_index\\')), FIXY, getEltPageTop(getElt(\\'c$previous_index\\'))); ";
+		$overlib_html .= "overlib(comment_text[$previous_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'$previous\\')), FIXY, getEltPageTop(getElt(\\'$previous\\'))); ";
 }
 	    $overlib_html .= "void(0);\">Previous</a>";
 	}
@@ -380,7 +380,7 @@ sub generate_comment_declarations
 	    $next_url .= '#' . $next;
 	    $overlib_html .= "<a href=\"javascript:window.location=\\'$next_url\\'; ";
 	    if ($fview == -1 || $fview == $next_fview) {
-		$overlib_html .= "overlib(comment_text[$next_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'c$next_index\\')), FIXY, getEltPageTop(getElt(\\'c$next_index\\'))); ";
+		$overlib_html .= "overlib(comment_text[$next_index], STICKY, DRAGGABLE, ALTCUT, FIXX, getEltPageLeft(getElt(\\'$next\\')), FIXY, getEltPageTop(getElt(\\'$next\\'))); ";
 	    }
 	    $overlib_html .= "void(0);\">Next</a>";
 	}
