@@ -1,40 +1,42 @@
 /* CSS for codestriker */
 
-BODY {background-color: #ffffff;}
+BODY {background-color: #fff;}
+
+H1 {font-family: Tahoma, Verdana, Bitstream Vera Sans, sans-serif;}
 
 /* Links */
-A:link    {color: blue;}
-A:visited {color: purple;}
+A:link    {color: #081020;}
+A:visited {color: #101828;}
 
 /* File heading */
-TD.file {background-color: #cccccc; font-family: Helvetica, Arial; font-size: medium}
+TD.file {background-color: #cccccc; font-family: Georgia, serif; font-size: medium}
 
 /* Line heading */
-TD.line {background-color: #99cccc; font-family: Helvetica, Arial; font-size: medium}
+TD.line {background-color: #99cccc; font-family: Georgia, serif; font-size: medium}
 
 /* Normal text */
-TD.n {font-family: Helvetica, Arial; font-size: smaller}
+TD.n {font-family: Georgia, serif; font-size: smaller}
 
 /* Normal text monospaced */
 TD.msn {font-family: monospace; font-size: smaller}
 
 /* Added text */
-TD.a {background-color: #aaffaa; font-family: Helvetica, Arial; font-size: smaller}
+TD.a {background-color: #abd; font-family: Georgia, serif; font-size: smaller}
 
 /* Added text monospaced */
-TD.msa {background-color: #aaffaa; font-family: monospace; font-size: smaller}
+TD.msa {background-color: #abd; font-family: monospace; font-size: smaller}
 
 /* Added file */
-TD.af {background-color: #aaffaa}
+TD.af {background-color: #abd}
 
 /* Added blank text */
-TD.ab {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
+TD.ab {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
 
 /* Added blank text monospaced */
 TD.msab {background-color: #cccccc; font-family: monospace; font-size: smaller}
 
 /* Removed text */
-TD.r {background-color: #ff9999; font-family: Helvetica, Arial; font-size: smaller}
+TD.r {background-color: #ff9999; font-family: Georgia, serif; font-size: smaller}
 
 /* Removed text monospaced */
 TD.msr {background-color: #ff9999; font-family: monospace; font-size: smaller}
@@ -43,10 +45,10 @@ TD.msr {background-color: #ff9999; font-family: monospace; font-size: smaller}
 TD.rf {background-color: #ff9999}
 
 /* Removed blank text */
-TD.rb {background-color: #cccccc; font-family: Helvetica, Arial; font-size: smaller}
+TD.rb {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed text */
-TD.c {background-color: #ffff77; font-family: Helvetica, Arial; font-size: smaller}
+TD.c {background-color: #ffff77; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed text monospaced */
 TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
@@ -54,23 +56,28 @@ TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
 /* Changed file */
 TD.cf {background-color: #ffff77}
 
-/* Patch file */
-TD.pf {background-color: #ffff77}
-
 /* Changed blank text */
-TD.cb {background-color: #eeee77; font-family: Helvetica, Arial; font-size: smaller}
+TD.cb {background-color: #eeee77; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed blank text monospaced */
 TD.mscb {background-color: #eeee77; font-family: monospace; font-size: smaller}
 
 /* Line number with comment */
-SPAN.comment {color: #ff0000; font-family: Helvetica, Arial; font-size: smaller}
+A.comment { color: #ff0000; font-family: Georgia, serif; font-size: smaller}
+A.comment:link { color: ff0000; text-decoration: none }
+A.comment:visited { color: inherit; text-decoration: none }
+A.comment:visited:hover { text-decoration: underline; }
+A.comment:link:hover { text-decoration: underline; }
 
 /* Line number with no comment */
-SPAN.nocom {font-family: Helvetica, Arial; font-size: smaller}
+A.nocom { font-family: Georgia, serif; font-size: smaller}
+A.nocom:link { color: inherit; text-decoration: none }
+A.nocom:visited { color: inherit; text-decoration: none }
+A.nocom:visited:hover { text-decoration: underline; }
+A.nocom:link:hover { text-decoration: underline; }
 
 /* Monospaced line with added text */
-SPAN.msa {background-color: #aaffaa; font-family: monospace; font-size: medium}
+SPAN.msa {background-color: #abd; font-family: monospace; font-size: medium}
 
 /* Monospaced line with removed text */
 SPAN.msr {background-color: #ff9999; font-family: monospace; font-size: medium}
@@ -83,20 +90,23 @@ SPAN.ms {font-family: monospace; font-size: medium}
 
 /* Monospaced line number with comment */
 SPAN.mscom {color: #ff0000; font-family: monospace; font-size: medium}
+SPAN.mscom:link { color: inherit; text-decoration: none }
+SPAN.mscom:visited { color: inherit; text-decoration: none }
+SPAN.mscom:visited:hover { text-decoration: underline; }
+SPAN.mscom:link:hover { text-decoration: underline; }
+
 /* Monospaced line number with no comment */
 SPAN.msnocom {font-family: monospace; font-size: medium}
-
-/* Smaller monospaced line number with comment */
-SPAN.smscom {color: #ff0000; font-family: monospace; font-size: smaller}
-
-/* Smaller monospaced line number with no comment */
-SPAN.smsnocom {font-family: monospace; font-size: smaller}
+SPAN.msnocom:link { color: inherit; text-decoration: none }
+SPAN.msnocom:visited { color: inherit; text-decoration: none }
+SPAN.msnocom:visited:hover { text-decoration: underline; }
+SPAN.msnocom:link:hover { text-decoration: underline; }
 
 /* File heading */
-SPAN.file_comment {background-color: #cccccc; font-family: Helvetica, Arial; font-size: medium; color: #ff0000}
+SPAN.file_comment {background-color: #cccccc; font-family: Georgia, serif; font-size: medium; color: #ff0000}
 
 /* General heading */
-SPAN.general_comment {color: #000000; font-family: Helvetica, Arial}
+SPAN.general_comment {color: #ff0000}
 
 /* Style used for rendering data within popup window */
 PRE.ms {font-family: monospace; font-size: medium}
@@ -104,13 +114,13 @@ PRE.ms {font-family: monospace; font-size: medium}
 /* Styles to use for topic list display */
 
 /* Topic list heading */
-TR.tlh {background-color: #aaffaa; font-family: Helvetica, Arial}
+TR.tlh {background-color: #abd; font-family: Georgia, serif}
 
 /* Topic list row type 1 */
-TR.tl1 {background-color: #cccccc; font-family: Helvetica, Arial}
+TR.tl1 {background-color: #cccccc; font-family: Georgia, serif}
 
 /* Topic list row type 1 */
-TR.tl2 {background-color: #eeeeee; font-family: Helvetica, Arial}
+TR.tl2 {background-color: #eeeeee; font-family: Georgia, serif}
 
 /* Colour to use for matching identifier */
 A.fid:link { color: inherit; text-decoration: none }
@@ -119,8 +129,8 @@ A.fid:visited:hover { text-decoration: underline; }
 A.fid:link:hover { text-decoration: underline; }
 
 /* Style comment listings. */
-TR.comments {background-color: #aaffaa; font-family: Helvetica, Arial} /* space */
-TR.commenth {background-color: #cccccc; font-family: Helvetica, Arial} /* header */
+TR.comments {background-color: #abd; font-family: Georgia, serif} /* space */
+TR.commenth {background-color: #cccccc; font-family: Georgia, serif} /* header */
 TR.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
 TD.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
 TR.commentc {background-color: #eeeeee; font-family: monospace} /* context */
@@ -128,29 +138,30 @@ TR.commentc {background-color: #eeeeee; font-family: monospace} /* context */
 /* Style for topic title headings. */
 
 /* Topic title heading */
-TR.tth {background-color: #aaffaa; font-family: Helvetica, Arial}
-TD.tth {background-color: #aaffaa; font-family: Helvetica, Arial}
+TR.tth {background-color: #abd; font-family: Georgia, serif}
+TD.tth {background-color: #abd; font-family: Georgia, serif}
 
 /* Topic title row type 0 */
-TR.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
-TD.tt0 {background-color: #cccccc; font-family: Helvetica, Arial}
+TR.tt0 {background-color: #cccccc; font-family: Georgia, serif}
+TD.tt0 {background-color: #cccccc; font-family: Georgia, serif}
 
 /* Topic title row type 1 */
-TR.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
-TD.tt1 {background-color: #eeeeee; font-family: Helvetica, Arial}
+TR.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
+TD.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
 
 /* Codestriker heading */
-TD.heading {text-align: center; background-color: #000000; font-family: Helvetica, Arial; font-size: x-large}
-A.heading {text-decoration: none; color: #ffffff}
+#header {margin-bottom: 1em; font-family: sans-serif;}
+#header .heading {background-color: #404D6C; color: white; font-size: 110%; -moz-border-radius-topleft: 5px; -moz-border-radius-topright: 5px; margin: 0; padding: 0.5em; vertical-align: bottom; font-weight: bold;}
+#header .heading a {text-decoration: none; color: inherit; background-color: transparent;}
 
 /* Codestriker top-level menu */
-DIV.menu {font-family: Helvetica, Arial}
+#header .menu {font-size: 85%; border-left: 1px solid silver; border-right: 1px solid silver; border-bottom: 1px solid silver; -moz-border-radius-bottomleft: 5px; -moz-border-radius-bottomright: 5px; padding: 0.5em}
 
 /* Tabbing styles */
-TR.tab {background-color: #aaffaa; font-family: Helvetica, Arial}
-TD.selected {background-color: #aaffaa}
+TR.tab {background-color: #abd; font-family: Georgia, serif}
+TD.selected {background-color: #abd}
 TD.notselected {background-color: #cccccc}
-TD.space {background-color: #eeeeee}
+TD.space {background-color: white}
 A.tab {text-decoration: none}
 
 /* Styles for error field in comment posting tooltip. */
@@ -174,4 +185,4 @@ SPAN.mark	{ background-color:#ffffbb;}
 SPAN.kwa { color:#000080; font-weight:bold; }
 SPAN.kwb { color:#000080; font-weight:bold; }
 SPAN.kwc { color:#000000; }
-SPAN.kwd { color:#000000; }
+SPAN.kwd { color:#000000; } 	  	 
