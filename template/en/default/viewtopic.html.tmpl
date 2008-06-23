@@ -26,7 +26,7 @@
 <p>
 <table cellspacing="0" cellpadding="0" border="0">
     <tr>
-        <td><a name="contents">Files in Topic:</a>
+        <td><a name="contents">Files in topic:</a>
     [% IF fview != -1 %]
             (<a href="[% display_all_files_url %]">view all files</a>)
     [% END %]
@@ -53,14 +53,14 @@
 
         [%# Display the jump to link in the case when all files are displayed. #%]
 	[% IF fview == -1 %]
-	    [<a href="#[% file.filename %]">Jump to</a>]
+	    [<a href="#[% file.filename %]" class="toc">Jump to</a>]
         [% END %]
 
         [%# Display the filename with an internal link if its not binary. #%]
 	[% IF file.binary %]
 	    [% file.filename | html_entity %]
         [% ELSE %]
-	    <a href="[% file.href_filename_url %]">[% file.filename | html_entity %]</a>
+	    <a href="[% file.href_filename_url %]" class="toc">[% file.filename | html_entity %]</a>
         [% END %]
 	    </td>
 

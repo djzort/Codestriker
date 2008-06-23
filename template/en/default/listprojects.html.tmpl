@@ -1,16 +1,12 @@
 [%# Display a list of projects #%]
 
 [% PROCESS header.html.tmpl version = version displaymenu = 1 
-                            closehead = 1 help = "x370.html" %]
+                            closehead = 1 help = "x370.html" subtitle="Project List" %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
     <span class="feedback">[% feedback %]</span>
 [% END %]
-
-<H1>Project list</H1>
-
-<P>
 
 <TABLE WIDTH="100%" CELLPADDING="2" CELLSPACING="2" BORDER="0">
 

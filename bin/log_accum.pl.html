@@ -1,0 +1,615 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>log_accum.pl</title>
+<link rel="stylesheet" type="text/css" href="highlight.css">
+</head>
+<body class="hl">
+<pre class="hl"><span class="hl slc">#!/usr/bin/perl</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Perl filter to handle the log messages from the checkin of files in</span>
+<span class="hl slc"># a directory.  This script will group the lists of files by log</span>
+<span class="hl slc"># message, and mail a single consolidated log message at the end of</span>
+<span class="hl slc"># the commit.</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># This file assumes a pre-commit checking program that leaves the</span>
+<span class="hl slc"># names of the first and last commit directories in a temporary file.</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Contributed by David Hampton &lt;hampton&#64;cisco.com&gt;</span>
+<span class="hl slc"># Roy Fielding removed useless code and added log/mail of new files</span>
+<span class="hl slc"># Ken Coar added special processing (i.e., no diffs) for binary files</span>
+<span class="hl slc"># Jon Stevens added a few new features and cleaned up some of the</span>
+<span class="hl slc"># output</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># David Sitsky modified this slightly so that it also creates a new</span>
+<span class="hl slc"># codestriker topic automatically.</span>
+
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Setup instructions</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Create a directory $CVSROOT/commitlogs and allow</span>
+<span class="hl slc"># the cvs process to write to it.</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Edit the options below.</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Configurable options</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Where do you want the RCS ID and delta info?</span>
+<span class="hl slc"># 0 = none,</span>
+<span class="hl slc"># 1 = in mail only,</span>
+<span class="hl slc"># 2 = rcsids in both mail and logs.</span>
+<span class="hl slc">#</span>
+<span class="hl kwb">$rcsidinfo</span> <span class="hl sym">=</span> <span class="hl num">2</span><span class="hl sym">;</span>
+
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Constants</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+<span class="hl kwb">$STATE_NONE</span>    <span class="hl sym">=</span> <span class="hl num">0</span><span class="hl sym">;</span>
+<span class="hl kwb">$STATE_CHANGED</span> <span class="hl sym">=</span> <span class="hl num">1</span><span class="hl sym">;</span>
+<span class="hl kwb">$STATE_ADDED</span>   <span class="hl sym">=</span> <span class="hl num">2</span><span class="hl sym">;</span>
+<span class="hl kwb">$STATE_REMOVED</span> <span class="hl sym">=</span> <span class="hl num">3</span><span class="hl sym">;</span>
+<span class="hl kwb">$STATE_LOG</span>     <span class="hl sym">=</span> <span class="hl num">4</span><span class="hl sym">;</span>
+
+<span class="hl kwb">$TMPDIR</span>        <span class="hl sym">=</span> <span class="hl kwb">$ENV</span><span class="hl sym">{</span><span class="hl str">'TMPDIR'</span><span class="hl sym">} ||</span> <span class="hl str">'/tmp'</span><span class="hl sym">;</span>
+<span class="hl kwb">$FILE_PREFIX</span>   <span class="hl sym">=</span> <span class="hl str">'#cvs.'</span><span class="hl sym">;</span>
+
+<span class="hl kwb">$LAST_FILE</span>     <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}lastdir&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$CHANGED_FILE</span>  <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.changed&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$ADDED_FILE</span>    <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.added&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$REMOVED_FILE</span>  <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.removed&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$LOG_FILE</span>      <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.log&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$BRANCH_FILE</span>   <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.branch&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$SUMMARY_FILE</span>  <span class="hl sym">=</span> <span class="hl str">&quot;$TMPDIR/${FILE_PREFIX}files.summary&quot;</span><span class="hl sym">;</span>
+
+<span class="hl kwb">$CVSROOT</span>       <span class="hl sym">=</span> <span class="hl kwb">$ENV</span><span class="hl sym">{</span><span class="hl str">'CVSROOT'</span><span class="hl sym">};</span>
+
+<span class="hl kwb">$CVSBIN</span>        <span class="hl sym">=</span> <span class="hl str">'/usr/bin'</span><span class="hl sym">;</span>
+<span class="hl kwb">$PATH</span>          <span class="hl sym">=</span> <span class="hl str">&quot;$PATH:/bin:/usr/bin&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$MAIL_CMD</span>      <span class="hl sym">=</span> <span class="hl str">&quot;| /usr/lib/sendmail -i -t&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$MAIL_TO</span>       <span class="hl sym">=</span> <span class="hl str">'engineering&#64;localhost.localdomain'</span><span class="hl sym">;</span>
+<span class="hl kwb">$MAIL_FROM</span>     <span class="hl sym">=</span> <span class="hl str">&quot;$ENV{'USER'}\&#64;localhost.localdomain&quot;</span><span class="hl sym">;</span>
+<span class="hl kwb">$SUBJECT_PRE</span>   <span class="hl sym">=</span> <span class="hl str">'CVS update:'</span><span class="hl sym">;</span>
+
+<span class="hl slc"># Codestriker-specific imports.</span>
+<span class="hl kwa">use</span> lib <span class="hl str">'/var/www/codestriker-1.8.4/bin'</span><span class="hl sym">;</span>
+<span class="hl kwa">use</span> <span class="hl kwd">CodestrikerClient</span><span class="hl sym">;</span>
+
+<span class="hl slc"># Codestriker specific parameters for topic creation.</span>
+<span class="hl kwb">$CODESTRIKER_URL</span> <span class="hl sym">=</span> <span class="hl str">'http://localhost/codestriker/codestriker.pl'</span><span class="hl sym">;</span>
+<span class="hl kwb">$CODESTRIKER_PROJECT</span> <span class="hl sym">=</span> <span class="hl str">'Project CVS'</span><span class="hl sym">;</span>
+<span class="hl kwb">$CODESTRIKER_REPOSITORY</span> <span class="hl sym">=</span> <span class="hl str">'/var/lib/cvs'</span><span class="hl sym">;</span>
+<span class="hl kwb">$CODESTRIKER_REVIEWERS</span> <span class="hl sym">=</span> <span class="hl str">'engineering&#64;localhost.localdomain'</span><span class="hl sym">;</span>
+<span class="hl kwb">$CODESTRIKER_CC</span> <span class="hl sym">=</span> <span class="hl str">''</span><span class="hl sym">;</span>
+
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Subroutines</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+
+<span class="hl kwa">sub</span> format_names <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;files</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;lines</span><span class="hl sym">);</span>
+
+    <span class="hl kwb">$lines</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">] =</span> <span class="hl kwd">sprintf</span><span class="hl sym">(</span><span class="hl str">&quot; %-08s&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$dir</span><span class="hl sym">);</span>
+    <span class="hl kwa">foreach</span> <span class="hl kwb">$file</span> <span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">) {</span>
+        <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwd">length</span><span class="hl sym">(</span><span class="hl kwb">$lines</span><span class="hl sym">[</span><span class="hl kwb">$#lines</span><span class="hl sym">]) +</span> <span class="hl kwd">length</span><span class="hl sym">(</span><span class="hl kwb">$file</span><span class="hl sym">) &gt;</span> <span class="hl num">60</span><span class="hl sym">) {</span>
+            <span class="hl kwb">$lines</span><span class="hl sym">[++</span><span class="hl kwb">$#lines</span><span class="hl sym">] =</span> <span class="hl kwd">sprintf</span><span class="hl sym">(</span><span class="hl str">&quot; %8s&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot; &quot;</span><span class="hl sym">);</span>
+        <span class="hl sym">}</span>
+        <span class="hl kwb">$lines</span><span class="hl sym">[</span><span class="hl kwb">$#lines</span><span class="hl sym">] .=</span> <span class="hl str">&quot; &quot;</span><span class="hl sym">.</span><span class="hl kwb">$file</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwb">&#64;lines</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> cleanup_tmpfiles <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">);</span>
+
+    <span class="hl kwd">opendir</span><span class="hl sym">(</span>DIR<span class="hl sym">,</span> <span class="hl kwb">$TMPDIR</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">,</span> <span class="hl kwd">grep</span><span class="hl sym">(/^${</span>FILE_PREFIX<span class="hl sym">}.*</span>\<span class="hl sym">.${</span>id<span class="hl sym">}$/,</span> <span class="hl kwd">readdir</span><span class="hl sym">(</span>DIR<span class="hl sym">)));</span>
+    <span class="hl kwd">closedir</span><span class="hl sym">(</span>DIR<span class="hl sym">);</span>
+    <span class="hl kwa">foreach</span> <span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">) {</span>
+        unlink <span class="hl str">&quot;$TMPDIR/$_&quot;</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> write_logfile <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">&#64;lines</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&gt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span> <span class="hl sym">(</span><span class="hl str">&quot;Cannot open log file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwc">print</span><span class="hl sym">(</span>FILE <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;lines</span><span class="hl sym">),</span> <span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> append_to_file <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;files</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">) {</span>
+        <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;lines</span><span class="hl sym">) = &amp;</span><span class="hl kwd">format_names</span><span class="hl sym">(</span><span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;files</span><span class="hl sym">);</span>
+        <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&gt;&gt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span> <span class="hl sym">(</span><span class="hl str">&quot;Cannot open file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+        <span class="hl kwc">print</span><span class="hl sym">(</span>FILE <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;lines</span><span class="hl sym">),</span> <span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+        <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> write_line <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">$line</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&gt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span><span class="hl sym">(</span><span class="hl str">&quot;Cannot open file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwc">print</span><span class="hl sym">(</span>FILE <span class="hl kwb">$line</span><span class="hl sym">,</span> <span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> append_line <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">$line</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&gt;&gt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span><span class="hl sym">(</span><span class="hl str">&quot;Cannot open file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwc">print</span><span class="hl sym">(</span>FILE <span class="hl kwb">$line</span><span class="hl sym">,</span> <span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> read_line <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$line</span><span class="hl sym">);</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&lt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span><span class="hl sym">(</span><span class="hl str">&quot;Cannot open file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwb">$line</span> <span class="hl sym">= &lt;</span>FILE<span class="hl sym">&gt;;</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+    <span class="hl kwd">chomp</span><span class="hl sym">(</span><span class="hl kwb">$line</span><span class="hl sym">);</span>
+    <span class="hl kwb">$line</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> read_file <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">$leader</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">) = ();</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&lt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwa">return</span> <span class="hl sym">();</span>
+    <span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>FILE<span class="hl sym">&gt;) {</span>
+        <span class="hl kwd">chomp</span><span class="hl sym">;</span>
+        <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl kwd">sprintf</span><span class="hl sym">(</span><span class="hl str">&quot;  %-10s  %s&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$leader</span><span class="hl sym">,</span> <span class="hl kwb">$_</span><span class="hl sym">));</span>
+        <span class="hl kwb">$leader</span> <span class="hl sym">=</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+    <span class="hl kwb">&#64;text</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> read_logfile <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$filename</span><span class="hl sym">,</span> <span class="hl kwb">$leader</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">) = ();</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>FILE<span class="hl sym">,</span> <span class="hl str">&quot;&lt;$filename&quot;</span><span class="hl sym">) ||</span> <span class="hl kwd">die</span> <span class="hl sym">(</span><span class="hl str">&quot;Cannot open log file $filename: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>FILE<span class="hl sym">&gt;) {</span>
+        <span class="hl kwd">chomp</span><span class="hl sym">;</span>
+        <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl kwb">$leader</span><span class="hl sym">.</span><span class="hl kwb">$_</span><span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>FILE<span class="hl sym">);</span>
+    <span class="hl kwb">&#64;text</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># do an 'cvs -Qn status' on each file in the arguments, and extract info.</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">sub</span> change_summary <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$out</span><span class="hl sym">,</span> <span class="hl kwb">&#64;filenames</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;revline</span><span class="hl sym">);</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$file</span><span class="hl sym">,</span> <span class="hl kwb">$rev</span><span class="hl sym">,</span> <span class="hl kwb">$rcsfile</span><span class="hl sym">,</span> <span class="hl kwb">$line</span><span class="hl sym">);</span>
+
+    <span class="hl kwa">while</span> <span class="hl sym">(</span><span class="hl kwb">&#64;filenames</span><span class="hl sym">) {</span>
+        <span class="hl kwb">$file</span> <span class="hl sym">=</span> shift <span class="hl kwb">&#64;filenames</span><span class="hl sym">;</span>
+
+        <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl str">&quot;$file&quot;</span> <span class="hl kwa">eq</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">) {</span>
+            <span class="hl kwa">next</span><span class="hl sym">;</span>
+        <span class="hl sym">}</span>
+
+        <span class="hl kwd">open</span><span class="hl sym">(</span>RCS<span class="hl sym">,</span> <span class="hl str">&quot;-|&quot;</span><span class="hl sym">) ||</span> exec <span class="hl str">&quot;$CVSBIN/cvs&quot;</span><span class="hl sym">,</span> <span class="hl str">'-Qn'</span><span class="hl sym">,</span> <span class="hl str">'status'</span><span class="hl sym">,</span> <span class="hl kwb">$file</span><span class="hl sym">;</span>
+
+        <span class="hl kwb">$rev</span> <span class="hl sym">=</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">;</span>
+        <span class="hl kwb">$delta</span> <span class="hl sym">=</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">;</span>
+        <span class="hl kwb">$rcsfile</span> <span class="hl sym">=</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">;</span>
+
+
+        <span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>RCS<span class="hl sym">&gt;) {</span>
+            <span class="hl kwa">if</span> <span class="hl sym">(/^[</span> <span class="hl esc">\t</span><span class="hl sym">]*</span>Repository revision<span class="hl sym">/) {</span>
+                <span class="hl kwd">chomp</span><span class="hl sym">;</span>
+                <span class="hl kwb">&#64;revline</span> <span class="hl sym">=</span> <span class="hl kwd">split</span><span class="hl sym">(</span><span class="hl str">' '</span><span class="hl sym">,</span> <span class="hl kwb">$_</span><span class="hl sym">);</span>
+                <span class="hl kwb">$rev</span> <span class="hl sym">=</span> <span class="hl kwb">$revline</span><span class="hl sym">[</span><span class="hl num">2</span><span class="hl sym">];</span>
+                <span class="hl kwb">$rcsfile</span> <span class="hl sym">=</span> <span class="hl kwb">$revline</span><span class="hl sym">[</span><span class="hl num">3</span><span class="hl sym">];</span>
+                <span class="hl kwb">$rcsfile</span> <span class="hl sym">=~</span> s<span class="hl sym">,^</span><span class="hl kwb">$CVSROOT</span><span class="hl sym">/,,;</span>
+                <span class="hl kwb">$rcsfile</span> <span class="hl sym">=~</span> s<span class="hl sym">/,</span>v<span class="hl sym">$//;</span>
+            <span class="hl sym">}</span>
+        <span class="hl sym">}</span>
+        <span class="hl kwd">close</span><span class="hl sym">(</span>RCS<span class="hl sym">);</span>
+
+
+        <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$rev</span> <span class="hl kwa">ne</span> <span class="hl str">''</span> <span class="hl sym">&amp;&amp;</span> <span class="hl kwb">$rcsfile</span> <span class="hl kwa">ne</span> <span class="hl str">''</span><span class="hl sym">) {</span>
+            <span class="hl kwd">open</span><span class="hl sym">(</span>RCS<span class="hl sym">,</span> <span class="hl str">&quot;-|&quot;</span><span class="hl sym">) ||</span> exec <span class="hl str">&quot;$CVSBIN/cvs&quot;</span><span class="hl sym">,</span> <span class="hl str">'-Qn'</span><span class="hl sym">,</span> <span class="hl str">'log'</span><span class="hl sym">,</span> <span class="hl str">&quot;-r$rev&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$file</span><span class="hl sym">;</span>
+            <span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>RCS<span class="hl sym">&gt;) {</span>
+                <span class="hl kwa">if</span> <span class="hl sym">(/^</span>date<span class="hl sym">:/) {</span>
+                    <span class="hl kwd">chomp</span><span class="hl sym">;</span>
+                    <span class="hl kwb">$delta</span> <span class="hl sym">=</span> <span class="hl kwb">$_</span><span class="hl sym">;</span>
+                    <span class="hl kwb">$delta</span> <span class="hl sym">=~</span> s<span class="hl sym">/^.*;//;</span>
+                    <span class="hl kwb">$delta</span> <span class="hl sym">=~</span> s<span class="hl sym">/^[</span>\s<span class="hl sym">]+</span>lines<span class="hl sym">://;</span>
+                <span class="hl sym">}</span>
+            <span class="hl sym">}</span>
+            <span class="hl kwd">close</span><span class="hl sym">(</span>RCS<span class="hl sym">);</span>
+        <span class="hl sym">}</span>
+
+        <span class="hl kwb">$diff</span> <span class="hl sym">=</span> <span class="hl str">&quot;</span><span class="hl esc">\n\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+
+	<span class="hl slc">#</span>
+	<span class="hl slc"># Get the differences between this and the previous revision,</span>
+	<span class="hl slc"># being aware that new files always have revision '1.1' and</span>
+	<span class="hl slc"># new branches always end in '.n.1'.</span>
+	<span class="hl slc">#</span>
+	<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$rev</span> <span class="hl sym">=~ /^(.*)</span>\<span class="hl sym">.([</span><span class="hl num">0</span><span class="hl sym">-</span><span class="hl num">9</span><span class="hl sym">]+)$/) {</span>
+	    <span class="hl kwb">$prev</span> <span class="hl sym">=</span> <span class="hl kwb">$2</span> <span class="hl sym">-</span> <span class="hl num">1</span><span class="hl sym">;</span>
+	    <span class="hl kwb">$prev_rev</span> <span class="hl sym">=</span> <span class="hl kwb">$1</span> <span class="hl sym">.</span> <span class="hl str">'.'</span> <span class="hl sym">.</span>  <span class="hl kwb">$prev</span><span class="hl sym">;</span>
+
+	    <span class="hl kwb">$prev_rev</span> <span class="hl sym">=~</span> s<span class="hl sym">/</span>\<span class="hl sym">.[</span><span class="hl num">0</span><span class="hl sym">-</span><span class="hl num">9</span><span class="hl sym">]+</span>\<span class="hl num">.0</span><span class="hl sym">$//;</span><span class="hl slc"># Truncate if first rev on branch</span>
+
+            <span class="hl kwd">open</span><span class="hl sym">(</span>DIFF<span class="hl sym">,</span> <span class="hl str">&quot;-|&quot;</span><span class="hl sym">)</span>
+		<span class="hl sym">||</span> exec <span class="hl str">&quot;$CVSBIN/cvs&quot;</span><span class="hl sym">,</span> <span class="hl str">'-Qn'</span><span class="hl sym">,</span> <span class="hl str">'diff'</span><span class="hl sym">,</span> <span class="hl str">'-uN'</span><span class="hl sym">,</span>
+	                <span class="hl str">&quot;-r$prev_rev&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;-r$rev&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$file</span><span class="hl sym">;</span>
+
+	    <span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>DIFF<span class="hl sym">&gt;) {</span>
+		<span class="hl kwb">$diff</span> <span class="hl sym">.=</span> <span class="hl kwb">$_</span><span class="hl sym">;</span>
+	    <span class="hl sym">}</span>
+	    <span class="hl kwd">close</span><span class="hl sym">(</span>DIFF<span class="hl sym">);</span>
+	    <span class="hl kwb">$diff</span> <span class="hl sym">.=</span> <span class="hl str">&quot;</span><span class="hl esc">\n\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+	<span class="hl sym">}</span>
+
+        <span class="hl sym">&amp;</span><span class="hl kwd">append_line</span><span class="hl sym">(</span><span class="hl kwb">$out</span><span class="hl sym">,</span> <span class="hl kwb">$diff</span><span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+
+<span class="hl kwa">sub</span> build_header <span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$header</span><span class="hl sym">);</span>
+    delete <span class="hl kwb">$ENV</span><span class="hl sym">{</span><span class="hl str">'TZ'</span><span class="hl sym">};</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$sec</span><span class="hl sym">,</span><span class="hl kwb">$min</span><span class="hl sym">,</span><span class="hl kwb">$hour</span><span class="hl sym">,</span><span class="hl kwb">$mday</span><span class="hl sym">,</span><span class="hl kwb">$mon</span><span class="hl sym">,</span><span class="hl kwb">$year</span><span class="hl sym">) =</span> <span class="hl kwd">localtime</span><span class="hl sym">(</span>time<span class="hl sym">);</span>
+
+    <span class="hl kwb">$header</span> <span class="hl sym">=</span> <span class="hl kwd">sprintf</span><span class="hl sym">(</span><span class="hl str">&quot;  User: %-8s</span><span class="hl esc">\n</span>  <span class="hl str">Date: %02d/%02d/%02d %02d:%02d:%02d&quot;</span><span class="hl sym">,</span>
+                       <span class="hl kwb">$cvs_user</span><span class="hl sym">,</span> <span class="hl kwb">$year%100</span><span class="hl sym">,</span> <span class="hl kwb">$mon</span><span class="hl sym">+</span><span class="hl num">1</span><span class="hl sym">,</span> <span class="hl kwb">$mday</span><span class="hl sym">,</span>
+                       <span class="hl kwb">$hour</span><span class="hl sym">,</span> <span class="hl kwb">$min</span><span class="hl sym">,</span> <span class="hl kwb">$sec</span><span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc"># !!! Mailing-list and history file mappings here !!!</span>
+<span class="hl kwa">sub</span> mlist_map
+<span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$path</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$path</span> <span class="hl sym">=~ /^([^</span>\<span class="hl sym">/]+)/) {</span> <span class="hl kwa">return</span> <span class="hl kwb">$1</span><span class="hl sym">; }</span>
+    <span class="hl kwa">else</span>                      <span class="hl sym">{</span> <span class="hl kwa">return</span> <span class="hl str">'apache'</span><span class="hl sym">; }</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> do_changes_file
+<span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$category</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$changes</span><span class="hl sym">);</span>
+
+    <span class="hl kwb">$changes</span> <span class="hl sym">=</span> <span class="hl str">&quot;$CVSROOT/CVSROOT/commitlogs/$category&quot;</span><span class="hl sym">;</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwd">open</span><span class="hl sym">(</span>CHANGES<span class="hl sym">,</span> <span class="hl str">&quot;&gt;&gt;$changes&quot;</span><span class="hl sym">)) {</span>
+        <span class="hl kwc">print</span><span class="hl sym">(</span>CHANGES <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">),</span> <span class="hl str">&quot;</span><span class="hl esc">\n\n</span><span class="hl str">&quot;</span><span class="hl sym">);</span>
+        <span class="hl kwd">close</span><span class="hl sym">(</span>CHANGES<span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwa">else</span> <span class="hl sym">{</span>
+        warn <span class="hl str">&quot;Cannot open $changes: $!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl kwa">sub</span> mail_notification
+<span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+
+<span class="hl slc">#    print &quot;Mailing the commit message...\n&quot;;</span>
+
+    <span class="hl kwd">open</span><span class="hl sym">(</span>MAIL<span class="hl sym">,</span> <span class="hl kwb">$MAIL_CMD</span><span class="hl sym">);</span>
+    <span class="hl kwc">print</span> MAIL <span class="hl str">&quot;From: $MAIL_FROM</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+    <span class="hl kwc">print</span> MAIL <span class="hl str">&quot;To: $MAIL_TO</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+    <span class="hl kwc">print</span> MAIL <span class="hl str">&quot;Subject: $SUBJECT_PRE $ARGV[0]</span><span class="hl esc">\n\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+    <span class="hl kwc">print</span><span class="hl sym">(</span>MAIL <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">));</span>
+    <span class="hl kwd">close</span><span class="hl sym">(</span>MAIL<span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc"># Create a Codestriker topic.  The topic title will be the</span>
+<span class="hl slc"># first line of the log message prefixed with &quot;CVS commit: &quot;.</span>
+<span class="hl slc"># The topic description is the entire log message.</span>
+<span class="hl slc"># Return the URL of the created topic if successful, otherwise</span>
+<span class="hl slc"># undef.</span>
+<span class="hl kwa">sub</span> codestriker_create_topic
+<span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$user</span><span class="hl sym">,</span> <span class="hl kwb">$log_ref</span><span class="hl sym">,</span> <span class="hl kwb">$diff_ref</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;log</span><span class="hl sym">) =</span> &#64;<span class="hl sym">{</span><span class="hl kwb">$log_ref</span><span class="hl sym">};</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;diff</span><span class="hl sym">) =</span> &#64;<span class="hl sym">{</span><span class="hl kwb">$diff_ref</span><span class="hl sym">};</span>
+
+    <span class="hl kwc">my</span> <span class="hl kwb">$topic_title</span> <span class="hl sym">=</span> <span class="hl str">&quot;CVS commit: &quot;</span> <span class="hl sym">.</span><span class="hl kwb">$log</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">];</span>
+    <span class="hl kwc">my</span> <span class="hl kwb">$topic_description</span> <span class="hl sym">=</span> <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;log</span><span class="hl sym">);</span>
+    <span class="hl kwc">my</span> <span class="hl kwb">$bug_ids</span> <span class="hl sym">=</span> <span class="hl kwb">$topic_description</span><span class="hl sym">;</span>
+
+    <span class="hl slc"># Truncate the title if necessary.</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwd">length</span><span class="hl sym">(</span><span class="hl kwb">$topic_title</span><span class="hl sym">) &gt;</span> <span class="hl num">57</span><span class="hl sym">) {</span>
+        <span class="hl kwb">$topic_title</span> <span class="hl sym">=</span> <span class="hl kwd">substr</span><span class="hl sym">(</span><span class="hl kwb">$topic_title</span><span class="hl sym">,</span> <span class="hl num">0</span><span class="hl sym">,</span> <span class="hl num">57</span><span class="hl sym">) .</span> <span class="hl str">&quot;...&quot;</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+
+    <span class="hl slc"># Check for any matching Bug id text.</span>
+    <span class="hl kwc">my</span> <span class="hl kwb">&#64;bugs</span> <span class="hl sym">= ();</span>
+    <span class="hl kwb">$bug_ids</span> <span class="hl sym">=~</span> s<span class="hl sym">/.*[</span>Bb<span class="hl sym">][</span>Uu<span class="hl sym">][</span>Gg<span class="hl sym">]:</span>?<span class="hl sym">(</span>\d<span class="hl sym">+)</span><span class="hl esc">\b</span><span class="hl sym">.*/</span><span class="hl kwb">$1</span> <span class="hl sym">/</span><span class="hl kwd">g</span><span class="hl sym">;</span>
+    <span class="hl kwa">while</span> <span class="hl sym">(</span><span class="hl kwb">$bug_ids</span> <span class="hl sym">=~ /</span><span class="hl esc">\b</span><span class="hl sym">[</span>Bb<span class="hl sym">][</span>Uu<span class="hl sym">][</span>Gg<span class="hl sym">]:</span>?\s<span class="hl sym">*(</span>\d<span class="hl sym">+)</span><span class="hl esc">\b</span><span class="hl sym">/</span>g<span class="hl sym">) {</span>
+	push <span class="hl kwb">&#64;bugs</span><span class="hl sym">,</span> <span class="hl kwb">$1</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+
+    <span class="hl kwc">my</span> <span class="hl kwb">$client</span> <span class="hl sym">=</span> CodestrikerClient<span class="hl sym">-&gt;</span><span class="hl kwd">new</span><span class="hl sym">(</span><span class="hl kwb">$CODESTRIKER_URL</span><span class="hl sym">);</span>
+    <span class="hl kwa">return</span> <span class="hl kwb">$client</span><span class="hl sym">-&gt;</span><span class="hl kwd">create_topic</span><span class="hl sym">({</span>
+	topic_title <span class="hl sym">=&gt;</span> <span class="hl kwb">$topic_title</span><span class="hl sym">,</span>
+	topic_description <span class="hl sym">=&gt;</span> <span class="hl kwb">$topic_description</span><span class="hl sym">,</span>
+	project_name <span class="hl sym">=&gt;</span> <span class="hl kwb">$CODESTRIKER_PROJECT</span><span class="hl sym">,</span>
+	repository <span class="hl sym">=&gt;</span> <span class="hl kwb">$CODESTRIKER_REPOSITORY</span><span class="hl sym">,</span>
+	bug_ids <span class="hl sym">=&gt;</span> <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;, &quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;bugs</span><span class="hl sym">),</span>
+	email <span class="hl sym">=&gt;</span> <span class="hl kwb">$MAIL_FROM</span><span class="hl sym">,</span>
+	reviewers <span class="hl sym">=&gt;</span> <span class="hl kwb">$CODESTRIKER_REVIEWERS</span><span class="hl sym">,</span>
+	cc <span class="hl sym">=&gt;</span> <span class="hl kwb">$CODESTRIKER_CC</span><span class="hl sym">,</span>
+	topic_text <span class="hl sym">=&gt;</span> <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot;</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;diff</span><span class="hl sym">)</span>
+	<span class="hl sym">});</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">## process the command line arguments sent to this script</span>
+<span class="hl slc">## it returns an array of files, %s, sent from the loginfo</span>
+<span class="hl slc">## command</span>
+<span class="hl kwa">sub</span> process_argv
+<span class="hl sym">{</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;argv</span><span class="hl sym">) =</span> <span class="hl kwb">&#64;_</span><span class="hl sym">;</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">&#64;files</span><span class="hl sym">);</span>
+    <span class="hl kwc">local</span><span class="hl sym">(</span><span class="hl kwb">$arg</span><span class="hl sym">);</span>
+<span class="hl slc">#    print &quot;Processing log script arguments...\n&quot;;</span>
+
+    <span class="hl kwa">while</span> <span class="hl sym">(</span><span class="hl kwb">&#64;argv</span><span class="hl sym">) {</span>
+        <span class="hl kwb">$arg</span> <span class="hl sym">=</span> shift <span class="hl kwb">&#64;argv</span><span class="hl sym">;</span>
+
+        <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$arg</span> <span class="hl kwa">eq</span> <span class="hl str">'-u'</span><span class="hl sym">) {</span>
+                <span class="hl kwb">$cvs_user</span> <span class="hl sym">=</span> shift <span class="hl kwb">&#64;argv</span><span class="hl sym">;</span>
+        <span class="hl sym">}</span> <span class="hl kwa">else</span> <span class="hl sym">{</span>
+                <span class="hl sym">(</span><span class="hl kwb">$donefiles</span><span class="hl sym">) &amp;&amp;</span> die <span class="hl str">&quot;Too many arguments!</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+                <span class="hl kwb">$donefiles</span> <span class="hl sym">=</span> <span class="hl num">1</span><span class="hl sym">;</span>
+                <span class="hl kwb">$ARGV</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">] =</span> <span class="hl kwb">$arg</span><span class="hl sym">;</span>
+                <span class="hl kwb">&#64;files</span> <span class="hl sym">=</span> <span class="hl kwd">split</span><span class="hl sym">(</span><span class="hl str">' '</span><span class="hl sym">,</span> <span class="hl kwb">$arg</span><span class="hl sym">);</span>
+        <span class="hl sym">}</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwa">return</span> <span class="hl kwb">&#64;files</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Main Body</span>
+<span class="hl slc">#</span>
+<span class="hl slc">############################################################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Setup environment</span>
+<span class="hl slc">#</span>
+<span class="hl kwd">umask</span> <span class="hl sym">(</span><span class="hl num">002</span><span class="hl sym">);</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Initialize basic variables</span>
+<span class="hl slc">#</span>
+<span class="hl kwb">$id</span> <span class="hl sym">=</span> <span class="hl kwd">getpgrp</span><span class="hl sym">();</span>
+<span class="hl kwb">$state</span> <span class="hl sym">=</span> <span class="hl kwb">$STATE_NONE</span><span class="hl sym">;</span>
+<span class="hl kwb">$cvs_user</span> <span class="hl sym">=</span> <span class="hl kwb">$ENV</span><span class="hl sym">{</span><span class="hl str">'USER'</span><span class="hl sym">} ||</span> getlogin <span class="hl sym">|| (</span><span class="hl kwd">getpwuid</span><span class="hl sym">($&lt;))[</span><span class="hl num">0</span><span class="hl sym">] ||</span> <span class="hl kwd">sprintf</span><span class="hl sym">(</span><span class="hl str">&quot;uid#%d&quot;</span><span class="hl sym">,$&lt;);</span>
+<span class="hl kwb">&#64;files</span> <span class="hl sym">=</span> <span class="hl kwd">process_argv</span><span class="hl sym">(</span><span class="hl kwb">&#64;ARGV</span><span class="hl sym">);</span>
+<span class="hl kwb">&#64;path</span> <span class="hl sym">=</span> <span class="hl kwd">split</span><span class="hl sym">(</span><span class="hl str">'/'</span><span class="hl sym">,</span> <span class="hl kwb">$files</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">]);</span>
+<span class="hl kwb">$repository</span> <span class="hl sym">=</span> <span class="hl kwb">$path</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">];</span>
+<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$#path</span> <span class="hl sym">==</span> <span class="hl num">0</span><span class="hl sym">) {</span>
+    <span class="hl kwb">$dir</span> <span class="hl sym">=</span> <span class="hl str">&quot;.&quot;</span><span class="hl sym">;</span>
+<span class="hl sym">}</span> <span class="hl kwa">else</span> <span class="hl sym">{</span>
+    <span class="hl kwb">$dir</span> <span class="hl sym">=</span> <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">'/'</span><span class="hl sym">,</span> <span class="hl kwb">&#64;path</span><span class="hl sym">[</span><span class="hl num">1</span><span class="hl sym">..</span><span class="hl kwb">$#path</span><span class="hl sym">]);</span>
+<span class="hl sym">}</span>
+<span class="hl slc">#print(&quot;ARGV  - &quot;, join(&quot;:&quot;, &#64;ARGV), &quot;\n&quot;);</span>
+<span class="hl slc">#print(&quot;files - &quot;, join(&quot;:&quot;, &#64;files), &quot;\n&quot;);</span>
+<span class="hl slc">#print(&quot;path  - &quot;, join(&quot;:&quot;, &#64;path), &quot;\n&quot;);</span>
+<span class="hl slc">#print(&quot;dir   - &quot;, $dir, &quot;\n&quot;);</span>
+<span class="hl slc">#print(&quot;id    - &quot;, $id, &quot;\n&quot;);</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Map the repository directory to a name for commitlogs.</span>
+<span class="hl slc">#</span>
+<span class="hl kwb">$mlist</span> <span class="hl sym">= &amp;</span><span class="hl kwd">mlist_map</span><span class="hl sym">(</span><span class="hl kwb">$files</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">]);</span>
+
+<span class="hl slc">##########################</span>
+<span class="hl slc"># Uncomment the following if we ever have per-repository cvs mail</span>
+
+<span class="hl slc"># if (defined($mlist)) {</span>
+<span class="hl slc">#     $MAIL_TO = $mlist . '-cvs';</span>
+<span class="hl slc"># }</span>
+<span class="hl slc"># else { undef $MAIL_TO; }</span>
+
+<span class="hl slc">##########################</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Check for a new directory first.  This will always appear as a</span>
+<span class="hl slc"># single item in the argument list, and an empty log message.</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$ARGV</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">] =~ /</span>New directory<span class="hl sym">/) {</span>
+    <span class="hl kwb">$header</span> <span class="hl sym">= &amp;</span><span class="hl kwd">build_header</span><span class="hl sym">;</span>
+    <span class="hl kwb">&#64;text</span> <span class="hl sym">= ();</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl kwb">$header</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;  &quot;</span><span class="hl sym">.</span><span class="hl kwb">$ARGV</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">]);</span>
+    <span class="hl sym">&amp;</span><span class="hl kwd">do_changes_file</span><span class="hl sym">(</span><span class="hl kwb">$mlist</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">);</span>
+    <span class="hl sym">&amp;</span><span class="hl kwd">mail_notification</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">)</span> <span class="hl kwa">if</span> <span class="hl kwd">defined</span><span class="hl sym">(</span><span class="hl kwb">$MAIL_TO</span><span class="hl sym">);</span>
+    exit <span class="hl num">0</span><span class="hl sym">;</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Iterate over the body of the message collecting information.</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">while</span> <span class="hl sym">(&lt;</span>STDIN<span class="hl sym">&gt;) {</span>
+    <span class="hl kwd">chomp</span><span class="hl sym">;</span>                      <span class="hl slc"># Drop the newline</span>
+
+    <span class="hl kwa">if</span> <span class="hl sym">(/^</span>Revision\<span class="hl sym">/</span>Branch<span class="hl sym">:/) {</span>
+        s<span class="hl sym">,^</span>Revision<span class="hl sym">/</span>Branch<span class="hl sym">:,,;</span>
+        <span class="hl kwd">push</span> <span class="hl sym">(</span><span class="hl kwb">&#64;branch_lines</span><span class="hl sym">,</span> split<span class="hl sym">);</span>
+        <span class="hl kwa">next</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+<span class="hl slc">#    next if (/^[ \t]+Tag:/ &amp;&amp; $state != $STATE_LOG);</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(/^</span>Modified Files<span class="hl sym">/) {</span> <span class="hl kwb">$state</span> <span class="hl sym">=</span> <span class="hl kwb">$STATE_CHANGED</span><span class="hl sym">;</span> <span class="hl kwa">next</span><span class="hl sym">; }</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(/^</span>Added Files<span class="hl sym">/)    {</span> <span class="hl kwb">$state</span> <span class="hl sym">=</span> <span class="hl kwb">$STATE_ADDED</span><span class="hl sym">;</span>   <span class="hl kwa">next</span><span class="hl sym">; }</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(/^</span>Removed Files<span class="hl sym">/)  {</span> <span class="hl kwb">$state</span> <span class="hl sym">=</span> <span class="hl kwb">$STATE_REMOVED</span><span class="hl sym">;</span> <span class="hl kwa">next</span><span class="hl sym">; }</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(/^</span>Log Message<span class="hl sym">/)    {</span> <span class="hl kwb">$state</span> <span class="hl sym">=</span> <span class="hl kwb">$STATE_LOG</span><span class="hl sym">;</span>     <span class="hl kwa">next</span><span class="hl sym">; }</span>
+    s<span class="hl sym">/[</span> <span class="hl esc">\t\n</span><span class="hl sym">]+$//;</span>              <span class="hl slc"># delete trailing space</span>
+
+    <span class="hl kwd">push</span> <span class="hl sym">(</span><span class="hl kwb">&#64;changed_files</span><span class="hl sym">,</span> split<span class="hl sym">)</span> <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$state</span> <span class="hl sym">==</span> <span class="hl kwb">$STATE_CHANGED</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span> <span class="hl sym">(</span><span class="hl kwb">&#64;added_files</span><span class="hl sym">,</span>   split<span class="hl sym">)</span> <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$state</span> <span class="hl sym">==</span> <span class="hl kwb">$STATE_ADDED</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span> <span class="hl sym">(</span><span class="hl kwb">&#64;removed_files</span><span class="hl sym">,</span> split<span class="hl sym">)</span> <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$state</span> <span class="hl sym">==</span> <span class="hl kwb">$STATE_REMOVED</span><span class="hl sym">);</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$state</span> <span class="hl sym">==</span> <span class="hl kwb">$STATE_LOG</span><span class="hl sym">) {</span>
+        <span class="hl kwa">if</span> <span class="hl sym">(/^</span>PR<span class="hl sym">:$/</span>i <span class="hl sym">||</span>
+            <span class="hl sym">/^</span>Reviewed by<span class="hl sym">:$/</span>i <span class="hl sym">||</span>
+            <span class="hl sym">/^</span>Submitted by<span class="hl sym">:$/</span>i <span class="hl sym">||</span>
+            <span class="hl sym">/^</span>Obtained from<span class="hl sym">:$/</span>i<span class="hl sym">) {</span>
+            <span class="hl kwa">next</span><span class="hl sym">;</span>
+        <span class="hl sym">}</span>
+        <span class="hl kwd">push</span> <span class="hl sym">(</span><span class="hl kwb">&#64;log_lines</span><span class="hl sym">,</span>     <span class="hl kwb">$_</span><span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Strip leading and trailing blank lines from the log message.  Also</span>
+<span class="hl slc"># compress multiple blank lines in the body of the message down to a</span>
+<span class="hl slc"># single blank line.</span>
+<span class="hl slc"># (Note, this only does the mail and changes log, not the rcs log).</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">while</span> <span class="hl sym">(</span><span class="hl kwb">$#log_lines</span> <span class="hl sym">&gt; -</span><span class="hl num">1</span><span class="hl sym">) {</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(</span><span class="hl kwb">$log_lines</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">]</span> <span class="hl kwa">ne</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">shift</span><span class="hl sym">(</span><span class="hl kwb">&#64;log_lines</span><span class="hl sym">);</span>
+<span class="hl sym">}</span>
+<span class="hl kwa">while</span> <span class="hl sym">(</span><span class="hl kwb">$#log_lines</span> <span class="hl sym">&gt; -</span><span class="hl num">1</span><span class="hl sym">) {</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(</span><span class="hl kwb">$log_lines</span><span class="hl sym">[</span><span class="hl kwb">$#log_lines</span><span class="hl sym">]</span> <span class="hl kwa">ne</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">pop</span><span class="hl sym">(</span><span class="hl kwb">&#64;log_lines</span><span class="hl sym">);</span>
+<span class="hl sym">}</span>
+<span class="hl kwa">for</span> <span class="hl sym">(</span><span class="hl kwb">$i</span> <span class="hl sym">=</span> <span class="hl kwb">$#log_lines</span><span class="hl sym">;</span> <span class="hl kwb">$i</span> <span class="hl sym">&gt;</span> <span class="hl num">0</span><span class="hl sym">;</span> <span class="hl kwb">$i</span><span class="hl sym">--) {</span>
+    <span class="hl kwa">if</span> <span class="hl sym">((</span><span class="hl kwb">$log_lines</span><span class="hl sym">[</span><span class="hl kwb">$i</span> <span class="hl sym">-</span> <span class="hl num">1</span><span class="hl sym">]</span> <span class="hl kwa">eq</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">) &amp;&amp; (</span><span class="hl kwb">$log_lines</span><span class="hl sym">[</span><span class="hl kwb">$i</span><span class="hl sym">]</span> <span class="hl kwa">eq</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">)) {</span>
+        <span class="hl kwd">splice</span><span class="hl sym">(</span><span class="hl kwb">&#64;log_lines</span><span class="hl sym">,</span> <span class="hl kwb">$i</span><span class="hl sym">,</span> <span class="hl num">1</span><span class="hl sym">);</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Find the log file that matches this log message</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">for</span> <span class="hl sym">(</span><span class="hl kwb">$i</span> <span class="hl sym">=</span> <span class="hl num">0</span><span class="hl sym">; ;</span> <span class="hl kwb">$i</span><span class="hl sym">++) {</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(! -</span>e <span class="hl str">&quot;$LOG_FILE.$i.$id&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwb">&#64;text</span> <span class="hl sym">= &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$LOG_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(</span><span class="hl kwb">$#text</span> <span class="hl sym">== -</span><span class="hl num">1</span><span class="hl sym">);</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(</span><span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot; &quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;log_lines</span><span class="hl sym">)</span> <span class="hl kwa">eq</span> <span class="hl kwd">join</span><span class="hl sym">(</span><span class="hl str">&quot; &quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">));</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Spit out the information gathered in this pass.</span>
+<span class="hl slc">#</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">write_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$LOG_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl kwb">&#64;log_lines</span><span class="hl sym">);</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">append_to_file</span><span class="hl sym">(</span><span class="hl str">&quot;$BRANCH_FILE.$i.$id&quot;</span><span class="hl sym">,</span>  <span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;branch_lines</span><span class="hl sym">);</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">append_to_file</span><span class="hl sym">(</span><span class="hl str">&quot;$ADDED_FILE.$i.$id&quot;</span><span class="hl sym">,</span>   <span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;added_files</span><span class="hl sym">);</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">append_to_file</span><span class="hl sym">(</span><span class="hl str">&quot;$CHANGED_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;changed_files</span><span class="hl sym">);</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">append_to_file</span><span class="hl sym">(</span><span class="hl str">&quot;$REMOVED_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl kwb">$dir</span><span class="hl sym">,</span> <span class="hl kwb">&#64;removed_files</span><span class="hl sym">);</span>
+<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$rcsidinfo</span><span class="hl sym">) {</span>
+    <span class="hl sym">&amp;</span><span class="hl kwd">change_summary</span><span class="hl sym">(</span><span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">,</span>
+		    <span class="hl sym">(</span><span class="hl kwb">&#64;changed_files</span><span class="hl sym">,</span> <span class="hl kwb">&#64;added_files</span><span class="hl sym">,</span> <span class="hl kwb">&#64;removed_files</span><span class="hl sym">));</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Check whether this is the last directory.  If not, quit.</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">if</span> <span class="hl sym">(-</span>e <span class="hl str">&quot;$LAST_FILE.$id&quot;</span><span class="hl sym">) {</span>
+   <span class="hl kwb">$_</span> <span class="hl sym">= &amp;</span><span class="hl kwd">read_line</span><span class="hl sym">(</span><span class="hl str">&quot;$LAST_FILE.$id&quot;</span><span class="hl sym">);</span>
+   <span class="hl kwb">$tmpfiles</span> <span class="hl sym">=</span> <span class="hl kwb">$files</span><span class="hl sym">[</span><span class="hl num">0</span><span class="hl sym">];</span>
+   <span class="hl kwb">$tmpfiles</span> <span class="hl sym">=~</span> s<span class="hl sym">,([^</span>a<span class="hl sym">-</span>zA<span class="hl sym">-</span>Z0<span class="hl sym">-</span><span class="hl num">9</span>_<span class="hl sym">/]),</span><span class="hl esc">\\</span><span class="hl kwb">$1</span><span class="hl sym">,</span><span class="hl kwd">g</span><span class="hl sym">;</span>
+   <span class="hl kwa">if</span> <span class="hl sym">(!</span> <span class="hl kwd">grep</span><span class="hl sym">(/</span><span class="hl kwb">$tmpfiles</span><span class="hl sym">$/,</span> <span class="hl kwb">$_</span><span class="hl sym">)) {</span>
+        <span class="hl kwc">print</span> <span class="hl str">&quot;More commits to come...</span><span class="hl esc">\n</span><span class="hl str">&quot;</span><span class="hl sym">;</span>
+        exit <span class="hl num">0</span>
+   <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># This is it.  The commits are all finished.  Lump everything together</span>
+<span class="hl slc"># into a single message, fire a copy off to the mailing list, and drop</span>
+<span class="hl slc"># it on the end of the Changes file.</span>
+<span class="hl slc">#</span>
+<span class="hl kwb">$header</span> <span class="hl sym">= &amp;</span><span class="hl kwd">build_header</span><span class="hl sym">;</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Produce the final compilation of the log messages</span>
+<span class="hl slc">#</span>
+<span class="hl kwb">&#64;text</span> <span class="hl sym">= ();</span>
+<span class="hl kwb">&#64;diff_text</span> <span class="hl sym">= ();</span>
+<span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl kwb">$header</span><span class="hl sym">);</span>
+<span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+<span class="hl kwa">for</span> <span class="hl sym">(</span><span class="hl kwb">$i</span> <span class="hl sym">=</span> <span class="hl num">0</span><span class="hl sym">; ;</span> <span class="hl kwb">$i</span><span class="hl sym">++) {</span>
+    <span class="hl kwa">last if</span> <span class="hl sym">(! -</span>e <span class="hl str">&quot;$LOG_FILE.$i.$id&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_file</span><span class="hl sym">(</span><span class="hl str">&quot;$BRANCH_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;Branch:&quot;</span><span class="hl sym">));</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_file</span><span class="hl sym">(</span><span class="hl str">&quot;$CHANGED_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;Modified:&quot;</span><span class="hl sym">));</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_file</span><span class="hl sym">(</span><span class="hl str">&quot;$ADDED_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;Added:&quot;</span><span class="hl sym">));</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_file</span><span class="hl sym">(</span><span class="hl str">&quot;$REMOVED_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;Removed:&quot;</span><span class="hl sym">));</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;  Log:&quot;</span><span class="hl sym">);</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$LOG_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;  &quot;</span><span class="hl sym">));</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$rcsidinfo</span> <span class="hl sym">==</span> <span class="hl num">2</span><span class="hl sym">) {</span>
+        <span class="hl kwa">if</span> <span class="hl sym">(-</span>e <span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">) {</span>
+            <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;  &quot;</span><span class="hl sym">);</span>
+            <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;diff_text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">));</span>
+            <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;  &quot;</span><span class="hl sym">));</span>
+        <span class="hl sym">}</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Append the log message to the commitlogs/&lt;module&gt; file</span>
+<span class="hl slc">#</span>
+<span class="hl sym">&amp;</span><span class="hl kwd">do_changes_file</span><span class="hl sym">(</span><span class="hl kwb">$mlist</span><span class="hl sym">,</span> <span class="hl kwb">&#64;text</span><span class="hl sym">);</span>
+<span class="hl slc">#</span>
+<span class="hl slc"># Now generate the extra info for the mail message..</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$rcsidinfo</span> <span class="hl sym">==</span> <span class="hl num">1</span><span class="hl sym">) {</span>
+    <span class="hl kwb">$revhdr</span> <span class="hl sym">=</span> <span class="hl num">0</span><span class="hl sym">;</span>
+    <span class="hl kwa">for</span> <span class="hl sym">(</span><span class="hl kwb">$i</span> <span class="hl sym">=</span> <span class="hl num">0</span><span class="hl sym">; ;</span> <span class="hl kwb">$i</span><span class="hl sym">++) {</span>
+        <span class="hl kwa">last if</span> <span class="hl sym">(! -</span>e <span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">);</span>
+        <span class="hl kwa">if</span> <span class="hl sym">(-</span>e <span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">) {</span>
+            <span class="hl kwa">if</span> <span class="hl sym">(!</span><span class="hl kwb">$revhdr</span><span class="hl sym">++) {</span>
+                <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;Revision  Changes    Path&quot;</span><span class="hl sym">);</span>
+            <span class="hl sym">}</span>
+            <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">));</span>
+            <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;diff_text</span><span class="hl sym">, &amp;</span><span class="hl kwd">read_logfile</span><span class="hl sym">(</span><span class="hl str">&quot;$SUMMARY_FILE.$i.$id&quot;</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">));</span>
+        <span class="hl sym">}</span>
+    <span class="hl sym">}</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwb">$revhdr</span><span class="hl sym">) {</span>
+        <span class="hl kwd">push</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">);</span>        <span class="hl slc"># consistancy...</span>
+    <span class="hl sym">}</span>
+<span class="hl sym">}</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Now create the Codestriker topic.</span>
+<span class="hl slc">#</span>
+<span class="hl kwc">my</span> <span class="hl kwb">$topic_url</span> <span class="hl sym">= &amp;</span><span class="hl kwd">codestriker_create_topic</span><span class="hl sym">(</span><span class="hl kwb">$cvs_user</span><span class="hl sym">,</span> \<span class="hl kwb">&#64;log_lines</span><span class="hl sym">,</span> \<span class="hl kwb">&#64;diff_text</span><span class="hl sym">);</span>
+
+<span class="hl slc">#</span>
+<span class="hl slc"># Mail out the notification.  Prepend the topic url if it is defined.</span>
+<span class="hl slc">#</span>
+<span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwd">defined</span><span class="hl sym">(</span><span class="hl kwb">$MAIL_TO</span><span class="hl sym">)) {</span>
+    <span class="hl kwa">if</span> <span class="hl sym">(</span><span class="hl kwd">defined</span><span class="hl sym">(</span><span class="hl kwb">$topic_url</span><span class="hl sym">)) {</span>
+	unshift <span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;&quot;</span><span class="hl sym">;</span>
+	unshift <span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;  $topic_url&quot;</span><span class="hl sym">;</span>
+	unshift <span class="hl kwb">&#64;text</span><span class="hl sym">,</span> <span class="hl str">&quot;  Created Codestriker topic at:&quot;</span><span class="hl sym">;</span>
+    <span class="hl sym">}</span>
+    <span class="hl sym">&amp;</span><span class="hl kwd">mail_notification</span><span class="hl sym">(</span><span class="hl kwb">&#64;text</span><span class="hl sym">)</span> <span class="hl kwa">if</span> <span class="hl kwd">defined</span><span class="hl sym">(</span><span class="hl kwb">$MAIL_TO</span><span class="hl sym">);</span>
+<span class="hl sym">}</span>
+
+<span class="hl sym">&amp;</span><span class="hl kwd">cleanup_tmpfiles</span><span class="hl sym">;</span>
+exit <span class="hl num">0</span><span class="hl sym">;</span>
+</pre>
+</body>
+</html>
+<!--HTML generated by highlight 2.6.10, http://www.andre-simon.de/-->

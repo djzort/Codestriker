@@ -1,7 +1,7 @@
 [%# Screen for the submit topic confirmation screen. #%]
 
 [% PROCESS header.html.tmpl version = version displaymenu = 1 
-                            closehead = 1 help="" %]
+                            closehead = 1 help="" subtitle = "Topic Created" %]
 
 [%# Display any "feedback" to the user if necessary. #%]
 [% IF feedback != '' %]
@@ -9,7 +9,6 @@
     <p>
 [% END %]
 
-<H2>Topic created</H2>
 Topic title: [% topic_title | html_entity %]<BR>
 Author: [% email | html_entity %]<BR>
 Topic URL: <A HREF="[% topic_url %]">[% topic_url %]</A>

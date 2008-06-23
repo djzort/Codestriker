@@ -1,0 +1,609 @@
+<html>
+<head>
+</head>
+<body>
+<b>#!/usr/bin/perl</b><BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Perl&nbsp;filter&nbsp;to&nbsp;handle&nbsp;the&nbsp;log&nbsp;messages&nbsp;from&nbsp;the&nbsp;checkin&nbsp;of&nbsp;files&nbsp;in</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;a&nbsp;directory.&nbsp;&nbsp;This&nbsp;script&nbsp;will&nbsp;group&nbsp;the&nbsp;lists&nbsp;of&nbsp;files&nbsp;by&nbsp;log</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;message,&nbsp;and&nbsp;mail&nbsp;a&nbsp;single&nbsp;consolidated&nbsp;log&nbsp;message&nbsp;at&nbsp;the&nbsp;end&nbsp;of</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;the&nbsp;commit.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;This&nbsp;file&nbsp;assumes&nbsp;a&nbsp;pre-commit&nbsp;checking&nbsp;program&nbsp;that&nbsp;leaves&nbsp;the</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;names&nbsp;of&nbsp;the&nbsp;first&nbsp;and&nbsp;last&nbsp;commit&nbsp;directories&nbsp;in&nbsp;a&nbsp;temporary&nbsp;file.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Contributed&nbsp;by&nbsp;David&nbsp;Hampton&nbsp;&lt;hampton@cisco.com&gt;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Roy&nbsp;Fielding&nbsp;removed&nbsp;useless&nbsp;code&nbsp;and&nbsp;added&nbsp;log/mail&nbsp;of&nbsp;new&nbsp;files</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Ken&nbsp;Coar&nbsp;added&nbsp;special&nbsp;processing&nbsp;(i.e.,&nbsp;no&nbsp;diffs)&nbsp;for&nbsp;binary&nbsp;files</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Jon&nbsp;Stevens&nbsp;added&nbsp;a&nbsp;few&nbsp;new&nbsp;features&nbsp;and&nbsp;cleaned&nbsp;up&nbsp;some&nbsp;of&nbsp;the&nbsp;</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;output</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;David&nbsp;Sitsky&nbsp;modified&nbsp;this&nbsp;slightly&nbsp;so&nbsp;that&nbsp;it&nbsp;also&nbsp;creates&nbsp;a&nbsp;new</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;codestriker&nbsp;topic&nbsp;automatically.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Setup&nbsp;instructions</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Create&nbsp;a&nbsp;directory&nbsp;$CVSROOT/commitlogs&nbsp;and&nbsp;allow</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;the&nbsp;cvs&nbsp;process&nbsp;to&nbsp;write&nbsp;to&nbsp;it.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Edit&nbsp;the&nbsp;options&nbsp;below.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Configurable&nbsp;options</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Where&nbsp;do&nbsp;you&nbsp;want&nbsp;the&nbsp;RCS&nbsp;ID&nbsp;and&nbsp;delta&nbsp;info?</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;0&nbsp;=&nbsp;none,</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;1&nbsp;=&nbsp;in&nbsp;mail&nbsp;only,</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;2&nbsp;=&nbsp;rcsids&nbsp;in&nbsp;both&nbsp;mail&nbsp;and&nbsp;logs.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$rcsidinfo</font>&nbsp;=&nbsp;<font color="#00007f">2</font>;<BR>
+<BR>
+<font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Constants</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$STATE_NONE</font>&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;0;<BR>
+<font color="#0000ff">$STATE_CHANGED</font>&nbsp;=&nbsp;<font color="#00007f">1</font>;<BR>
+<font color="#0000ff">$STATE_ADDED</font>&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#00007f">2</font>;<BR>
+<font color="#0000ff">$STATE_REMOVED</font>&nbsp;=&nbsp;<font color="#00007f">3</font>;<BR>
+<font color="#0000ff">$STATE_LOG</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;4;<BR>
+<BR>
+<font color="#0000ff">$TMPDIR</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#0000ff"><b>$ENV</b></font>{<font color="#ffa500">'</font><font color="#ff0000">TMPDIR</font><font color="#ffa500">'</font>}&nbsp;||&nbsp;<font color="#ffa500">'</font><font color="#ff0000">/tmp</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$FILE_PREFIX</font>&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">#cvs.</font><font color="#ffa500">'</font>;<BR>
+<BR>
+<font color="#0000ff">$LAST_FILE</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}lastdir</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$CHANGED_FILE</font>&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.changed</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$ADDED_FILE</font>&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.added</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$REMOVED_FILE</font>&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.removed</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$LOG_FILE</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.log</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$BRANCH_FILE</font>&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.branch</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$SUMMARY_FILE</font>&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff">${FILE_PREFIX}files</font><font color="#ff0000">.summary</font><font color="#ffa500">"</font>;<BR>
+<BR>
+<font color="#0000ff">$CVSROOT</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#0000ff"><b>$ENV</b></font>{<font color="#ffa500">'</font><font color="#ff0000">CVSROOT</font><font color="#ffa500">'</font>};<BR>
+<BR>
+<font color="#0000ff">$CVSBIN</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">/usr/bin</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$PATH</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$PATH</font><font color="#ff0000">:/bin:/usr/bin</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$MAIL_CMD</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#ff0000">|&nbsp;/usr/lib/sendmail&nbsp;-i&nbsp;-t</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$MAIL_TO</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">engineering@localhost.localdomain</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$MAIL_FROM</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff"><b>$ENV</b></font><font color="#ff0000">{'USER'}\@localhost.localdomain</font><font color="#ffa500">"</font>;<BR>
+<font color="#0000ff">$SUBJECT_PRE</font>&nbsp;&nbsp;&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">CVS&nbsp;update:</font><font color="#ffa500">'</font>;<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;Codestriker-specific&nbsp;imports.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>use</b>&nbsp;lib&nbsp;<font color="#ffa500">'</font><font color="#ff0000">/var/www/codestriker-1.8.4/bin</font><font color="#ffa500">'</font>;<BR>
+<b>use</b>&nbsp;CodestrikerClient;<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;Codestriker&nbsp;specific&nbsp;parameters&nbsp;for&nbsp;topic&nbsp;creation.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$CODESTRIKER_URL</font>&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">http://localhost/codestriker/codestriker.pl</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$CODESTRIKER_PROJECT</font>&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">Project&nbsp;CVS</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$CODESTRIKER_REPOSITORY</font>&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">/var/lib/cvs</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$CODESTRIKER_REVIEWERS</font>&nbsp;=&nbsp;<font color="#ffa500">'</font><font color="#ff0000">engineering@localhost.localdomain</font><font color="#ffa500">'</font>;<BR>
+<font color="#0000ff">$CODESTRIKER_CC</font>&nbsp;=&nbsp;<font color="#ffa500">''</font>;<BR>
+<BR>
+<font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Subroutines</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<b>sub&nbsp;</b><font color="#007f00">format_names</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@files</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@lines</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$lines</font>[0]&nbsp;=&nbsp;<font color="#007f00">sprintf</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;%-08s</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$dir</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>foreach</b>&nbsp;<font color="#0000ff">$file</font>&nbsp;(<font color="#0000ff">@files</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#007f00">length</font>(<font color="#0000ff">$lines</font>[<font color="#0000ff">$#lines</font>])&nbsp;+&nbsp;<font color="#007f00">length</font>(<font color="#0000ff">$file</font>)&nbsp;&gt;&nbsp;<font color="#00007f">60</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$lines</font>[++<font color="#0000ff">$#lines</font>]&nbsp;=&nbsp;<font color="#007f00">sprintf</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;</font><font color="#0000ff">%8s</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$lines</font>[<font color="#0000ff">$#lines</font>]&nbsp;.=&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">"</font>.<font color="#0000ff">$file</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@lines</font>;<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">cleanup_tmpfiles</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@files</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">opendir</font>(DIR,&nbsp;<font color="#0000ff">$TMPDIR</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@files</font>,&nbsp;<font color="#007f00">grep</font>(<font color="#ffa500">/</font><font color="#ff00ff">^$</font><font color="#b03060">{FILE_PREFIX}.</font><font color="#ff00ff">*</font><font color="#b03060">\.</font><font color="#ff00ff">$</font><font color="#b03060">{id}</font><font color="#ff00ff">$</font><font color="#ffa500">/</font>,&nbsp;<font color="#007f00">readdir</font>(DIR)));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">closedir</font>(DIR);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>foreach</b>&nbsp;(<font color="#0000ff">@files</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">unlink</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$TMPDIR</font><font color="#ff0000">/</font><font color="#0000ff"><b>$_</b></font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">write_logfile</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">@lines</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&gt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>&nbsp;(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;log&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(FILE&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@lines</font>),&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">append_to_file</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@files</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">@files</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@lines</font>)&nbsp;=&nbsp;&amp;format_names(<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@files</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&gt;&gt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>&nbsp;(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(FILE&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@lines</font>),&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">write_line</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">$line</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&gt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(FILE&nbsp;<font color="#0000ff">$line</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">append_line</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">$line</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&gt;&gt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(FILE&nbsp;<font color="#0000ff">$line</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">read_line</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$line</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&lt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$line</font>&nbsp;=&nbsp;<b>&lt;FILE&gt;</b>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>(<font color="#0000ff">$line</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$line</font>;<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">read_file</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">$leader</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@text</font>)&nbsp;=&nbsp;();<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&lt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<b>return</b>&nbsp;();<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<b>&lt;FILE&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#007f00">sprintf</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;%-10s&nbsp;&nbsp;</font><font color="#0000ff">%s</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$leader</font>,&nbsp;<font color="#0000ff"><b>$_</b></font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$leader</font>&nbsp;=&nbsp;<font color="#ffa500">""</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@text</font>;<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">read_logfile</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$filename</font>,&nbsp;<font color="#0000ff">$leader</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@text</font>)&nbsp;=&nbsp;();<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(FILE,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&lt;</font><font color="#0000ff">$filename</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">die</font>&nbsp;(<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;log&nbsp;file&nbsp;</font><font color="#0000ff">$filename</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<b>&lt;FILE&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#0000ff">$leader</font>.<font color="#0000ff"><b>$_</b></font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(FILE);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@text</font>;<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;do&nbsp;an&nbsp;'cvs&nbsp;-Qn&nbsp;status'&nbsp;on&nbsp;each&nbsp;file&nbsp;in&nbsp;the&nbsp;arguments,&nbsp;and&nbsp;extract&nbsp;info.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>sub&nbsp;</b><font color="#007f00">change_summary</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$out</font>,&nbsp;<font color="#0000ff">@filenames</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@revline</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$file</font>,&nbsp;<font color="#0000ff">$rev</font>,&nbsp;<font color="#0000ff">$rcsfile</font>,&nbsp;<font color="#0000ff">$line</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<font color="#0000ff">@filenames</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$file</font>&nbsp;=&nbsp;<font color="#007f00">shift</font>&nbsp;<font color="#0000ff">@filenames</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">"</font><font color="#0000ff">$file</font><font color="#ffa500">"</font>&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#ffa500">""</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>next</b>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(RCS,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-|</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">exec</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$CVSBIN</font><font color="#ff0000">/cvs</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">-Qn</font><font color="#ffa500">'</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">status</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">$file</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rev</font>&nbsp;=&nbsp;<font color="#ffa500">""</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$delta</font>&nbsp;=&nbsp;<font color="#ffa500">""</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rcsfile</font>&nbsp;=&nbsp;<font color="#ffa500">""</font>;<BR>
+<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<b>&lt;RCS&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^[</font><font color="#007f00">&nbsp;\t</font><font color="#ff00ff">]*</font><font color="#b03060">Repository&nbsp;revision</font><font color="#ffa500">/</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@revline</font>&nbsp;=&nbsp;<font color="#007f00">split</font>(<font color="#ffa500">'</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff"><b>$_</b></font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rev</font>&nbsp;=&nbsp;<font color="#0000ff">$revline</font>[<font color="#00007f">2</font>];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rcsfile</font>&nbsp;=&nbsp;<font color="#0000ff">$revline</font>[<font color="#00007f">3</font>];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rcsfile</font>&nbsp;=~&nbsp;<font color="#ffa500">s,</font><font color="#ff00ff">^</font><font color="#0000ff">$CVSROOT</font><font color="#b03060">/</font><font color="#ffa500">,,</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$rcsfile</font>&nbsp;=~&nbsp;<font color="#ffa500">s/</font><font color="#b03060">,v</font><font color="#ff00ff">$</font><font color="#ffa500">//</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(RCS);<BR>
+<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$rev</font>&nbsp;<font color="#ffa500">ne</font>&nbsp;<font color="#ffa500">''</font>&nbsp;&amp;&amp;&nbsp;<font color="#0000ff">$rcsfile</font>&nbsp;<font color="#ffa500">ne</font>&nbsp;<font color="#ffa500">''</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(RCS,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-|</font><font color="#ffa500">"</font>)&nbsp;||&nbsp;<font color="#007f00">exec</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$CVSBIN</font><font color="#ff0000">/cvs</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">-Qn</font><font color="#ffa500">'</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">log</font><font color="#ffa500">'</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-r</font><font color="#0000ff">$rev</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$file</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<b>&lt;RCS&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">date:</font><font color="#ffa500">/</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$delta</font>&nbsp;=&nbsp;<font color="#0000ff"><b>$_</b></font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$delta</font>&nbsp;=~&nbsp;<font color="#ffa500">s/</font><font color="#ff00ff">^</font><font color="#b03060">.</font><font color="#ff00ff">*</font><font color="#b03060">;</font><font color="#ffa500">//</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$delta</font>&nbsp;=~&nbsp;<font color="#ffa500">s/</font><font color="#ff00ff">^[</font><font color="#007f00">\s</font><font color="#ff00ff">]+</font><font color="#b03060">lines:</font><font color="#ffa500">//</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(RCS);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$diff</font>&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n\n</font><font color="#ffa500">"</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Get&nbsp;the&nbsp;differences&nbsp;between&nbsp;this&nbsp;and&nbsp;the&nbsp;previous&nbsp;revision,</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;being&nbsp;aware&nbsp;that&nbsp;new&nbsp;files&nbsp;always&nbsp;have&nbsp;revision&nbsp;'1.1'&nbsp;and</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;new&nbsp;branches&nbsp;always&nbsp;end&nbsp;in&nbsp;'.n.1'.</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$rev</font>&nbsp;=~&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^(</font><font color="#b03060">.</font><font color="#ff00ff">*)</font><font color="#b03060">\.</font><font color="#ff00ff">([</font><font color="#007f00">0-9</font><font color="#ff00ff">]+)$</font><font color="#ffa500">/</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$prev</font>&nbsp;=&nbsp;<font color="#0000ff"><b>$2</b></font>&nbsp;<font color="#ffa500">-</font>&nbsp;<font color="#00007f">1</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$prev_rev</font>&nbsp;=&nbsp;<font color="#0000ff"><b>$1</b></font>&nbsp;.&nbsp;<font color="#ffa500">'</font><font color="#ff0000">.</font><font color="#ffa500">'</font>&nbsp;.&nbsp;&nbsp;<font color="#0000ff">$prev</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$prev_rev</font>&nbsp;=~&nbsp;<font color="#ffa500">s/</font><font color="#b03060">\.</font><font color="#ff00ff">[</font><font color="#007f00">0-9</font><font color="#ff00ff">]+</font><font color="#b03060">\.0</font><font color="#ff00ff">$</font><font color="#ffa500">//</font>;<font color="#7f7f7f"><i>#&nbsp;Truncate&nbsp;if&nbsp;first&nbsp;rev&nbsp;on&nbsp;branch</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(DIFF,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-|</font><font color="#ffa500">"</font>)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;||&nbsp;<font color="#007f00">exec</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$CVSBIN</font><font color="#ff0000">/cvs</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">-Qn</font><font color="#ffa500">'</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">diff</font><font color="#ffa500">'</font>,&nbsp;<font color="#ffa500">'</font><font color="#ff0000">-uN</font><font color="#ffa500">'</font>,<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-r</font><font color="#0000ff">$prev_rev</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">-r</font><font color="#0000ff">$rev</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$file</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<b>&lt;DIFF&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$diff</font>&nbsp;.=&nbsp;<font color="#0000ff"><b>$_</b></font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(DIFF);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$diff</font>&nbsp;.=&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;}<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;append_line(<font color="#0000ff">$out</font>,&nbsp;<font color="#0000ff">$diff</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">build_header</font>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$header</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">delete</font>&nbsp;<font color="#0000ff"><b>$ENV</b></font>{<font color="#ffa500">'</font><font color="#ff0000">TZ</font><font color="#ffa500">'</font>};<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$sec</font>,<font color="#0000ff">$min</font>,<font color="#0000ff">$hour</font>,<font color="#0000ff">$mday</font>,<font color="#0000ff">$mon</font>,<font color="#0000ff">$year</font>)&nbsp;=&nbsp;<font color="#007f00">localtime</font>(<font color="#007f00">time</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$header</font>&nbsp;=&nbsp;<font color="#007f00">sprintf</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;User:&nbsp;%-8s</font><font color="#ff00ff">\n</font><font color="#ff0000">&nbsp;&nbsp;Date:&nbsp;</font><font color="#0000ff">%02d</font><font color="#ff0000">/</font><font color="#0000ff">%02d</font><font color="#ff0000">/</font><font color="#0000ff">%02d</font><font color="#ff0000">&nbsp;</font><font color="#0000ff">%02d</font><font color="#ff0000">:</font><font color="#0000ff">%02d</font><font color="#ff0000">:</font><font color="#0000ff">%02d</font><font color="#ffa500">"</font>,<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$cvs_user</font>,&nbsp;<font color="#0000ff">$year%100</font>,&nbsp;<font color="#0000ff">$mon</font>+<font color="#00007f">1</font>,&nbsp;<font color="#0000ff">$mday</font>,<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$hour</font>,&nbsp;<font color="#0000ff">$min</font>,&nbsp;<font color="#0000ff">$sec</font>);<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;!!!&nbsp;Mailing-list&nbsp;and&nbsp;history&nbsp;file&nbsp;mappings&nbsp;here&nbsp;!!!</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>sub&nbsp;</b><font color="#007f00">mlist_map</font><BR>
+{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$path</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$path</font>&nbsp;=~&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^([^</font><font color="#007f00">\/</font><font color="#ff00ff">]+)</font><font color="#ffa500">/</font>)&nbsp;{&nbsp;<b>return</b>&nbsp;<font color="#0000ff"><b>$1</b></font>;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>else</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<b>return</b>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">apache</font><font color="#ffa500">'</font>;&nbsp;}<BR>
+}&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">do_changes_file</font><BR>
+{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$category</font>,&nbsp;<font color="#0000ff">@text</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$changes</font>);<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$changes</font>&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$CVSROOT</font><font color="#ff0000">/CVSROOT/commitlogs/</font><font color="#0000ff">$category</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#007f00">open</font>(CHANGES,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&gt;&gt;</font><font color="#0000ff">$changes</font><font color="#ffa500">"</font>))&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(CHANGES&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@text</font>),&nbsp;<font color="#ffa500">"</font><font color="#ff00ff">\n\n</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(CHANGES);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>else</b>&nbsp;{&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">warn</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Cannot&nbsp;open&nbsp;</font><font color="#0000ff">$changes</font><font color="#ff0000">:&nbsp;</font><font color="#0000ff"><b>$!</b></font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<b>sub&nbsp;</b><font color="#007f00">mail_notification</font><BR>
+{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@text</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"Mailing&nbsp;the&nbsp;commit&nbsp;message...\n";</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">open</font>(MAIL,&nbsp;<font color="#0000ff">$MAIL_CMD</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>&nbsp;MAIL&nbsp;<font color="#ffa500">"</font><font color="#ff0000">From:&nbsp;</font><font color="#0000ff">$MAIL_FROM</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>&nbsp;MAIL&nbsp;<font color="#ffa500">"</font><font color="#ff0000">To:&nbsp;</font><font color="#0000ff">$MAIL_TO</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>&nbsp;MAIL&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Subject:&nbsp;</font><font color="#0000ff">$SUBJECT_PRE</font><font color="#ff0000">&nbsp;</font><font color="#0000ff"><b>$ARGV</b></font><font color="#ff0000">[0]</font><font color="#ff00ff">\n\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>(MAIL&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@text</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">close</font>(MAIL);<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#&nbsp;Create&nbsp;a&nbsp;Codestriker&nbsp;topic.&nbsp;&nbsp;The&nbsp;topic&nbsp;title&nbsp;will&nbsp;be&nbsp;the</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;first&nbsp;line&nbsp;of&nbsp;the&nbsp;log&nbsp;message&nbsp;prefixed&nbsp;with&nbsp;"CVS&nbsp;commit:&nbsp;".</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;The&nbsp;topic&nbsp;description&nbsp;is&nbsp;the&nbsp;entire&nbsp;log&nbsp;message.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Return&nbsp;the&nbsp;URL&nbsp;of&nbsp;the&nbsp;created&nbsp;topic&nbsp;if&nbsp;successful,&nbsp;otherwise</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;undef.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>sub&nbsp;</b><font color="#007f00">codestriker_create_topic</font><BR>
+{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$user</font>,&nbsp;<font color="#0000ff">$log_ref</font>,&nbsp;<font color="#0000ff">$diff_ref</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@log</font>)&nbsp;=&nbsp;<font color="#0000ff">@</font>{<font color="#0000ff">$log_ref</font>};<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@diff</font>)&nbsp;=&nbsp;<font color="#0000ff">@</font>{<font color="#0000ff">$diff_ref</font>};<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$topic_title</font>&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#ff0000">CVS&nbsp;commit:&nbsp;</font><font color="#ffa500">"</font>&nbsp;.<font color="#0000ff">$log</font>[0];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$topic_description</font>&nbsp;=&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@log</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$bug_ids</font>&nbsp;=&nbsp;<font color="#0000ff">$topic_description</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Truncate&nbsp;the&nbsp;title&nbsp;if&nbsp;necessary.</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#007f00">length</font>(<font color="#0000ff">$topic_title</font>)&nbsp;&gt;&nbsp;<font color="#00007f">57</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$topic_title</font>&nbsp;=&nbsp;<font color="#007f00">substr</font>(<font color="#0000ff">$topic_title</font>,&nbsp;0,&nbsp;<font color="#00007f">57</font>)&nbsp;.&nbsp;<font color="#ffa500">"</font><font color="#ff0000">...</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Check&nbsp;for&nbsp;any&nbsp;matching&nbsp;Bug&nbsp;id&nbsp;text.</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">@bugs</font>&nbsp;=&nbsp;();<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$bug_ids</font>&nbsp;=~&nbsp;<font color="#ffa500">s/</font><font color="#b03060">.</font><font color="#ff00ff">*[</font><font color="#007f00">Bb</font><font color="#ff00ff">][</font><font color="#007f00">Uu</font><font color="#ff00ff">][</font><font color="#007f00">Gg</font><font color="#ff00ff">]</font><font color="#b03060">:</font><font color="#ff00ff">?(</font><font color="#007f00">\d</font><font color="#ff00ff">+)\b</font><font color="#b03060">.</font><font color="#ff00ff">*</font><font color="#ffa500">/</font><font color="#0000ff"><b>$1</b></font><font color="#ff0000">&nbsp;</font><font color="#ffa500">/g</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<font color="#0000ff">$bug_ids</font>&nbsp;=~&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">\b[</font><font color="#007f00">Bb</font><font color="#ff00ff">][</font><font color="#007f00">Uu</font><font color="#ff00ff">][</font><font color="#007f00">Gg</font><font color="#ff00ff">]</font><font color="#b03060">:</font><font color="#ff00ff">?</font><font color="#007f00">\s</font><font color="#ff00ff">*(</font><font color="#007f00">\d</font><font color="#ff00ff">+)\b</font><font color="#ffa500">/g</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;<font color="#0000ff">@bugs</font>,&nbsp;<font color="#0000ff"><b>$1</b></font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>my</b>&nbsp;<font color="#0000ff">$client</font>&nbsp;=&nbsp;CodestrikerClient-&gt;new(<font color="#0000ff">$CODESTRIKER_URL</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b>&nbsp;<font color="#0000ff">$client</font>-&gt;<font color="#0000ff">create_topic</font>({<BR>
+&nbsp;&nbsp;&nbsp;topic_title&nbsp;=&gt;&nbsp;<font color="#0000ff">$topic_title</font>,<BR>
+&nbsp;&nbsp;&nbsp;topic_description&nbsp;=&gt;&nbsp;<font color="#0000ff">$topic_description</font>,<BR>
+&nbsp;&nbsp;&nbsp;project_name&nbsp;=&gt;&nbsp;<font color="#0000ff">$CODESTRIKER_PROJECT</font>,<BR>
+&nbsp;&nbsp;&nbsp;repository&nbsp;=&gt;&nbsp;<font color="#0000ff">$CODESTRIKER_REPOSITORY</font>,<BR>
+&nbsp;&nbsp;&nbsp;bug_ids&nbsp;=&gt;&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff0000">,&nbsp;</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@bugs</font>),<BR>
+&nbsp;&nbsp;&nbsp;email&nbsp;=&gt;&nbsp;<font color="#0000ff">$MAIL_FROM</font>,<BR>
+&nbsp;&nbsp;&nbsp;reviewers&nbsp;=&gt;&nbsp;<font color="#0000ff">$CODESTRIKER_REVIEWERS</font>,<BR>
+&nbsp;&nbsp;&nbsp;cc&nbsp;=&gt;&nbsp;<font color="#0000ff">$CODESTRIKER_CC</font>,<BR>
+&nbsp;&nbsp;&nbsp;topic_text&nbsp;=&gt;&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@diff</font>)<BR>
+&nbsp;&nbsp;&nbsp;});<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>##&nbsp;process&nbsp;the&nbsp;command&nbsp;line&nbsp;arguments&nbsp;sent&nbsp;to&nbsp;this&nbsp;script</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>##&nbsp;it&nbsp;returns&nbsp;an&nbsp;array&nbsp;of&nbsp;files,&nbsp;%s,&nbsp;sent&nbsp;from&nbsp;the&nbsp;loginfo</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>##&nbsp;command</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>sub&nbsp;</b><font color="#007f00">process_argv</font><BR>
+{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@argv</font>)&nbsp;=&nbsp;<font color="#0000ff">@_</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">@files</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>local</b>(<font color="#0000ff">$arg</font>);<BR>
+<font color="#7f7f7f"><i>#&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"Processing&nbsp;log&nbsp;script&nbsp;arguments...\n";</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>while</b>&nbsp;(<font color="#0000ff">@argv</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$arg</font>&nbsp;=&nbsp;<font color="#007f00">shift</font>&nbsp;<font color="#0000ff">@argv</font>;<BR>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$arg</font>&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#ffa500">'</font><font color="#ff0000">-u</font><font color="#ffa500">'</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$cvs_user</font>&nbsp;=&nbsp;<font color="#007f00">shift</font>&nbsp;<font color="#0000ff">@argv</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<b>else</b>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<font color="#0000ff">$donefiles</font>)&nbsp;&amp;&amp;&nbsp;<font color="#007f00">die</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Too&nbsp;many&nbsp;arguments!</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$donefiles</font>&nbsp;=&nbsp;<font color="#00007f">1</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff"><b>$ARGV</b></font>[0]&nbsp;=&nbsp;<font color="#0000ff">$arg</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@files</font>&nbsp;=&nbsp;<font color="#007f00">split</font>(<font color="#ffa500">'</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">$arg</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b>&nbsp;<font color="#0000ff">@files</font>;<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Main&nbsp;Body</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>############################################################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Setup&nbsp;environment</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#007f00">umask</font>&nbsp;(002);<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Initialize&nbsp;basic&nbsp;variables</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$id</font>&nbsp;=&nbsp;<font color="#007f00">getpgrp</font>();<BR>
+<font color="#0000ff">$state</font>&nbsp;=&nbsp;<font color="#0000ff">$STATE_NONE</font>;<BR>
+<font color="#0000ff">$cvs_user</font>&nbsp;=&nbsp;<font color="#0000ff"><b>$ENV</b></font>{<font color="#ffa500">'</font><font color="#ff0000">USER</font><font color="#ffa500">'</font>}&nbsp;||&nbsp;<font color="#007f00">getlogin</font>&nbsp;||&nbsp;(<font color="#007f00">getpwuid</font>(<font color="#0000ff"><b>$&lt;</b></font>))[0]&nbsp;||&nbsp;<font color="#007f00">sprintf</font>(<font color="#ffa500">"</font><font color="#ff0000">uid#</font><font color="#0000ff">%d</font><font color="#ffa500">"</font>,<font color="#0000ff"><b>$&lt;</b></font>);<BR>
+<font color="#0000ff">@files</font>&nbsp;=&nbsp;process_argv(<font color="#0000ff"><b>@ARGV</b></font>);<BR>
+<font color="#0000ff">@path</font>&nbsp;=&nbsp;<font color="#007f00">split</font>(<font color="#ffa500">'</font><font color="#ff0000">/</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">$files</font>[0]);<BR>
+<font color="#0000ff">$repository</font>&nbsp;=&nbsp;<font color="#0000ff">$path</font>[0];<BR>
+<b>if</b>&nbsp;(<font color="#0000ff">$#path</font>&nbsp;==&nbsp;0)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$dir</font>&nbsp;=&nbsp;<font color="#ffa500">"</font><font color="#ff0000">.</font><font color="#ffa500">"</font>;<BR>
+}&nbsp;<b>else</b>&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$dir</font>&nbsp;=&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">'</font><font color="#ff0000">/</font><font color="#ffa500">'</font>,&nbsp;<font color="#0000ff">@path</font>[<font color="#00007f">1.</font>.<font color="#0000ff">$#path</font>]);<BR>
+}<BR>
+<font color="#7f7f7f"><i>#print("ARGV&nbsp;&nbsp;-&nbsp;",&nbsp;join(":",&nbsp;@ARGV),&nbsp;"\n");</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#print("files&nbsp;-&nbsp;",&nbsp;join(":",&nbsp;@files),&nbsp;"\n");</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#print("path&nbsp;&nbsp;-&nbsp;",&nbsp;join(":",&nbsp;@path),&nbsp;"\n");</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#print("dir&nbsp;&nbsp;&nbsp;-&nbsp;",&nbsp;$dir,&nbsp;"\n");</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#print("id&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;",&nbsp;$id,&nbsp;"\n");</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Map&nbsp;the&nbsp;repository&nbsp;directory&nbsp;to&nbsp;a&nbsp;name&nbsp;for&nbsp;commitlogs.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$mlist</font>&nbsp;=&nbsp;&amp;mlist_map(<font color="#0000ff">$files</font>[0]);<BR>
+<BR>
+<font color="#7f7f7f"><i>##########################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Uncomment&nbsp;the&nbsp;following&nbsp;if&nbsp;we&nbsp;ever&nbsp;have&nbsp;per-repository&nbsp;cvs&nbsp;mail</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<font color="#7f7f7f"><i>#&nbsp;if&nbsp;(defined($mlist))&nbsp;{</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$MAIL_TO&nbsp;=&nbsp;$mlist&nbsp;.&nbsp;'-cvs';</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;else&nbsp;{&nbsp;undef&nbsp;$MAIL_TO;&nbsp;}</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+<font color="#7f7f7f"><i>##########################</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Check&nbsp;for&nbsp;a&nbsp;new&nbsp;directory&nbsp;first.&nbsp;&nbsp;This&nbsp;will&nbsp;always&nbsp;appear&nbsp;as&nbsp;a</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;single&nbsp;item&nbsp;in&nbsp;the&nbsp;argument&nbsp;list,&nbsp;and&nbsp;an&nbsp;empty&nbsp;log&nbsp;message.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>if</b>&nbsp;(<font color="#0000ff"><b>$ARGV</b></font>[0]&nbsp;=~&nbsp;<font color="#ffa500">/</font><font color="#b03060">New&nbsp;directory</font><font color="#ffa500">/</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$header</font>&nbsp;=&nbsp;&amp;build_header;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@text</font>&nbsp;=&nbsp;();<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#0000ff">$header</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">""</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;</font><font color="#ffa500">"</font>.<font color="#0000ff"><b>$ARGV</b></font>[0]);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&amp;do_changes_file(<font color="#0000ff">$mlist</font>,&nbsp;<font color="#0000ff">@text</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&amp;mail_notification(<font color="#0000ff">@text</font>)&nbsp;<b>if</b>&nbsp;<font color="#007f00">defined</font>(<font color="#0000ff">$MAIL_TO</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">exit</font>&nbsp;0;<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Iterate&nbsp;over&nbsp;the&nbsp;body&nbsp;of&nbsp;the&nbsp;message&nbsp;collecting&nbsp;information.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>while</b>&nbsp;(<b>&lt;STDIN&gt;</b>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">chomp</font>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;Drop&nbsp;the&nbsp;newline</i></font><font color="#7f7f7f"><i><BR>
+</i></font><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Revision\/Branch:</font><font color="#ffa500">/</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">s,</font><font color="#ff00ff">^</font><font color="#b03060">Revision/Branch:</font><font color="#ffa500">,,</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;(<font color="#0000ff">@branch_lines</font>,&nbsp;<font color="#007f00">split</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>next</b>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<font color="#7f7f7f"><i>#&nbsp;&nbsp;&nbsp;&nbsp;next&nbsp;if&nbsp;(/^[&nbsp;\t]+Tag:/&nbsp;&amp;&amp;&nbsp;$state&nbsp;!=&nbsp;$STATE_LOG);</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Modified&nbsp;Files</font><font color="#ffa500">/</font>)&nbsp;{&nbsp;<font color="#0000ff">$state</font>&nbsp;=&nbsp;<font color="#0000ff">$STATE_CHANGED</font>;&nbsp;<b>next</b>;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Added&nbsp;Files</font><font color="#ffa500">/</font>)&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<font color="#0000ff">$state</font>&nbsp;=&nbsp;<font color="#0000ff">$STATE_ADDED</font>;&nbsp;&nbsp;&nbsp;<b>next</b>;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Removed&nbsp;Files</font><font color="#ffa500">/</font>)&nbsp;&nbsp;{&nbsp;<font color="#0000ff">$state</font>&nbsp;=&nbsp;<font color="#0000ff">$STATE_REMOVED</font>;&nbsp;<b>next</b>;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Log&nbsp;Message</font><font color="#ffa500">/</font>)&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<font color="#0000ff">$state</font>&nbsp;=&nbsp;<font color="#0000ff">$STATE_LOG</font>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>next</b>;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">s/</font><font color="#ff00ff">[</font><font color="#007f00">&nbsp;\t\n</font><font color="#ff00ff">]+$</font><font color="#ffa500">//</font>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;delete&nbsp;trailing&nbsp;space</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;(<font color="#0000ff">@changed_files</font>,&nbsp;<font color="#007f00">split</font>)&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$state</font>&nbsp;==&nbsp;<font color="#0000ff">$STATE_CHANGED</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;(<font color="#0000ff">@added_files</font>,&nbsp;&nbsp;&nbsp;<font color="#007f00">split</font>)&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$state</font>&nbsp;==&nbsp;<font color="#0000ff">$STATE_ADDED</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;(<font color="#0000ff">@removed_files</font>,&nbsp;<font color="#007f00">split</font>)&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$state</font>&nbsp;==&nbsp;<font color="#0000ff">$STATE_REMOVED</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$state</font>&nbsp;==&nbsp;<font color="#0000ff">$STATE_LOG</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">PR:</font><font color="#ff00ff">$</font><font color="#ffa500">/i</font>&nbsp;||<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Reviewed&nbsp;by:</font><font color="#ff00ff">$</font><font color="#ffa500">/i</font>&nbsp;||<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Submitted&nbsp;by:</font><font color="#ff00ff">$</font><font color="#ffa500">/i</font>&nbsp;||<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffa500">/</font><font color="#ff00ff">^</font><font color="#b03060">Obtained&nbsp;from:</font><font color="#ff00ff">$</font><font color="#ffa500">/i</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>next</b>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>&nbsp;(<font color="#0000ff">@log_lines</font>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff"><b>$_</b></font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Strip&nbsp;leading&nbsp;and&nbsp;trailing&nbsp;blank&nbsp;lines&nbsp;from&nbsp;the&nbsp;log&nbsp;message.&nbsp;&nbsp;Also</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;compress&nbsp;multiple&nbsp;blank&nbsp;lines&nbsp;in&nbsp;the&nbsp;body&nbsp;of&nbsp;the&nbsp;message&nbsp;down&nbsp;to&nbsp;a</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;single&nbsp;blank&nbsp;line.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;(</i></font><font color="#0000ff">Note</font><font color="#7f7f7f"><i>,&nbsp;this&nbsp;only&nbsp;does&nbsp;the&nbsp;mail&nbsp;and&nbsp;changes&nbsp;log,&nbsp;not&nbsp;the&nbsp;rcs&nbsp;log).</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>while</b>&nbsp;(<font color="#0000ff">$#log_lines</font>&nbsp;&gt;&nbsp;<font color="#00007f">-1</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$log_lines</font>[0]&nbsp;<font color="#ffa500">ne</font>&nbsp;<font color="#ffa500">""</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">shift</font>(<font color="#0000ff">@log_lines</font>);<BR>
+}<BR>
+<b>while</b>&nbsp;(<font color="#0000ff">$#log_lines</font>&nbsp;&gt;&nbsp;<font color="#00007f">-1</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$log_lines</font>[<font color="#0000ff">$#log_lines</font>]&nbsp;<font color="#ffa500">ne</font>&nbsp;<font color="#ffa500">""</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">pop</font>(<font color="#0000ff">@log_lines</font>);<BR>
+}<BR>
+<b>for</b>&nbsp;(<font color="#0000ff">$i</font>&nbsp;=&nbsp;<font color="#0000ff">$#log_lines</font>;&nbsp;<font color="#0000ff">$i</font>&nbsp;&gt;&nbsp;0;&nbsp;<font color="#0000ff">$i</font>--)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;((<font color="#0000ff">$log_lines</font>[<font color="#0000ff">$i</font>&nbsp;<font color="#ffa500">-</font>&nbsp;<font color="#00007f">1</font>]&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#ffa500">""</font>)&nbsp;&amp;&amp;&nbsp;(<font color="#0000ff">$log_lines</font>[<font color="#0000ff">$i</font>]&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#ffa500">""</font>))&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">splice</font>(<font color="#0000ff">@log_lines</font>,&nbsp;<font color="#0000ff">$i</font>,&nbsp;<font color="#00007f">1</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Find&nbsp;the&nbsp;log&nbsp;file&nbsp;that&nbsp;matches&nbsp;this&nbsp;log&nbsp;message</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>for</b>&nbsp;(<font color="#0000ff">$i</font>&nbsp;=&nbsp;0;&nbsp;;&nbsp;<font color="#0000ff">$i</font>++)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(!&nbsp;<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$LOG_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">@text</font>&nbsp;=&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$LOG_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">""</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$#text</font>&nbsp;==&nbsp;<font color="#00007f">-1</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@log_lines</font>)&nbsp;<font color="#ffa500">eq</font>&nbsp;<font color="#007f00">join</font>(<font color="#ffa500">"</font><font color="#ff0000">&nbsp;</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@text</font>));<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Spit&nbsp;out&nbsp;the&nbsp;information&nbsp;gathered&nbsp;in&nbsp;this&nbsp;pass.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&amp;write_logfile(<font color="#ffa500">"</font><font color="#0000ff">$LOG_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">@log_lines</font>);<BR>
+&amp;append_to_file(<font color="#ffa500">"</font><font color="#0000ff">$BRANCH_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;&nbsp;<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@branch_lines</font>);<BR>
+&amp;append_to_file(<font color="#ffa500">"</font><font color="#0000ff">$ADDED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;&nbsp;&nbsp;<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@added_files</font>);<BR>
+&amp;append_to_file(<font color="#ffa500">"</font><font color="#0000ff">$CHANGED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@changed_files</font>);<BR>
+&amp;append_to_file(<font color="#ffa500">"</font><font color="#0000ff">$REMOVED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#0000ff">$dir</font>,&nbsp;<font color="#0000ff">@removed_files</font>);<BR>
+<b>if</b>&nbsp;(<font color="#0000ff">$rcsidinfo</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&amp;change_summary(<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<font color="#0000ff">@changed_files</font>,&nbsp;<font color="#0000ff">@added_files</font>,&nbsp;<font color="#0000ff">@removed_files</font>));<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Check&nbsp;whether&nbsp;this&nbsp;is&nbsp;the&nbsp;last&nbsp;directory.&nbsp;&nbsp;If&nbsp;not,&nbsp;quit.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>if</b>&nbsp;(<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$LAST_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;<font color="#0000ff"><b>$_</b></font>&nbsp;=&nbsp;&amp;read_line(<font color="#ffa500">"</font><font color="#0000ff">$LAST_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;<font color="#0000ff">$tmpfiles</font>&nbsp;=&nbsp;<font color="#0000ff">$files</font>[0];<BR>
+&nbsp;&nbsp;&nbsp;<font color="#0000ff">$tmpfiles</font>&nbsp;=~&nbsp;<font color="#ffa500">s,</font><font color="#ff00ff">([^</font><font color="#007f00">a-zA-Z0-9_/</font><font color="#ff00ff">])</font><font color="#ffa500">,</font><font color="#ff0000">\\</font><font color="#0000ff"><b>$1</b></font><font color="#ffa500">,g</font>;<BR>
+&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(!&nbsp;<font color="#007f00">grep</font>(<font color="#ffa500">/</font><font color="#0000ff">$tmpfiles</font><font color="#ff00ff">$</font><font color="#ffa500">/</font>,&nbsp;<font color="#0000ff"><b>$_</b></font>))&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">print</font>&nbsp;<font color="#ffa500">"</font><font color="#ff0000">More&nbsp;commits&nbsp;to&nbsp;come...</font><font color="#ff00ff">\n</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">exit</font>&nbsp;0<BR>
+&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;This&nbsp;is&nbsp;it.&nbsp;&nbsp;The&nbsp;commits&nbsp;are&nbsp;all&nbsp;finished.&nbsp;&nbsp;Lump&nbsp;everything&nbsp;together</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;into&nbsp;a&nbsp;single&nbsp;message,&nbsp;fire&nbsp;a&nbsp;copy&nbsp;off&nbsp;to&nbsp;the&nbsp;mailing&nbsp;list,&nbsp;and&nbsp;drop</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;it&nbsp;on&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;Changes&nbsp;file.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">$header</font>&nbsp;=&nbsp;&amp;build_header;<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Produce&nbsp;the&nbsp;final&nbsp;compilation&nbsp;of&nbsp;the&nbsp;log&nbsp;messages</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#0000ff">@text</font>&nbsp;=&nbsp;();<BR>
+<font color="#0000ff">@diff_text</font>&nbsp;=&nbsp;();<BR>
+<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#0000ff">$header</font>);<BR>
+<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">""</font>);<BR>
+<b>for</b>&nbsp;(<font color="#0000ff">$i</font>&nbsp;=&nbsp;0;&nbsp;;&nbsp;<font color="#0000ff">$i</font>++)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(!&nbsp;<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$LOG_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_file(<font color="#ffa500">"</font><font color="#0000ff">$BRANCH_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Branch:</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_file(<font color="#ffa500">"</font><font color="#0000ff">$CHANGED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Modified:</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_file(<font color="#ffa500">"</font><font color="#0000ff">$ADDED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Added:</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_file(<font color="#ffa500">"</font><font color="#0000ff">$REMOVED_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Removed:</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;Log:</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$LOG_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$rcsidinfo</font>&nbsp;==&nbsp;<font color="#00007f">2</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@diff_text</font>,&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">""</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;</font><font color="#ffa500">"</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">""</font>);<BR>
+}<BR>
+<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Append&nbsp;the&nbsp;log&nbsp;message&nbsp;to&nbsp;the&nbsp;commitlogs/&lt;module&gt;&nbsp;file</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&amp;do_changes_file(<font color="#0000ff">$mlist</font>,&nbsp;<font color="#0000ff">@text</font>);<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Now&nbsp;generate&nbsp;the&nbsp;extra&nbsp;info&nbsp;for&nbsp;the&nbsp;mail&nbsp;message..</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>if</b>&nbsp;(<font color="#0000ff">$rcsidinfo</font>&nbsp;==&nbsp;<font color="#00007f">1</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<font color="#0000ff">$revhdr</font>&nbsp;=&nbsp;0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>for</b>&nbsp;(<font color="#0000ff">$i</font>&nbsp;=&nbsp;0;&nbsp;;&nbsp;<font color="#0000ff">$i</font>++)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>last</b>&nbsp;<b>if</b>&nbsp;(!&nbsp;<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#ffa500">-e</font>&nbsp;<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(!<font color="#0000ff">$revhdr</font>++)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">Revision&nbsp;&nbsp;Changes&nbsp;&nbsp;&nbsp;&nbsp;Path</font><font color="#ffa500">"</font>);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">""</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@diff_text</font>,&nbsp;&amp;read_logfile(<font color="#ffa500">"</font><font color="#0000ff">$SUMMARY_FILE</font><font color="#ff0000">.</font><font color="#0000ff">$i</font><font color="#ff0000">.</font><font color="#0000ff">$id</font><font color="#ffa500">"</font>,&nbsp;<font color="#ffa500">""</font>));<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#0000ff">$revhdr</font>)&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#007f00">push</font>(<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">""</font>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#7f7f7f"><i>#&nbsp;consistancy...</i></font><font color="#7f7f7f"><i><BR>
+</i></font>&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+}<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Now&nbsp;create&nbsp;the&nbsp;Codestriker&nbsp;topic.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>my</b>&nbsp;<font color="#0000ff">$topic_url</font>&nbsp;=&nbsp;&amp;codestriker_create_topic(<font color="#0000ff">$cvs_user</font>,&nbsp;\<font color="#0000ff">@log_lines</font>,&nbsp;\<font color="#0000ff">@diff_text</font>);<BR>
+<BR>
+<font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#&nbsp;Mail&nbsp;out&nbsp;the&nbsp;notification.&nbsp;&nbsp;Prepend&nbsp;the&nbsp;topic&nbsp;url&nbsp;if&nbsp;it&nbsp;is&nbsp;defined.</i></font><font color="#7f7f7f"><i><BR>
+</i></font><font color="#7f7f7f"><i>#</i></font><font color="#7f7f7f"><i><BR>
+</i></font><b>if</b>&nbsp;(<font color="#007f00">defined</font>(<font color="#0000ff">$MAIL_TO</font>))&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b>&nbsp;(<font color="#007f00">defined</font>(<font color="#0000ff">$topic_url</font>))&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;<font color="#007f00">unshift</font>&nbsp;<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">""</font>;<BR>
+&nbsp;&nbsp;&nbsp;<font color="#007f00">unshift</font>&nbsp;<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;</font><font color="#0000ff">$topic_url</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;<font color="#007f00">unshift</font>&nbsp;<font color="#0000ff">@text</font>,&nbsp;<font color="#ffa500">"</font><font color="#ff0000">&nbsp;&nbsp;Created&nbsp;Codestriker&nbsp;topic&nbsp;at:</font><font color="#ffa500">"</font>;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&amp;mail_notification(<font color="#0000ff">@text</font>)&nbsp;<b>if</b>&nbsp;<font color="#007f00">defined</font>(<font color="#0000ff">$MAIL_TO</font>);<BR>
+}<BR>
+<BR>
+&amp;cleanup_tmpfiles;<BR>
+<font color="#007f00">exit</font>&nbsp;0;<BR>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<?xml version="1.0"?>
+<document>
+<title>log_accum.pl</title>
+<style>
+	<bgcolor value="eeeeee" />
+	<font size="8" family="Courier New" />
+	<class name="def" color="000000" bold="false" italic="false" underline="false" />
+	<class name="num" color="800080" bold="true" italic="false" underline="false" />
+	<class name="esc" color="ff00ff" bold="true" italic="false" underline="false" />
+	<class name="str" color="a68500" bold="false" italic="false" underline="false" />
+	<class name="dstr" color="0000ff" bold="false" italic="false" underline="false" />
+	<class name="slc" color="f27900" bold="false" italic="false" underline="false" />
+	<class name="com" color="ff8000" bold="false" italic="false" underline="false" />
+	<class name="dir" color="0080c0" bold="true" italic="false" underline="false" />
+	<class name="sym" color="ff0080" bold="true" italic="false" underline="false" />
+	<class name="line" color="303030" bold="false" italic="false" underline="false" />
+	<class name="kwa" color="bb7977" bold="true" italic="false" underline="false" />
+	<class name="kwb" color="8080c0" bold="true" italic="false" underline="false" />
+	<class name="kwc" color="0080c0" bold="false" italic="false" underline="false" />
+	<class name="kwd" color="004466" bold="false" italic="false" underline="false" />
+</style>
+<source>
+<def></def><slc>#!/usr/bin/perl</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Perl filter to handle the log messages from the checkin of files in</slc><br />
+<def></def><slc># a directory.  This script will group the lists of files by log</slc><br />
+<def></def><slc># message, and mail a single consolidated log message at the end of</slc><br />
+<def></def><slc># the commit.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># This file assumes a pre-commit checking program that leaves the</slc><br />
+<def></def><slc># names of the first and last commit directories in a temporary file.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Contributed by David Hampton &lt;hampton@cisco.com&gt;</slc><br />
+<def></def><slc># Roy Fielding removed useless code and added log/mail of new files</slc><br />
+<def></def><slc># Ken Coar added special processing (i.e., no diffs) for binary files</slc><br />
+<def></def><slc># Jon Stevens added a few new features and cleaned up some of the</slc><br />
+<def></def><slc># output</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># David Sitsky modified this slightly so that it also creates a new</slc><br />
+<def></def><slc># codestriker topic automatically.</slc><br />
+<def></def><br />
+<slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Setup instructions</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Create a directory $CVSROOT/commitlogs and allow</slc><br />
+<def></def><slc># the cvs process to write to it.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Edit the options below.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Configurable options</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Where do you want the RCS ID and delta info?</slc><br />
+<def></def><slc># 0 = none,</slc><br />
+<def></def><slc># 1 = in mail only,</slc><br />
+<def></def><slc># 2 = rcsids in both mail and logs.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwb>$rcsidinfo</kwb> <def></def><sym>=</sym> <def></def><num>2</num><def></def><sym>;</sym><br />
+<def></def><br />
+<slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Constants</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><kwb>$STATE_NONE</kwb>    <def></def><sym>=</sym> <def></def><num>0</num><def></def><sym>;</sym><br />
+<def></def><kwb>$STATE_CHANGED</kwb> <def></def><sym>=</sym> <def></def><num>1</num><def></def><sym>;</sym><br />
+<def></def><kwb>$STATE_ADDED</kwb>   <def></def><sym>=</sym> <def></def><num>2</num><def></def><sym>;</sym><br />
+<def></def><kwb>$STATE_REMOVED</kwb> <def></def><sym>=</sym> <def></def><num>3</num><def></def><sym>;</sym><br />
+<def></def><kwb>$STATE_LOG</kwb>     <def></def><sym>=</sym> <def></def><num>4</num><def></def><sym>;</sym><br />
+<def></def><br />
+<kwb>$TMPDIR</kwb>        <def></def><sym>=</sym> <def></def><kwb>$ENV</kwb><def></def><sym>{</sym><def></def><str>'TMPDIR'</str><def></def><sym>} ||</sym> <def></def><str>'/tmp'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$FILE_PREFIX</kwb>   <def></def><sym>=</sym> <def></def><str>'#cvs.'</str><def></def><sym>;</sym><br />
+<def></def><br />
+<kwb>$LAST_FILE</kwb>     <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}lastdir&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$CHANGED_FILE</kwb>  <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.changed&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$ADDED_FILE</kwb>    <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.added&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$REMOVED_FILE</kwb>  <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.removed&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$LOG_FILE</kwb>      <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.log&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$BRANCH_FILE</kwb>   <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.branch&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$SUMMARY_FILE</kwb>  <def></def><sym>=</sym> <def></def><str>&quot;$TMPDIR/${FILE_PREFIX}files.summary&quot;</str><def></def><sym>;</sym><br />
+<def></def><br />
+<kwb>$CVSROOT</kwb>       <def></def><sym>=</sym> <def></def><kwb>$ENV</kwb><def></def><sym>{</sym><def></def><str>'CVSROOT'</str><def></def><sym>};</sym><br />
+<def></def><br />
+<kwb>$CVSBIN</kwb>        <def></def><sym>=</sym> <def></def><str>'/usr/bin'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$PATH</kwb>          <def></def><sym>=</sym> <def></def><str>&quot;$PATH:/bin:/usr/bin&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$MAIL_CMD</kwb>      <def></def><sym>=</sym> <def></def><str>&quot;| /usr/lib/sendmail -i -t&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$MAIL_TO</kwb>       <def></def><sym>=</sym> <def></def><str>'engineering@localhost.localdomain'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$MAIL_FROM</kwb>     <def></def><sym>=</sym> <def></def><str>&quot;$ENV{'USER'}\@localhost.localdomain&quot;</str><def></def><sym>;</sym><br />
+<def></def><kwb>$SUBJECT_PRE</kwb>   <def></def><sym>=</sym> <def></def><str>'CVS update:'</str><def></def><sym>;</sym><br />
+<def></def><br />
+<slc># Codestriker-specific imports.</slc><br />
+<def></def><kwa>use</kwa> <def>lib</def> <str>'/var/www/codestriker-1.8.4/bin'</str><def></def><sym>;</sym><br />
+<def></def><kwa>use</kwa> <def></def><kwd>CodestrikerClient</kwd><def></def><sym>;</sym><br />
+<def></def><br />
+<slc># Codestriker specific parameters for topic creation.</slc><br />
+<def></def><kwb>$CODESTRIKER_URL</kwb> <def></def><sym>=</sym> <def></def><str>'http://localhost/codestriker/codestriker.pl'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$CODESTRIKER_PROJECT</kwb> <def></def><sym>=</sym> <def></def><str>'Project CVS'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$CODESTRIKER_REPOSITORY</kwb> <def></def><sym>=</sym> <def></def><str>'/var/lib/cvs'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$CODESTRIKER_REVIEWERS</kwb> <def></def><sym>=</sym> <def></def><str>'engineering@localhost.localdomain'</str><def></def><sym>;</sym><br />
+<def></def><kwb>$CODESTRIKER_CC</kwb> <def></def><sym>=</sym> <def></def><str>''</str><def></def><sym>;</sym><br />
+<def></def><br />
+<slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Subroutines</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><br />
+<kwa>sub</kwa> <def>format_names</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@files</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@lines</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+    <kwb>$lines</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>] =</sym> <def></def><kwd>sprintf</kwd><def></def><sym>(</sym><def></def><str>&quot; %-08s&quot;</str><def></def><sym>,</sym> <def></def><kwb>$dir</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwa>foreach</kwa> <def></def><kwb>$file</kwb> <def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwd>length</kwd><def></def><sym>(</sym><def></def><kwb>$lines</kwb><def></def><sym>[</sym><def></def><kwb>$#lines</kwb><def></def><sym>]) +</sym> <def></def><kwd>length</kwd><def></def><sym>(</sym><def></def><kwb>$file</kwb><def></def><sym>) &gt;</sym> <def></def><num>60</num><def></def><sym>) {</sym><br />
+<def></def>            <kwb>$lines</kwb><def></def><sym>[++</sym><def></def><kwb>$#lines</kwb><def></def><sym>] =</sym> <def></def><kwd>sprintf</kwd><def></def><sym>(</sym><def></def><str>&quot; %8s&quot;</str><def></def><sym>,</sym> <def></def><str>&quot; &quot;</str><def></def><sym>);</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>        <kwb>$lines</kwb><def></def><sym>[</sym><def></def><kwb>$#lines</kwb><def></def><sym>] .=</sym> <def></def><str>&quot; &quot;</str><def></def><sym>.</sym><def></def><kwb>$file</kwb><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwb>@lines</kwb><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>cleanup_tmpfiles</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+    <kwd>opendir</kwd><def></def><sym>(</sym><def>DIR</def><sym>,</sym> <def></def><kwb>$TMPDIR</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>,</sym> <def></def><kwd>grep</kwd><def></def><sym>(/^${</sym><def>FILE_PREFIX</def><sym>}.*</sym><def>\</def><sym>.${</sym><def>id</def><sym>}$/,</sym> <def></def><kwd>readdir</kwd><def></def><sym>(</sym><def>DIR</def><sym>)));</sym><br />
+<def></def>    <kwd>closedir</kwd><def></def><sym>(</sym><def>DIR</def><sym>);</sym><br />
+<def></def>    <kwa>foreach</kwa> <def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>) {</sym><br />
+<def>        unlink</def> <str>&quot;$TMPDIR/$_&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>write_logfile</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>@lines</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&gt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd> <def></def><sym>(</sym><def></def><str>&quot;Cannot open log file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwc>print</kwc><def></def><sym>(</sym><def>FILE</def> <kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@lines</kwb><def></def><sym>),</sym> <def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>append_to_file</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@files</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@lines</kwb><def></def><sym>) = &amp;</sym><def></def><kwd>format_names</kwd><def></def><sym>(</sym><def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@files</kwb><def></def><sym>);</sym><br />
+<def></def>        <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&gt;&gt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd> <def></def><sym>(</sym><def></def><str>&quot;Cannot open file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>        <kwc>print</kwc><def></def><sym>(</sym><def>FILE</def> <kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@lines</kwb><def></def><sym>),</sym> <def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>        <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>write_line</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>$line</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&gt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd><def></def><sym>(</sym><def></def><str>&quot;Cannot open file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwc>print</kwc><def></def><sym>(</sym><def>FILE</def> <kwb>$line</kwb><def></def><sym>,</sym> <def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>append_line</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>$line</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&gt;&gt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd><def></def><sym>(</sym><def></def><str>&quot;Cannot open file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwc>print</kwc><def></def><sym>(</sym><def>FILE</def> <kwb>$line</kwb><def></def><sym>,</sym> <def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>read_line</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$line</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&lt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd><def></def><sym>(</sym><def></def><str>&quot;Cannot open file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwb>$line</kwb> <def></def><sym>= &lt;</sym><def>FILE</def><sym>&gt;;</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def>    <kwd>chomp</kwd><def></def><sym>(</sym><def></def><kwb>$line</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwb>$line</kwb><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>read_file</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>$leader</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>) = ();</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&lt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwa>return</kwa> <def></def><sym>();</sym><br />
+<def></def>    <kwa>while</kwa> <def></def><sym>(&lt;</sym><def>FILE</def><sym>&gt;) {</sym><br />
+<def></def>        <kwd>chomp</kwd><def></def><sym>;</sym><br />
+<def></def>        <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><kwd>sprintf</kwd><def></def><sym>(</sym><def></def><str>&quot;  %-10s  %s&quot;</str><def></def><sym>,</sym> <def></def><kwb>$leader</kwb><def></def><sym>,</sym> <def></def><kwb>$_</kwb><def></def><sym>));</sym><br />
+<def></def>        <kwb>$leader</kwb> <def></def><sym>=</sym> <def></def><str>&quot;&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def>    <kwb>@text</kwb><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>read_logfile</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$filename</kwb><def></def><sym>,</sym> <def></def><kwb>$leader</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>) = ();</sym><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>FILE</def><sym>,</sym> <def></def><str>&quot;&lt;$filename&quot;</str><def></def><sym>) ||</sym> <def></def><kwd>die</kwd> <def></def><sym>(</sym><def></def><str>&quot;Cannot open log file $filename: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwa>while</kwa> <def></def><sym>(&lt;</sym><def>FILE</def><sym>&gt;) {</sym><br />
+<def></def>        <kwd>chomp</kwd><def></def><sym>;</sym><br />
+<def></def>        <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><kwb>$leader</kwb><def></def><sym>.</sym><def></def><kwb>$_</kwb><def></def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>FILE</def><sym>);</sym><br />
+<def></def>    <kwb>@text</kwb><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># do an 'cvs -Qn status' on each file in the arguments, and extract info.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>sub</kwa> <def>change_summary</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$out</kwb><def></def><sym>,</sym> <def></def><kwb>@filenames</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@revline</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$file</kwb><def></def><sym>,</sym> <def></def><kwb>$rev</kwb><def></def><sym>,</sym> <def></def><kwb>$rcsfile</kwb><def></def><sym>,</sym> <def></def><kwb>$line</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+    <kwa>while</kwa> <def></def><sym>(</sym><def></def><kwb>@filenames</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwb>$file</kwb> <def></def><sym>=</sym> <def>shift</def> <kwb>@filenames</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+        <kwa>if</kwa> <def></def><sym>(</sym><def></def><str>&quot;$file&quot;</str><def></def> <kwa>eq</kwa> <def></def><str>&quot;&quot;</str><def></def><sym>) {</sym><br />
+<def></def>            <kwa>next</kwa><def></def><sym>;</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def><br />
+        <kwd>open</kwd><def></def><sym>(</sym><def>RCS</def><sym>,</sym> <def></def><str>&quot;-|&quot;</str><def></def><sym>) ||</sym> <def>exec</def> <str>&quot;$CVSBIN/cvs&quot;</str><def></def><sym>,</sym> <def></def><str>'-Qn'</str><def></def><sym>,</sym> <def></def><str>'status'</str><def></def><sym>,</sym> <def></def><kwb>$file</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+        <kwb>$rev</kwb> <def></def><sym>=</sym> <def></def><str>&quot;&quot;</str><def></def><sym>;</sym><br />
+<def></def>        <kwb>$delta</kwb> <def></def><sym>=</sym> <def></def><str>&quot;&quot;</str><def></def><sym>;</sym><br />
+<def></def>        <kwb>$rcsfile</kwb> <def></def><sym>=</sym> <def></def><str>&quot;&quot;</str><def></def><sym>;</sym><br />
+<def></def><br />
+<br />
+        <kwa>while</kwa> <def></def><sym>(&lt;</sym><def>RCS</def><sym>&gt;) {</sym><br />
+<def></def>            <kwa>if</kwa> <def></def><sym>(/^[</sym> <def></def><esc>\t</esc><def></def><sym>]*</sym><def>Repository revision</def><sym>/) {</sym><br />
+<def></def>                <kwd>chomp</kwd><def></def><sym>;</sym><br />
+<def></def>                <kwb>@revline</kwb> <def></def><sym>=</sym> <def></def><kwd>split</kwd><def></def><sym>(</sym><def></def><str>' '</str><def></def><sym>,</sym> <def></def><kwb>$_</kwb><def></def><sym>);</sym><br />
+<def></def>                <kwb>$rev</kwb> <def></def><sym>=</sym> <def></def><kwb>$revline</kwb><def></def><sym>[</sym><def></def><num>2</num><def></def><sym>];</sym><br />
+<def></def>                <kwb>$rcsfile</kwb> <def></def><sym>=</sym> <def></def><kwb>$revline</kwb><def></def><sym>[</sym><def></def><num>3</num><def></def><sym>];</sym><br />
+<def></def>                <kwb>$rcsfile</kwb> <def></def><sym>=~</sym> <def>s</def><sym>,^</sym><def></def><kwb>$CVSROOT</kwb><def></def><sym>/,,;</sym><br />
+<def></def>                <kwb>$rcsfile</kwb> <def></def><sym>=~</sym> <def>s</def><sym>/,</sym><def>v</def><sym>$//;</sym><br />
+<def></def>            <sym>}</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>        <kwd>close</kwd><def></def><sym>(</sym><def>RCS</def><sym>);</sym><br />
+<def></def><br />
+<br />
+        <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$rev</kwb> <def></def><kwa>ne</kwa> <def></def><str>''</str><def></def> <sym>&amp;&amp;</sym> <def></def><kwb>$rcsfile</kwb> <def></def><kwa>ne</kwa> <def></def><str>''</str><def></def><sym>) {</sym><br />
+<def></def>            <kwd>open</kwd><def></def><sym>(</sym><def>RCS</def><sym>,</sym> <def></def><str>&quot;-|&quot;</str><def></def><sym>) ||</sym> <def>exec</def> <str>&quot;$CVSBIN/cvs&quot;</str><def></def><sym>,</sym> <def></def><str>'-Qn'</str><def></def><sym>,</sym> <def></def><str>'log'</str><def></def><sym>,</sym> <def></def><str>&quot;-r$rev&quot;</str><def></def><sym>,</sym> <def></def><kwb>$file</kwb><def></def><sym>;</sym><br />
+<def></def>            <kwa>while</kwa> <def></def><sym>(&lt;</sym><def>RCS</def><sym>&gt;) {</sym><br />
+<def></def>                <kwa>if</kwa> <def></def><sym>(/^</sym><def>date</def><sym>:/) {</sym><br />
+<def></def>                    <kwd>chomp</kwd><def></def><sym>;</sym><br />
+<def></def>                    <kwb>$delta</kwb> <def></def><sym>=</sym> <def></def><kwb>$_</kwb><def></def><sym>;</sym><br />
+<def></def>                    <kwb>$delta</kwb> <def></def><sym>=~</sym> <def>s</def><sym>/^.*;//;</sym><br />
+<def></def>                    <kwb>$delta</kwb> <def></def><sym>=~</sym> <def>s</def><sym>/^[</sym><def>\s</def><sym>]+</sym><def>lines</def><sym>://;</sym><br />
+<def></def>                <sym>}</sym><br />
+<def></def>            <sym>}</sym><br />
+<def></def>            <kwd>close</kwd><def></def><sym>(</sym><def>RCS</def><sym>);</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def><br />
+        <kwb>$diff</kwb> <def></def><sym>=</sym> <def></def><str>&quot;</str><esc>\n\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def><br />
+    <slc>#</slc><br />
+<def></def>    <slc># Get the differences between this and the previous revision,</slc><br />
+<def></def>    <slc># being aware that new files always have revision '1.1' and</slc><br />
+<def></def>    <slc># new branches always end in '.n.1'.</slc><br />
+<def></def>    <slc>#</slc><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$rev</kwb> <def></def><sym>=~ /^(.*)</sym><def>\</def><sym>.([</sym><def></def><num>0</num><def></def><sym>-</sym><def></def><num>9</num><def></def><sym>]+)$/) {</sym><br />
+<def></def>        <kwb>$prev</kwb> <def></def><sym>=</sym> <def></def><kwb>$2</kwb> <def></def><sym>-</sym> <def></def><num>1</num><def></def><sym>;</sym><br />
+<def></def>        <kwb>$prev_rev</kwb> <def></def><sym>=</sym> <def></def><kwb>$1</kwb> <def></def><sym>.</sym> <def></def><str>'.'</str><def></def> <sym>.</sym>  <def></def><kwb>$prev</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+        <kwb>$prev_rev</kwb> <def></def><sym>=~</sym> <def>s</def><sym>/</sym><def>\</def><sym>.[</sym><def></def><num>0</num><def></def><sym>-</sym><def></def><num>9</num><def></def><sym>]+</sym><def>\</def><num>.0</num><def></def><sym>$//;</sym><def></def><slc># Truncate if first rev on branch</slc><br />
+<def></def><br />
+            <kwd>open</kwd><def></def><sym>(</sym><def>DIFF</def><sym>,</sym> <def></def><str>&quot;-|&quot;</str><def></def><sym>)</sym><br />
+<def></def>        <sym>||</sym> <def>exec</def> <str>&quot;$CVSBIN/cvs&quot;</str><def></def><sym>,</sym> <def></def><str>'-Qn'</str><def></def><sym>,</sym> <def></def><str>'diff'</str><def></def><sym>,</sym> <def></def><str>'-uN'</str><def></def><sym>,</sym><br />
+<def></def>                    <str>&quot;-r$prev_rev&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;-r$rev&quot;</str><def></def><sym>,</sym> <def></def><kwb>$file</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+        <kwa>while</kwa> <def></def><sym>(&lt;</sym><def>DIFF</def><sym>&gt;) {</sym><br />
+<def></def>        <kwb>$diff</kwb> <def></def><sym>.=</sym> <def></def><kwb>$_</kwb><def></def><sym>;</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>        <kwd>close</kwd><def></def><sym>(</sym><def>DIFF</def><sym>);</sym><br />
+<def></def>        <kwb>$diff</kwb> <def></def><sym>.=</sym> <def></def><str>&quot;</str><esc>\n\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><br />
+        <sym>&amp;</sym><def></def><kwd>append_line</kwd><def></def><sym>(</sym><def></def><kwb>$out</kwb><def></def><sym>,</sym> <def></def><kwb>$diff</kwb><def></def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<br />
+<kwa>sub</kwa> <def>build_header</def> <sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$header</kwb><def></def><sym>);</sym><br />
+<def>    delete</def> <kwb>$ENV</kwb><def></def><sym>{</sym><def></def><str>'TZ'</str><def></def><sym>};</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$sec</kwb><def></def><sym>,</sym><def></def><kwb>$min</kwb><def></def><sym>,</sym><def></def><kwb>$hour</kwb><def></def><sym>,</sym><def></def><kwb>$mday</kwb><def></def><sym>,</sym><def></def><kwb>$mon</kwb><def></def><sym>,</sym><def></def><kwb>$year</kwb><def></def><sym>) =</sym> <def></def><kwd>localtime</kwd><def></def><sym>(</sym><def>time</def><sym>);</sym><br />
+<def></def><br />
+    <kwb>$header</kwb> <def></def><sym>=</sym> <def></def><kwd>sprintf</kwd><def></def><sym>(</sym><def></def><str>&quot;  User: %-8s</str><esc>\n</esc>  <str>Date: %02d/%02d/%02d %02d:%02d:%02d&quot;</str><def></def><sym>,</sym><br />
+<def></def>                       <kwb>$cvs_user</kwb><def></def><sym>,</sym> <def></def><kwb>$year%100</kwb><def></def><sym>,</sym> <def></def><kwb>$mon</kwb><def></def><sym>+</sym><def></def><num>1</num><def></def><sym>,</sym> <def></def><kwb>$mday</kwb><def></def><sym>,</sym><br />
+<def></def>                       <kwb>$hour</kwb><def></def><sym>,</sym> <def></def><kwb>$min</kwb><def></def><sym>,</sym> <def></def><kwb>$sec</kwb><def></def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc># !!! Mailing-list and history file mappings here !!!</slc><br />
+<def></def><kwa>sub</kwa> <def>mlist_map</def><br />
+<sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$path</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$path</kwb> <def></def><sym>=~ /^([^</sym><def>\</def><sym>/]+)/) {</sym> <def></def><kwa>return</kwa> <def></def><kwb>$1</kwb><def></def><sym>; }</sym><br />
+<def></def>    <kwa>else</kwa>                      <def></def><sym>{</sym> <def></def><kwa>return</kwa> <def></def><str>'apache'</str><def></def><sym>; }</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>do_changes_file</def><br />
+<sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$category</kwb><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$changes</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+    <kwb>$changes</kwb> <def></def><sym>=</sym> <def></def><str>&quot;$CVSROOT/CVSROOT/commitlogs/$category&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwd>open</kwd><def></def><sym>(</sym><def>CHANGES</def><sym>,</sym> <def></def><str>&quot;&gt;&gt;$changes&quot;</str><def></def><sym>)) {</sym><br />
+<def></def>        <kwc>print</kwc><def></def><sym>(</sym><def>CHANGES</def> <kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>),</sym> <def></def><str>&quot;</str><esc>\n\n</esc><str>&quot;</str><def></def><sym>);</sym><br />
+<def></def>        <kwd>close</kwd><def></def><sym>(</sym><def>CHANGES</def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwa>else</kwa> <def></def><sym>{</sym><br />
+<def>        warn</def> <str>&quot;Cannot open $changes: $!</str><esc>\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<kwa>sub</kwa> <def>mail_notification</def><br />
+<sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+<slc>#    print &quot;Mailing the commit message...\n&quot;;</slc><br />
+<def></def><br />
+    <kwd>open</kwd><def></def><sym>(</sym><def>MAIL</def><sym>,</sym> <def></def><kwb>$MAIL_CMD</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwc>print</kwc> <def>MAIL</def> <str>&quot;From: $MAIL_FROM</str><esc>\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <kwc>print</kwc> <def>MAIL</def> <str>&quot;To: $MAIL_TO</str><esc>\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <kwc>print</kwc> <def>MAIL</def> <str>&quot;Subject: $SUBJECT_PRE $ARGV[0]</str><esc>\n\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <kwc>print</kwc><def></def><sym>(</sym><def>MAIL</def> <kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>));</sym><br />
+<def></def>    <kwd>close</kwd><def></def><sym>(</sym><def>MAIL</def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc># Create a Codestriker topic.  The topic title will be the</slc><br />
+<def></def><slc># first line of the log message prefixed with &quot;CVS commit: &quot;.</slc><br />
+<def></def><slc># The topic description is the entire log message.</slc><br />
+<def></def><slc># Return the URL of the created topic if successful, otherwise</slc><br />
+<def></def><slc># undef.</slc><br />
+<def></def><kwa>sub</kwa> <def>codestriker_create_topic</def><br />
+<sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$user</kwb><def></def><sym>,</sym> <def></def><kwb>$log_ref</kwb><def></def><sym>,</sym> <def></def><kwb>$diff_ref</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@log</kwb><def></def><sym>) =</sym> <def>@</def><sym>{</sym><def></def><kwb>$log_ref</kwb><def></def><sym>};</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@diff</kwb><def></def><sym>) =</sym> <def>@</def><sym>{</sym><def></def><kwb>$diff_ref</kwb><def></def><sym>};</sym><br />
+<def></def><br />
+    <kwc>my</kwc> <def></def><kwb>$topic_title</kwb> <def></def><sym>=</sym> <def></def><str>&quot;CVS commit: &quot;</str><def></def> <sym>.</sym><def></def><kwb>$log</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>];</sym><br />
+<def></def>    <kwc>my</kwc> <def></def><kwb>$topic_description</kwb> <def></def><sym>=</sym> <def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@log</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwc>my</kwc> <def></def><kwb>$bug_ids</kwb> <def></def><sym>=</sym> <def></def><kwb>$topic_description</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+    <slc># Truncate the title if necessary.</slc><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwd>length</kwd><def></def><sym>(</sym><def></def><kwb>$topic_title</kwb><def></def><sym>) &gt;</sym> <def></def><num>57</num><def></def><sym>) {</sym><br />
+<def></def>        <kwb>$topic_title</kwb> <def></def><sym>=</sym> <def></def><kwd>substr</kwd><def></def><sym>(</sym><def></def><kwb>$topic_title</kwb><def></def><sym>,</sym> <def></def><num>0</num><def></def><sym>,</sym> <def></def><num>57</num><def></def><sym>) .</sym> <def></def><str>&quot;...&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><br />
+    <slc># Check for any matching Bug id text.</slc><br />
+<def></def>    <kwc>my</kwc> <def></def><kwb>@bugs</kwb> <def></def><sym>= ();</sym><br />
+<def></def>    <kwb>$bug_ids</kwb> <def></def><sym>=~</sym> <def>s</def><sym>/.*[</sym><def>Bb</def><sym>][</sym><def>Uu</def><sym>][</sym><def>Gg</def><sym>]:</sym><def>?</def><sym>(</sym><def>\d</def><sym>+)</sym><def></def><esc>\b</esc><def></def><sym>.*/</sym><def></def><kwb>$1</kwb> <def></def><sym>/</sym><def></def><kwd>g</kwd><def></def><sym>;</sym><br />
+<def></def>    <kwa>while</kwa> <def></def><sym>(</sym><def></def><kwb>$bug_ids</kwb> <def></def><sym>=~ /</sym><def></def><esc>\b</esc><def></def><sym>[</sym><def>Bb</def><sym>][</sym><def>Uu</def><sym>][</sym><def>Gg</def><sym>]:</sym><def>?\s</def><sym>*(</sym><def>\d</def><sym>+)</sym><def></def><esc>\b</esc><def></def><sym>/</sym><def>g</def><sym>) {</sym><br />
+<def>    push</def> <kwb>@bugs</kwb><def></def><sym>,</sym> <def></def><kwb>$1</kwb><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><br />
+    <kwc>my</kwc> <def></def><kwb>$client</kwb> <def></def><sym>=</sym> <def>CodestrikerClient</def><sym>-&gt;</sym><def></def><kwd>new</kwd><def></def><sym>(</sym><def></def><kwb>$CODESTRIKER_URL</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwa>return</kwa> <def></def><kwb>$client</kwb><def></def><sym>-&gt;</sym><def></def><kwd>create_topic</kwd><def></def><sym>({</sym><br />
+<def>    topic_title</def> <sym>=&gt;</sym> <def></def><kwb>$topic_title</kwb><def></def><sym>,</sym><br />
+<def>    topic_description</def> <sym>=&gt;</sym> <def></def><kwb>$topic_description</kwb><def></def><sym>,</sym><br />
+<def>    project_name</def> <sym>=&gt;</sym> <def></def><kwb>$CODESTRIKER_PROJECT</kwb><def></def><sym>,</sym><br />
+<def>    repository</def> <sym>=&gt;</sym> <def></def><kwb>$CODESTRIKER_REPOSITORY</kwb><def></def><sym>,</sym><br />
+<def>    bug_ids</def> <sym>=&gt;</sym> <def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;, &quot;</str><def></def><sym>,</sym> <def></def><kwb>@bugs</kwb><def></def><sym>),</sym><br />
+<def>    email</def> <sym>=&gt;</sym> <def></def><kwb>$MAIL_FROM</kwb><def></def><sym>,</sym><br />
+<def>    reviewers</def> <sym>=&gt;</sym> <def></def><kwb>$CODESTRIKER_REVIEWERS</kwb><def></def><sym>,</sym><br />
+<def>    cc</def> <sym>=&gt;</sym> <def></def><kwb>$CODESTRIKER_CC</kwb><def></def><sym>,</sym><br />
+<def>    topic_text</def> <sym>=&gt;</sym> <def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot;</str><esc>\n</esc><str>&quot;</str><def></def><sym>,</sym> <def></def><kwb>@diff</kwb><def></def><sym>)</sym><br />
+<def></def>    <sym>});</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>## process the command line arguments sent to this script</slc><br />
+<def></def><slc>## it returns an array of files, %s, sent from the loginfo</slc><br />
+<def></def><slc>## command</slc><br />
+<def></def><kwa>sub</kwa> <def>process_argv</def><br />
+<sym>{</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@argv</kwb><def></def><sym>) =</sym> <def></def><kwb>@_</kwb><def></def><sym>;</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>@files</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwc>local</kwc><def></def><sym>(</sym><def></def><kwb>$arg</kwb><def></def><sym>);</sym><br />
+<def></def><slc>#    print &quot;Processing log script arguments...\n&quot;;</slc><br />
+<def></def><br />
+    <kwa>while</kwa> <def></def><sym>(</sym><def></def><kwb>@argv</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwb>$arg</kwb> <def></def><sym>=</sym> <def>shift</def> <kwb>@argv</kwb><def></def><sym>;</sym><br />
+<def></def><br />
+        <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$arg</kwb> <def></def><kwa>eq</kwa> <def></def><str>'-u'</str><def></def><sym>) {</sym><br />
+<def></def>                <kwb>$cvs_user</kwb> <def></def><sym>=</sym> <def>shift</def> <kwb>@argv</kwb><def></def><sym>;</sym><br />
+<def></def>        <sym>}</sym> <def></def><kwa>else</kwa> <def></def><sym>{</sym><br />
+<def></def>                <sym>(</sym><def></def><kwb>$donefiles</kwb><def></def><sym>) &amp;&amp;</sym> <def>die</def> <str>&quot;Too many arguments!</str><esc>\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def></def>                <kwb>$donefiles</kwb> <def></def><sym>=</sym> <def></def><num>1</num><def></def><sym>;</sym><br />
+<def></def>                <kwb>$ARGV</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>] =</sym> <def></def><kwb>$arg</kwb><def></def><sym>;</sym><br />
+<def></def>                <kwb>@files</kwb> <def></def><sym>=</sym> <def></def><kwd>split</kwd><def></def><sym>(</sym><def></def><str>' '</str><def></def><sym>,</sym> <def></def><kwb>$arg</kwb><def></def><sym>);</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwa>return</kwa> <def></def><kwb>@files</kwb><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Main Body</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc>############################################################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Setup environment</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwd>umask</kwd> <def></def><sym>(</sym><def></def><num>002</num><def></def><sym>);</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Initialize basic variables</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwb>$id</kwb> <def></def><sym>=</sym> <def></def><kwd>getpgrp</kwd><def></def><sym>();</sym><br />
+<def></def><kwb>$state</kwb> <def></def><sym>=</sym> <def></def><kwb>$STATE_NONE</kwb><def></def><sym>;</sym><br />
+<def></def><kwb>$cvs_user</kwb> <def></def><sym>=</sym> <def></def><kwb>$ENV</kwb><def></def><sym>{</sym><def></def><str>'USER'</str><def></def><sym>} ||</sym> <def>getlogin</def> <sym>|| (</sym><def></def><kwd>getpwuid</kwd><def></def><sym>($&lt;))[</sym><def></def><num>0</num><def></def><sym>] ||</sym> <def></def><kwd>sprintf</kwd><def></def><sym>(</sym><def></def><str>&quot;uid#%d&quot;</str><def></def><sym>,$&lt;);</sym><br />
+<def></def><kwb>@files</kwb> <def></def><sym>=</sym> <def></def><kwd>process_argv</kwd><def></def><sym>(</sym><def></def><kwb>@ARGV</kwb><def></def><sym>);</sym><br />
+<def></def><kwb>@path</kwb> <def></def><sym>=</sym> <def></def><kwd>split</kwd><def></def><sym>(</sym><def></def><str>'/'</str><def></def><sym>,</sym> <def></def><kwb>$files</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>]);</sym><br />
+<def></def><kwb>$repository</kwb> <def></def><sym>=</sym> <def></def><kwb>$path</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>];</sym><br />
+<def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$#path</kwb> <def></def><sym>==</sym> <def></def><num>0</num><def></def><sym>) {</sym><br />
+<def></def>    <kwb>$dir</kwb> <def></def><sym>=</sym> <def></def><str>&quot;.&quot;</str><def></def><sym>;</sym><br />
+<def></def><sym>}</sym> <def></def><kwa>else</kwa> <def></def><sym>{</sym><br />
+<def></def>    <kwb>$dir</kwb> <def></def><sym>=</sym> <def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>'/'</str><def></def><sym>,</sym> <def></def><kwb>@path</kwb><def></def><sym>[</sym><def></def><num>1</num><def></def><sym>..</sym><def></def><kwb>$#path</kwb><def></def><sym>]);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><slc>#print(&quot;ARGV  - &quot;, join(&quot;:&quot;, @ARGV), &quot;\n&quot;);</slc><br />
+<def></def><slc>#print(&quot;files - &quot;, join(&quot;:&quot;, @files), &quot;\n&quot;);</slc><br />
+<def></def><slc>#print(&quot;path  - &quot;, join(&quot;:&quot;, @path), &quot;\n&quot;);</slc><br />
+<def></def><slc>#print(&quot;dir   - &quot;, $dir, &quot;\n&quot;);</slc><br />
+<def></def><slc>#print(&quot;id    - &quot;, $id, &quot;\n&quot;);</slc><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Map the repository directory to a name for commitlogs.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwb>$mlist</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>mlist_map</kwd><def></def><sym>(</sym><def></def><kwb>$files</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>]);</sym><br />
+<def></def><br />
+<slc>##########################</slc><br />
+<def></def><slc># Uncomment the following if we ever have per-repository cvs mail</slc><br />
+<def></def><br />
+<slc># if (defined($mlist)) {</slc><br />
+<def></def><slc>#     $MAIL_TO = $mlist . '-cvs';</slc><br />
+<def></def><slc># }</slc><br />
+<def></def><slc># else { undef $MAIL_TO; }</slc><br />
+<def></def><br />
+<slc>##########################</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Check for a new directory first.  This will always appear as a</slc><br />
+<def></def><slc># single item in the argument list, and an empty log message.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$ARGV</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>] =~ /</sym><def>New directory</def><sym>/) {</sym><br />
+<def></def>    <kwb>$header</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>build_header</kwd><def></def><sym>;</sym><br />
+<def></def>    <kwb>@text</kwb> <def></def><sym>= ();</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><kwb>$header</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;  &quot;</str><def></def><sym>.</sym><def></def><kwb>$ARGV</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>]);</sym><br />
+<def></def>    <sym>&amp;</sym><def></def><kwd>do_changes_file</kwd><def></def><sym>(</sym><def></def><kwb>$mlist</kwb><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>);</sym><br />
+<def></def>    <sym>&amp;</sym><def></def><kwd>mail_notification</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>)</sym> <def></def><kwa>if</kwa> <def></def><kwd>defined</kwd><def></def><sym>(</sym><def></def><kwb>$MAIL_TO</kwb><def></def><sym>);</sym><br />
+<def>    exit</def> <num>0</num><def></def><sym>;</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Iterate over the body of the message collecting information.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>while</kwa> <def></def><sym>(&lt;</sym><def>STDIN</def><sym>&gt;) {</sym><br />
+<def></def>    <kwd>chomp</kwd><def></def><sym>;</sym>                      <def></def><slc># Drop the newline</slc><br />
+<def></def><br />
+    <kwa>if</kwa> <def></def><sym>(/^</sym><def>Revision\</def><sym>/</sym><def>Branch</def><sym>:/) {</sym><br />
+<def>        s</def><sym>,^</sym><def>Revision</def><sym>/</sym><def>Branch</def><sym>:,,;</sym><br />
+<def></def>        <kwd>push</kwd> <def></def><sym>(</sym><def></def><kwb>@branch_lines</kwb><def></def><sym>,</sym> <def>split</def><sym>);</sym><br />
+<def></def>        <kwa>next</kwa><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><slc>#    next if (/^[ \t]+Tag:/ &amp;&amp; $state != $STATE_LOG);</slc><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(/^</sym><def>Modified Files</def><sym>/) {</sym> <def></def><kwb>$state</kwb> <def></def><sym>=</sym> <def></def><kwb>$STATE_CHANGED</kwb><def></def><sym>;</sym> <def></def><kwa>next</kwa><def></def><sym>; }</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(/^</sym><def>Added Files</def><sym>/)    {</sym> <def></def><kwb>$state</kwb> <def></def><sym>=</sym> <def></def><kwb>$STATE_ADDED</kwb><def></def><sym>;</sym>   <def></def><kwa>next</kwa><def></def><sym>; }</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(/^</sym><def>Removed Files</def><sym>/)  {</sym> <def></def><kwb>$state</kwb> <def></def><sym>=</sym> <def></def><kwb>$STATE_REMOVED</kwb><def></def><sym>;</sym> <def></def><kwa>next</kwa><def></def><sym>; }</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(/^</sym><def>Log Message</def><sym>/)    {</sym> <def></def><kwb>$state</kwb> <def></def><sym>=</sym> <def></def><kwb>$STATE_LOG</kwb><def></def><sym>;</sym>     <def></def><kwa>next</kwa><def></def><sym>; }</sym><br />
+<def>    s</def><sym>/[</sym> <def></def><esc>\t\n</esc><def></def><sym>]+$//;</sym>              <def></def><slc># delete trailing space</slc><br />
+<def></def><br />
+    <kwd>push</kwd> <def></def><sym>(</sym><def></def><kwb>@changed_files</kwb><def></def><sym>,</sym> <def>split</def><sym>)</sym> <def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$state</kwb> <def></def><sym>==</sym> <def></def><kwb>$STATE_CHANGED</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd> <def></def><sym>(</sym><def></def><kwb>@added_files</kwb><def></def><sym>,</sym>   <def>split</def><sym>)</sym> <def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$state</kwb> <def></def><sym>==</sym> <def></def><kwb>$STATE_ADDED</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd> <def></def><sym>(</sym><def></def><kwb>@removed_files</kwb><def></def><sym>,</sym> <def>split</def><sym>)</sym> <def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$state</kwb> <def></def><sym>==</sym> <def></def><kwb>$STATE_REMOVED</kwb><def></def><sym>);</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$state</kwb> <def></def><sym>==</sym> <def></def><kwb>$STATE_LOG</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwa>if</kwa> <def></def><sym>(/^</sym><def>PR</def><sym>:$/</sym><def>i</def> <sym>||</sym><br />
+<def></def>            <sym>/^</sym><def>Reviewed by</def><sym>:$/</sym><def>i</def> <sym>||</sym><br />
+<def></def>            <sym>/^</sym><def>Submitted by</def><sym>:$/</sym><def>i</def> <sym>||</sym><br />
+<def></def>            <sym>/^</sym><def>Obtained from</def><sym>:$/</sym><def>i</def><sym>) {</sym><br />
+<def></def>            <kwa>next</kwa><def></def><sym>;</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>        <kwd>push</kwd> <def></def><sym>(</sym><def></def><kwb>@log_lines</kwb><def></def><sym>,</sym>     <def></def><kwb>$_</kwb><def></def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Strip leading and trailing blank lines from the log message.  Also</slc><br />
+<def></def><slc># compress multiple blank lines in the body of the message down to a</slc><br />
+<def></def><slc># single blank line.</slc><br />
+<def></def><slc># (Note, this only does the mail and changes log, not the rcs log).</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>while</kwa> <def></def><sym>(</sym><def></def><kwb>$#log_lines</kwb> <def></def><sym>&gt; -</sym><def></def><num>1</num><def></def><sym>) {</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(</sym><def></def><kwb>$log_lines</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>]</sym> <def></def><kwa>ne</kwa> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>shift</kwd><def></def><sym>(</sym><def></def><kwb>@log_lines</kwb><def></def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><kwa>while</kwa> <def></def><sym>(</sym><def></def><kwb>$#log_lines</kwb> <def></def><sym>&gt; -</sym><def></def><num>1</num><def></def><sym>) {</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(</sym><def></def><kwb>$log_lines</kwb><def></def><sym>[</sym><def></def><kwb>$#log_lines</kwb><def></def><sym>]</sym> <def></def><kwa>ne</kwa> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>pop</kwd><def></def><sym>(</sym><def></def><kwb>@log_lines</kwb><def></def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><kwa>for</kwa> <def></def><sym>(</sym><def></def><kwb>$i</kwb> <def></def><sym>=</sym> <def></def><kwb>$#log_lines</kwb><def></def><sym>;</sym> <def></def><kwb>$i</kwb> <def></def><sym>&gt;</sym> <def></def><num>0</num><def></def><sym>;</sym> <def></def><kwb>$i</kwb><def></def><sym>--) {</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>((</sym><def></def><kwb>$log_lines</kwb><def></def><sym>[</sym><def></def><kwb>$i</kwb> <def></def><sym>-</sym> <def></def><num>1</num><def></def><sym>]</sym> <def></def><kwa>eq</kwa> <def></def><str>&quot;&quot;</str><def></def><sym>) &amp;&amp; (</sym><def></def><kwb>$log_lines</kwb><def></def><sym>[</sym><def></def><kwb>$i</kwb><def></def><sym>]</sym> <def></def><kwa>eq</kwa> <def></def><str>&quot;&quot;</str><def></def><sym>)) {</sym><br />
+<def></def>        <kwd>splice</kwd><def></def><sym>(</sym><def></def><kwb>@log_lines</kwb><def></def><sym>,</sym> <def></def><kwb>$i</kwb><def></def><sym>,</sym> <def></def><num>1</num><def></def><sym>);</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Find the log file that matches this log message</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>for</kwa> <def></def><sym>(</sym><def></def><kwb>$i</kwb> <def></def><sym>=</sym> <def></def><num>0</num><def></def><sym>; ;</sym> <def></def><kwb>$i</kwb><def></def><sym>++) {</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(! -</sym><def>e</def> <str>&quot;$LOG_FILE.$i.$id&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwb>@text</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$LOG_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(</sym><def></def><kwb>$#text</kwb> <def></def><sym>== -</sym><def></def><num>1</num><def></def><sym>);</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(</sym><def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot; &quot;</str><def></def><sym>,</sym> <def></def><kwb>@log_lines</kwb><def></def><sym>)</sym> <def></def><kwa>eq</kwa> <def></def><kwd>join</kwd><def></def><sym>(</sym><def></def><str>&quot; &quot;</str><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>));</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Spit out the information gathered in this pass.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><sym>&amp;</sym><def></def><kwd>write_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$LOG_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><kwb>@log_lines</kwb><def></def><sym>);</sym><br />
+<def></def><sym>&amp;</sym><def></def><kwd>append_to_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$BRANCH_FILE.$i.$id&quot;</str><def></def><sym>,</sym>  <def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@branch_lines</kwb><def></def><sym>);</sym><br />
+<def></def><sym>&amp;</sym><def></def><kwd>append_to_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$ADDED_FILE.$i.$id&quot;</str><def></def><sym>,</sym>   <def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@added_files</kwb><def></def><sym>);</sym><br />
+<def></def><sym>&amp;</sym><def></def><kwd>append_to_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$CHANGED_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@changed_files</kwb><def></def><sym>);</sym><br />
+<def></def><sym>&amp;</sym><def></def><kwd>append_to_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$REMOVED_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><kwb>$dir</kwb><def></def><sym>,</sym> <def></def><kwb>@removed_files</kwb><def></def><sym>);</sym><br />
+<def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$rcsidinfo</kwb><def></def><sym>) {</sym><br />
+<def></def>    <sym>&amp;</sym><def></def><kwd>change_summary</kwd><def></def><sym>(</sym><def></def><str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>,</sym><br />
+<def></def>            <sym>(</sym><def></def><kwb>@changed_files</kwb><def></def><sym>,</sym> <def></def><kwb>@added_files</kwb><def></def><sym>,</sym> <def></def><kwb>@removed_files</kwb><def></def><sym>));</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Check whether this is the last directory.  If not, quit.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>if</kwa> <def></def><sym>(-</sym><def>e</def> <str>&quot;$LAST_FILE.$id&quot;</str><def></def><sym>) {</sym><br />
+<def></def>   <kwb>$_</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>read_line</kwd><def></def><sym>(</sym><def></def><str>&quot;$LAST_FILE.$id&quot;</str><def></def><sym>);</sym><br />
+<def></def>   <kwb>$tmpfiles</kwb> <def></def><sym>=</sym> <def></def><kwb>$files</kwb><def></def><sym>[</sym><def></def><num>0</num><def></def><sym>];</sym><br />
+<def></def>   <kwb>$tmpfiles</kwb> <def></def><sym>=~</sym> <def>s</def><sym>,([^</sym><def>a</def><sym>-</sym><def>zA</def><sym>-</sym><def>Z0</def><sym>-</sym><def></def><num>9</num><def>_</def><sym>/]),</sym><def></def><esc>\\</esc><def></def><kwb>$1</kwb><def></def><sym>,</sym><def></def><kwd>g</kwd><def></def><sym>;</sym><br />
+<def></def>   <kwa>if</kwa> <def></def><sym>(!</sym> <def></def><kwd>grep</kwd><def></def><sym>(/</sym><def></def><kwb>$tmpfiles</kwb><def></def><sym>$/,</sym> <def></def><kwb>$_</kwb><def></def><sym>)) {</sym><br />
+<def></def>        <kwc>print</kwc> <def></def><str>&quot;More commits to come...</str><esc>\n</esc><str>&quot;</str><def></def><sym>;</sym><br />
+<def>        exit</def> <num>0</num><br />
+<def></def>   <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># This is it.  The commits are all finished.  Lump everything together</slc><br />
+<def></def><slc># into a single message, fire a copy off to the mailing list, and drop</slc><br />
+<def></def><slc># it on the end of the Changes file.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwb>$header</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>build_header</kwd><def></def><sym>;</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Produce the final compilation of the log messages</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwb>@text</kwb> <def></def><sym>= ();</sym><br />
+<def></def><kwb>@diff_text</kwb> <def></def><sym>= ();</sym><br />
+<def></def><kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><kwb>$header</kwb><def></def><sym>);</sym><br />
+<def></def><kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def><kwa>for</kwa> <def></def><sym>(</sym><def></def><kwb>$i</kwb> <def></def><sym>=</sym> <def></def><num>0</num><def></def><sym>; ;</sym> <def></def><kwb>$i</kwb><def></def><sym>++) {</sym><br />
+<def></def>    <kwa>last if</kwa> <def></def><sym>(! -</sym><def>e</def> <str>&quot;$LOG_FILE.$i.$id&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$BRANCH_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;Branch:&quot;</str><def></def><sym>));</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$CHANGED_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;Modified:&quot;</str><def></def><sym>));</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$ADDED_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;Added:&quot;</str><def></def><sym>));</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_file</kwd><def></def><sym>(</sym><def></def><str>&quot;$REMOVED_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;Removed:&quot;</str><def></def><sym>));</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;  Log:&quot;</str><def></def><sym>);</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$LOG_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;  &quot;</str><def></def><sym>));</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$rcsidinfo</kwb> <def></def><sym>==</sym> <def></def><num>2</num><def></def><sym>) {</sym><br />
+<def></def>        <kwa>if</kwa> <def></def><sym>(-</sym><def>e</def> <str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>) {</sym><br />
+<def></def>            <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;  &quot;</str><def></def><sym>);</sym><br />
+<def></def>            <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@diff_text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>));</sym><br />
+<def></def>            <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;  &quot;</str><def></def><sym>));</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<br />
+<slc>#</slc><br />
+<def></def><slc># Append the log message to the commitlogs/&lt;module&gt; file</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><sym>&amp;</sym><def></def><kwd>do_changes_file</kwd><def></def><sym>(</sym><def></def><kwb>$mlist</kwb><def></def><sym>,</sym> <def></def><kwb>@text</kwb><def></def><sym>);</sym><br />
+<def></def><slc>#</slc><br />
+<def></def><slc># Now generate the extra info for the mail message..</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$rcsidinfo</kwb> <def></def><sym>==</sym> <def></def><num>1</num><def></def><sym>) {</sym><br />
+<def></def>    <kwb>$revhdr</kwb> <def></def><sym>=</sym> <def></def><num>0</num><def></def><sym>;</sym><br />
+<def></def>    <kwa>for</kwa> <def></def><sym>(</sym><def></def><kwb>$i</kwb> <def></def><sym>=</sym> <def></def><num>0</num><def></def><sym>; ;</sym> <def></def><kwb>$i</kwb><def></def><sym>++) {</sym><br />
+<def></def>        <kwa>last if</kwa> <def></def><sym>(! -</sym><def>e</def> <str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>);</sym><br />
+<def></def>        <kwa>if</kwa> <def></def><sym>(-</sym><def>e</def> <str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>) {</sym><br />
+<def></def>            <kwa>if</kwa> <def></def><sym>(!</sym><def></def><kwb>$revhdr</kwb><def></def><sym>++) {</sym><br />
+<def></def>                <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;Revision  Changes    Path&quot;</str><def></def><sym>);</sym><br />
+<def></def>            <sym>}</sym><br />
+<def></def>            <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>));</sym><br />
+<def></def>            <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@diff_text</kwb><def></def><sym>, &amp;</sym><def></def><kwd>read_logfile</kwd><def></def><sym>(</sym><def></def><str>&quot;$SUMMARY_FILE.$i.$id&quot;</str><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>));</sym><br />
+<def></def>        <sym>}</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwb>$revhdr</kwb><def></def><sym>) {</sym><br />
+<def></def>        <kwd>push</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>);</sym>        <def></def><slc># consistancy...</slc><br />
+<def></def>    <sym>}</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Now create the Codestriker topic.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwc>my</kwc> <def></def><kwb>$topic_url</kwb> <def></def><sym>= &amp;</sym><def></def><kwd>codestriker_create_topic</kwd><def></def><sym>(</sym><def></def><kwb>$cvs_user</kwb><def></def><sym>,</sym> <def>\</def><kwb>@log_lines</kwb><def></def><sym>,</sym> <def>\</def><kwb>@diff_text</kwb><def></def><sym>);</sym><br />
+<def></def><br />
+<slc>#</slc><br />
+<def></def><slc># Mail out the notification.  Prepend the topic url if it is defined.</slc><br />
+<def></def><slc>#</slc><br />
+<def></def><kwa>if</kwa> <def></def><sym>(</sym><def></def><kwd>defined</kwd><def></def><sym>(</sym><def></def><kwb>$MAIL_TO</kwb><def></def><sym>)) {</sym><br />
+<def></def>    <kwa>if</kwa> <def></def><sym>(</sym><def></def><kwd>defined</kwd><def></def><sym>(</sym><def></def><kwb>$topic_url</kwb><def></def><sym>)) {</sym><br />
+<def>    unshift</def> <kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;&quot;</str><def></def><sym>;</sym><br />
+<def>    unshift</def> <kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;  $topic_url&quot;</str><def></def><sym>;</sym><br />
+<def>    unshift</def> <kwb>@text</kwb><def></def><sym>,</sym> <def></def><str>&quot;  Created Codestriker topic at:&quot;</str><def></def><sym>;</sym><br />
+<def></def>    <sym>}</sym><br />
+<def></def>    <sym>&amp;</sym><def></def><kwd>mail_notification</kwd><def></def><sym>(</sym><def></def><kwb>@text</kwb><def></def><sym>)</sym> <def></def><kwa>if</kwa> <def></def><kwd>defined</kwd><def></def><sym>(</sym><def></def><kwb>$MAIL_TO</kwb><def></def><sym>);</sym><br />
+<def></def><sym>}</sym><br />
+<def></def><br />
+<sym>&amp;</sym><def></def><kwd>cleanup_tmpfiles</kwd><def></def><sym>;</sym><br />
+<def>exit</def> <num>0</num><def></def><sym>;</sym><def></def><br />
+</source>
+</document>
+<!-- XML generated by Highlight 2.6.10, http://www.andre-simon.de/ -->

@@ -1,7 +1,7 @@
 [%# Screen for the edit project form. #%]
 
 [% PROCESS header.html.tmpl version = version displaymenu = 1 
-                            closehead = 1 help = "x370.html" %]
+                            closehead = 1 help = "x370.html" subtitle = "Edit Project" %]
 
 
 <script language="JavaScript">
@@ -37,9 +37,6 @@ function DeleteProjectConfirm()
 
 <P>
 
-<H1>Edit project</H1>
-
-<P>
 <FORM METHOD="POST" ENCTYPE="application/x-www-form-urlencoded" NAME="form">
 
 <INPUT TYPE="hidden" name="projectid" value="[% project.id %]">
