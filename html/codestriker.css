@@ -15,52 +15,52 @@ TD.file {background-color: #cccccc; font-family: Georgia, serif; font-size: medi
 TD.line {background-color: #99cccc; font-family: Georgia, serif; font-size: medium}
 
 /* Normal text */
-TD.n {font-family: Georgia, serif; font-size: smaller}
+TD.n {white-space: pre; font-family: Georgia, serif; font-size: smaller}
 
 /* Normal text monospaced */
-TD.msn {font-family: monospace; font-size: smaller}
+TD.msn {white-space: pre; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Added text */
-TD.a {background-color: #abd; font-family: Georgia, serif; font-size: smaller}
+TD.a {white-space: pre; background-color: #abd; font-family: Georgia, serif; font-size: smaller}
 
 /* Added text monospaced */
-TD.msa {background-color: #abd; font-family: monospace; font-size: smaller}
+TD.msa {white-space: pre; background-color: #abd; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Added file */
 TD.af {background-color: #abd}
 
 /* Added blank text */
-TD.ab {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
+TD.ab {white-space: pre; background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
 
 /* Added blank text monospaced */
-TD.msab {background-color: #cccccc; font-family: monospace; font-size: smaller}
+TD.msab {white-space: pre; background-color: #cccccc; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Removed text */
-TD.r {background-color: #ff9999; font-family: Georgia, serif; font-size: smaller}
+TD.r {white-space: pre; background-color: #ff9999; font-family: Georgia, serif; font-size: smaller}
 
 /* Removed text monospaced */
-TD.msr {background-color: #ff9999; font-family: monospace; font-size: smaller}
+TD.msr {white-space: pre; background-color: #ff9999; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Removed file */
 TD.rf {background-color: #ff9999}
 
 /* Removed blank text */
-TD.rb {background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
+TD.rb {white-space: pre; background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed text */
-TD.c {background-color: #ffff77; font-family: Georgia, serif; font-size: smaller}
+TD.c {white-space: pre; background-color: #ffff77; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed text monospaced */
-TD.msc {background-color: #ffff77; font-family: monospace; font-size: smaller}
+TD.msc {white-space: pre; background-color: #ffff77; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Changed file */
 TD.cf {background-color: #ffff77}
 
 /* Changed blank text */
-TD.cb {background-color: #eeee77; font-family: Georgia, serif; font-size: smaller}
+TD.cb {white-space: pre; background-color: #eeee77; font-family: Georgia, serif; font-size: smaller}
 
 /* Changed blank text monospaced */
-TD.mscb {background-color: #eeee77; font-family: monospace; font-size: smaller}
+TD.mscb {white-space: pre; background-color: #eeee77; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 
 /* Table of contents links */
 A.toc { font-family: Georgia, serif; font-size: smaller}
@@ -70,30 +70,30 @@ A.toc:visited:hover { text-decoration: underline; }
 A.toc:link:hover { text-decoration: underline; }
 
 /* Line number with comment */
-A.comment { color: #ff0000; font-family: Georgia, serif; font-size: smaller}
+A.comment { color: #ff0000; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 A.comment:link { color: ff0000; text-decoration: none }
 A.comment:visited { color: inherit; text-decoration: none }
 A.comment:visited:hover { text-decoration: underline; }
 A.comment:link:hover { text-decoration: underline; }
 
 /* Line number with no comment */
-A.nocom { font-family: Georgia, serif; font-size: smaller}
+A.nocom { font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
 A.nocom:link { color: inherit; text-decoration: none }
 A.nocom:visited { color: inherit; text-decoration: none }
 A.nocom:visited:hover { text-decoration: underline; }
 A.nocom:link:hover { text-decoration: underline; }
 
 /* Monospaced line with added text */
-SPAN.msa {background-color: #abd; font-family: monospace; font-size: medium}
+SPAN.msa {background-color: #abd; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: medium}
 
 /* Monospaced line with removed text */
-SPAN.msr {background-color: #ff9999; font-family: monospace; font-size: medium}
+SPAN.msr {background-color: #ff9999; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: medium}
 
 /* Monospaced line with changed text */
-SPAN.msc {background-color: #ffff77; font-family: monospace; font-size: medium}
+SPAN.msc {background-color: #ffff77; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: medium}
 
 /* Monospaced line with normal text */
-SPAN.ms {font-family: monospace; font-size: medium}
+SPAN.ms {font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: medium}
 
 /* Monospaced line number with comment */
 SPAN.mscom {color: #ff0000; font-family: monospace; font-size: medium}
@@ -138,9 +138,9 @@ A.fid:link:hover { text-decoration: underline; }
 /* Style comment listings. */
 TR.comments {background-color: #abd; font-family: Georgia, serif} /* space */
 TR.commenth {background-color: #cccccc; font-family: Georgia, serif} /* header */
-TR.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
-TD.commentb {background-color: #eeeeee; font-family: monospace} /* comment body */
-TR.commentc {background-color: #eeeeee; font-family: monospace} /* context */
+TR.commentb {background-color: #eeeeee; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace} /* comment body */
+TD.commentb {background-color: #eeeeee; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace} /* comment body */
+TR.commentc {background-color: #eeeeee; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace} /* context */
 
 /* Style for topic title headings. */
 

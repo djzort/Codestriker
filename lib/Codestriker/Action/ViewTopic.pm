@@ -164,7 +164,7 @@ sub process($$$) {
     # Set template variables relating to coloured mode.
     if ($mode == $Codestriker::COLOURED_MODE) {
 	$vars->{'mode'} = 'coloured';
-    } elsif ($mode == $Codestrikier::COLOURED_MONO_MODE) {
+    } elsif ($mode == $Codestriker::COLOURED_MONO_MODE) {
 	$vars->{'mode'} = 'coloured_mono';
     } else {
 	$vars->{'mode'} = 'unknown';

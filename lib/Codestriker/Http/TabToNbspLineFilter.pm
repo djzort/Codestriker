@@ -32,7 +32,7 @@ sub _filter {
     my ($self, $text) = @_;
 
     my $tabwidth = $self->{tabwidth};
-    1 while $text =~ s/\t+/'&nbsp;' x
+    1 while $text =~ s/\t+/' ' x
 	(length($&) * $tabwidth - length($`) % $tabwidth)/eo;
 
     return $text;

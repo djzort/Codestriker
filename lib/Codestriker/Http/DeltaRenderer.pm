@@ -13,7 +13,6 @@ use strict;
 
 use Codestriker::Http::HtmlEntityLineFilter;
 use Codestriker::Http::TabToNbspLineFilter;
-use Codestriker::Http::LineBreakLineFilter;
 use Codestriker::Http::HighlightLineFilter;
 use Codestriker::Http::HighlightedLxrLineFilter;
 use Codestriker::Http::NonHighlightedLxrLineFilter;
@@ -61,14 +60,12 @@ sub new {
     @{$self->{line_filters}} = ();
     if (defined $Codestriker::highlighter && $Codestriker::highlighter ne '') {
 	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
-    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
     	if (defined $lxr_config) {
 		    push @{$self->{line_filters}}, Codestriker::Http::HighlightedLxrLineFilter->new($lxr_config);
     	}
     } else {
     	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
     	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    	push @{$self->{line_filters}}, Codestriker::Http::LineBreakLineFilter->new();
     	if (defined $lxr_config) {
 		    push @{$self->{line_filters}}, Codestriker::Http::NonHighlightedLxrLineFilter->new($lxr_config);
     	}
