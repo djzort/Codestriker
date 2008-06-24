@@ -889,28 +889,17 @@ $allow_comment_email = 1;
 	</para>
       </sect2>
       <sect2>
-        <title>Default View Topic Line Break Mode</title>
+        <title>Source Code Hihglighting</title>
 	<para>
-	  As explained by the comments in the configuration file, it
-	  is possible to set the default view topic line break mode,
-	  by setting the <varname>$default_topic_br_mode</varname>
-	  variable.  There is usually no need to change the default
-	  setting unless you regularly review code with very long
-	   lines.
+	  Source code highlighting will be performed if the Highlight
+	  program is installed.	
 	  <programlisting>
-# The default line break viewing mode to use in the URL when viewing a
-# topic.  Can be either $LINE_BREAK_NORMAL_MODE or $LINE_BREAK_ASSIST_MODE.
-# Using $LINE_BREAK_ASSIST_MODE indicates that extra line breaks may be
-# used in the topic display if the review has very long code lines.  Using
-# $LINE_BREAK_NORMAL_MODE will ensure that the display matches the line
-# breaks present in the code.  The line break mode can also be changed
-# dynamically in the view topic screen.  There is usually no need to
-# change this setting unless you regularly review code with very long
-# lines.
-$LINE_BREAK_NORMAL_MODE = 1;
-$LINE_BREAK_ASSIST_MODE = 2;
-
-$default_topic_br_mode = $LINE_BREAK_NORMAL_MODE;
+# Location of the highlight binary, which is used for highlighting source code.
+# Available from http://www.andre-simon.de/.  If this is not set, no syntax
+# highlighting will be performed.
+$highlighter = '';
+#$highlighter = '/usr/bin/highlight';
+#$highlighter = 'C:/Program Files (x86)/WinHighlight/highlight.exe'; 
 	  </programlisting>
 	</para>
       </sect2>
@@ -1919,6 +1908,12 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
 	  </programlisting>
 	  Here 132 is the change-number.  This should be substituted
 	  with the change-number that you want to review.
+	</para>
+	<para>
+	  It is also possible to create Perforce topics from already committed
+	  code.  Simply enter the change number into either the "Start tag" or
+	  "End tag" field, and set "Module" to be //, which corresponds to the
+	  root of the depot.
 	</para>
       </sect2>
       <sect2>
