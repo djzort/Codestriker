@@ -51,7 +51,7 @@ Version 1.9.5
   
 * Removed the "View with minimal screen width" / "View with minimal
   link break" options from the view topic screen.  If the browser window
-  is not wide enough, lines will wrap if possible.
+  is not wide enough, a horizontal scrollbar will appear.
   
 * Provided the ability to create topics for a specific changeset from
   a Perforce repository, from Alis McCutcheon <amccutcheon@nxpna.com>.
