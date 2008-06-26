@@ -65,6 +65,13 @@ Version 1.9.5
   
 * Can now comment on any line of any file in the review, not just those
   that are a part of the diff file.  
+  
+* Introduced new configuration variable $sort_diffs_by_filename in
+  codestriker.conf which indicates whether the diff chunks inside a
+  topic should be ordered by filename.  Apparently Subversion can
+  produce diff topics in some circumstances in arbitrary order,
+  where using this setting would make sense.  Default is for this
+  setting to disabled.
 	
 Version 1.9.4
 
