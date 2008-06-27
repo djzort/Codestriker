@@ -47,6 +47,9 @@ TD.rf {background-color: #ff9999}
 /* Removed blank text */
 TD.rb {white-space: pre; background-color: #cccccc; font-family: Georgia, serif; font-size: smaller}
 
+/* Removed blank text monospaced */
+TD.msrb {white-space: pre; background-color: #cccccc; font-family: Consolas, "Nimbus Mono L", LucidaConsole, "Bitstream Vera Sans Mono", monospace; font-size: smaller}
+
 /* Changed text */
 TD.c {white-space: pre; background-color: #ffff77; font-family: Georgia, serif; font-size: smaller}
 
