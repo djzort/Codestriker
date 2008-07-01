@@ -162,7 +162,7 @@ TD.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
 /* Codestriker heading */
 #header {margin-bottom: 1em; font-family: sans-serif;}
 #header .heading {background-color: #404D6C; color: white; font-size: 110%; -moz-border-radius-topleft: 5px; -moz-border-radius-topright: 5px; margin: 0; padding: 0.5em; vertical-align: bottom; font-weight: bold;}
-#header .heading a {text-decoration: none; color: inherit; background-color: transparent;}
+#header .heading a {text-decoration: none; color: white; background-color: transparent;}
 
 /* Codestriker top-level menu */
 #header .menu {font-size: 85%; border-left: 1px solid silver; border-right: 1px solid silver; border-bottom: 1px solid silver; -moz-border-radius-bottomleft: 5px; -moz-border-radius-bottomright: 5px; padding: 0.5em}
