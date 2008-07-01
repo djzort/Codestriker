@@ -38,18 +38,14 @@
         [% IF delta.view_old_full_url != "" %]
         [%# Display heading with links to retrieve the entire file #%]
         <td class="line" colspan="2">
-	  <a href="javascript: myOpen('[% delta.view_old_full_url %]', 'Codestriker')">
 	    Line [% delta.old_linenumber %]
-	  </a>
 	  |
 	  <a href="javascript: myOpen('[% delta.view_old_full_both_url %]', 'Codestriker')">
 	    Parallel
 	  </a>
 	</td>
         <td class="line" colspan="2">
-	  <a href="javascript: myOpen('[% delta.view_new_full_url %]', 'Codestriker')">
 	    Line [% delta.new_linenumber %]
-	  </a>
 	  |
 	  <a href="javascript: myOpen('[% delta.view_new_full_both_url %]', 'Codestriker')">
 	    Parallel
