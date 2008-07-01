@@ -244,7 +244,9 @@ sub generate_header {
     
 
     # Print the basic HTML header header, with the inclusion of the scripts.
-    print '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">';
+    # Make sure a DOCTYPE is used which will put IE 6 and above into
+    # "standards-compliant mode": http://msdn.microsoft.com/en-us/library/ms535242(VS.85).aspx.
+    print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">';
     print "\n";
     print '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">';
     print "\n";
