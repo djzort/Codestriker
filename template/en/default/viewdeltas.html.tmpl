@@ -55,7 +55,7 @@
 	    Parallel
 	  </a>
 	</td>
-        [% ELSE %]
+        [% ELSIF !delta.binary %]
         [%# Just display the line numbers for the delta without any links. #%]
         <td class="line" colspan="2">Line [% delta.old_linenumber %]</td>
         <td class="line" colspan="2">Line [% delta.new_linenumber %]</td>
