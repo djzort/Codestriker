@@ -50,7 +50,12 @@ sub _filter {
     push @args, '-f';
     push @args, '-t';
     push @args, $self->{tabwidth};
-    Codestriker::execute_command($read_stdout_fh, undef, $self->{highlight}, @args);
+
+	# Wrap the command in an eval in case highlight fails running over the file - for
+	# example if it is an unknown file type.
+    eval {
+    	Codestriker::execute_command($read_stdout_fh, undef, $self->{highlight}, @args);
+    };
     if ($read_data eq "") {
     	# Assume this occurred because the filename was an unsupported type.
     	# Just return the text appropriately encoded for html output.
