@@ -65,12 +65,12 @@
       <tr>
 	[% IF delta.new_file %]
 	<td>[% line.new_data_line %]</td>
-	<td class="[% delta.new_file_class %]" colspan="3">[% line.new_data %]</td>
+	<td class="[% delta.new_file_class %]" colspan="3"> [% line.new_data %]</td>
 	[% ELSE %]
 	<td>[% line.old_data_line %]</td>
-	<td class="[% line.old_data_class %]">[% line.old_data %]</td>
+	<td class="[% line.old_data_class %]"> [% line.old_data %]</td>
 	<td>[% line.new_data_line %]</td>
-	<td class="[% line.new_data_class %]">[% line.new_data %]</td>
+	<td class="[% line.new_data_class %]"> [% line.new_data %]</td>
 	[% END %]
       </tr>
       [% END %]
