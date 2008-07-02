@@ -13,29 +13,25 @@
     <p>
 [% END %]
 
-<table cellpadding="5" cellspacing="0" border="0" width="100%">
-<tr class="tab">
-   <td width="1%" nowrap class=[% IF topicview == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
-	<a class="tab" href="[% view_topic_url %]">Topic Text</a></td>
-   <td width="1" class="space">&nbsp;</td>
-   <td width="1%" nowrap class=[% IF topiccomments == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
-	<a class="tab" href="[% view_comments_url %]">Topic Comments ([% number_comments %])</a></td>
-   <td width="1" class="space">&nbsp;</td>
-   <td width="1%" nowrap class=[% IF topicproperties == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
-	<a class="tab" href="[% view_topic_properties_url %]">Topic Properties</a></td>
-   <td width="1" class="space">&nbsp;</td>
-   <td width="1%" nowrap class=[% IF topicinfo == 0 %]"notselected"[% ELSE %]"selected"[% END %]>
-	<a class="tab" href="[% view_topicinfo_url %]">Topic Information</a> </td>
-   <td colspan=2 class="space" align=right><b>[% author | html_entity %]</b></td>
-</tr>
-</table>
-
-<table cellpadding="5" cellspacing="0" border="0" width="100%">
-<tr class="tab">
-    <td>Topic title: <b>[% title | html_entity %]</b></td>
-    <td align=right>[% document_creation_time | html_entity %]</td>
-</tr>
-</table>
+<div class="tabs">
+  <div class="tabfloat">[% author | html_entity %]</div>
+  <div class=[% IF topicview == 0 %]"tab notselected"[% ELSE %]"tab selected"[% END %]>
+    <a href="[% view_topic_url %]">Topic Text</a>
+  </div>
+  <div class=[% IF topiccomments == 0 %]"tab notselected"[% ELSE %]"tab selected"[% END %]>
+    <a href="[% view_comments_url %]">Topic Comments ([% number_comments %])</a>
+  </div>
+  <div class=[% IF topicproperties == 0 %]"tab notselected"[% ELSE %]"tab selected"[% END %]>
+    <a href="[% view_topic_properties_url %]">Topic Properties</a>
+  </div>
+  <div class=[% IF topicinfo == 0 %]"tab notselected"[% ELSE %]"tab selected"[% END %]>
+    <a href="[% view_topicinfo_url %]">Topic Information</a>
+  </div>
+</div>
+<div class="aftertabs">
+  <div class="aftertabfloat">[% document_creation_time | html_entity %]</div>
+  <div>Topic title: <b>[% title | html_entity %]</b></div>
+</div>
 
 [%# If this topic obsoletes any other topics, show them now #%]
 [% IF obsoleted_topics.size > 0 %]

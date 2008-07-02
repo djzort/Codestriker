@@ -161,18 +161,23 @@ TD.tt1 {background-color: #eeeeee; font-family: Georgia, serif}
 
 /* Codestriker heading */
 #header {margin-bottom: 1em; font-family: sans-serif;}
-#header .heading {background-color: #404D6C; color: white; font-size: 110%; -moz-border-radius-topleft: 5px; -moz-border-radius-topright: 5px; margin: 0; padding: 0.5em; vertical-align: bottom; font-weight: bold;}
+#header .heading {background-color: #404D6C; color: white; font-size: 110%; border-top-left-radius: 5px; -moz-border-radius-topleft: 5px; border-top-right-radius: 5px; -moz-border-radius-topright: 5px; margin: 0; padding: 0.5em; vertical-align: bottom; font-weight: bold;}
 #header .heading a {text-decoration: none; color: white; background-color: transparent;}
 
 /* Codestriker top-level menu */
-#header .menu {font-size: 85%; border-left: 1px solid silver; border-right: 1px solid silver; border-bottom: 1px solid silver; -moz-border-radius-bottomleft: 5px; -moz-border-radius-bottomright: 5px; padding: 0.5em}
+#header .menu {font-size: 85%; border-left: 1px solid silver; border-right: 1px solid silver; border-bottom: 1px solid silver; border-bottom-left-radius: 5px; -moz-border-radius-bottomleft: 5px; border-bottom-right-radius: 5px; -moz-border-radius-bottomright: 5px; padding: 0.5em;}
 
 /* Tabbing styles */
-TR.tab {background-color: #abd; font-family: Georgia, serif}
-TD.selected {background-color: #abd}
-TD.notselected {background-color: #cccccc}
-TD.space {background-color: white}
-A.tab {text-decoration: none}
+DIV.tabs {width: 100%; font-family: sans-serif;}
+DIV.tab {display: block; float: left; padding: 0.3em 0.4em; margin-right: 0.4em; border-top-left-radius: 5px; -moz-border-radius-topleft: 5px; border-top-right-radius: 5px; -moz-border-radius-topright: 5px;}
+DIV.tab.selected {background-color: #abd;}
+DIV.tab.selected:hover {background-color: #bce;}
+DIV.tab.notselected {background-color: #ccc;}
+DIV.tab.notselected:hover {background-color: #ddd;}
+DIV.tab A {text-decoration: none;}
+DIV.tabfloat {font-weight: bold; float: right;}
+DIV.aftertabs {left: 0; right: 0; background-color: #abd; padding: 0.3em 0.4em; font-family: sans-serif; clear: both;}
+DIV.aftertabfloat {float: right}
 
 /* Styles for error field in comment posting tooltip. */
 span.hidden {display: none}
@@ -191,7 +196,7 @@ SPAN.com { color:#008080; }
 SPAN.dir { color:#008200; }
 SPAN.sym { color:#000000; }
 SPAN.line { color:#555555; }
-SPAN.mark	{ background-color:#ffffbb;}
+SPAN.mark { background-color:#ffffbb;}
 SPAN.kwa { color:#000080; font-weight:bold; }
 SPAN.kwb { color:#000080; font-weight:bold; }
 SPAN.kwc { color:#000000; }

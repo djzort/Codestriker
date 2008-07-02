@@ -60,8 +60,9 @@ Version 1.9.5
   in either the start or end tag field.  
   
 * Updated the Codestriker CSS file significantly based on the work by
-  Kannan Goundan <cakoose@users.sourceforge.net>.  Also changed the 
-  appearance of the application to give it a more modern look.
+  Kannan Goundan <cakoose@users.sourceforge.net> ands Daniel Noll. 
+  Also changed the appearance of the application to give it a more
+  modern appearance.
   
 * Can now comment on any line of any file in the review, not just those
   that are a part of the diff file.  
