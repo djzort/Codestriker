@@ -142,7 +142,7 @@ sub getDiff ($$$$$$) {
     }
 
     # Cheat - having two '-u's changes nothing.
-    my $extra_options = $default_to_head ? '-u' : '-f';
+    my $extra_options = $default_to_head ? '-f' : '-u';
 
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
 
