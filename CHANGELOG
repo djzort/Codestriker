@@ -78,7 +78,7 @@ Version 1.9.5
   topic should be ordered by filename.  Apparently Subversion can
   produce diff topics in some circumstances in arbitrary order,
   where using this setting would make sense.  Default is for this
-  setting to disabled.
+  setting to be enabled.
 	
 Version 1.9.4
 
