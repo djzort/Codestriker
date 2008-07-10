@@ -24,7 +24,7 @@ use strict;
 use Config;
 use lib '../lib';
 
-require 5.8.0;
+require 5.008_0;
 
 # Now load up the required modules.  Do this is a lazy fashion so that Perl
 # doesn't try to grab this during compile time, otherwise nasty-looking

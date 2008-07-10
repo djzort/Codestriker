@@ -6,6 +6,9 @@ Version 1.9.6
 * "Default to head" option for CVS topic creation was not used when
   selected, but when it was unselected.  This has now been fixed.  
   Spotted by mnk26@users.sourceforge.net.
+  
+* Fix for "v-string in use/require non-portable" warning when using
+  Perl 5.10 from rob_webset@users.sourceforge.net.  
 
 Version 1.9.5
 
