@@ -46,6 +46,14 @@ sub parse ($$) {
 	    $line = <$fh>;
 	}
 	return () unless defined $line;
+	
+	# Git patches might have an index: line, such as:
+	# index b3fc290..d13313f 100644
+	if ($line =~ /^index /o) {
+		$line = <$fh>;
+	}
+	return () unless defined $line;
+	
 
         # Need to check for binary file differences.
         # Unfortunately, when you provide the "-N" argument to diff,
@@ -61,7 +69,8 @@ sub parse ($$) {
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
-	} elsif ($line =~ /^\-\-\- (.*)\t/o) {
+	} elsif ($line =~ /^\-\-\- ([^\t]+)/o) {
+		# Note git and quilt diffs don't have a tab character unlike normal diffs.
 	    $filename = $1;
 	} else {
 	    return ();
@@ -76,7 +85,7 @@ sub parse ($$) {
 	    if ($line =~ /^\+\+\+ \/dev\/null/o) {
 		# File has been removed.
 		$revision = $Codestriker::REMOVED_REVISION;
-	    } elsif ($line =~ /^\+\+\+ (.*)\t/o) {
+	    } elsif ($line =~ /^\+\+\+ ([^\t]+)/o) {
 		$filename = $1;
 	    } else {
 		return ();

@@ -12,6 +12,8 @@ Version 1.9.6
   
 * Deleting a topic connected with a TestDirector bug has been fixed
   from rob_webset@users.sourceforge.net.
+  
+* Ability to parse git patches correctly.  
 
 Version 1.9.5
 

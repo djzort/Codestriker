@@ -1,0 +1,80 @@
+diff --git a/builtin-apply.c b/builtin-apply.c
+index b3fc290..d13313f 100644
+--- a/builtin-apply.c
++++ b/builtin-apply.c
+@@ -2296,7 +2296,8 @@ static int apply_data(struct patch *patch, struct stat *st, struct cache_entry *
+ 
+ 	strbuf_init(&buf, 0);
+ 
+-	if ((tpatch = in_fn_table(patch->old_name)) != NULL) {
++	if (!(patch->is_copy || patch->is_rename) &&
++	    ((tpatch = in_fn_table(patch->old_name)) != NULL)) {
+ 		if (tpatch == (struct patch *) -1) {
+ 			return error("patch %s has been renamed/deleted",
+ 				patch->old_name);
+@@ -2375,7 +2376,7 @@ static int verify_index_match(struct cache_entry *ce, struct stat *st)
+ static int check_preimage(struct patch *patch, struct cache_entry **ce, struct stat *st)
+ {
+ 	const char *old_name = patch->old_name;
+-	struct patch *tpatch;
++	struct patch *tpatch = NULL;
+ 	int stat_ret = 0;
+ 	unsigned st_mode = 0;
+ 
+@@ -2389,7 +2390,9 @@ static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s
+ 		return 0;
+ 
+ 	assert(patch->is_new <= 0);
+-	if ((tpatch = in_fn_table(old_name)) != NULL) {
++
++	if (!(patch->is_copy || patch->is_rename) &&
++	    (tpatch = in_fn_table(old_name)) != NULL) {
+ 		if (tpatch == (struct patch *) -1) {
+ 			return error("%s: has been deleted/renamed", old_name);
+ 		}
+@@ -2399,6 +2402,7 @@ static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s
+ 		if (stat_ret && errno != ENOENT)
+ 			return error("%s: %s", old_name, strerror(errno));
+ 	}
++
+ 	if (check_index && !tpatch) {
+ 		int pos = cache_name_pos(old_name, strlen(old_name));
+ 		if (pos < 0) {
+diff --git a/t/t4112-apply-renames.sh b/t/t4112-apply-renames.sh
+index 70a1859..f9ad183 100755
+--- a/t/t4112-apply-renames.sh
++++ b/t/t4112-apply-renames.sh
+@@ -36,6 +36,9 @@ typedef struct __jmp_buf jmp_buf[1];
+ 
+ #endif /* _SETJMP_H */
+ EOF
++cat >klibc/README <<\EOF
++This is a simple readme file.
++EOF
+ 
+ cat >patch <<\EOF
+ diff --git a/klibc/arch/x86_64/include/klibc/archsetjmp.h b/include/arch/cris/klibc/archsetjmp.h
+@@ -113,6 +116,23 @@ rename to include/arch/m32r/klibc/archsetjmp.h
+ 
+ -#endif /* _SETJMP_H */
+ +#endif /* _KLIBC_ARCHSETJMP_H */
++diff --git a/klibc/README b/klibc/README
++--- a/klibc/README
+++++ b/klibc/README
++@@ -1,1 +1,4 @@
++ This is a simple readme file.
+++And we add a few
+++lines at the
+++end of it.
++diff --git a/klibc/README b/klibc/arch/README
++copy from klibc/README
++copy to klibc/arch/README
++--- a/klibc/README
+++++ b/klibc/arch/README
++@@ -1,1 +1,3 @@
++ This is a simple readme file.
+++And we copy it to one level down, and
+++add a few lines at the end of it.
+ EOF
+ 
+ find klibc -type f -print | xargs git update-index --add --

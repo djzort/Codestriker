@@ -18,8 +18,8 @@
 	[%# Output the diff description if it is present. #%]
 	[% IF delta.description != "" %]
 	<tr>
-	  <td class="line" colspan="2">[% delta.description | html_entity %]</td>
-	  <td class="line" colspan="2">[% delta.description | html_entity %]</td>
+	  <td class="line" align="left">[% delta.description | html_entity %]</td>
+	  <td class="line" align="right">[% delta.description | html_entity %]</td>
 	</tr>
 	[% END %]
     </table>
