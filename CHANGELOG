@@ -11,7 +11,12 @@ Version 1.9.6
   Perl 5.10 from rob_webset@users.sourceforge.net.
   
 * Deleting a topic connected with a TestDirector bug has been fixed
-  from rob_webset@users.sourceforge.net.
+  by rob_webset@users.sourceforge.net.
+  
+* Creation of Subversion topics which use a file for the module field
+  in the create topic screen may not work correctly for some versions
+  of Subversion.  This has now been fixed by 
+  rob_webset@users.sourceforge.net. 
   
 * Ability to parse git patches correctly.  
 

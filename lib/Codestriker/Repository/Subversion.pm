@@ -135,7 +135,7 @@ sub is_file_url {
 	open($read_stdout_fh, '<', \$read_data);
 	while (<$read_stdout_fh>) {
 	    if (/kind\s*\=\s*\"(\w+)\"/) {
-		$file_url = $1 eq "File";
+		$file_url = $1 =~ /^File$/io;
 		last;
 	    }
 	}
