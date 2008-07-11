@@ -8,7 +8,10 @@ Version 1.9.6
   Spotted by mnk26@users.sourceforge.net.
   
 * Fix for "v-string in use/require non-portable" warning when using
-  Perl 5.10 from rob_webset@users.sourceforge.net.  
+  Perl 5.10 from rob_webset@users.sourceforge.net.
+  
+* Deleting a topic connected with a TestDirector bug has been fixed
+  from rob_webset@users.sourceforge.net.
 
 Version 1.9.5
 

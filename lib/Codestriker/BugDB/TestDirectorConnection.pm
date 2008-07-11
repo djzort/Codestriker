@@ -128,7 +128,6 @@ sub _update_bug_delete($$$) {
 	    }
 	    $attach_counter++;
 	}
-	$attachments->post();
     }
 }
 
