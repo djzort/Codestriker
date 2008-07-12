@@ -16,19 +16,19 @@ sub filter {
     # First handle any URL linking.
     my @words = split /(\s)/, $text;
     my $result = "";
-    for (my $i = 0; $i <= $#words; $i++) {
-	if ($words[$i] =~ /^([A-Za-z]+:\/\/.*[A-Za-z0-9_])(.*)$/o) {
+    for my $word (@words) {
+	if ($word =~ /^([A-Za-z]+:\/\/[^<]+[^<\.])(.*)$/o) {
 	    # A URL, create a link to it.
-	    $result .= "<A HREF=\"$1\">$1</A>$2";
+	    $result .= "<a href=\"$1\">$1</a>$2";
 	} else {
-	    $result .= $words[$i];
+	    $result .= $word;
 	}
     }
 
     # If there is a link to a bug tracking system, automagically modify all
     # text of the form "[Bb]ug \d+" to a hyperlink for that bug record.
     if (defined $Codestriker::bugtracker && $Codestriker::bugtracker ne "") {
-	$result =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<A HREF="${Codestriker::bugtracker}$3">$1$2$4<\/A>/mg;
+	$result =~ s/(\b)([Bb][Uu][Gg]\s*(\d+))(\b)/$1<a href="${Codestriker::bugtracker}$3">$1$2$4<\/a>/mg;
     }
     
     return $result;
