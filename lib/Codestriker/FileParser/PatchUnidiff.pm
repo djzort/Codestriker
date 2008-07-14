@@ -69,7 +69,7 @@ sub parse ($$) {
 	} elsif ($line =~ /^\-\-\- \/dev\/null/o) {
 	    # File has been added.
 	    $revision = $Codestriker::ADDED_REVISION;
-	} elsif ($line =~ /^\-\-\- ([^\t]+)/o) {
+	} elsif ($line =~ /^\-\-\- ([^\t\n]+)/o) {
 		# Note git and quilt diffs don't have a tab character unlike normal diffs.
 	    $filename = $1;
 	} else {
@@ -85,7 +85,7 @@ sub parse ($$) {
 	    if ($line =~ /^\+\+\+ \/dev\/null/o) {
 		# File has been removed.
 		$revision = $Codestriker::REMOVED_REVISION;
-	    } elsif ($line =~ /^\+\+\+ ([^\t]+)/o) {
+	    } elsif ($line =~ /^\+\+\+ ([^\t\n]+)/o) {
 		$filename = $1;
 	    } else {
 		return ();
