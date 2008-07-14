@@ -9,17 +9,18 @@ use Codestriker::FileParser::PatchUnidiff;
 
 # Parse the test git patch file.
 my $fh;
-open($fh, '<', '../../test/testtopictexts/git-diff1.txt');
+open( $fh, '<', '../../test/testtopictexts/git-diff1.txt' );
 my @deltas = Codestriker::FileParser::PatchUnidiff->parse($fh);
 close($fh);
 
 # Set what the expected output should be.
 my @expected;
 push @expected, make_delta(
-    filename => 'b/builtin-apply.c',
+	filename       => 'b/builtin-apply.c',
 	old_linenumber => 2296,
 	new_linenumber => 2296,
-	description => 'static int apply_data(struct patch *patch, struct stat *st, struct cache_entry *',
+	description    =>
+		'static int apply_data(struct patch *patch, struct stat *st, struct cache_entry *',
 	text => <<'END_DELTA',
  
  	strbuf_init(&buf, 0);
@@ -34,10 +35,11 @@ END_DELTA
 );
 
 push @expected, make_delta(
-    filename => 'b/builtin-apply.c',
+	filename       => 'b/builtin-apply.c',
 	old_linenumber => 2375,
 	new_linenumber => 2376,
-	description => 'static int verify_index_match(struct cache_entry *ce, struct stat *st)',
+	description    =>
+		'static int verify_index_match(struct cache_entry *ce, struct stat *st)',
 	text => <<'END_DELTA',
  static int check_preimage(struct patch *patch, struct cache_entry **ce, struct stat *st)
  {
@@ -51,10 +53,11 @@ END_DELTA
 );
 
 push @expected, make_delta(
-    filename => 'b/builtin-apply.c',
+	filename       => 'b/builtin-apply.c',
 	old_linenumber => 2389,
 	new_linenumber => 2390,
-	description => 'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
+	description    =>
+		'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
 	text => <<'END_DELTA',
  		return 0;
  
@@ -70,10 +73,11 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename => 'b/builtin-apply.c',
+	filename       => 'b/builtin-apply.c',
 	old_linenumber => 2399,
 	new_linenumber => 2402,
-	description => 'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
+	description    =>
+		'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
 	text => <<'END_DELTA',
  		if (stat_ret && errno != ENOENT)
  			return error("%s: %s", old_name, strerror(errno));
@@ -86,11 +90,11 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename => 'b/t/t4112-apply-renames.sh',
+	filename       => 'b/t/t4112-apply-renames.sh',
 	old_linenumber => 36,
 	new_linenumber => 36,
-	description => 'typedef struct __jmp_buf jmp_buf[1];',
-	text => <<'END_DELTA',
+	description    => 'typedef struct __jmp_buf jmp_buf[1];',
+	text           => <<'END_DELTA',
  
  #endif /* _SETJMP_H */
  EOF
@@ -104,11 +108,11 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename => 'b/t/t4112-apply-renames.sh',
+	filename       => 'b/t/t4112-apply-renames.sh',
 	old_linenumber => 113,
 	new_linenumber => 116,
-	description => 'rename to include/arch/m32r/klibc/archsetjmp.h',
-	text => <<'END_DELTA',
+	description    => 'rename to include/arch/m32r/klibc/archsetjmp.h',
+	text           => <<'END_DELTA',
  
  -#endif /* _SETJMP_H */
  +#endif /* _KLIBC_ARCHSETJMP_H */
@@ -136,26 +140,28 @@ END_DELTA
 );
 
 # Check that the extracted deltas match what is expected.
-is(@deltas, @expected, "Number of deltas in git patch 1");
-for (my $index = 0; $index < @deltas; $index++) {
-	is_deeply($deltas[$index], $expected[$index], "Delta $index in git patch 1");
+is( @deltas, @expected, "Number of deltas in git patch 1" );
+for ( my $index = 0; $index < @deltas; $index++ ) {
+	is_deeply( $deltas[$index], $expected[$index],
+		"Delta $index in git patch 1" );
 }
 
 # Convenience function for creating a delta object.
 sub make_delta {
+
 	# Set constant properties for all git deltas.
 	my $delta = {};
-	$delta->{binary} = 0;
-    $delta->{repmatch} = 0;
-    $delta->{revision} = $Codestriker::PATCH_REVISION;
+	$delta->{binary}   = 0;
+	$delta->{repmatch} = 0;
+	$delta->{revision} = $Codestriker::PATCH_REVISION;
 
 	# Apply the passed in arguments.
 	my %arg = @_;
-	$delta->{filename} = $arg{filename};
+	$delta->{filename}       = $arg{filename};
 	$delta->{old_linenumber} = $arg{old_linenumber};
 	$delta->{new_linenumber} = $arg{new_linenumber};
-	$delta->{description} = $arg{description};
-    $delta->{text} = $arg{text};
+	$delta->{description}    = $arg{description};
+	$delta->{text}           = $arg{text};
 
-    return $delta;
-}						   
+	return $delta;
+}
