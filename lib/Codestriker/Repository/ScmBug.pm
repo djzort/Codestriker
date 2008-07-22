@@ -58,7 +58,11 @@ sub toString ($) {
 sub getDiff {
     my ($self, $bugids, $stdout_fh, $stderr_fh, $default_to_head) = @_;
 
-    my $affected_files_list = $self->{scmbug}->get_affected_files( $bugids );
+    # Remove spaces from the comma-separated list of bug ids so that
+    # "123, 456" is transformed to "123,456" which is the form
+    # Scmbug::ActivityUtilities expects.
+    $bugids =~ s/ //g;
+    my $affected_files_list = $self->{scmbug}->get_affected_files($bugids);
 
     foreach my $changeset ( @{ $affected_files_list } ) {
 	

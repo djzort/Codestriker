@@ -23,7 +23,11 @@ Version 1.9.6
 * Better detection of filename extensions for highlighting.  This
   previously caused issues for temporary directories which contained 
   a period, but the filename itself didn't.  Reported by
-  rob_webset@users.sourceforge.net.  
+  rob_webset@users.sourceforge.net.
+  
+* Scmbug integration now works correctly if multiple bug IDs are
+  specified is the create topic screen.  Fixed by
+  rob_webset@users.sourceforge.net.
 
 Version 1.9.5
 
