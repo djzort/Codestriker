@@ -75,7 +75,8 @@ sub filter {
     # Determine the filename extension so the highlighter knows what language
     # to apply highlighting to.  Handle CVS files which might end in ,v.
     my $extension = ".txt";
-    if ($delta->{filename} =~ /^.*(\..*),v$/o || $delta->{filename} =~ /^.*(\..*)$/o) {
+	if ($delta->{filename} =~ /^.*(\.[^\/\\]*),v$/o ||
+	    $delta->{filename} =~ /^.*(\.[^\/\\]*)$/o) {    
     	$extension = $1;
     }
     

@@ -18,7 +18,12 @@ Version 1.9.6
   of Subversion.  This has now been fixed by 
   rob_webset@users.sourceforge.net. 
   
-* Ability to parse git patches correctly.  
+* Ability to parse git patches correctly.
+
+* Better detection of filename extensions for highlighting.  This
+  previously caused issues for temporary directories which contained 
+  a period, but the filename itself didn't.  Reported by
+  rob_webset@users.sourceforge.net.  
 
 Version 1.9.5
 
