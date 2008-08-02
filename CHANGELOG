@@ -30,7 +30,8 @@ Version 1.9.6
   rob_webset@users.sourceforge.net.
   
 * Fixed the parsing of Subversion diffs which contained modifications
-  within property sets.  Reported by clechasseur@users.sourceforge.net.  
+  within property sets.  Also fixed case where file in diff is empty.
+  Reported by clechasseur@users.sourceforge.net.  
 
 Version 1.9.5
 
