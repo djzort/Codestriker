@@ -1,0 +1,16 @@
+Index: users/clechasseur/local/devsetup/CoveoDevSetup.iss
+===================================================================
+--- users/clechasseur/local/devsetup/CoveoDevSetup.iss	(revision 44309)
++++ users/clechasseur/local/devsetup/CoveoDevSetup.iss	(revision 44310)
+@@ -31,3 +31,4 @@
+ 
+ [Languages]
+ Name: english; MessagesFile: compiler:Default.isl
++; woo!
+
+Property changes on: CoveoDevSetup.iss
+___________________________________________________________________
+Added: test:foo
+   + bar
+
+

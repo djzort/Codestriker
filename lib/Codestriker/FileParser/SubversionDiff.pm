@@ -45,36 +45,37 @@ sub parse ($$$) {
 	while ($line =~ /^.*Property changes on: .*$/o) {
 	    $line = <$fh>;
 	    return () unless defined $line &&
-		$line =~ /^___________________________________________________________________$/o;
+		                 $line =~ /^___________________________________________________________________$/o;
 	    
-	    # Keep reading until we either get to an Index: line, a property
-	    # block, an Added/Deleted/Modified lines or the end of file.
-	    while (defined $line &&
-		   $line !~ /^.*Index:/o &&
-		   $line !~ /^.*Added:/o &&
-		   $line !~ /^.*Deleted:/o &&
-		   $line !~ /^.*Modified:/o &&
-		   $line !~ /^.*Copied:/o &&
-		   $line !~ /^.*Property changes on:/o) {
-		$line = <$fh>;
-	    }
-	    
-	    if (! defined $line) {
-		# End of file has been reached, return what we have parsed.
-		return @result;
-	    }
-	}
+	    # Keep reading until we either get to the separator line or end of file. 
+        while (defined $line &&
+               $line !~ /^===================================================================$/o) {
+       	    if ($line =~ /^.*(Index|Added|Modified|Copied|Deleted): (.*)$/o) {
+			    $entry_type = $1;
+			    $filename = $2;
+            }
+        	$line = <$fh>;
+        }
+        
+        if (!defined $line) {
+		    # End of file has been reached, return what we have parsed.
+			return @result;
+        }
+    }
 
-	return () unless
-	    $line =~ /^.*(Index|Added|Modified|Copied|Deleted): (.*)$/o;
-	$entry_type = $1;
-	$filename = $2;
-	$line = <$fh>;
+    if ($line =~ /^.*(Index|Added|Modified|Copied|Deleted): (.*)$/o) {
+        $entry_type = $1;
+		$filename = $2;
+	    $line = <$fh>;
+    }
 
 	# The separator line appears next.
 	return () unless defined $line && $line =~ /^===================================================================$/o;
 	$line = <$fh>;
 
+	# Check if this is a file entry with no content.  If so, skip it.
+	next if ! defined $line || $line =~ /^\s*$/o;
+		
 	# Check if the delta represents a binary file.
 	if ($line =~ /^Cannot display: file marked as a binary type\./o ||
 	    $line =~ /^\(Binary files differ\)/o) {

@@ -1,0 +1,19 @@
+Index: users/clechasseur/local/devsetup/CoveoDevSetup.iss
+===================================================================
+--- users/clechasseur/local/devsetup/CoveoDevSetup.iss	(revision 44307)
++++ users/clechasseur/local/devsetup/CoveoDevSetup.iss	(revision 44308)
+@@ -31,3 +31,4 @@
+ 
+ [Languages]
+ Name: english; MessagesFile: compiler:Default.isl
++; woo!
+Index: users/clechasseur/local/devsetup/New Text Document.txt
+===================================================================
+
+Property changes on: New Text Document.txt
+___________________________________________________________________
+Added: svn:keywords
+   + Id HeadURL
+
+Index: users/clechasseur/local/devsetup/New Text Document (2).datata
+===================================================================

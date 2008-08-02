@@ -28,6 +28,9 @@ Version 1.9.6
 * Scmbug integration now works correctly if multiple bug IDs are
   specified is the create topic screen.  Fixed by
   rob_webset@users.sourceforge.net.
+  
+* Fixed the parsing of Subversion diffs which contained modifications
+  within property sets.  Reported by clechasseur@users.sourceforge.net.  
 
 Version 1.9.5
 

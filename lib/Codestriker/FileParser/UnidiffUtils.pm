@@ -52,6 +52,10 @@ sub read_unidiff_text($$$$) {
 		if ($num_matched_old_lines >= $number_old_lines &&
 		    $num_matched_new_lines >= $number_new_lines) {
 		    last unless $line =~ /^\s*$/o;
+		    
+		    # Consume excessive blank lines.
+	        $line = <$fh>;
+		    next;
 		}
 		else {
 		    if ($line =~ /^\-/o) {
