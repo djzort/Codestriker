@@ -77,7 +77,7 @@ sub retrieve {
     # Open a pipe to the CVS repository.
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
 
-    my $read_data;
+    my $read_data = '';
     my $read_stdout_fh = new FileHandle;
     open($read_stdout_fh, '>', \$read_data);
     my @args = ();

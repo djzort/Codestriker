@@ -63,7 +63,7 @@ sub retrieve ($$$\$) {
     # Sanitise the filename.
     $filename = sanitise_url_component($filename);
 
-    my $read_data;
+    my $read_data = '';
     my $read_stdout_fh = new FileHandle;
     open($read_stdout_fh, '>', \$read_data);
     my @args = ();
@@ -192,7 +192,7 @@ sub getDiff {
     }
 
     # Execute the diff command.
-    my $read_stdout_data;
+    my $read_stdout_data = '';
     my $read_stdout_fh = new FileHandle;
     open($read_stdout_fh, '>', \$read_stdout_data);
 
