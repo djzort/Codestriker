@@ -16,7 +16,10 @@ Version 1.9.6
 * Creation of Subversion topics which use a file for the module field
   in the create topic screen may not work correctly for some versions
   of Subversion.  This has now been fixed by 
-  rob_webset@users.sourceforge.net. 
+  rob_webset@users.sourceforge.net.
+  
+* Make sure XML representation of a topic has its data properly escaped.
+  Fixed by rob_webset@users.sourceforge.net.  
   
 * Ability to parse git patches correctly.
 

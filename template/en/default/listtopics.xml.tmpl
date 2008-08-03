@@ -5,23 +5,23 @@ Content-type: text/plain
     [% FOREACH topic = alltopics %]
     <topic>
 	<topicid>[% topic.topicid %]</topicid>
-	<title>[% topic.title %]</title>
-	<description>[% topic.description %]</description>
-	<topic_state>[% topic.topic_state %]</topic_state>
+	<title>[% topic.title | html_entity %]</title>
+	<description>[% topic.description | html_entity %]</description>
+	<topic_state>[% topic.topic_state | html_entity %]</topic_state>
 	<topic_state_id>[% topic.topic_state_id %]</topic_state_id>
-	<author>[% topic.author %]</author>
-	<cc>[% topic.cc %]</cc>
-	<reviewers>[% topic.reviewers %]</reviewers>
-	<project_name>[% topic.project_name %]</project_name>
+	<author>[% topic.author | html_entity %]</author>
+	<cc>[% topic.cc | html_entity %]</cc>
+	<reviewers>[% topic.reviewers | html_entity %]</reviewers>
+	<project_name>[% topic.project_name | html_entity %]</project_name>
 	<project_id>[% topic.project_id %]</project_id>
 	[%# Make sure we remove any password from the end of the repository %]
-	<repository>[% topic.repository.split( ';' ).0 %]</repository>
-	<module>[% topic.module %]</module>
-	<start_tag>[% topic.start_tag %]</start_tag>
-	<end_tag>[% topic.end_tag %]</end_tag>
-	<bug_ids>[% topic.bug_ids %]</bug_ids>
+	<repository>[% topic.repository.split( ';' ).0 | html_entity %]</repository>
+	<module>[% topic.module | html_entity %]</module>
+	<start_tag>[% topic.start_tag | html_entity %]</start_tag>
+	<end_tag>[% topic.end_tag | html_entity %]</end_tag>
+	<bug_ids>[% topic.bug_ids | html_entity %]</bug_ids>
 	<version>[% topic.version %]</version>
-	<creation_ts>[% topic.creation_ts %]</creation_ts>
+	<creation_ts>[% topic.creation_ts | html_entity %]</creation_ts>
     </topic>
     [% END %]
 </topics>
