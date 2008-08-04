@@ -1,0 +1,54 @@
+diff -r 24ed0f64c715 -r 6d633e6509fe addedtest.txt
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/addedtest.txt	Sun Aug 03 16:58:46 2008 +0200
+@@ -0,0 +1,14 @@
++Lorem ipsum dolor sit amet, consectetuer 
++adipiscing elit. Sed laoreet erat vel arcu. Vestibulum 
++ante ipsum primis in faucibus orci luctus et ultrices posuere 
++cubilia Curae; Aliquam et diam ac nisi congue semper. Nulla 
++consequat. Cras molestie dictum turpis. Aenean lorem diam, 
++luctus at, tempus ac, semper ut, lorem. Nulla consequat, velit
++eu tincidunt commodo, diam lorem sodales leo, vitae aliquet leo 
++leo eget eros. Vestibulum consectetuer iaculis pede. 
++Suspendisse potenti. Sed non magna. Donec vel augue. 
++Sed iaculis nisi sed nunc. Sed cursus tellus eu risus. 
++Ut eros quam, imperdiet et, ultricies non, iaculis at, sem. 
++Donec et lacus in massa aliquet pretium. Suspendisse lacus. 
++Vestibulum ante ipsum primis in faucib
++us orci luctus et ultrices posuere cubilia Curae;
+\ No newline at end of file
+diff -r 24ed0f64c715 -r 6d633e6509fe deletetest.txt
+--- a/deletetest.txt	Sun Aug 03 16:57:40 2008 +0200
++++ /dev/null	Thu Jan 01 00:00:00 1970 +0000
+@@ -1,3 +0,0 @@
+-Class aptent taciti sociosqu ad litora torquent 
+-per conubia nostra, per inceptos himenaeos. 
+-Aliquam auctor. Proin tempor commodo nisl. 
+diff -r 24ed0f64c715 -r 6d633e6509fe feedback.html
+--- a/feedback.html	Sun Aug 03 16:57:40 2008 +0200
++++ b/feedback.html	Sun Aug 03 16:58:46 2008 +0200
+@@ -10,7 +10,6 @@
+   }
+   div.modalFeedback h1{
+       margin: 20px 20px 20px 20px;
+-      font-size: 18pt;
+   }
+    #feedbackForm textarea {
+       font-family: Arial,Helvetica,sans-serif;
+@@ -23,6 +22,7 @@
+     border: solid 3px #ddddFF;
+     padding: 3px;
+     width: 50px;
++    height: 50px;
+   }
+   #feedbackForm input#feedback_email{
+    width: 60%;
+@@ -31,7 +31,7 @@
+ </head>
+ <body>
+ 
+-Hello from hg
++Hello to codestriker from hg
+ 
+ </body>
+ </html>

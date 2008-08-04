@@ -3,8 +3,10 @@
 use strict;
 use Fatal qw / open close /;
 use Test::More tests => 33;
+use Test::Differences;
 
 use lib '../../lib';
+use Codestriker;
 use Codestriker::FileParser::SubversionDiff;
 
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff1.txt', ());
@@ -12,9 +14,9 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff2.txt', ());
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff3.txt', ());
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff4.txt',
     make_delta(filename => 'parseBuildLogs',
-			   old_linenumber => 9,
-			   new_linenumber => 9,
-	           revision => 7,
+			   old_linenumber => '9',
+			   new_linenumber => '9',
+	           revision => '7',
 	           text => <<'END_DELTA',
      if [[ "${MYHOSTNAME}" == "compaq" ]]; then
          DATABASEHOST="elmo";
@@ -29,9 +31,9 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff4.txt',
 END_DELTA
     ),
     make_delta(filename => 'buildCleanup.py',
-			   old_linenumber => 28,
-			   new_linenumber => 28,
-	           revision => 7,
+			   old_linenumber => '28',
+			   new_linenumber => '28',
+	           revision => '7',
 	           text => <<'END_DELTA',
  #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
  #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
@@ -49,9 +51,9 @@ END_DELTA
    
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff5.txt',
     make_delta(filename => 'parseBuildLogs',
-			   old_linenumber => 9,
-			   new_linenumber => 9,
-	           revision => 6,
+			   old_linenumber => '9',
+			   new_linenumber => '9',
+	           revision => '6',
 	           text => <<'END_DELTA',
      if [[ "${MYHOSTNAME}" == "compaq" ]]; then
          DATABASEHOST="elmo";
@@ -66,9 +68,9 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff5.txt',
 END_DELTA
     ),
     make_delta(filename => 'buildCleanup.py',
-			   old_linenumber => 28,
-			   new_linenumber => 28,
-	           revision => 6,
+			   old_linenumber => '28',
+			   new_linenumber => '28',
+	           revision => '6',
 	           text => <<'END_DELTA',
  #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
  #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
@@ -86,9 +88,9 @@ END_DELTA
     
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff6.txt',
     make_delta(filename => 'parseBuildLogs',
-			   old_linenumber => 9,
-			   new_linenumber => 9,
-	           revision => 6,
+			   old_linenumber => '9',
+			   new_linenumber => '9',
+	           revision => '6',
 	           text => <<'END_DELTA',
      if [[ "${MYHOSTNAME}" == "compaq" ]]; then
          DATABASEHOST="elmo";
@@ -103,9 +105,9 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff6.txt',
 END_DELTA
     ),
     make_delta(filename => 'buildCleanup.py',
-			   old_linenumber => 28,
-			   new_linenumber => 28,
-	           revision => 6,
+			   old_linenumber => '28',
+			   new_linenumber => '28',
+	           revision => '6',
 	           text => <<'END_DELTA',
  #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
  #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
@@ -123,9 +125,9 @@ END_DELTA
     
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff7.txt',
     make_delta(filename => 'users/clechasseur/local/devsetup/CoveoDevSetup.iss',
-			   old_linenumber => 31,
-			   new_linenumber => 31,
-	           revision => 44307,
+			   old_linenumber => '31',
+			   new_linenumber => '31',
+	           revision => '44307',
 	           text => <<'END_DELTA',
  
  [Languages]
@@ -136,9 +138,9 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-Propdiff8.txt',
     make_delta(filename => 'users/clechasseur/local/devsetup/CoveoDevSetup.iss',
-			   old_linenumber => 31,
-			   new_linenumber => 31,
-	           revision => 44309,
+			   old_linenumber => '31',
+			   new_linenumber => '31',
+	           revision => '44309',
 	           text => <<'END_DELTA',
  
  [Languages]
@@ -149,9 +151,9 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-look-diff1.txt',
     make_delta(filename => 't1.txt',
-	           old_linenumber => 0,
-	           new_linenumber => 1,
-	           revision => 0,
+	           old_linenumber => '0',
+	           new_linenumber => '1',
+	           revision => '0',
 	           text => <<'END_DELTA',
 +line1
 +line2
@@ -161,9 +163,9 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-look-diff2.txt',
     make_delta(filename => 't1.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 1,
-	           revision => 89,
+	           old_linenumber => '1',
+	           new_linenumber => '1',
+	           revision => '89',
 	           text => <<'END_DELTA',
 +line0
  line1
@@ -175,9 +177,9 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-look-diff3.txt',
     make_delta(filename => 't1.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 0,
-	           revision => 90,
+	           old_linenumber => '1',
+	           new_linenumber => '0',
+	           revision => '90',
 	           text => <<'END_DELTA',
 -line0
 -line1
@@ -189,9 +191,9 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-look-diff4.txt',
     make_delta(filename => 't1.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 1,
-	           revision => 92,
+	           old_linenumber => '1',
+	           new_linenumber => '1',
+	           revision => '92',
 	           text => <<'END_DELTA',
 -l1
 +l1
@@ -200,9 +202,9 @@ assert_delta_equals('../../test/testtopictexts/svn-look-diff4.txt',
 END_DELTA
     ),
     make_delta(filename => 't2.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 0,
-	           revision => 92,
+	           old_linenumber => '1',
+	           new_linenumber => '0',
+	           revision => '92',
 	           text => <<'END_DELTA',
 -l1
 END_DELTA
@@ -214,11 +216,12 @@ assert_delta_equals('../../test/testtopictexts/svn-look-diff5.txt',
 	           new_linenumber => -1,
 	           text => '',
 	           binary => 1,
+	           revision => $Codestriker::PATCH_REVISION
     ),
     make_delta(filename => 't2.txt',
-	           old_linenumber => 0,
-	           new_linenumber => 1,
-	           revision => 93,
+	           old_linenumber => '0',
+	           new_linenumber => '1',
+	           revision => '93',
 	           text => <<'END_DELTA',
 +aaa
 +bbb
@@ -232,11 +235,12 @@ assert_delta_equals('../../test/testtopictexts/svn-look-diff6.txt',
 	           new_linenumber => -1,
 	           text => '',
 	           binary => 1,
+	           revision => $Codestriker::REMOVED_REVISION
     ),
     make_delta(filename => 't1.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 1,
-	           revision => 94,
+	           old_linenumber => '1',
+	           new_linenumber => '1',
+	           revision => '94',
 	           text => <<'END_DELTA',
  l1
 +l11
@@ -246,9 +250,9 @@ assert_delta_equals('../../test/testtopictexts/svn-look-diff6.txt',
 END_DELTA
     ),
     make_delta(filename => 't2.txt',
-	           old_linenumber => 1,
-	           new_linenumber => 0,
-	           revision => 94,
+	           old_linenumber => '1',
+	           new_linenumber => '0',
+	           revision => '94',
 	           text => <<'END_DELTA',
 -aaa
 -bbb
@@ -256,9 +260,9 @@ END_DELTA
 END_DELTA
     ),
     make_delta(filename => 't3.txt',
-	           old_linenumber => 0,
-	           new_linenumber => 1,
-	           revision => 0,
+	           old_linenumber => '0',
+	           new_linenumber => '1',
+	           revision => '0',
 	           text => <<'END_DELTA',
 +labuda
 END_DELTA
@@ -301,7 +305,7 @@ sub assert_delta_equals {
 	# Check that the extracted deltas match what is expected.
 	is( @actual, @expected, "Number of deltas for file: $filename" );
 	for ( my $index = 0; $index < @actual; $index++ ) {
-		is_deeply( $actual[$index], $expected[$index],
-			       "Delta $index in file $filename" );
+		eq_or_diff( $actual[$index], $expected[$index],
+			        "Delta $index in file $filename" );
     }
 }

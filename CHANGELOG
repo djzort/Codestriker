@@ -23,6 +23,8 @@ Version 1.9.6
   
 * Ability to parse git patches correctly.
 
+* Ability to parse hg diffs (Mercurial SCM) correctly.
+
 * Better detection of filename extensions for highlighting.  This
   previously caused issues for temporary directories which contained 
   a period, but the filename itself didn't.  Reported by

@@ -5,6 +5,7 @@ use Fatal qw / open close /;
 use Test::More tests => 7;
 
 use lib '../../lib';
+use Codestriker;
 use Codestriker::FileParser::PatchUnidiff;
 
 # Parse the test git patch file.
