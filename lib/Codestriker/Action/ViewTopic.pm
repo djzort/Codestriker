@@ -188,11 +188,17 @@ sub process($$$) {
     # Setup the filetable template variable for displaying the table of
     # contents.
     my @filetable = ();
+    my $total_old_changes = 0;
+    my $total_new_changes = 0;
     for (my $i = 0; $i <= $#filenames; $i++) {
 	my $filerow = {};
 	my $filename = $filenames[$i];
 	$filerow->{filename} = $filename;
 	$filerow->{numchanges} = $numchanges[$i];
+	if (defined $numchanges[$i] && $numchanges[$i] =~ /^\+(\d+),\-(\d+)$/o) {
+		$total_old_changes += $2;
+		$total_new_changes += $1;
+	}
 	$filerow->{href_filename_url} = 
 	    $url_builder->view_url($topicid, -1, $mode, $i) .
 	    "#" . $filename;
@@ -212,6 +218,8 @@ sub process($$$) {
 	push @filetable, $filerow;
     }
     $vars->{'filetable'} = \@filetable;
+    $vars->{'total_old_changes'} = $total_old_changes;
+    $vars->{'total_new_changes'} = $total_new_changes;
 
     # Determine which deltas are to be retrieved.
     my @deltas = ();

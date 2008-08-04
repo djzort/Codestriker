@@ -36,7 +36,10 @@ Version 1.9.6
   
 * Fixed the parsing of Subversion diffs which contained modifications
   within property sets.  Also fixed case where file in diff is empty.
-  Reported by clechasseur@users.sourceforge.net.  
+  Reported by clechasseur@users.sourceforge.net.
+  
+* Show total added/removed line count after table of contents on view
+  topic screen.  Also show same line counts on create topic email.  
 
 Version 1.9.5
 

@@ -47,12 +47,13 @@ sub topic_create($$) {
     my $bcc = $topic->{author};
 
     # Send out the list of files changes when creating a new topic.
-    my (@filenames, @revisions, @offsets, @binary);
+    my (@filenames, @revisions, @offsets, @binary, @numchanges);
     $topic->get_filestable(
     		\@filenames,
                 \@revisions,
                 \@offsets,
-                \@binary);
+                \@binary,
+                \@numchanges);
 
     # Determine if any topics are obsoleted by this topic.
     my $query = new CGI;
@@ -74,8 +75,22 @@ sub topic_create($$) {
 	"$topic->{description}\n\n" .
 	$obsolete_text .
 	"$EMAIL_HR\n\n" .
-        "The topic was created with the following files:\n\n" .
-        join("\n",@filenames);
+        "The topic was created with the following files:\n\n";
+        
+    my $total_old_changes = 0;
+    my $total_new_changes = 0;
+    for (my $i = 0; $i <= $#filenames; $i++) {
+    	$notes .= $filenames[$i];
+    	if (defined $numchanges[$i]) {
+    		$notes .= " {" . $numchanges[$i] . "}";
+	        if ($numchanges[$i] =~ /^\+(\d+),\-(\d+)$/o) {
+		        $total_old_changes += $2;
+		        $total_new_changes += $1;
+	        }
+    	}
+    	$notes .= "\n";
+    }
+    $notes .= "\nTotal line count: {+" . $total_new_changes . ",-" . $total_old_changes . "}\n";    
 
     return $self->_send_topic_email($topic, 1, "Created", 1, $from, $to, $cc,
 				    $bcc, $notes);
