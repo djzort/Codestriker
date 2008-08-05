@@ -39,7 +39,11 @@ Version 1.9.6
   Reported by clechasseur@users.sourceforge.net.
   
 * Show total added/removed line count after table of contents on view
-  topic screen.  Also show same line counts on create topic email.  
+  topic screen.  Also show same line counts on create topic email.
+  
+* Make the topic title in the edit comment page link directly to the
+  code location being commented on rather than just the top of the
+  view topic page.  
 
 Version 1.9.5
 
