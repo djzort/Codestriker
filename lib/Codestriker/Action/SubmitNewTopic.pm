@@ -348,8 +348,7 @@ sub process($$$) {
     $feedback = Codestriker::TopicListeners::Manager::topic_create($topic);
                       
     # Obtain a URL builder object and determine the URL to the topic.
-    my $topic_url = $url_builder->view_url_extended($topicid, -1, "", "", "",
-						    $query->url(), 0);
+    my $topic_url = $url_builder->view_url(topicid => $topicid); 
                                                     
     # Indicate to the user that the topic has been created and an email has
     # been sent.

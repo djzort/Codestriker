@@ -56,8 +56,7 @@ sub topic_create($$) {
 	my $query = new CGI;
         my $url_builder = Codestriker::Http::UrlBuilder->new($query);
         my $topic_url =
-	    $url_builder->view_url_extended($topic->{topicid}, -1, "", "", "",
-					    $query->url(), 0);
+	    $url_builder->view_url(topicid => $topic->{topicid});
         
 	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
@@ -113,9 +112,7 @@ sub topic_changed($$$$) {
 	my $newstate = $topic->{topic_state};
 	my $query = new CGI;
         my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-        my $topic_url =
-	    $url_builder->view_url_extended($topic->{topicid}, -1, "", "", "",
-					    $query->url(), 0);
+        my $topic_url = $url_builder->view_url(topicid => $topic->{topicid});
  	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
         

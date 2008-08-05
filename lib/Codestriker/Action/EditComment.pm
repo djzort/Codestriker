@@ -58,7 +58,9 @@ sub process($$$) {
 						       $url_builder, $fview,
 						       $tabwidth, 1, 0);
 
-    my $view_topic_url = $url_builder->view_url($topicid, $line, $mode);
+    my $view_topic_url = $url_builder->view_url(topicid => $topicid, mode => $mode,
+                                                fview => $fn, filenumber => $fn,
+                                                new => $new, line => $line);
     my $view_comments_url = $url_builder->view_comments_url($topicid);
     
     $vars->{'view_topic_url'} = $view_topic_url;

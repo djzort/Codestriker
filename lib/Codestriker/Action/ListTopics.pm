@@ -133,7 +133,7 @@ sub process_default($$$) {
 	my $template_topic = {};
 
 	$template_topic->{'view_topic_url'} = 
-	    $url_builder->view_url($topic->{topicid}, -1, $mode);
+	    $url_builder->view_url(topicid => $topic->{topicid}, mode => $mode);
         
 	$template_topic->{'description'} = $topic->{description};
 

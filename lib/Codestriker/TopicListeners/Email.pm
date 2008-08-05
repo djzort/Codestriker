@@ -61,8 +61,7 @@ sub topic_create($$) {
     my @obsolete_topic_urls = ();
     foreach my $obsolete_topic (@{$topic->{obsoleted_topics}}) {
 	push @obsolete_topic_urls,
-	     $url_builder->view_url_extended($obsolete_topic, -1, "", "", "",
-					     $query->url(), 0);
+	     $url_builder->view_url(topicid => $obsolete_topic);
     }
     my $obsolete_text = "";
     if ($#obsolete_topic_urls >= 0) {

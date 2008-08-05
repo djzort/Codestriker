@@ -67,7 +67,7 @@ sub process($$$) {
     my @projectids = ($topic->{project_id});
 
     $vars->{'view_topic_url'} =
-	$url_builder->view_url($topicid, -1, $mode);
+	$url_builder->view_url(topicid => $topicid, mode => $mode);
 
     $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url($topicid);
     $vars->{'view_comments_url'} = $url_builder->view_comments_url($topicid);

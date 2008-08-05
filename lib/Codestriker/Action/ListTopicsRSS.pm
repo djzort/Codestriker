@@ -78,8 +78,7 @@ sub process($$$) {
 
         # do the easy stuff first, 1 to 1 mapping into the template.
 	my $link =
-	    $url_builder->view_url($topic->{topicid}, -1, $mode,
-				   $Codestriker::default_topic_br_mode);
+	    $url_builder->view_url(topicid => $topic->{topicid}, mode => $mode);
 
 	my $comment_link = $url_builder->view_comments_url($topic->{topicid});
 

@@ -21,6 +21,15 @@ sub new {
     my ($type, $query) = @_;
     my $self = {};
     $self->{query} = $query;
+    
+    # Determine default settings.
+    $self->{default_topic_create_mode} =
+        defined $Codestriker::default_topic_create_mode ?
+        $Codestriker::default_topic_create_mode : $Codestriker::COLOURED_MODE; 
+
+    $self->{default_file_to_view} =
+        defined $Codestriker::default_file_to_view ?
+        $Codestriker::default_file_to_view : -1; 
 
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
@@ -50,28 +59,18 @@ sub new {
     return bless $self, $type;
 }
 
-# Create the URL for viewing a topic with a specified tabwidth.
-sub view_url_extended {
-    my ($self, $topic, $line, $mode, $tabwidth, $email, $prefix,
-	$updated, $fview) = @_;
-    
-    return ($prefix ne "" ? $prefix : $self->{query}->url()) .
-	"?topic=$topic&action=view" .
-	($updated ? "&updated=$updated" : "") .
-	((defined $tabwidth && $tabwidth ne "") ? "&tabwidth=$tabwidth" : "") .
-	((defined $mode && $mode ne "") ? "&mode=$mode" : "") .
-	((defined $fview && $fview ne "") ? "&fview=$fview" : "") .
-	((defined $email && $email ne "") ? "&email=$email" : "") .
-	($line != -1 ? "#${line}" : "");
-}
-
 # Create the URL for viewing a topic.
 sub view_url {
-    my ($self, $topic, $line, $mode, $fview) = @_;
-    if (!(defined $mode)) { $mode = $Codestriker::default_topic_create_mode; }
-    if (!(defined $fview)) { $fview = $Codestriker::default_file_to_view; }
-    return $self->view_url_extended($topic, $line, $mode, "", "", "",
-				    undef, $fview);
+    my ($self, %args) = @_;
+    
+    return (defined $args{prefix} ? $args{prefix} : $self->{query}->url()) .
+	        "?topic=$args{topicid}&action=view" .
+	        (defined $args{updated} ? "&updated=$args{updated}" : "") .
+			(defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
+			"&mode=" . (defined $args{mode} ? $args{mode} : $self->{default_topic_create_mode}) .
+			"&fview=" . (defined $args{fview} ? $args{fview} : $self->{default_file_to_view}) .
+			(defined $args{email} ? "&email=$args{email}" : "") .
+			(defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
 }
 
 # Create the URL for downloading the topic text.

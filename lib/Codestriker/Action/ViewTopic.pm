@@ -150,16 +150,9 @@ sub process($$$) {
 
     # Obtain the links for the different viewing modes.
     $vars->{'coloured_mode_url'} =
-	$url_builder->view_url($topicid, -1, $Codestriker::COLOURED_MODE, $fview);
+	$url_builder->view_url(topicid => $topicid, mode => $Codestriker::COLOURED_MODE, fview => $fview);
     $vars->{'coloured_mono_mode_url'} =
-	$url_builder->view_url($topicid, -1,
-			       $Codestriker::COLOURED_MONO_MODE, $fview);
-    $vars->{'br_normal_mode_url'} =
-	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_NORMAL_MODE, $fview);
-    $vars->{'br_assist_mode_url'} =
-	$url_builder->view_url($topicid, -1, $mode,
-			       $Codestriker::LINE_BREAK_ASSIST_MODE, $fview);
+	$url_builder->view_url(topicid => $topicid, mode => $Codestriker::COLOURED_MONO_MODE, fview => $fview);
 
     # Set template variables relating to coloured mode.
     if ($mode == $Codestriker::COLOURED_MODE) {
@@ -175,14 +168,14 @@ sub process($$$) {
     $vars->{'tabwidth'} = $tabwidth;
     $vars->{'newtabwidth'} = $newtabwidth;
     $vars->{'change_tabwidth_url'} =
-	$url_builder->view_url_extended($topicid, -1, $mode, $newtabwidth,
-					"", "", 0, $fview);
+	$url_builder->view_url(topicid => $topicid, mode => $mode, tabwidth => $newtabwidth,
+					       fview => $fview);
 
     # Set the display all, display single URLs.
     $vars->{'display_all_files_url'} =
-	$url_builder->view_url($topicid, -1, $mode, -1);
+	$url_builder->view_url(topicid => $topicid, mode => $mode);
     $vars->{'display_single_file_url'} =
-	$url_builder->view_url($topicid, -1, $mode, 0);
+	$url_builder->view_url(topicid => $topicid, mode => $mode);
     $vars->{'fview'} = $fview;
 
     # Setup the filetable template variable for displaying the table of
@@ -200,7 +193,7 @@ sub process($$$) {
 		$total_new_changes += $1;
 	}
 	$filerow->{href_filename_url} = 
-	    $url_builder->view_url($topicid, -1, $mode, $i) .
+	    $url_builder->view_url(topicid => $topicid, mode => $mode, fview => $i) .
 	    "#" . $filename;
 	$filerow->{binary} = $binary[$i];
 
@@ -273,13 +266,13 @@ sub process($$$) {
 	# Create the next/previous file URL links.
     if ($filenumber > 0) {
 		$delta->{previous_file_url} =
-		    $url_builder->view_url($topicid, -1, $mode,
-					   $filenumber-1) . "#" . $filenames[$filenumber-1];
+		    $url_builder->view_url(topicid => $topicid, mode => $mode,
+					               fview => $filenumber-1) . "#" . $filenames[$filenumber-1];
 	    }
 	    if ($filenumber < $#filenames) {
 		$delta->{next_file_url} =
-		    $url_builder->view_url($topicid, -1, $mode,
-					   $filenumber+1) . "#" . $filenames[$filenumber+1];
+		    $url_builder->view_url(topicid => $topicid, mode => $mode,
+					               fview => $filenumber+1) . "#" . $filenames[$filenumber+1];
 	    }
 
 	    $current_filename = $delta->{filename};
@@ -351,7 +344,7 @@ sub ProcessTopicHeader
 	my $obsoleted_topic = Codestriker::Model::Topic->new($id);
 	my $entry = {};
 	$entry->{title} = $obsoleted_topic->{title};
-	$entry->{view_url} = $url_builder->view_url($id, -1);
+	$entry->{view_url} = $url_builder->view_url(topicid => $id);
 	push @obsoleted_topics, $entry;
     }
     $vars->{'obsoleted_topics'} = \@obsoleted_topics;
@@ -362,7 +355,7 @@ sub ProcessTopicHeader
 	my $superseeded_topic = Codestriker::Model::Topic->new($id);
 	my $entry = {};
 	$entry->{title} = $superseeded_topic->{title};
-	$entry->{view_url} = $url_builder->view_url($id, -1);
+	$entry->{view_url} = $url_builder->view_url(topicid => $id);
 	push @obsoleted_by, $entry;
     }
     $vars->{'obsoleted_by'} = \@obsoleted_by;
