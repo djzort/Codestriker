@@ -22,15 +22,6 @@ sub new {
     my $self = {};
     $self->{query} = $query;
     
-    # Determine default settings.
-    $self->{default_topic_create_mode} =
-        defined $Codestriker::default_topic_create_mode ?
-        $Codestriker::default_topic_create_mode : $Codestriker::COLOURED_MODE; 
-
-    $self->{default_file_to_view} =
-        defined $Codestriker::default_file_to_view ?
-        $Codestriker::default_file_to_view : -1; 
-
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
     # else.
@@ -67,8 +58,8 @@ sub view_url {
 	        "?topic=$args{topicid}&action=view" .
 	        (defined $args{updated} ? "&updated=$args{updated}" : "") .
 			(defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
-			"&mode=" . (defined $args{mode} ? $args{mode} : $self->{default_topic_create_mode}) .
-			"&fview=" . (defined $args{fview} ? $args{fview} : $self->{default_file_to_view}) .
+			(defined $args{mode} ? "&mode=$args{mode}" : "") .
+			(defined $args{fview} ? "&fview=$args{fview}" : "") .
 			(defined $args{email} ? "&email=$args{email}" : "") .
 			(defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
 }
