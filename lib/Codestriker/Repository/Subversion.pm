@@ -71,9 +71,7 @@ sub retrieve ($$$\$) {
     push @args, '--non-interactive';
     push @args, '--no-auth-cache';
     push @args, @{ $self->{userCmdLine} };
-    push @args, '--revision';
-    push @args, $revision;
-    push @args, $self->{repository_url} . '/' . $filename;
+    push @args, $self->{repository_url} . '/' . $filename . '@' . $revision;
     Codestriker::execute_command($read_stdout_fh, undef,
 				 $Codestriker::svn, @args);
 

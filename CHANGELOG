@@ -43,7 +43,12 @@ Version 1.9.6
   
 * Make the topic title in the edit comment page link directly to the
   code location being commented on rather than just the top of the
-  view topic page.  
+  view topic page.
+  
+* Use pegged revisions instead of operative revisions when retrieving 
+  files from Subversion to handle situations where files have been moved 
+  within the repository since the review was created.  Fixed by
+  clechasseur@users.sourceforge.net.  
 
 Version 1.9.5
 
