@@ -48,7 +48,11 @@ Version 1.9.6
 * Use pegged revisions instead of operative revisions when retrieving 
   files from Subversion to handle situations where files have been moved 
   within the repository since the review was created.  Fixed by
-  clechasseur@users.sourceforge.net.  
+  clechasseur@users.sourceforge.net.
+  
+* In the create topic email, show the URL to the associated bug records
+  if $bugtracker is defined in codestriker.conf rather than just the bug
+  IDs.  
 
 Version 1.9.5
 

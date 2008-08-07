@@ -432,13 +432,33 @@ sub _send_topic_email {
   
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $topic_url = $url_builder->view_url(topicid => $topic);
+    my $topic_url = $url_builder->view_url(topicid => $topic->{topicid});
     
     my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\"";
+    
+    # Set the bug ID line to report the actual URL links if possible.
+    my $bug_id_line = "";
+    if (defined $topic->{bug_ids} && $topic->{bug_ids} ne "") {
+	    $bug_id_line = "Bug IDs: ";
+	    if (defined $Codestriker::bugtracker) {
+	        my @bug_id_array = split /[\s,]+/, $topic->{bug_ids};
+	        for (my $i = 0; $i <= $#bug_id_array; $i++) {
+	    	    $bug_id_line .= $Codestriker::bugtracker . $bug_id_array[$i];
+	    	    if ($i < $#bug_id_array) {
+	    	        $bug_id_line .= "\n         ";
+	    	    }
+	        }
+	        $bug_id_line .= "\n";
+	    }
+	    else {
+	    	$bug_id_line .= $topic->{bug_ids} . "\n";
+	    }	
+    }
+    
     my $body =
 	"Topic \"$topic->{title}\"\n" .
 	"Author: $topic->{author}\n" .
-	(($topic->{bug_ids} ne "") ? "Bug IDs: $topic->{bug_ids}\n" : "") .
+	$bug_id_line .
 	"Reviewers: $topic->{reviewers}\n" .
         (($include_url) ? "URL: $topic_url\n\n" : "") .
 	"$EMAIL_HR\n" .
