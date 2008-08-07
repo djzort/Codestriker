@@ -55,7 +55,7 @@ sub view_url {
     my ($self, %args) = @_;
     
     return (defined $args{prefix} ? $args{prefix} : $self->{query}->url()) .
-	        "?topic=$args{topicid}&action=view" .
+	        "?action=view&topic=$args{topicid}" .
 	        (defined $args{updated} ? "&updated=$args{updated}" : "") .
 			(defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
 			(defined $args{mode} ? "&mode=$args{mode}" : "") .
