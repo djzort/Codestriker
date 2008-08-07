@@ -304,8 +304,7 @@ sub ProcessTopicHeader
     $vars->{'view_topicinfo_url'} =
 	$url_builder->view_topicinfo_url($topic->{topicid});
     $vars->{'view_topic_url'} =
-	## XX mode, last param
-	$url_builder->view_url($topic->{topicid}, -1, 0);
+	$url_builder->view_url(topicid => $topic->{topicid});
     
     $vars->{'view_comments_url'} =
 	$url_builder->view_comments_url($topic->{topicid});
