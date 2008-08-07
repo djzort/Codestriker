@@ -52,7 +52,10 @@ Version 1.9.6
   
 * In the create topic email, show the URL to the associated bug records
   if $bugtracker is defined in codestriker.conf rather than just the bug
-  IDs.  
+  IDs.
+  
+* Allow the Parallel links to work for new files and display them
+  appropriately.    
 
 Version 1.9.5
 

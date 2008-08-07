@@ -57,10 +57,18 @@ sub process($$$) {
 
     # Load the appropriate original form of this file into memory.
     my @filedata;
-    if (!$repository->retrieve($filename, $revision, \@filedata)) {
-	$http_response->error("Couldn't get repository data for $filename " .
-			      "$revision: $!");
+    if ($deltas[0]->{only_delta_in_file} &&
+        $deltas[0]->{revision} == $Codestriker::ADDED_REVISION) {
+        # New file, the data is contained entirely in the delta.
+        $deltas[0]->{new_file} = 1;
+        @filedata = ();
     }
+    else {
+        if (!$repository->retrieve($filename, $revision, \@filedata)) {
+            $http_response->error("Couldn't get repository data for $filename " .
+                                  "$revision: $!");
+        }
+    }    
 
     # Output the new file, with the deltas applied.
     my $title;
@@ -90,7 +98,8 @@ sub process($$$) {
 	$merged_delta->{binary} = $delta->{binary};
 	$merged_delta->{filenumber} = $delta->{filenumber};
 	$merged_delta->{repmatch} = $delta->{repmatch};
-	$merged_delta->{old_linenumber} = 1;
+    $merged_delta->{new_file} = $delta->{new_file};
+    $merged_delta->{old_linenumber} = $delta->{new_file} ? 0 : 1;
 	$merged_delta->{new_linenumber} = 1;
 	$merged_delta->{only_delta_in_file} = 1;
     }
