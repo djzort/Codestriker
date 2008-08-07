@@ -10,7 +10,7 @@
 	    [% ELSE %]
                    [% delta.filename | html_entity %]
 	    [% END %]
-	    [% IF delta.revision != "0.1" %](Revision [% delta.revision %])[% END %]
+	    [% IF delta.revision != "0.1" && !delta.new_file %] (Revision [% delta.revision %])[% END %]
 	    </td>
 
             <td class="file" align="right">
