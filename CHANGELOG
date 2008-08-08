@@ -3,6 +3,14 @@
 
 Version 1.9.6
 
+* Ability to create Codestriker topics automatically from a Subversion
+  commit, via the bin/subversion-post-commit.pl script.  Once the
+  appropriate configuration is set at the start of the file, simply
+  add it to your Subversion repos/hooks/post-commit file as the
+  following:
+  
+  /path/to/codestriker/bin/subversion-post-commit.pl "$REPOS" "$REV"
+
 * "Default to head" option for CVS topic creation was not used when
   selected, but when it was unselected.  This has now been fixed.  
   Spotted by mnk26@users.sourceforge.net.
