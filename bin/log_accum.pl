@@ -328,8 +328,8 @@ sub codestriker_create_topic
     my $bug_ids = $topic_description;
 
     # Truncate the title if necessary.
-    if (length($topic_title) > 57) {
-        $topic_title = substr($topic_title, 0, 57) . "...";
+    if (length($topic_title) > 77) {
+        $topic_title = substr($topic_title, 0, 77) . "...";
     }
 
     # Check for any matching Bug id text.
