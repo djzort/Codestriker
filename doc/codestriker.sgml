@@ -1884,6 +1884,16 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
           repository location. All topics created by Codestriker have
           a builtin workaround for the Subversion diff problem.
 	</para>
+	<para>
+	  It is possible to create Codestriker topics automatically after
+	  each Subversion commit, via the bin/subversion-post-commit.pl script.
+	  Once the appropriate configuration is set at the start of the file, simply
+      add it to your Subversion <filename>repos/hooks/post-commit</filename>
+      the path to the file as follows:
+<programlisting>  
+  /path/to/codestriker/bin/subversion-post-commit.pl "$REPOS" "$REV"
+</programlisting>  
+	</para>
       </sect2>
       <sect2>
         <title>Creating Perforce Diff Topics</title>
