@@ -60,8 +60,11 @@ sub topic_create($$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my @obsolete_topic_urls = ();
     foreach my $obsolete_topic (@{$topic->{obsoleted_topics}}) {
+    	my $obj = Codestriker::Model::Topic->new($obsolete_topic);     
+    	
 	push @obsolete_topic_urls,
-	     $url_builder->view_url(topicid => $obsolete_topic);
+	     $url_builder->view_url(topicid => $obsolete_topic,
+	                            projectid => $obj->{project_id});
     }
     my $obsolete_text = "";
     if ($#obsolete_topic_urls >= 0) {
@@ -326,11 +329,11 @@ sub comment_create($$$) {
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
-    my $edit_url = $url_builder->edit_url($comment->{filenumber}, 
-					  $comment->{fileline}, 
-					  $comment->{filenew},
-					  $comment->{topicid}, "", "",
-					  $query->url());
+    my $edit_url = $url_builder->edit_url(filenumber => $comment->{filenumber}, 
+					                      line => $comment->{fileline}, 
+					                      new => $comment->{filenew},
+					                      topicid => $topic->{topicid},
+					                      projectid => $topic->{projectid});
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();

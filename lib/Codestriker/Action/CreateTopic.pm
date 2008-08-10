@@ -103,7 +103,8 @@ sub set_obsoleted_topics_parameter {
 	    my $topic = Codestriker::Model::Topic->new($topicid);
 	    my $obsoleted_topic = {};
 	    $obsoleted_topic->{title} = $topic->{title};
-	    $obsoleted_topic->{view_url} = $url_builder->view_url(topicid => $topicid);
+	    $obsoleted_topic->{view_url} = $url_builder->view_url(topicid => $topicid,
+	                                                          projectid => $topic->{project_id});
 	    push @obsoleted_topics, $obsoleted_topic;
 	}
     }

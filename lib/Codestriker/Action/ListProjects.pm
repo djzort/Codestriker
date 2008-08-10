@@ -46,13 +46,11 @@ sub process($$$) {
 	$project->{num_open_topics} =
 	    Codestriker::Model::Project->num_open_topics($project->{id});
 	$project->{open_topic_list_url} =
-	    $url_builder->list_topics_url('', '', '', '', '', '', '', '', '',
-					  '', [0], [$project->{id}], '');
+	    $url_builder->list_topics_url(sproject => [$project->{id}], sstate => [0]);
 	$project->{num_topics} =
 	    Codestriker::Model::Project->num_topics($project->{id});
 	$project->{topic_list_url} =
-	    $url_builder->list_topics_url('', '', '', '', '', '', '', '', '',
-					  '', undef, [$project->{id}], '');
+	    $url_builder->list_topics_url(sproject => [$project->{id}]);
     }
     $vars->{'projects'} = \@projects;
 

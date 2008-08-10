@@ -39,16 +39,12 @@ sub new($$$) {
     return bless $self, $type;
 }
 
-# Process the CGI parameters, and untaint them.  If any of them look
-# suspicious, immediately output an error.
-sub process($) {
-    my ($self) = @_;
-
-    my $query = $self->{query};
-    my %cookie = Codestriker::Http::Cookie->get($query);
-
+sub extract_cgi_parameters {
+	my ($self) = @_;
+	
     # Retrieve all of the known Codestriker CGI parameters, and check they
     # are valid.
+    my $query = $self->{query};
     $self->{action} = $query->param('action');
     $self->{button} = $query->param('button');
     $self->{topic} = $query->param('topic');
@@ -109,6 +105,16 @@ sub process($) {
     my @selected_comments = $query->param('selected_comments');
     $self->{selected_comments} = \@selected_comments;
     $self->{default_to_head} = $query->param('default_to_head');
+}
+
+# Process the CGI parameters, and untaint them.  If any of them look
+# suspicious, immediately output an error.
+sub process($) {
+    my ($self) = @_;
+
+    my $query = $self->{query};
+    my %cookie = Codestriker::Http::Cookie->get($query);
+    $self->extract_cgi_parameters();
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};

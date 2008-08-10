@@ -58,10 +58,11 @@ sub process($$$) {
 						       $url_builder, $fview,
 						       $tabwidth, 1, 0);
 
-    my $view_topic_url = $url_builder->view_url(topicid => $topicid, mode => $mode,
-                                                fview => $fn, filenumber => $fn,
+    my $view_topic_url = $url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
+                                                mode => $mode, fview => $fn, filenumber => $fn,
                                                 new => $new, line => $line);
-    my $view_comments_url = $url_builder->view_comments_url($topicid);
+    my $view_comments_url = $url_builder->view_comments_url(topicid => $topicid,
+                                                            projectid => $topic->{project_id});
     
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
@@ -72,11 +73,13 @@ sub process($$$) {
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
-	$url_builder->edit_url($fn, $line, $new, $topicid,
-			       $inc_context, $anchor, "");
+	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
+	                       topicid => $topicid, projectid => $topic->{projectid},
+			               context => $inc_context, anchor => $anchor);
     my $dec_context_url =
-	$url_builder->edit_url($fn, $line, $new, $topicid,
-			       $dec_context, $anchor, "");
+	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
+	                       topicid => $topicid, projectid => $topic->{projectid},
+			               context => $dec_context, anchor => $anchor);
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
     $vars->{'context'} = "";

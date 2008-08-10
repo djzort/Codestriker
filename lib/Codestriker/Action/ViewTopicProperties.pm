@@ -67,10 +67,12 @@ sub process($$$) {
     my @projectids = ($topic->{project_id});
 
     $vars->{'view_topic_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $mode);
+	$url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
+	                       mode => $mode);
 
     $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url($topicid);
-    $vars->{'view_comments_url'} = $url_builder->view_comments_url($topicid);
+    $vars->{'view_comments_url'} = $url_builder->view_comments_url(topicid => $topic->{topicid},
+                                                                   projectid => $topic->{project_id});
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
 
     # Display the "update" message if the topic state has been changed.

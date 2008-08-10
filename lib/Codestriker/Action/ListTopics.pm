@@ -108,18 +108,20 @@ sub process_default($$$) {
     # revert back to the default open topic list.  The search is
     # applied each time they change the sort order.
     $vars->{'list_sort_url'} = 
-	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
-				      $stext, $stitle,
-				      $sdescription, $scomments,
-				      $sbody, $sfilename,
-				      [ split ',', $sstate] , \@project_ids);
+	$url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer, 
+	                              scc => $scc, sbugid => $sbugid,
+				                  stext => $stext, stitle => $stitle,
+				                  sdescription => $sdescription, scomments => $scomments,
+				                  sbody => $sbody, sfilename => $sfilename,
+				                  sstate => [split ',', $sstate] , sprojects => \@project_ids);
 
     $vars->{'list_sort_url_rss'} = 
-	$url_builder->list_topics_url_rss($sauthor, $sreviewer, $scc, $sbugid,
-				      $stext, $stitle,
-				      $sdescription, $scomments,
-				      $sbody, $sfilename,
-				      [ split ',', $sstate] , \@project_ids);
+	$url_builder->list_topics_url_rss(sauthor => $sauthor, sreviewer => $sreviewer, 
+	                                  scc => $scc, sbugid => $sbugid,
+				                      stext => $stext, stitle => $stitle,
+				                      sdescription => $sdescription, scomments => $scomments,
+				                      sbody => $sbody, sfilename => $sfilename,
+				                      sstate => [split ',', $sstate] , sprojects => \@project_ids);
 
     # The list of topics in the template toolkit.
     my @template_topics;
@@ -133,7 +135,8 @@ sub process_default($$$) {
 	my $template_topic = {};
 
 	$template_topic->{'view_topic_url'} = 
-	    $url_builder->view_url(topicid => $topic->{topicid}, mode => $mode);
+	    $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
+	                           mode => $mode);
         
 	$template_topic->{'description'} = $topic->{description};
 

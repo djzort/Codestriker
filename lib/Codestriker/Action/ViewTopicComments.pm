@@ -48,7 +48,8 @@ sub process($$$) {
 						   \%metric_filter);
 
     # Retrieve the appropriate topic details.           
-    my $topic = Codestriker::Model::Topic->new($topicid);     
+    my $topic = Codestriker::Model::Topic->new($topicid);
+    my $projectid = $topic->{project_id};     
 
     # Display the data, with each topic title linked to the view topic screen.
     $http_response->generate_header(topic=>$topic,
@@ -92,15 +93,13 @@ sub process($$$) {
 	if ($comment->{fileline} != $last_fileline ||
 	    $comment->{filenumber} != $last_filenumber) {
 	    my $new_file =
-		$url_builder->view_file_url($topicid, $comment->{filenumber},
-					    $comment->{filenew},
-					    $comment->{fileline}, $mode, 0);
+		$url_builder->view_file_url(topicid => $topicid, projectid => $projectid,
+		                            filenumber => $comment->{filenumber},
+					                new => $comment->{filenew},
+					                line => $comment->{fileline}, mode => $mode);
 					    
 	    $comment->{view_file} = "javascript: myOpen('$new_file','CVS')";
-	    my $parallel = 
-		$url_builder->view_file_url($topicid, $comment->{filenumber},
-					    $comment->{filenew},
-					    $comment->{fileline}, $mode, 1);
+	    my $parallel = $new_file;
 	    $comment->{view_parallel} =
 		"javascript: myOpen('$parallel','CVS')";
 	    $comment->{edit_url} =

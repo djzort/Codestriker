@@ -104,8 +104,10 @@ sub process($$$) {
 					reload=>$reload, cache=>0);
                                     
 	my $view_topic_url = $url_builder->view_url(topicid => $topicid, mode => $mode, fview => $fn,
-	                                            filenumber => $fn, new => $new, line => $line);
-	my $view_comments_url = $url_builder->view_comments_url($topicid);
+	                                            filenumber => $fn, new => $new, line => $line,
+	                                            projectid => $topic->{project_id});
+	my $view_comments_url = $url_builder->view_comments_url(topicid => $topic->{topicid},
+	                                                        projectid => $topic->{project_id});
                                     
 	my $vars = {};
 	$vars->{'view_topic_url'} = $view_topic_url;

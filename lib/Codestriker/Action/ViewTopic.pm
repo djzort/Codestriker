@@ -40,7 +40,8 @@ sub process($$$) {
     }
 
     # Retrieve the appropriate topic details.           
-    my $topic = Codestriker::Model::Topic->new($topicid);     
+    my $topic = Codestriker::Model::Topic->new($topicid);
+    my $projectid = $topic->{project_id};     
 
     # Retrieve the comment details for this topic, firstly determine how
     # many distinct comment lines are there.
@@ -146,13 +147,16 @@ sub process($$$) {
     $vars->{'description'} = $data;
 
     # Obtain the link to download the actual document text.
-    $vars->{'download_url'} = $url_builder->download_url($topicid);
+    $vars->{'download_url'} = $url_builder->download_url(topicid => $topicid,
+                                                         projectid => $projectid);
 
     # Obtain the links for the different viewing modes.
     $vars->{'coloured_mode_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $Codestriker::COLOURED_MODE, fview => $fview);
+	$url_builder->view_url(topicid => $topicid, projectid => $projectid,
+	                       mode => $Codestriker::COLOURED_MODE, fview => $fview);
     $vars->{'coloured_mono_mode_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $Codestriker::COLOURED_MONO_MODE, fview => $fview);
+	$url_builder->view_url(topicid => $topicid, projectid => $projectid,
+	                       mode => $Codestriker::COLOURED_MONO_MODE, fview => $fview);
 
     # Set template variables relating to coloured mode.
     if ($mode == $Codestriker::COLOURED_MODE) {
@@ -168,14 +172,14 @@ sub process($$$) {
     $vars->{'tabwidth'} = $tabwidth;
     $vars->{'newtabwidth'} = $newtabwidth;
     $vars->{'change_tabwidth_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $mode, tabwidth => $newtabwidth,
-					       fview => $fview);
+	$url_builder->view_url(topicid => $topicid, projectid => $projectid,
+	                       mode => $mode, tabwidth => $newtabwidth, fview => $fview);
 
     # Set the display all, display single URLs.
     $vars->{'display_all_files_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $mode);
+	$url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode);
     $vars->{'display_single_file_url'} =
-	$url_builder->view_url(topicid => $topicid, mode => $mode);
+	$url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode);
     $vars->{'fview'} = $fview;
 
     # Setup the filetable template variable for displaying the table of
@@ -193,8 +197,8 @@ sub process($$$) {
 		$total_new_changes += $1;
 	}
 	$filerow->{href_filename_url} = 
-	    $url_builder->view_url(topicid => $topicid, mode => $mode, fview => $i) .
-	    "#" . $filename;
+	    $url_builder->view_url(topicid => $topicid, projectid => $projectid,
+	                           mode => $mode, fview => $i) . "#" . $filename;
 	$filerow->{binary} = $binary[$i];
 
 	my $revision = $revisions[$i];
@@ -250,28 +254,26 @@ sub process($$$) {
 	    $delta->{repository_file_view_url} =
 		$repository->getViewUrl($delta->{filename});
 	    $delta->{view_old_full_url} =
-		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
-					    $mode, 0);
-	    $delta->{view_old_full_both_url} =
-		$url_builder->view_file_url($topicid, $filenumber, 0, $delta->{old_linenumber},
-					    $mode, 1);
+		$url_builder->view_file_url(topicid => $topicid, projectid => $projectid, 
+		                            filenumber => $filenumber, new => 0,
+		                            line => $delta->{old_linenumber}, mode => $mode);
+	    $delta->{view_old_full_both_url} = $delta->{view_old_full_url};
 	    $delta->{view_new_full_url} =
-		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
-					    $mode, 0);
-	    $delta->{view_new_full_both_url} =
-		$url_builder->view_file_url($topicid, $filenumber, 1, $delta->{new_linenumber},
-					    $mode, 1);
+		$url_builder->view_file_url(topicid => $topicid, projectid => $projectid, 
+		                            filenumber => $filenumber, new => 1,
+		                            line => $delta->{new_linenumber}, mode => $mode);
+	    $delta->{view_new_full_both_url} = $delta->{view_new_full_url};
 	}
 
 	# Create the next/previous file URL links.
     if ($filenumber > 0) {
 		$delta->{previous_file_url} =
-		    $url_builder->view_url(topicid => $topicid, mode => $mode,
+		    $url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode,
 					               fview => $filenumber-1) . "#" . $filenames[$filenumber-1];
 	    }
 	    if ($filenumber < $#filenames) {
 		$delta->{next_file_url} =
-		    $url_builder->view_url(topicid => $topicid, mode => $mode,
+		    $url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode,
 					               fview => $filenumber+1) . "#" . $filenames[$filenumber+1];
 	    }
 
@@ -302,15 +304,18 @@ sub ProcessTopicHeader
 
     # Handle the links in the three topic tabs.
     $vars->{'view_topicinfo_url'} =
-	$url_builder->view_topicinfo_url($topic->{topicid});
+	$url_builder->view_topicinfo_url(topicid => $topic->{topicid},
+	                                 projectid => $topic->{project_id});
     $vars->{'view_topic_url'} =
-	$url_builder->view_url(topicid => $topic->{topicid});
+	$url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id});
     
     $vars->{'view_comments_url'} =
-	$url_builder->view_comments_url($topic->{topicid});
+	$url_builder->view_comments_url(topicid => $topic->{topicid},
+	                                projectid => $topic->{project_id});
     
     $vars->{'view_topic_properties_url'} =
-	$url_builder->view_topic_properties_url($topic->{topicid});
+	$url_builder->view_topic_properties_url(topicid => $topic->{topicid},
+	                                        projectid => $topic->{project_id});
     
     my @project_ids = ($topic->{project_id});
     $vars->{'list_open_topics_in_project_url'} =
@@ -343,7 +348,8 @@ sub ProcessTopicHeader
 	my $obsoleted_topic = Codestriker::Model::Topic->new($id);
 	my $entry = {};
 	$entry->{title} = $obsoleted_topic->{title};
-	$entry->{view_url} = $url_builder->view_url(topicid => $id);
+	$entry->{view_url} = $url_builder->view_url(topicid => $id,
+	                                            projectid => $obsoleted_topic->{project_id});
 	push @obsoleted_topics, $entry;
     }
     $vars->{'obsoleted_topics'} = \@obsoleted_topics;
@@ -354,7 +360,8 @@ sub ProcessTopicHeader
 	my $superseeded_topic = Codestriker::Model::Topic->new($id);
 	my $entry = {};
 	$entry->{title} = $superseeded_topic->{title};
-	$entry->{view_url} = $url_builder->view_url(topicid => $id);
+	$entry->{view_url} = $url_builder->view_url(topicid => $id,
+	                                            projectid => $superseeded_topic->{project_id});
 	push @obsoleted_by, $entry;
     }
     $vars->{'obsoleted_by'} = \@obsoleted_by;

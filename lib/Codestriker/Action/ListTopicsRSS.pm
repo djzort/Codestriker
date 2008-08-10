@@ -78,9 +78,11 @@ sub process($$$) {
 
         # do the easy stuff first, 1 to 1 mapping into the template.
 	my $link =
-	    $url_builder->view_url(topicid => $topic->{topicid}, mode => $mode);
+	    $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
+	                           mode => $mode);
 
-	my $comment_link = $url_builder->view_comments_url($topic->{topicid});
+	my $comment_link = $url_builder->view_comments_url(topicid => $topic->{topicid},
+	                                                   projectid => $topic->{project_id});
 
 	my $description = $topic->{description};
 	my $title = $topic->{title};
