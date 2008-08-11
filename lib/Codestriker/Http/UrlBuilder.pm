@@ -78,22 +78,7 @@ sub new {
 # Create the URL for viewing a topic.
 sub view_url {
     my ($self, %args) = @_;
-
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-    if ($self->{cgi_style}) {
-	    return $self->{url_prefix} . "?action=view&topic=$args{topicid}" .
-		       (defined $args{updated} ? "&updated=$args{updated}" : "") .
-			   (defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
-			   (defined $args{mode} ? "&mode=$args{mode}" : "") .
-			   (defined $args{fview} ? "&fview=$args{fview}" : "") .
-			   (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
-    } else {
-    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/view/text" .
-    	       (defined $args{fview} ? "/filenumber/$args{filenumber}" : "") .
-			   (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
-    }    
+    return Codestriker::Http::Method::ViewTopicTextMethod->new($query)->url(%args);
 }
 
 # Create the URL for downloading the topic text.
@@ -115,69 +100,31 @@ sub download_url {
 # Create the URL for creating a topic.
 sub create_topic_url {
     my ($self, $obsoletes) = @_;
-
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=create" .
-	           (defined $obsoletes ? "&obsoletes=$obsoletes" : "");
-    } else {
-    	return $self->{url_prefix} . "/topics/create" .
-	           (defined $obsoletes ? "/obsoletes/$obsoletes" : "");
-    }
+    return Codestriker::Http::Method::CreateTopicMethod->new($query)->url($obsoletes);
 }	    
 
 # Create the URL for editing a topic.
 sub edit_url {
     my ($self, %args) = @_;
-     
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-    if ($self->{cgi_style}) {
-	    return $self->{url_prefix} . "?action=edit&fn=$args{filenumber}&line=$args{line}&new=$args{new}&topic=$args{topicid}" .
-		(defined $args{anchor} ? "&a=$args{anchor}" : "") .
-		(defined $args{context} ? "&context=$args{context}" : "");
-    } else {
-    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comment/" .
-    	       "$args{filenumber}|$args{line}|$args{new}/add" .
-		       (defined $args{anchor} ? "/anchor/$args{anchor}" : "") .
-		       (defined $args{context} ? "/context/$args{context}" : "");
-    }
+    return Codestriker::Http::Method::AddCommentMethod->new($query)->url(%args);
 }
 
 # Create the URL for viewing a new file.
 sub view_file_url {
     my ($self, %args) = @_;
-
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=view_file&fn=$args{filenumber}&" .
-	           "topic=$args{topicid}&new=$args{new}" .
-	           (defined $args{mode} ? "&mode=$args{mode}" : "") .
-	           "#$args{filenumber}|$args{line}|$args{new}";
-    } else {
-    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/view/file/filenumber/$args{filenumber}" .
-	           (defined $args{mode} ? "/mode/$args{mode}" : "") .
-	           "#$args{filenumber}|$args{line}|$args{new}";
-    }
+    return Codestriker::Http::Method::ViewTopicFileMethod->new($query)->url(%args);
 }
 
 # Create the URL for the search page.
 sub search_url {
     my ($self) = @_;
-
-    if ($self->{cgi_style}) {
-        return $self->{query}->url() . "?action=search";
-    } else {
-    	return $self->{query}->url() . "/topics/search";
-    }
+    return Codestriker::Http::Method::SearchTopicsMethod->new($query)->url(%args);
 }
 
 # Create the URL for the documentation page.
 sub doc_url {
     my ($self) = @_;
-    return $self->{htmldir};
+    return Codestriker::Http::Method::StaticResourcesMethod->new($query)->url(%args);
 }
 
 # Create the URL for listing the topics (and topic search). See
@@ -201,105 +148,54 @@ sub list_topics_url_rss {
 # Create the URL for listing the topics.
 sub _list_topics_url {
     my ($self, %args) = @_;
-    
-    return $self->{list_topics_method}->url(%args);
+    return Codestriker::Http::Method::ListTopicsMethod->new($query)->url(%args);
 }
 
 
 # Construct a URL for editing a specific project.
 sub edit_project_url {
     my ($self, $projectid) = @_;
-
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=edit_project&projectid=$projectid";
-    } else {
-    	return $self->{url_prefix} . "/admin/project/$projectid/edit";
-    }
+    return Codestriker::Http::Method::EditProjectMethod->new($query)->url($projectid);
 }
 
 # Construct a URL for listing all projects.
 sub list_projects_url {
     my ($self) = @_;
-
-	if ($self->{cgi_style}) {
-        return $self->{query}->url() . "?action=list_projects";
-	} else {
-		return $self->{query}->url() . "/admin/projects/list";
-	}
+    return Codestriker::Http::Method::ListProjectsMethod->new($query)->url();
 }
 
 # Construct a URL for creating a project.
 sub create_project_url {
     my ($self) = @_;
-
-	if ($self->{cgi_style}) {
-        return $self->{query}->url() . "?action=create_project";
-	} else {
-		return $self->{query}->url() . "/admin/projects/create";
-	}
+    return Codestriker::Http::Method::CreateProjectMethod->new($query)->url();
 }
 
 # Create the URL for viewing comments.
 sub view_comments_url {
     my ($self, %args) = @_;
-
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=list_comments&topic=$args{topicid}";
-	} else {
-		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comments/list";
-	}
+    return Codestriker::Http::Method::ViewTopicCommentsMethod->new($query)->url(%args);
 }
 
 # Create the URL for viewing the topic properties.
 sub view_topic_properties_url {
     my ($self, %args) = @_;
-
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=view_topic_properties&topic=$args{topicid}";
-	} else {
-		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/properties";
-	}
+    return Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query)->url(%args);
 }
 
 # Create the URL for viewing the topic metrics.
 sub view_topicinfo_url {
     my ($self, %args) = @_;
-
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=viewinfo&topic=$args{topicid}";
-	} else {
-		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/metrics";
-	}
+    return Codestriker::Http::Method::ViewTopicMetricsMethod->new($query)->url(%args);
 }
 
 sub metric_report_url {
     my ($self) = @_;
-
-	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=metrics_report";
-	} else {
-		return $self->{url_prefix} . "/metrics/view";
-	}
+    return Codestriker::Http::Method::ViewMetricsMethod->new($query)->url();
 }
 
 sub metric_report_download_raw_data {
     my ($self) = @_;
-
-	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=metrics_download";
-	} else {
-        return $self->{url_prefix} . "/metrics/download";
-	}
-	
+    return Codestriker::Http::Method::DownloadMetricsMethod->new($query)->url();
 }
 
 1;
