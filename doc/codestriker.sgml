@@ -1886,12 +1886,32 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
 	</para>
 	<para>
 	  It is possible to create Codestriker topics automatically after
-	  each Subversion commit, via the bin/subversion-post-commit.pl script.
+	  each Subversion commit, via the
+	  <filename>bin/subversion-post-commit.pl</filename> script.
 	  Once the appropriate configuration is set at the start of the file, simply
       add it to your Subversion <filename>repos/hooks/post-commit</filename>
       the path to the file as follows:
 <programlisting>  
   /path/to/codestriker/bin/subversion-post-commit.pl "$REPOS" "$REV"
+</programlisting>  
+	</para>
+	<para>
+	  Another option is to use the standard <filename>commit-email.pl</filename>
+	  script that ships with Subversion which sends out email diffs from
+	  each commit.  It has been updated to also allow the possibility of
+	  creating a Codestriker topic automatically as well.  This updated
+	  script is available in <filename>bin/commit-email-codestriker.pl</filename>.
+	  The email sent out will contain an additional
+	  line, which is the URL to the Codestriker topic.  All Codestriker
+	  configuration is passed via the command line, as this example shows:
+<programlisting>  
+  /path/to/codestriker/bin/commit-email-codestriker.pl -h company.com
+     --codestriker-url http://company.com/codestriker/codestriker.pl
+     --codestriker-project "Subversion Commits"
+     --codestriker-repository "svn://hostname/var/svn/repos/fbi2/trunk"
+     --codestriker-reviewers "engineering@company.com"
+     --codestriker-install-dir /var/www/codestriker
+     "$REPOS" "$REV" engineering@company.com
 </programlisting>  
 	</para>
       </sect2>

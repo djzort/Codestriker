@@ -1,6 +1,13 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.7
+
+* Created another Subversion post-commit script which is an extension
+  of the standard commit-email.pl script which ships with Subversion.
+  The email sent also includes an additional line, which is the URL to
+  the auto-created topic.
+
 Version 1.9.6
 
 * Ability to create Codestriker topics automatically from a Subversion
