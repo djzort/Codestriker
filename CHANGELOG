@@ -7,6 +7,9 @@ Version 1.9.7
   of the standard commit-email.pl script which ships with Subversion.
   The email sent also includes an additional line, which is the URL to
   the auto-created topic.
+  
+* Updated install.pl so that it can be executed from any directory, not
+  just bin.
 
 Version 1.9.6
 

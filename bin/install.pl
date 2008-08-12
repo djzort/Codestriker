@@ -22,7 +22,19 @@
 
 use strict;
 use Config;
-use lib '../lib';
+
+# Determine the location of the Codestriker bin directory.  This will
+# work even if the script was not executed in the bin directory.
+my $bin_directory;
+BEGIN {
+    use File::Spec::Functions qw(rel2abs);
+    use File::Basename qw(dirname);
+    my $path = rel2abs($0);
+    $bin_directory = dirname($path);
+}
+use lib $bin_directory . "/../lib";
+
+chdir $bin_directory;
 
 require 5.008_0;
 
