@@ -86,7 +86,9 @@ sub getDiff ($$$$$) {
 	my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::p4,
-                 '-u', $self->{user}, '-P', $self->{password}, 'describe',
+   	             '-p', $self->{hostname} . ':' . $self->{port},
+                 '-u', $self->{user}, 
+                 '-P', $self->{password}, 'describe',
                  '-du', $tag);
     return $Codestriker::OK;
 }

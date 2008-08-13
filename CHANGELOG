@@ -10,6 +10,10 @@ Version 1.9.7
   
 * Updated install.pl so that it can be executed from any directory, not
   just bin.
+  
+* Creating Perforce topics directly from already committed files in the
+  depot did not work if the depot was on a different machine to the
+  web-server.  This has now been fixed.  
 
 Version 1.9.6
 
