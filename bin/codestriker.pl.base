@@ -34,6 +34,7 @@ use CGI::Carp 'fatalsToBrowser';
 use Codestriker;
 use Codestriker::Http::Input;
 use Codestriker::Http::Response;
+use Codestriker::Http::Dispatcher;
 use Codestriker::Action::CreateTopic;
 use Codestriker::Action::EditComment;
 use Codestriker::Action::Search;
@@ -88,7 +89,7 @@ sub main() {
     Codestriker->initialise([% codestriker_conf %]);
 
 [% IF has_rss %]
-    # only generated if checksetup.pl found a good version of XML::RSS.
+    # Only generated if install.pl found a good version of XML::RSS.
     $Codestriker::rss_enabled = 1;
 [% ELSE %]
     # valid XML::RSS not found
@@ -121,97 +122,21 @@ sub main() {
     # Load the CGI object, and prepare the HTTP response.
     my $query = new CGI;
     my $http_response = Codestriker::Http::Response->new($query);
+    
+    # TODO: need to put in mapping here from new URL scheme to old
+    # scheme.
 
     # Process the HTTP input to ensure it is consistent.
     my $http_input = Codestriker::Http::Input->new($query, $http_response);
     $http_input->process();
+    
+    my $dispatcher = Codestriker::Http::Dispatcher->new($query);
+    $dispatcher->dispatch($http_input, $http_response);
 
-    # Delegate the request to the appropriate Action module.
-    my $action = $http_input->get("action");
-    if ($action eq "create") {
-	Codestriker::Action::CreateTopic->process($http_input, $http_response);
-    } elsif ($action eq "submit_new_topic") {
-	Codestriker::Action::SubmitNewTopic->process($http_input,
-						     $http_response);
-    } elsif ($action eq "view") {
-	Codestriker::Action::ViewTopic->process($http_input, $http_response);
-    } elsif ($action eq "view_topic_properties") {
-	Codestriker::Action::ViewTopicProperties->process($http_input,
-							  $http_response);
-    } elsif ($action eq "viewinfo") {
-	Codestriker::Action::ViewTopicInfo->process($http_input,
-						    $http_response);
-    } elsif ($action eq "edit") {
-	Codestriker::Action::EditComment->process($http_input, $http_response);
-    } elsif ($action eq "submit_comment") {
-	Codestriker::Action::SubmitNewComment->process($http_input,
-						       $http_response);
-    } elsif ($action eq "view_file") {
-	Codestriker::Action::ViewTopicFile->process($http_input,
-						    $http_response);
-    } elsif ($action eq "search") {
-	Codestriker::Action::Search->process($http_input, $http_response);
-    } elsif ($action eq "submit_search") {
-	Codestriker::Action::SubmitSearch->process($http_input,
-						   $http_response);
-    } elsif ($action eq "list_topics") {
-	Codestriker::Action::ListTopics->process($http_input, $http_response);
-    } elsif ($action eq "download") {
-	Codestriker::Action::DownloadTopic->process($http_input,
-						    $http_response);
-    } elsif ($action eq "edit_topic_properties") {
-        Codestriker::Action::SubmitEditTopicProperties->process($http_input,
-								$http_response);
-    } elsif ($action eq "edit_topic_metrics") {
-        Codestriker::Action::SubmitEditTopicMetrics->process($http_input,
-							     $http_response);
-    } elsif ($action eq "change_topics_state") {
-        Codestriker::Action::SubmitEditTopicsState->process($http_input,
-							    $http_response);
-    } elsif ($action eq "list_comments") {
-	Codestriker::Action::ViewTopicComments->process($http_input,
-						   $http_response);
-    } elsif ($action eq "change_comments_state") {
-	Codestriker::Action::SubmitEditCommentsState->process($http_input,
-						     $http_response);
-    } elsif ($action eq "list_projects") {
-	Codestriker::Action::ListProjects->process($http_input,
-						   $http_response);
-    } elsif ($action eq "edit_project") {
-	Codestriker::Action::EditProject->process($http_input,
-						  $http_response);
-    } elsif ($action eq "create_project") {
-	Codestriker::Action::CreateProject->process($http_input,
-						    $http_response);
-    } elsif ($action eq "submit_project") {
-	Codestriker::Action::SubmitNewProject->process($http_input,
-						    $http_response);
-    } elsif ($action eq "submit_editproject") {
-	Codestriker::Action::SubmitEditProject->process($http_input,
-							$http_response);
-    } elsif ($action eq "metrics_report") {
-	Codestriker::Action::MetricsReport->process($http_input,
-						    $http_response);
-    } elsif ($action eq "metrics_download") {
-	Codestriker::Action::MetricsReport->process_download($http_input,
-							     $http_response);
-[% IF has_rss %]
+#[% IF has_rss %]
     # only generated if checksetup.pl found a good version of XML::RSS.
-    } elsif ($action eq "list_topics_rss") {
-	Codestriker::Action::ListTopicsRSS->process($http_input,
-					            $http_response);
-[% END %]
-
-    } else {
-	# Default action is to list topics that are in state open if the
-	# list functionality is enabled, otherwise go to the create topic
-	# screen.
-	if ($Codestriker::allow_searchlist) {
-	    Codestriker::Action::ListTopics->process($http_input,
-						     $http_response);
-        } else {
-	    Codestriker::Action::CreateTopic->process($http_input,
-						      $http_response);
-	}
-    }
+#    } elsif ($action eq "list_topics_rss") {
+#	Codestriker::Action::ListTopicsRSS->process($http_input,
+#					            $http_response);
+#[% END %]
 }

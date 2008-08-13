@@ -31,9 +31,6 @@ package Codestriker::Http::UrlBuilder;
 use strict;
 use CGI;
 
-use Codestriker::Http::Method;
-use Codestriker::Http::Method::ListTopics;
-
 # Constructor for this class.
 sub new {
     my ($type, $query, $cgi_style) = @_;
@@ -70,7 +67,7 @@ sub new {
     
     # Initialise all of the methods.
     $self->{list_topics_method} =
-        Codestriker::Http::Method::ListTopics->new($self->{query}, $self->{url_prefix}, $self->{cgi_style});
+        Codestriker::Http::Method::ListTopicsMethod->new($self->{query}, $self->{url_prefix}, $self->{cgi_style});
 
     return bless $self, $type;
 }
@@ -78,7 +75,7 @@ sub new {
 # Create the URL for viewing a topic.
 sub view_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ViewTopicTextMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ViewTopicTextMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for downloading the topic text.
@@ -100,31 +97,31 @@ sub download_url {
 # Create the URL for creating a topic.
 sub create_topic_url {
     my ($self, $obsoletes) = @_;
-    return Codestriker::Http::Method::CreateTopicMethod->new($query)->url($obsoletes);
+    return Codestriker::Http::Method::CreateTopicMethod->new($self->{query})->url($obsoletes);
 }	    
 
 # Create the URL for editing a topic.
 sub edit_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::AddCommentMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::AddCommentMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for viewing a new file.
 sub view_file_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ViewTopicFileMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ViewTopicFileMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for the search page.
 sub search_url {
     my ($self) = @_;
-    return Codestriker::Http::Method::SearchTopicsMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::SearchTopicsMethod->new($self->{query})->url();
 }
 
 # Create the URL for the documentation page.
 sub doc_url {
     my ($self) = @_;
-    return Codestriker::Http::Method::StaticResourcesMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::StaticResourcesMethod->new($self->{query})->url();
 }
 
 # Create the URL for listing the topics (and topic search). See
@@ -148,54 +145,54 @@ sub list_topics_url_rss {
 # Create the URL for listing the topics.
 sub _list_topics_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ListTopicsMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ListTopicsMethod->new($self->{query})->url(%args);
 }
 
 
 # Construct a URL for editing a specific project.
 sub edit_project_url {
     my ($self, $projectid) = @_;
-    return Codestriker::Http::Method::EditProjectMethod->new($query)->url($projectid);
+    return Codestriker::Http::Method::EditProjectMethod->new($self->{query})->url($projectid);
 }
 
 # Construct a URL for listing all projects.
 sub list_projects_url {
     my ($self) = @_;
-    return Codestriker::Http::Method::ListProjectsMethod->new($query)->url();
+    return Codestriker::Http::Method::ListProjectsMethod->new($self->{query})->url();
 }
 
 # Construct a URL for creating a project.
 sub create_project_url {
     my ($self) = @_;
-    return Codestriker::Http::Method::CreateProjectMethod->new($query)->url();
+    return Codestriker::Http::Method::CreateProjectMethod->new($self->{query})->url();
 }
 
 # Create the URL for viewing comments.
 sub view_comments_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ViewTopicCommentsMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ViewTopicCommentsMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for viewing the topic properties.
 sub view_topic_properties_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ViewTopicPropertiesMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for viewing the topic metrics.
 sub view_topicinfo_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ViewTopicMetricsMethod->new($query)->url(%args);
+    return Codestriker::Http::Method::ViewTopicMetricsMethod->new($self->{query})->url(%args);
 }
 
 sub metric_report_url {
     my ($self) = @_;
-    return Codestriker::Http::Method::ViewMetricsMethod->new($query)->url();
+    return Codestriker::Http::Method::ViewMetricsMethod->new($self->{query})->url();
 }
 
 sub metric_report_download_raw_data {
     my ($self) = @_;
-    return Codestriker::Http::Method::DownloadMetricsMethod->new($query)->url();
+    return Codestriker::Http::Method::DownloadMetricsMethod->new($self->{query})->url();
 }
 
 1;

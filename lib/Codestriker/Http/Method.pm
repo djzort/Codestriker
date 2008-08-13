@@ -10,6 +10,7 @@ package Codestriker::Http::Method;
 
 use strict;
 use CGI;
+use CGI::Carp qw(fatalsToBrowser);
 
 # The optional $cgi_style parameter indicates whether the old-style
 # CGI URLs are to be generated.  Default is for old-style URLs.
@@ -42,7 +43,7 @@ sub url {
 # If this query type is recognised, extract the parameters and store them into
 # $http_input and return true, otherwise return false.
 sub extract_parameters {
-	my ($self, $query, $http_input) = @_;
+	my ($self, $http_input) = @_;
 	
 	return 0;
 }
