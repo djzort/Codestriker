@@ -31,6 +31,24 @@ package Codestriker::Http::UrlBuilder;
 use strict;
 use CGI;
 
+use Codestriker::Http::Method;
+use Codestriker::Http::Method::ListTopicsMethod; 
+use Codestriker::Http::Method::CreateTopicMethod; 
+use Codestriker::Http::Method::ViewTopicTextMethod;
+use Codestriker::Http::Method::ViewTopicCommentsMethod;
+use Codestriker::Http::Method::ViewTopicFileMethod;
+use Codestriker::Http::Method::ViewTopicMetricsMethod;
+use Codestriker::Http::Method::ViewTopicPropertiesMethod;
+use Codestriker::Http::Method::AddCommentMethod;
+use Codestriker::Http::Method::AddTopicMethod;
+use Codestriker::Http::Method::CreateProjectMethod;
+use Codestriker::Http::Method::DownloadMetricsMethod;
+use Codestriker::Http::Method::EditProjectMethod;
+use Codestriker::Http::Method::ListProjectsMethod;
+use Codestriker::Http::Method::SearchTopicsMethod;
+use Codestriker::Http::Method::StaticResourcesMethod;
+use Codestriker::Http::Method::ViewMetricsMethod;
+
 # Constructor for this class.
 sub new {
     my ($type, $query, $cgi_style) = @_;
