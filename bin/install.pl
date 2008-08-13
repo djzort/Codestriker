@@ -23,18 +23,18 @@
 use strict;
 use Config;
 
-# Determine the location of the Codestriker bin directory.  This will
+# Determine the location of the Codestriker base directory.  This will
 # work even if the script was not executed in the bin directory.
-my $bin_directory;
+my $base_directory;
 BEGIN {
     use File::Spec::Functions qw(rel2abs);
     use File::Basename qw(dirname);
     my $path = rel2abs($0);
-    $bin_directory = dirname($path);
+    $base_directory = dirname(dirname($path));
 }
-use lib $bin_directory . "/../lib";
+use lib $base_directory . "/lib";
 
-chdir $bin_directory;
+chdir $base_directory;
 
 require 5.008_0;
 
@@ -60,7 +60,7 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 @Codestriker::valid_repositories = ();
 
 # Initialise Codestriker, load up the configuration file.
-Codestriker->initialise(cwd() . '/..');
+Codestriker->initialise(cwd());
 
 # Make sure the $db configuration variable has been set, and if not
 # complain and exit.
@@ -1064,7 +1064,7 @@ $dbh->{PrintError} = 1;
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).
 print "Generating cgi-bin/codestriker.pl file...\n";
-mkdir '../cgi-bin', 0755;
+mkdir 'cgi-bin', 0755;
 
 my $template = Template->new();
 
@@ -1090,9 +1090,9 @@ if (defined $Codestriker::scmbug_lib_dir &&
     $template_vars->{scmbug_lib} = 'use lib \'' . $Codestriker::scmbug_lib_dir . '\';';
 }
 
-$template_vars->{codestriker_lib} = 'use lib \'' . cwd() . '/../lib\';';
+$template_vars->{codestriker_lib} = 'use lib \'' . cwd() . '/lib\';';
 
-$template_vars->{codestriker_conf} = '\'' . cwd() . '/..\'';
+$template_vars->{codestriker_conf} = '\'' . cwd() . '\'';
 
 $template_vars->{has_rss} = !exists($missing_optional{'XML::RSS'});
 
@@ -1101,20 +1101,20 @@ $template_vars->{scary_warning} =
     "# !!!! DO NOT EDIT !!!\n".
     "# The base source is bin/codestriker.pl.base.\n";
 
-open(CODESTRIKER_PL, ">../cgi-bin/codestriker.pl")
-    || die "Unable to create ../cgi-bin/codestriker.pl file: $!";
+open(CODESTRIKER_PL, ">cgi-bin/codestriker.pl")
+    || die "Unable to create cgi-bin/codestriker.pl file: $!";
 
-$template->process("codestriker.pl.base", $template_vars,\*CODESTRIKER_PL);
+$template->process("bin/codestriker.pl.base", $template_vars, \*CODESTRIKER_PL);
 close CODESTRIKER_PL;
 
 
 # Make sure the generated file is executable.
-chmod 0755, '../cgi-bin/codestriker.pl';
+chmod 0755, 'cgi-bin/codestriker.pl';
 
 # Clean out the contents of the data and template directory, but don't
 # remove them.
 print "Removing old generated templates...\n";
-chdir('../cgi-bin') ||
+chdir('cgi-bin') ||
     die "Couldn't change to cgi-dir directory: $!";
 if (-d 'template/en') {
     print "Cleaning old template directory...\n";
