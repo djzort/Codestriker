@@ -80,11 +80,13 @@ sub process($$$) {
     # Redirect the user to the list topics page.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $redirect_url =
-	$url_builder->list_topics_url($sauthor, $sreviewer, $scc, $sbugid,
-				      $stext, $search_title,
-				      $search_description, $search_comments,
-				      $search_body, $search_filename,
-				      \@stateids, \@projectids);
+	$url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer,
+	                              scc => $scc, sbugid => $sbugid,
+				                  stext => $stext, stitle => $search_title,
+				                  sdescription => $search_description,
+				                  scomments => $search_comments,
+				                  sbody => $search_body, sfilename => $search_filename,
+				                  sstate => \@stateids, sproject => \@projectids);
 
     print $query->redirect(-URI=>$redirect_url);
 }

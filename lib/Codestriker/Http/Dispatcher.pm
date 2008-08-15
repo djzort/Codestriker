@@ -27,6 +27,7 @@ use Codestriker::Http::Method::DownloadMetricsMethod;
 use Codestriker::Http::Method::EditProjectMethod;
 use Codestriker::Http::Method::ListProjectsMethod;
 use Codestriker::Http::Method::SearchTopicsMethod;
+use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
 
@@ -56,6 +57,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
 	push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
 	push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
+	push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
 

@@ -23,6 +23,8 @@ sub url() {
     my $sproject = defined $args{sproject} ? CGI::escape(join ',', @{$args{sproject}}) : "";
     my $action = defined $args{rss} && $args{rss} ? "list_topics_rss" : "list_topics";
     
+    print STDERR "sauthor is " . $args{sauthor} . "\n";
+    
     if ($self->{cgi_style}) {
         return $self->{url_prefix} . "?action=$action" .
 	           (defined $args{sauthor} && $args{sauthor} ne "" ? "&sauthor=" . CGI::escape($args{sauthor}) : "") .

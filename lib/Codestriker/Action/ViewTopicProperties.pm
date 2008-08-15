@@ -70,8 +70,9 @@ sub process($$$) {
 	$url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
 	                       mode => $mode);
 
-    $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url($topicid);
-    $vars->{'view_comments_url'} = $url_builder->view_comments_url(topicid => $topic->{topicid},
+    $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url(topicid => $topicid,
+                                                                     projectid => $topic->{project_id});
+    $vars->{'view_comments_url'} = $url_builder->view_comments_url(topicid => $topicid,
                                                                    projectid => $topic->{project_id});
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
 
