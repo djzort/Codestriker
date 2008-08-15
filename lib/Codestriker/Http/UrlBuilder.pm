@@ -143,7 +143,6 @@ sub doc_url {
 sub list_topics_url {
     my ($self, %args) = @_;
 
-    print STDERR "list sauthor is " . $args{sauthor} . "\n";
     $args{action} = "list_topics";
     return $self->_list_topics_url(%args);
 }
@@ -160,8 +159,6 @@ sub list_topics_url_rss {
 # Create the URL for listing the topics.
 sub _list_topics_url {
     my ($self, %args) = @_;
-    print STDERR "_list sauthor is " . $args{sauthor} . "\n";
-    
     return Codestriker::Http::Method::ListTopicsMethod->new($self->{query})->url(%args);
 }
 

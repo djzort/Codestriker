@@ -754,7 +754,7 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
 
     # Build up the project condition.
     my $project_part = "";
-    if ($sproject ne "") {
+    if (defined $sproject && $sproject ne "") {
 	$project_part = "topic.projectid IN ($sproject)";
     }
 

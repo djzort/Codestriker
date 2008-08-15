@@ -62,7 +62,7 @@ sub process_default($$$) {
     # If only a single project id is being searched over, set that id in the
     # cookie.
     my @project_ids = ();
-    if ($sproject ne "") {
+    if (defined $sproject && $sproject ne "") {
 	@project_ids = split ',', $sproject;
     }
     my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
@@ -297,7 +297,7 @@ sub get_topic_list_query_params {
     # from the cookie as the project search value.  This is done to facilate
     # integration with other systems, which jump straight to this URL, and
     # set the cookie explicitly.
-    if ($sproject eq "-1") {
+    if (defined $sproject && $sproject eq "-1") {
 	$sproject = (defined $projectid) ? $projectid : "";
     }
     
@@ -329,7 +329,7 @@ sub get_topic_sort_order {
 
     my @sort_order = split(/,/,$topicsort); # this is always from the cookie.
 
-    if ($topic_sort_change ne "") {
+    if (defined $topic_sort_change && $topic_sort_change ne "") {
         if (scalar(@sort_order) > 0) {
 
             # If the user clicked on the same column twice in a row, reverse
