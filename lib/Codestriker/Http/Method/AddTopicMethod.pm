@@ -47,7 +47,7 @@ sub extract_parameters {
 sub execute {
 	my ($self, $http_input, $http_output) = @_;
 	
-	Codestriker::Action::CreateTopic->process($http_input, $http_output);
+	Codestriker::Action::SubmitNewTopic->process($http_input, $http_output);
 }
 
 1;

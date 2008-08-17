@@ -46,6 +46,7 @@ use Codestriker::Http::Method::DownloadMetricsMethod;
 use Codestriker::Http::Method::EditProjectMethod;
 use Codestriker::Http::Method::ListProjectsMethod;
 use Codestriker::Http::Method::SearchTopicsMethod;
+use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
 
@@ -114,6 +115,12 @@ sub create_topic_url {
     return Codestriker::Http::Method::CreateTopicMethod->new($self->{query})->url($obsoletes);
 }	    
 
+# Create the URL for adding a topic to a project.
+sub add_topic_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::AddTopicMethod->new($self->{query})->url(%args);
+}	    
+
 # Create the URL for editing a topic.
 sub edit_url {
     my ($self, %args) = @_;
@@ -130,6 +137,12 @@ sub view_file_url {
 sub search_url {
     my ($self) = @_;
     return Codestriker::Http::Method::SearchTopicsMethod->new($self->{query})->url();
+}
+
+# The submit search URL.
+sub submit_search_url {
+    my ($self) = @_;
+    return Codestriker::Http::Method::SubmitSearchTopicsMethod->new($self->{query})->url();
 }
 
 # Create the URL for the documentation page.

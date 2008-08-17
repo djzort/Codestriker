@@ -10,6 +10,7 @@
 package Codestriker::Http::Method::ViewTopicTextMethod;
 
 use strict;
+use Carp;
 use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::ViewTopicTextMethod::ISA =
@@ -19,8 +20,8 @@ use Codestriker::Http::Method;
 sub url() {
 	my ($self, %args) = @_;
 	
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
+    confess "Parameter topicid missing" unless defined $args{topicid};
+   	confess "Parameter projectid missing" unless defined $args{projectid};
 
     if ($self->{cgi_style}) {
 	    return $self->{url_prefix} . "?action=view&topic=$args{topicid}" .

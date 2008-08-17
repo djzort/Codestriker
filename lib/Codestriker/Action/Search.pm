@@ -12,6 +12,7 @@ package Codestriker::Action::Search;
 use strict;
 use Codestriker::Model::Project;
 use Codestriker::DB::Database;
+use Codestriker::Http::UrlBuilder;
 
 # Create an appropriate form for topic searching.
 sub process($$$) {
@@ -71,6 +72,9 @@ sub process($$$) {
 	$vars->{'enable_body'} = 0;
 	$vars->{'enable_filename'} = 1;
     }
+    
+    # Target URL to divert the post to.
+    $vars->{'submit_search_url'} = $url_builder->submit_search_url(); 
 
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars);

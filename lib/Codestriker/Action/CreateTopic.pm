@@ -40,6 +40,9 @@ sub process($$$) {
     # url.
     $vars->{'doc_url'} = $url_builder->doc_url();
     $vars->{'search_url'} = $url_builder->search_url();
+    
+    # TODO: fix this once create topic is only done within context of a project.
+    $vars->{'add_topic_url'} = $url_builder->add_topic_url(projectid => 0);
 
     # Retrieve the email, reviewers, cc, repository and projectid from
     # the cookie.

@@ -438,7 +438,8 @@ sub _send_topic_email {
   
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-    my $topic_url = $url_builder->view_url(topicid => $topic->{topicid});
+    my $topic_url = $url_builder->view_url(topicid => $topic->{topicid},
+                                           projectid => $topic->{project_id});
     
     my $subject = "[REVIEW] Topic $event_name \"" . $topic->{title} . "\"";
     
