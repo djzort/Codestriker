@@ -368,7 +368,8 @@ sub read_filtered {
         my $filteredByAuthor =
             	    Codestriker->filter_email($filtered_by_author);
 
-        if ($filteredByAuthor ne "" && $filteredAuthor ne $filteredByAuthor) {
+        if (defined $filteredByAuthor && $filteredByAuthor ne "" &&
+            $filteredAuthor ne $filteredByAuthor) {
 	    # Don't keep this record.
 	    $keep_comment = 0;
 	}

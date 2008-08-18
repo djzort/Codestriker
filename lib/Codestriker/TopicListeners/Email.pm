@@ -333,7 +333,7 @@ sub comment_create($$$) {
 					                      line => $comment->{fileline}, 
 					                      new => $comment->{filenew},
 					                      topicid => $topic->{topicid},
-					                      projectid => $topic->{projectid});
+					                      projectid => $topic->{project_id});
 
     # Retrieve the comment details for this topic.
     my @comments = $topic->read_comments();

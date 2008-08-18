@@ -124,7 +124,7 @@ sub add_topic_url {
 # Create the URL for editing a topic.
 sub edit_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::AddCommentMethod->new($self->{query})->url(%args);
+    return Codestriker::Http::Method::CreateCommentMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for viewing a new file.

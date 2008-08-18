@@ -6,7 +6,7 @@ use Test::More tests => 2;
 use lib '../../../lib';
 use Test::MockObject;
 use Codestriker;
-use Codestriker::Http::Method::SearchTopicsMethod;
+use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 
 # Create a CGI mock object for these tests.
 my $mock_query = Test::MockObject->new();

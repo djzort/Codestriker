@@ -75,14 +75,14 @@ sub generate_header {
     # $tabwidth parameters.
     my %cookie = ();
 
-    if (!exists $params{email} || $params{email} eq "") {
+    if (! defined $params{email} || $params{email} eq "") {
 	$email = Codestriker::Http::Cookie->get_property($query, 'email');
     }
     else {
         $email = $params{email};
     }
 
-    if (!exists $params{reviewers} || $params{reviewers} eq "") {
+    if (! defined $params{reviewers} || $params{reviewers} eq "") {
 	$reviewers = Codestriker::Http::Cookie->get_property($query,
 							     'reviewers');
     }
@@ -90,14 +90,14 @@ sub generate_header {
         $reviewers = $params{reviewers};
     }
 
-    if (!exists $params{cc} || $params{cc} eq "") {
+    if (! defined $params{cc} || $params{cc} eq "") {
 	$cc = Codestriker::Http::Cookie->get_property($query, 'cc');
     }
     else {
         $cc = $params{cc};
     }
 
-    if (!exists $params{tabwidth} || $params{tabwidth} eq "") {
+    if (! defined $params{tabwidth} || $params{tabwidth} eq "") {
 	$tabwidth = Codestriker::Http::Cookie->get_property($query,
 							    'tabwidth');
     }
@@ -105,14 +105,14 @@ sub generate_header {
         $tabwidth = $params{tabwidth};
     }
 
-    if (!exists $params{mode} || $params{mode} eq "") {
+    if (! defined $params{mode} || $params{mode} eq "") {
 	$mode = Codestriker::Http::Cookie->get_property($query, 'mode');
     }
     else {
         $mode = $params{mode};
     }
 
-    if (!exists $params{repository} || $params{repository} eq "") {
+    if (! defined $params{repository} || $params{repository} eq "") {
 	$repository = Codestriker::Http::Cookie->get_property($query,
 							     'repository');
     }
@@ -120,7 +120,7 @@ sub generate_header {
         $repository = $params{repository};
     }
 
-    if (!exists $params{projectid} || $params{projectid} eq "") {
+    if (! defined $params{projectid} || $params{projectid} eq "") {
 	$projectid = Codestriker::Http::Cookie->get_property($query,
 							     'projectid');
     }
@@ -128,7 +128,7 @@ sub generate_header {
         $projectid = $params{projectid};
     }
 
-    if (!exists $params{topicsort} || $params{topicsort} eq "") {
+    if (! defined $params{topicsort} || $params{topicsort} eq "") {
 	$topicsort = Codestriker::Http::Cookie->get_property($query,
 							     'topicsort');
     }
@@ -289,7 +289,7 @@ sub generate_header {
     # output an error message.  This is usually due to a
     # misconfiguration.
     print "    if ('function' != typeof window.add_comment_html) {\n";
-    print "        alert('Oh oh... can\\'t find codestriker.js, please check your apache config.');\n";
+    print "        alert('Oh oh... can\\'t find codestriker.js, please check your web-server config.');\n";
     print "    }\n";
 
     print "</script>\n";
