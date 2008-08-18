@@ -7,24 +7,24 @@
 
 # Method for viewing the topic properties.
 
-package Codestriker::Http::Method::ViewTopicPropertiesMethod;
+package Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 
 use strict;
+use Carp;
 use Codestriker::Http::Method;
 
-@Codestriker::Http::Method::ViewTopicPropertiesMethod::ISA = ("Codestriker::Http::Method");
+@Codestriker::Http::Method::UpdateTopicPropertiesMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
 sub url() {
 	my ($self, %args) = @_;
 	
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
 	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=view_topic_properties&topic=$args{topicid}";
+        return $self->{url_prefix} . "?action=submit_edit_topic_properties&topic=$args{topicid}";
 	} else {
-		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/properties/view";
+        confess "Parameter topicid missing" unless defined $args{topicid};
+   	    confess "Parameter projectid missing" unless defined $args{projectid};
+		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/properties/update";
 	}
 }
 
@@ -33,10 +33,10 @@ sub extract_parameters {
 	
 	my $action = $http_input->{query}->param('action'); 
     my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "view_topic_properties") {  
+    if ($self->{cgi_style} && defined $action && $action eq "edit_topic_properties") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/properties/view}) {
+	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/properties}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid', topic => 'topicid');
 		return 1;
@@ -48,7 +48,7 @@ sub extract_parameters {
 sub execute {
 	my ($self, $http_input, $http_output) = @_;
 	
-	Codestriker::Action::ViewTopicProperties->process($http_input, $http_output);
+	Codestriker::Action::SubmitEditTopicProperties->process($http_input, $http_output);
 }
 
 1;
