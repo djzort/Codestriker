@@ -32,6 +32,7 @@ use Codestriker::Http::Method::SearchTopicsMethod;
 use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
+use Codestriker::Http::Method::UpdateTopicStateMethod;
 
 # Initialise all of the methods that are known to the system.
 # TODO: add configuration to the parameter.
@@ -64,6 +65,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
+	push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
 
 	$self->{methods} = \@methods;
     return bless $self, $type;
