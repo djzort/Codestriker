@@ -13,7 +13,13 @@ Version 1.9.7
   
 * Creating Perforce topics directly from already committed files in the
   depot did not work if the depot was on a different machine to the
-  web-server.  This has now been fixed.  
+  web-server.  This has now been fixed.
+  
+* Added a drop-down on the topic create page where the initial topic
+  state can be set.  By default, this is set to "Open", however in
+  situations where a review has already been performed but needs to
+  be recorded, or a topic is automatically created from a post-commit
+  script from an SCM, sometimes another initial state is desirable.  
 
 Version 1.9.6
 

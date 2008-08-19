@@ -117,11 +117,21 @@ sub _insert_bug_ids($$$) {
 
 # Create a new topic with all of the specified properties.
 sub create($$$$$$$$$$$$) {
-    my ($self, $topicid, $author, $title, $bug_ids, $reviewers, $cc,
+    my ($self, $topicid, $author, $title, $state, $bug_ids, $reviewers, $cc,
 	$description, $document, $start_tag, $end_tag, $module,
 	$repository, $projectid, $deltas_ref, $obsoleted_topics) = @_;
 
     my $timestamp = Codestriker->get_timestamp(time);        
+
+    # Map the state to its number.
+    my $stateid;
+    for ($stateid = 0; $stateid <= $#Codestriker::topic_states;
+	     $stateid++) {
+	last if ($Codestriker::topic_states[$stateid] eq $state);
+    }
+    if ($stateid > $#Codestriker::topic_states) {
+	die "Unable to create topic to invalid state: \"$state\"";
+    }
         
     $self->{topicid} = $topicid;
     $self->{author} = $author;
@@ -133,8 +143,8 @@ sub create($$$$$$$$$$$$) {
     $self->{document} = $document;
     $self->{creation_ts} = $timestamp;
     $self->{modified_ts} = $timestamp;
-    $self->{topic_state} = 0;
-    $self->{topic_state_id} = 0;
+    $self->{topic_state} = $state;
+    $self->{topic_state_id} = $stateid;
     $self->{project_id} = $projectid;
     $self->{version} = 0;
     $self->{start_tag} = $start_tag;
@@ -157,10 +167,9 @@ sub create($$$$$$$$$$$$) {
 			     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert_topic;
 
-    # Create all of the necessary rows.  It is assumed state 0 is the initial
-    # state.
+    # Create all of the necessary rows.
     $success &&= $insert_topic->execute($topicid, $author, $title,
-					$description, $document, 0,
+					$description, $document, $stateid,
 					$timestamp, $timestamp, 0,
 					$start_tag, $end_tag, $module,
 					$repository, $projectid);

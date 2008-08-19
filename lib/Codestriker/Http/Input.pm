@@ -105,16 +105,9 @@ sub extract_cgi_parameters {
     my @selected_comments = $query->param('selected_comments');
     $self->{selected_comments} = \@selected_comments;
     $self->{default_to_head} = $query->param('default_to_head');
-}
 
-# Process the CGI parameters, and untaint them.  If any of them look
-# suspicious, immediately output an error.
-sub process($) {
-    my ($self) = @_;
-
-    my $query = $self->{query};
+	# Set any missing parameters from the cookie.
     my %cookie = Codestriker::Http::Cookie->get($query);
-    $self->extract_cgi_parameters();
 
     # Set things to the empty string rather than undefined.
     $self->{cc} = "" if ! defined $self->{cc};
@@ -293,7 +286,7 @@ sub _set_property_from_cookie($$$) {
 
     my %cookie = Codestriker::Http::Cookie->get($self->{query});
     if (! defined $self->{$name} || $self->{$name} eq "") {
-	$self->{$name} = exists $cookie{$name} ? $cookie{$name} : $default;
+	$self->{$name} = exists $cookie{$name} && $cookie{$name} ne "" ? $cookie{$name} : $default;
     }
 }
 

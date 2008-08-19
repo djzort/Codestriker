@@ -45,6 +45,7 @@ sub process($$$) {
     my $module = $http_input->get('module');
     my $obsoletes = $http_input->get('obsoletes');
     my $default_to_head = $http_input->get('default_to_head');
+    my $topic_state = $http_input->get('topic_state');
 
     my $feedback = "";
     my $topic_text = "";
@@ -64,6 +65,11 @@ sub process($$$) {
 	    $feedback .= "Repository functionality has been disabled.  " .
 		"Can't create topic text usings tags.\n";
 	}
+    }
+
+    # Check if the state is valid.
+    if (! grep /^$topic_state$/, @Codestriker::topic_states) {
+		$http_response->error("Topic state $topic_state unrecognised");
     }
 
     if ($topic_title eq "") {
@@ -325,7 +331,7 @@ sub process($$$) {
 
     # Create the topic in the model.
     my $topic = Codestriker::Model::Topic->new($topicid);
-    $topic->create($topicid, $email, $topic_title,
+    $topic->create($topicid, $email, $topic_title, $topic_state,
 		   $bug_ids, $reviewers, $cc,
 		   $topic_description, $topic_text,
 		   $start_tag, $end_tag, $module,
@@ -346,7 +352,7 @@ sub process($$$) {
     # Tell all of the topic listener classes that a topic has 
     # just been created.
     $feedback = Codestriker::TopicListeners::Manager::topic_create($topic);
-                      
+    
     # Obtain a URL builder object and determine the URL to the topic.
     my $topic_url = $url_builder->view_url(topicid => $topicid, projectid => $projectid);
                                                     

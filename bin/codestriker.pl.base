@@ -128,7 +128,6 @@ sub main() {
 
     # Process the HTTP input to ensure it is consistent.
     my $http_input = Codestriker::Http::Input->new($query, $http_response);
-    $http_input->process();
     
     my $dispatcher = Codestriker::Http::Dispatcher->new($query);
     $dispatcher->dispatch($http_input, $http_response);

@@ -20,8 +20,8 @@
 <p>
 [% END %]
 
-<FORM METHOD="post" ENCTYPE="multipart/form-data" ACCEPT-CHARSET="UTF-8" action="[% add_topic_url %]">
-<!-- <INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic" /> -->
+<FORM METHOD="post" ENCTYPE="multipart/form-data" ACCEPT-CHARSET="UTF-8">
+<INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic" />
 <INPUT TYPE="hidden" NAME="obsoletes" VALUE="[% obsoletes %]" />
 
 [%# The topic title input field #%]
@@ -256,6 +256,40 @@ to notify a number of people about the creation of a new topic.')">(?)</a></FONT
 </TD>
  <TD COLSPAN="3"><INPUT TYPE="text" NAME="cc" VALUE="[% cc | html_entity %]" SIZE=50 MAXLENGTH=1024 /></TD>
 </TR>
+
+<tr>
+ <td>State:
+   <FONT SIZE="-2"><a href="javascript:void(0);"
+onmouseover="return create_window('When a topic is created, it is by default in state \'open\'.\
+Once a topic has been reviewed, and the code has been committed, \
+the state should be updated to \'committed\'.  If the code \
+in this review is not to be committed, perhaps because a \
+new review will superceed this one, or because it was rejected, \
+the state should be changed to \'closed\'. \
+\
+If a topic is linked to Bugzilla bugs, each time the topic \
+state is changed, an appropriate comment will be appended to \
+all associated bugs, as a form of tracking. \
+\
+The topic states are also useful as a form of filtering, when \
+retrieving lists of topics from the search page. \
+\
+This topic can be superceeded by a new topic, by selecting the \
+state \'obsoleted\'')">(?)</A></FONT>
+  </td>
+  <td>
+    [%# Now display the option button for changing the topic state #%]
+    <select name="topic_state">
+    [% FOREACH state = states %]
+       [% IF state == 'Open' %]
+           <option selected value="[% state %]">[% state %]</option>
+       [% ELSIF state != 'Deleted' && state != 'Obsoleted' %]
+           <option value="[% state %]">[% state %]</option>
+       [% END %]
+    [% END %]
+    </select>
+ </td>
+</tr>
 </TABLE>
 
 <P>
