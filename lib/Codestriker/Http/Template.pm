@@ -122,8 +122,7 @@ sub process($$) {
 
     # Handle the links and parameters in the main title bar.
     $vars->{'list_url'} =
-	$url_builder->list_topics_url("", "", "", "", "", "", "",
-				      "", "", "", [ 0 ], undef);
+	$url_builder->list_topics_url(sstate => [0]);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();

@@ -57,6 +57,7 @@ sub create_topic {
 		    email => $params->{email},
 		    reviewers => $params->{reviewers},
 		    cc => $params->{cc},
+		    topic_state => $params->{topic_state},
 		    topic_file => [$tempfile_filename]];
     my $response =
 	$ua->request(HTTP::Request::Common::POST($self->{url},

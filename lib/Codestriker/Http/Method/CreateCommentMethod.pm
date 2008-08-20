@@ -20,13 +20,13 @@ sub url() {
 	my ($self, %args) = @_;
 	
     confess "Parameter topicid missing" unless defined $args{topicid};
-   	confess "Parameter projectid missing" unless defined $args{projectid};
 
     if ($self->{cgi_style}) {
 	    return $self->{url_prefix} . "?action=edit&fn=$args{filenumber}&line=$args{line}&new=$args{new}&topic=$args{topicid}" .
 		(defined $args{anchor} ? "&a=$args{anchor}" : "") .
 		(defined $args{context} ? "&context=$args{context}" : "");
     } else {
+   	    confess "Parameter projectid missing" unless defined $args{projectid};
     	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comment/" .
     	       "$args{filenumber}|$args{line}|$args{new}/create" .
 		       (defined $args{anchor} ? "/anchor/$args{anchor}" : "") .

@@ -21,7 +21,6 @@ sub url() {
 	my ($self, %args) = @_;
 	
     confess "Parameter topicid missing" unless defined $args{topicid};
-   	confess "Parameter projectid missing" unless defined $args{projectid};
 
     if ($self->{cgi_style}) {
 	    return $self->{url_prefix} . "?action=view&topic=$args{topicid}" .
@@ -31,6 +30,7 @@ sub url() {
 			   (defined $args{fview} ? "&fview=$args{fview}" : "") .
 			   (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
     } else {
+   	    confess "Parameter projectid missing" unless defined $args{projectid};
     	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/text" .
     	       (defined $args{fview} ? "/filenumber/$args{filenumber}" : "") .
     	       (defined $args{mode} ? "/mode/$args{mode}" : "") .
