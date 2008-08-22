@@ -121,6 +121,7 @@ my %opt_to_hash_key = ('--from' => 'from_address',
 		       '--codestriker-repository' => 'codestriker_repository',
 		       '--codestriker-reviewers' => 'codestriker_reviewers',
 		       '--codestriker-cc' => 'codestriker_cc',
+		       '--codestriker-state' => 'codestriker_state',
 		       '--codestriker-install-dir' => 'codestriker_install_dir');
 
 while (@ARGV)
@@ -372,6 +373,7 @@ if ($current_project->{codestriker_url} ne '')
     {
 	$topic_title = substr($topic_title, 0, 77) . "...";
     }
+    $topic_title =~ s/[\r\n]+$//g;
     
     # Check for any matching Bug id text.
     my @bugs = ();
@@ -396,6 +398,7 @@ if ($current_project->{codestriker_url} ne '')
 	email => $codestriker_author,
 	reviewers => $current_project->{codestriker_reviewers},
 	cc => $current_project->{codestriker_cc},
+	topic_state => $current_project->{codestriker_state},
 	topic_text => join("\n", @difflines)
 	});
 }
@@ -574,6 +577,7 @@ sub usage
       "  --codestriker_repository repository  Codestriker repository to use for new topics\n",
       "  --codestriker_reviewers reviewers    Reviewers to be set for new topics\n",
       "  --codestriker_cc cc                  Optional cc recipients for new topics\n",
+      "  --codestriker_state state            Initial state for new topics - defaults to Open\n",
       "  --codestriker_install_dir path       Location of Codestriker installation\n",
       "\n",
       "This script supports a single repository with multiple projects,\n",
@@ -612,6 +616,7 @@ sub new_project
 	  codestriker_repository => '',
 	  codestriker_reviewers => '',
 	  codestriker_cc => '',
+	  codestriker_state => 'Open',
 	  codestriker_install_dir => ''};
 }
 
