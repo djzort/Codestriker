@@ -20,6 +20,7 @@ use Codestriker::Http::Method::ViewTopicCommentsMethod;
 use Codestriker::Http::Method::ViewTopicFileMethod;
 use Codestriker::Http::Method::ViewTopicMetricsMethod;
 use Codestriker::Http::Method::ViewTopicPropertiesMethod;
+use Codestriker::Http::Method::DownloadTopicTextMethod;
 use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 use Codestriker::Http::Method::AddCommentMethod;
 use Codestriker::Http::Method::CreateCommentMethod;
@@ -33,6 +34,7 @@ use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
+use Codestriker::Http::Method::AddProjectMethod;
 
 # Initialise all of the methods that are known to the system.
 # TODO: add configuration to the parameter.
@@ -58,6 +60,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::AddTopicMethod->new($query);
 	push @methods, Codestriker::Http::Method::CreateProjectMethod->new($query);
 	push @methods, $self->{create_topic_method};
+	push @methods, Codestriker::Http::Method::DownloadTopicTextMethod->new($query);
 	push @methods, Codestriker::Http::Method::DownloadMetricsMethod->new($query);
 	push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
 	push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
@@ -66,6 +69,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
 	push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
+	push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
 
 	$self->{methods} = \@methods;
     return bless $self, $type;

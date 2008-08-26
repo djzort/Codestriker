@@ -43,6 +43,7 @@ use Codestriker::Http::Method::AddCommentMethod;
 use Codestriker::Http::Method::AddTopicMethod;
 use Codestriker::Http::Method::CreateProjectMethod;
 use Codestriker::Http::Method::DownloadMetricsMethod;
+use Codestriker::Http::Method::DownloadTopicTextMethod;
 use Codestriker::Http::Method::EditProjectMethod;
 use Codestriker::Http::Method::ListProjectsMethod;
 use Codestriker::Http::Method::SearchTopicsMethod;
@@ -96,17 +97,7 @@ sub view_url {
 # Create the URL for downloading the topic text.
 sub download_url {
     my ($self, %args) = @_;
-    
-    # TODO: handle this as parameter to view topic text.
-    
-    die "Parameter topicid missing" unless defined $args{topicid};
-   	die "Parameter projectid missing" unless defined $args{projectid};
-
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=download&topic=$args{topicid}";
-    } else {
-    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/download/text";
-    }
+    return Codestriker::Http::Method::DownloadTopicTextMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for creating a topic.
