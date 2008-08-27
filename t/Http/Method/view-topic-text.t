@@ -1,7 +1,7 @@
 # Tests for the ViewTopicText method.
 
 use strict;
-use Test::More tests => 8;
+use Test::More tests => 7;
 
 use lib '../../../lib';
 use Test::MockObject;
@@ -41,15 +41,6 @@ eval {
 if ($@) {
 	# Expected.
 	pass("View URL missing topicid parameter");
-}   
-
-eval {
-	$url_cgi->url(topicid => 1234, filenumber => 2, line => 3, new => 1);
-	fail("View URL missing projectid parameter");
-};
-if ($@) {
-	# Expected.
-	pass("View URL missing projectid parameter");
 }   
 
 # Check that the parameters extracted correctly.

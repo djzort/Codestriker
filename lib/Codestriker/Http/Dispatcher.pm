@@ -28,6 +28,7 @@ use Codestriker::Http::Method::AddTopicMethod;
 use Codestriker::Http::Method::CreateProjectMethod;
 use Codestriker::Http::Method::DownloadMetricsMethod;
 use Codestriker::Http::Method::EditProjectMethod;
+use Codestriker::Http::Method::UpdateProjectMethod;
 use Codestriker::Http::Method::ListProjectsMethod;
 use Codestriker::Http::Method::SearchTopicsMethod;
 use Codestriker::Http::Method::SubmitSearchTopicsMethod;
@@ -63,6 +64,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::DownloadTopicTextMethod->new($query);
 	push @methods, Codestriker::Http::Method::DownloadMetricsMethod->new($query);
 	push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
+	push @methods, Codestriker::Http::Method::UpdateProjectMethod->new($query);
 	push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
 	push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
