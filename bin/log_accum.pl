@@ -349,6 +349,7 @@ sub codestriker_create_topic
 	email => $MAIL_FROM,
 	reviewers => $CODESTRIKER_REVIEWERS,
 	cc => $CODESTRIKER_CC,
+	email_event => 0,
 	topic_text => join("\n", @diff)
 	});
 }
