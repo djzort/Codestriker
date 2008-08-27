@@ -1331,6 +1331,41 @@ PerlSwitches -T
           not enable this mode.
         </para>
       </sect2>
+      
+      <sect2>
+        <title>Virtual Host per Project Configuration</title>
+        <para>
+          It is possible to create a separate virtual host / database per
+          Codestriker project using the following steps:
+          <itemizedlist>
+	    <listitem>
+	      <para>Copy the distribution files to a common location across configs. 
+	            For example, <filename>/usr/local/codestriker</filename>.</para>
+	    </listitem>
+	    <listitem>
+	      <para>Create a unique directory for each virtual host configured in Apache.
+                    For example, <filename>/usr/local/apache2/htdocs/CONFIG1/codestriker</filename>.</para>
+            </listitem>
+	    <listitem>
+	      <para>Create a <filename>codestriker.conf</filename> file in the virtual host directory.</para>
+	    </listitem>
+	    <listitem>
+	      <para>Create a <filename>cgi-bin</filename> sub-directory in the virtual host directory.</para>
+	    </listitem>
+	    <listitem>
+	      <para>Create symbolic links from common to config specific directory. For
+		    example, <command>ln -s /usr/local/codestriker/* /usr/local/apache2/htdocs/CONFIG1/codestriker</command></para>
+	    </listitem>
+	    <listitem>
+	      <para>Run install script in the virtual host directory. For example, <command>./bin/install.pl</command></para>
+	    </listitem>
+          </itemizedlist>             
+        </para>
+        <para>
+          Updates just require updating the single source install and running <command>./bin/install.pl</command>
+          for each virtual host directory. 
+        </para>
+      </sect2>
     </sect1>
 
     <sect1 id="IIS-configuration">

@@ -19,7 +19,11 @@ Version 1.9.7
   state can be set.  By default, this is set to "Open", however in
   situations where a review has already been performed but needs to
   be recorded, or a topic is automatically created from a post-commit
-  script from an SCM, sometimes another initial state is desirable.  
+  script from an SCM, sometimes another initial state is desirable.
+  
+* Updated install.pl to support a separate Apache virtual host per
+  Codestriker project as suggested by dmulter@users.sourceforge.net.
+  Manual has been updated with the appropriate instructions. 
 
 Version 1.9.6
 
