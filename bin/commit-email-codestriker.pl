@@ -399,6 +399,7 @@ if ($current_project->{codestriker_url} ne '')
 	reviewers => $current_project->{codestriker_reviewers},
 	cc => $current_project->{codestriker_cc},
 	topic_state => $current_project->{codestriker_state},
+	email_event => 0,
 	topic_text => join("\n", @difflines)
 	});
 }

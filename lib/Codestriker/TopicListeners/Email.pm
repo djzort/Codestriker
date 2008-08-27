@@ -38,6 +38,11 @@ sub new {
 sub topic_create($$) { 
     my ($self, $topic) = @_;
     
+    # Check if this action doesn't need to be logged.
+    if (defined $topic->{email_event} && ! $topic->{email_event}) {
+    	return '';
+    }
+    
     # Send an email to the document author and all contributors with the
     # relevant information.  The person who wrote the comment is indicated
     # in the "From" field, and is BCCed the email so they retain a copy.
@@ -100,6 +105,11 @@ sub topic_create($$) {
 
 sub topic_changed($$$$) {
     my ($self, $user_that_made_the_change, $topic_orig, $topic) = @_;
+
+    # Check if this action doesn't need to be logged.
+    if (defined $topic->{email_event} && $topic->{email_event} == 0) {
+    	return '';
+    }
 
     # Not all changes in the topic changes needs to be sent out to everybody
     # who is working on the topic. The policy of this function is that 
@@ -190,6 +200,11 @@ sub topic_changed($$$$) {
 # for the content of the email only.
 sub send_topic_changed_email {
     my ($self, $user_that_made_the_change, $topic_orig, $topic,@to_list) = @_;
+
+    # Check if this action doesn't need to be logged.
+    if (defined $topic->{email_event} && $topic->{email_event} == 0) {
+    	return '';
+    }
 
     my $changes = "";
 
@@ -323,6 +338,11 @@ sub send_topic_changed_email {
 sub comment_create($$$) {
     my ($self, $topic, $comment) = @_;
         
+    # Check if this action doesn't need to be logged.
+    if (defined $topic->{email_event} && $topic->{email_event} == 0) {
+    	return '';
+    }
+
     my $query = new CGI;
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     

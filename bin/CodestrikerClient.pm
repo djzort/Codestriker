@@ -18,6 +18,7 @@
 #      bug_ids => '1',
 #      email => 'sits',
 #      reviewers => 'root',
+#      email_event => 0,
 #      topic_text => "Here is some text\nHere is some\n\nMore and more...\n"});
 
 package CodestrikerClient;
@@ -58,6 +59,7 @@ sub create_topic {
 		    reviewers => $params->{reviewers},
 		    cc => $params->{cc},
 		    topic_state => $params->{topic_state},
+		    email_event => $params->{email_event},
 		    topic_file => [$tempfile_filename]];
     my $response =
 	$ua->request(HTTP::Request::Common::POST($self->{url},

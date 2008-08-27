@@ -46,6 +46,7 @@ sub process($$$) {
     my $obsoletes = $http_input->get('obsoletes');
     my $default_to_head = $http_input->get('default_to_head');
     my $topic_state = $http_input->get('topic_state');
+    my $email_event = $http_input->get('email_event');
 
     my $feedback = "";
     my $topic_text = "";
@@ -351,6 +352,7 @@ sub process($$$) {
     
     # Tell all of the topic listener classes that a topic has 
     # just been created.
+    $topic->{email_event} = $email_event;
     $feedback = Codestriker::TopicListeners::Manager::topic_create($topic);
     
     # Obtain a URL builder object and determine the URL to the topic.

@@ -105,6 +105,7 @@ sub extract_cgi_parameters {
     my @selected_comments = $query->param('selected_comments');
     $self->{selected_comments} = \@selected_comments;
     $self->{default_to_head} = $query->param('default_to_head');
+    $self->{email_event} = $query->param('email_event');
 
 	# Set any missing parameters from the cookie.
     my %cookie = Codestriker::Http::Cookie->get($query);
@@ -126,6 +127,7 @@ sub extract_cgi_parameters {
     $self->{format} = "html" if ! defined $self->{format};
     $self->{obsoletes} = "" if ! defined $self->{obsoletes};
     $self->{default_to_head} = 0 if ! defined $self->{default_to_head};
+    $self->{email_event} = 1 if ! defined $self->{email_event};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;
