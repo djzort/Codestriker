@@ -48,14 +48,10 @@ sub read_unidiff_text($$$$) {
 	    if ($line !~ /^[\\]/o) {
 
 		# Check if the diff block with the trailing context has been
-		# read. Note Perforce diffs can contain empty lines.
+		# read.
 		if ($num_matched_old_lines >= $number_old_lines &&
 		    $num_matched_new_lines >= $number_new_lines) {
-		    last unless $line =~ /^\s*$/o;
-		    
-		    # Consume excessive blank lines.
-	        $line = <$fh>;
-		    next;
+		    last;
 		}
 		else {
 		    if ($line =~ /^\-/o) {

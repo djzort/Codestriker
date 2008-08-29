@@ -1,0 +1,75 @@
+                                                                     
+                                                                     
+                                                                     
+                                             
+Change 156 by shambhu@shambhu_build_test on 2008/08/12 20:55:51
+
+	Minor build related fixes, updated IP address, internal_stage location in table "releases" after build done and posted. Update "end" column in releases once a release is released.
+
+Affected files ...
+
+... //depot/autobuild/Build.pm#12 edit
+... //depot/autobuild/buildserver.pl#3 edit
+
+Differences ...
+
+==== //depot/autobuild/Build.pm#12 (text) ====
+
+@@ -499,7 +499,7 @@
+   
+     if ($state eq "start") {
+       print SENDMAIL "\t\tBuild started for release $rel. Build log could be found at:\n";
+-      print SENDMAIL "http://172.20.1.120/build_log/$bldlog\n";
++      print SENDMAIL "http://172.20.1.251/build_log/$bldlog\n";
+       print SENDMAIL "\n You would be notified once build is done.\n";
+       print SENDMAIL "\n\n\nHappy Building... :)";
+     }
+@@ -507,9 +507,9 @@
+ 
+       print SENDMAIL "\t\tBuild for release $rel finished successfully. Here is details:\n";
+       print SENDMAIL "\nImage location: $stage_rel_link\n";
+-      print SENDMAIL "Alternate location: http://172.20.1.120/images/$stage_rel_dir\n";
+-      print SENDMAIL "Build Log: http://172.20.1.120/build_log/$bldlog\n";
+-      print SENDMAIL "Sync Log: http://172.20.1.120/synclog/$synclog\n";
++      print SENDMAIL "Alternate location: http://172.20.1.251/images/$stage_rel_dir\n";
++      print SENDMAIL "Build Log: http://172.20.1.251/build_log/$bldlog\n";
++      print SENDMAIL "Sync Log: http://172.20.1.251/synclog/$synclog\n";
+     }
+     elsif ($state eq "failed") {
+
+@@ -519,8 +519,8 @@
+       push (@error_msgs, @error_msg);
+       print SENDMAIL "\n @error_msgs\n";
+       print SENDMAIL "\n\nSee build log for full details: ";
+-      print SENDMAIL "Build Log: http://172.20.1.120/build_log/$bldlog\n";
+-      print SENDMAIL "Sync Log: http://172.20.1.120/synclog/$synclog\n";
++      print SENDMAIL "Build Log: http://172.20.1.251/build_log/$bldlog\n";
++      print SENDMAIL "Sync Log: http://172.20.1.251/synclog/$synclog\n";
+       print SENDMAIL "\nPlease fix the issue and resubmit the build request.";
+     }
+     close (SENDMAIL);
+
+==== //depot/autobuild/buildserver.pl#3 (xtext) ====
+
+@@ -10,6 +10,7 @@
+ my $syncdir = "/opt/LOG/synclog";
+ my $stage_dir = "/mars/UPLOAD/BUILD/AUTO_BUILD/";
+ my $stage_linkdir = '\\\\mars\\Remote\\UPLOAD\\BUILD\\AUTO_BUILD\\';
++my $db_stage_linkdir = '\\\\\\\\mars\\\\Remote\\\\UPLOAD\\\\BUILD\\\\AUTO_BUILD\\\\';
+ my $image_dir = "/opt/Build/IMAGES/";
+ my $script_dir = "/var/www/cgi-bin/build/BUILD_SCRIPTS/";
+ my $buildlog_dir = "/opt/LOG/BUILD_LOG/";
+@@ -282,6 +283,12 @@
+    	my $alt_stage_dir = $prod_rel[0] . "/" . $rel;
+ 	my $stage_rel_link = $stage_linkdir . "$prod_rel[0]" . "\\" . "$prod_rel[1]" . "\\" . "$rel";	
+ 	Build->build_status_mail($bld_usr,$rel,$log_name,"pass", $stage_rel_link, $alt_stage_dir);
++
++	my $db_stage_rel_link = $db_stage_linkdir . "$prod_rel[0]" . "\\\\" . "$prod_rel[1]" . "\\\\" . "$rel";
++	my $stage_int_sql = "UPDATE releases SET internal_stage=\'$db_stage_rel_link\'
++				where releases.release=\'$rel\'";
++	Build->run_sql_query($stage_int_sql, ";");
++
+       }
+     }
+     else {
+

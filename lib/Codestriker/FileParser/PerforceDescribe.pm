@@ -148,6 +148,9 @@ sub parse ($$$) {
 
 	# Skip the next blank line before the next chunk.
 	$line = <$fh>;
+	while (defined $line && $line =~ /^\s*$/) {
+		$line = <$fh>;
+	}
     }
 
     # Finally, add any remaining TOC netries that are unaccounted for.

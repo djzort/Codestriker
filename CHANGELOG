@@ -15,6 +15,10 @@ Version 1.9.7
   depot did not work if the depot was on a different machine to the
   web-server.  This has now been fixed.
   
+* Fixed an issue where some Perforce describe diffs were not being
+  parsed correctly as reported by shambhu.1980@gmail.com.  This has
+  now been fixed.  
+  
 * Added a drop-down on the topic create page where the initial topic
   state can be set.  By default, this is set to "Open", however in
   situations where a review has already been performed but needs to
