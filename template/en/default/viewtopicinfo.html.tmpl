@@ -8,7 +8,7 @@
  
 [%# Create a form to allow the topic's metrics to be changed #%]
 [% SET metric_input_exists = 0 %]
-<form method="post" enctype="multipart/form-data" name="form" accept-charset="UTF-8">
+<form method="post" enctype="multipart/form-data" name="form" accept-charset="UTF-8" action="[% action_url %]">
 
 <input type="hidden" name="action" value="edit_topic_metrics" />
 <input type="hidden" name="topic" value="[% topic %]" />

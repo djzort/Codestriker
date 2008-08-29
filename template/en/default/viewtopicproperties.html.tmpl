@@ -33,7 +33,7 @@ function DeleteTopicConfirm()
 </script>
 
 [%# Create a form to allow the topic's properties to be changed #%]
-<form method="post" name="form" enctype="multipart/form-data" accept-charset="UTF-8">
+<form method="post" name="form" enctype="multipart/form-data" accept-charset="UTF-8" action="[% action_url %]">
 
 <input type="hidden" name="action" value="edit_topic_properties" />
 <input type="hidden" name="topic" value="[% topicid %]" />

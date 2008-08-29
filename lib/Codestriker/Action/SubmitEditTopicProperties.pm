@@ -43,6 +43,7 @@ sub process($$$) {
 
     # Retrieve the current state of the topic.
     my $topic = Codestriker::Model::Topic->new($topicid);
+    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     my $feedback = "";
     my $rc = $Codestriker::OK;
@@ -103,7 +104,6 @@ sub process($$$) {
 	elsif ($topic_state eq "Obsoleted") {
 	    # Redirect to the create topic screen with this topic being
 	    # the one to obsolete.
-	    my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 	    my $create_topic_url =
 		$url_builder->create_topic_url("$topicid,$version");
 	    print $query->redirect(-URI=>$create_topic_url);
@@ -174,8 +174,8 @@ sub process($$$) {
         }
     } else {
 	# Go to the view topic properties screen.
-	Codestriker::Action::ViewTopicProperties->process($http_input,
-							  $http_response);
+	    Codestriker::Action::ViewTopicProperties->process($http_input,
+						      $http_response);
     }	
 }
 

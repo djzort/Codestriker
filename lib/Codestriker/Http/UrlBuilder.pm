@@ -50,15 +50,16 @@ use Codestriker::Http::Method::SearchTopicsMethod;
 use Codestriker::Http::Method::SubmitSearchTopicsMethod;
 use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
+use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
+use Codestriker::Http::Method::UpdateTopicMetricsMethod;
 
 # Constructor for this class.
 sub new {
-    my ($type, $query, $cgi_style) = @_;
+    my ($type, $query) = @_;
     my $self = {};
 
 	$self->{query} = $query;
-    $self->{cgi_style} = 1;
-   	$self->{cgi_style} = $cgi_style if defined $cgi_style;
+    $self->{cgi_style} = defined $Codestriker::cgi_style ? $Codestriker::cgi_style : 1;
 
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
@@ -191,16 +192,40 @@ sub view_comments_url {
     return Codestriker::Http::Method::ViewTopicCommentsMethod->new($self->{query})->url(%args);
 }
 
+# Create the URL for updating comments.
+sub update_comments_url {
+    my ($self, %args) = @_;
+#    return Codestriker::Http::Method::UpdateTopicCommentsMethod->new($self->{query})->url(%args);
+}
+
 # Create the URL for viewing the topic properties.
 sub view_topic_properties_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::ViewTopicPropertiesMethod->new($self->{query})->url(%args);
 }
 
+# Create the URL for updating the topic properties.
+sub update_topic_properties_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::UpdateTopicPropertiesMethod->new($self->{query})->url(%args);
+}
+
 # Create the URL for viewing the topic metrics.
 sub view_topicinfo_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::ViewTopicMetricsMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for updating the topic metrics.
+sub update_topicinfo_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::UpdateTopicMetricsMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for adding new comments.
+sub add_comment_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::AddCommentMethod->new($self->{query})->url(%args);
 }
 
 sub metric_report_url {

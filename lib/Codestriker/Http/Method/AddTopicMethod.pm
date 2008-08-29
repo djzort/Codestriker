@@ -35,7 +35,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "submit_new_topic") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topics/add}) {
+	} elsif ($path_info =~ m{^/project/\d+/topics/add}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid');
 		return 1;

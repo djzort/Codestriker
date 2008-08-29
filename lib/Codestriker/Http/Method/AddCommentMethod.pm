@@ -5,7 +5,7 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Method for submitting a searching topic form.
+# Method for submitting a new comment.
 
 package Codestriker::Http::Method::AddCommentMethod;
 
@@ -24,8 +24,8 @@ sub url() {
 	    die "Parameter topicid missing" unless defined $args{topicid};
    		die "Parameter projectid missing" unless defined $args{projectid};
 
-    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comment/" .
-    	       "$args{filenumber}|$args{line}|$args{new}/add";
+    	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comment" .
+    	       (defined $args{filenumber} && $args{filenumber} ne "" ? "/$args{filenumber}|$args{line}|$args{new}/add" : "");
     }
 }
 
@@ -37,13 +37,13 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "submit_comment") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/comment/(\d+)\|(\d+)\|(\d+)/add}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/comment/(\d+)\|(\d+)\|(\d+)/add}) {
+	    $self->_extract_nice_parameters($http_input,
+	                                    project => 'projectid', topic => 'topic',
+	                                    anchor => 'anchor', context => 'context');
 		$http_input->{fn} = $1;
 		$http_input->{line} = $2;
 		$http_input->{new} = $3;
-	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid',
-	                                    anchor => 'anchor', context => 'context');
 		return 1;
 	} else {
 		return 0;

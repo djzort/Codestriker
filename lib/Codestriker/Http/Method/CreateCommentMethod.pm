@@ -22,14 +22,15 @@ sub url() {
     confess "Parameter topicid missing" unless defined $args{topicid};
 
     if ($self->{cgi_style}) {
-	    return $self->{url_prefix} . "?action=edit&fn=$args{filenumber}&line=$args{line}&new=$args{new}&topic=$args{topicid}" .
+	    return $self->{url_prefix} . "?action=edit&topic=$args{topicid}" .
+	    (defined $args{filenumber} && $args{filenumber} ne "" . "&fn=$args{filenumber}&line=$args{line}&new=$args{new}") .
 		(defined $args{anchor} ? "&a=$args{anchor}" : "") .
 		(defined $args{context} ? "&context=$args{context}" : "");
     } else {
    	    confess "Parameter projectid missing" unless defined $args{projectid};
     	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/comment/" .
-    	       "$args{filenumber}|$args{line}|$args{new}/create" .
-		       (defined $args{anchor} ? "/anchor/$args{anchor}" : "") .
+    	       (defined $args{filenumber} && $args{filenumber} ne "" ? "$args{filenumber}|$args{line}|$args{new}/create" : "") .
+		       (defined $args{anchor} && $args{anchor} ne '' ? "/anchor/$args{anchor}" : "") .
 		       (defined $args{context} ? "/context/$args{context}" : "");
     }
 }
@@ -42,13 +43,13 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "edit") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/comment/(\d+)\|(\d+)\|(\d+)/create}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/comment/(\d+)\|(\d+)\|(\d+)/create}) {
+	    $self->_extract_nice_parameters($http_input,
+	                                    project => 'projectid', topic => 'topic',
+	                                    anchor => 'anchor', context => 'context');
 		$http_input->{fn} = $1;
 		$http_input->{line} = $2;
 		$http_input->{new} = $3;
-	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid',
-	                                    anchor => 'anchor', context => 'context');
 		return 1;
 	} else {
 		return 0;

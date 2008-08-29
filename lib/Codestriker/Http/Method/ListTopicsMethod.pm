@@ -66,8 +66,8 @@ sub extract_parameters {
         ($action eq "list_topics" || $action eq "list_topics_rss")) { 
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/feed/topics/list} ||
-	         $path_info =~ m{^$self->{url_prefix}/topics/list}) {
+	} elsif ($path_info =~ m{^/feed/topics/list} ||
+	         $path_info =~ m{^/topics/list}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    author => 'sauthor', reviewer => 'sreviewer',
 	                                    cc => 'scc', bugid => 'sbugid', text => 'stext',

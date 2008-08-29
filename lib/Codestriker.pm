@@ -32,7 +32,7 @@ use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
 	      $metric_config $tmpdir @metric_schema $comment_state_metrics
 	      $project_states $rss_enabled
 	      $repository_name_map $repository_url_map
-	      @valid_repository_names $topic_text_encoding
+	      @valid_repository_names $topic_text_encoding $cgi_style
 	      );
 
 # Version of Codestriker.

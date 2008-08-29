@@ -129,7 +129,8 @@ function add_other_reviewers() {
 
 <P>
 
-<FORM NAME="add_comment" METHOD="POST" onSubmit="return verify();" ENCTYPE="application/x-www-form-urlencoded">
+<FORM NAME="add_comment" METHOD="POST" onSubmit="return verify();" ENCTYPE="application/x-www-form-urlencoded"
+      ACTION="[% action_url %]">
  <INPUT TYPE="hidden" NAME="action" VALUE="submit_comment">
  <INPUT TYPE="hidden" NAME="line" VALUE="[% line %]">
  <INPUT TYPE="hidden" NAME="topic" VALUE="[% topic %]">

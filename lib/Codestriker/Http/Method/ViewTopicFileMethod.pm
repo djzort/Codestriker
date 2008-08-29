@@ -41,7 +41,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "view_file") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/file/\d+}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/file/\d+}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid', topic => 'topicid',
 	                                    file => 'fn');

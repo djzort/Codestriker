@@ -94,9 +94,8 @@ function view_topic_on_load_handler()
 function add_comment_html(file, line, new_value)
 {
     // Get the location of the codestriker URL.
-    var l = top.location;
-    var url = l.protocol + '//' + l.host + l.pathname;
-
+    var url = cs_add_comment_url + '/' + file + '|' + line + '|' + new_value + '/add';
+              
     // Create the hidden error span, and the initial form, with the
     // appropriate hidden fields.
     var html = '<html><head>' +
@@ -109,7 +108,7 @@ function add_comment_html(file, line, new_value)
 	    '<form name="add_comment" method="POST" ' +
             'action="' + url + '" ' +
             'onSubmit="return top.verify(document.add_comment, getElt(\'statusField\'));" ' +
-            'enctype="application/x-www-form-urlencoded">\n' +
+            'enctype="application/x-www-form-urlencoded" action="' + url + '">\n' +
 	    '<input type="hidden" name="action" value="submit_comment">\n' +
 	    '<input type="hidden" name="line" value="' + line + '">\n' +
 	    '<input type="hidden" name="topic" value="' + cs_topicid + '">\n' +
@@ -265,6 +264,9 @@ function verify(comment_form, status_field)
     // If we reached here, then all metrics have been set.  Send the 
     // request as an XMLHttpRequest, and return false so the browser
     // does nothing else.
+    var url = cs_add_comment_url + '/' + 
+              comment_form.fn.value + '|' + comment_form.line.value + '|' +
+              comment_form.newval.value + '/add';
     var params = 'action=submit_comment';
     params += '&line=' + encodeURIComponent(comment_form.line.value);
     params += '&topic=' + encodeURIComponent(comment_form.topic.value);
@@ -284,7 +286,7 @@ function verify(comment_form, status_field)
 
     setStatusText('Submitting comment...');
 
-    postXMLDoc(params);
+    postXMLDoc(url, params);
     return false;
 }
 
@@ -348,12 +350,8 @@ function create_window(text)
 }
 
 // Function for posting to Codestriker using the XMLHttpRequest object.
-function postXMLDoc(params)
+function postXMLDoc(url, params)
 {
-    // Generate the basic Codestriker URL.
-    var l = top.location;
-    var url = l.protocol + '//' + l.host + l.pathname;
-
     // Check for Mozilla/Safari.
     if (window.XMLHttpRequest) {
         cs_request = new XMLHttpRequest();

@@ -5,7 +5,7 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Action object for handling the submission of changing the properties of a
+# Action object for handling the submission of changing the metrics of a
 # topic.
 
 package Codestriker::Action::SubmitEditTopicMetrics;

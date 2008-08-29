@@ -36,7 +36,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "edit_topic_properties") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/properties}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/properties}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid', topic => 'topicid');
 		return 1;

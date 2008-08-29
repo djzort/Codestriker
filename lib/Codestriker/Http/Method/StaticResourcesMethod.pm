@@ -35,7 +35,7 @@ sub url() {
     if ($self->{cgi_style}) {
         return $htmlurl;
     } else {
-    	return $self->{url_prefix} . "/static";
+    	return $self->{url_prefix} . "/html";
     }
 }
 

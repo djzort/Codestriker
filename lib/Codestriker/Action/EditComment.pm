@@ -63,22 +63,25 @@ sub process($$$) {
                                                 new => $new, line => $line);
     my $view_comments_url = $url_builder->view_comments_url(topicid => $topicid,
                                                             projectid => $topic->{project_id});
+    my $add_comment_url = $url_builder->add_comment_url(topicid => $topicid, projectid => $topic->{project_id},
+                                                        filenumber => $fn, new => $new, line => $line);
     
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'doc_url'} = $url_builder->doc_url();
-
+    $vars->{'action_url'} = $add_comment_url;
+    
     # Retrieve the context in question.  Allow the user to increase it
     # or decrease it appropriately.
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
 	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
-	                       topicid => $topicid, projectid => $topic->{projectid},
+	                       topicid => $topicid, projectid => $topic->{project_id},
 			               context => $inc_context, anchor => $anchor);
     my $dec_context_url =
 	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
-	                       topicid => $topicid, projectid => $topic->{projectid},
+	                       topicid => $topicid, projectid => $topic->{project_id},
 			               context => $dec_context, anchor => $anchor);
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;

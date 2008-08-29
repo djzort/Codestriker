@@ -36,9 +36,9 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "list_comments") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/comments}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/comments}) {
 	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid');
+	                                    project => 'projectid', topic => 'topic');
 		return 1;
 	} else {
 		return 0;

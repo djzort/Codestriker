@@ -130,6 +130,8 @@ sub process($$$) {
     $vars->{'view_comments_url'} = $url_builder->view_comments_url(topicid => $topicid,
                                                                    projectid => $topic->{project_id});
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
+    $vars->{'action_url'} = $url_builder->update_topicinfo_url(topicid => $topicid,
+                                                               projectid => $topic->{project_id});
 
     # Display the "update" message if the topic state has been changed.
     $vars->{'updated'} = $http_input->get('updated');

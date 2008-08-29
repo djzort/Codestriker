@@ -33,7 +33,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "submit_editproject") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/admin/project/\d+/update$}) {
+	} elsif ($path_info =~ m{^/admin/project/\d+/update$}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid');
 		return 1;

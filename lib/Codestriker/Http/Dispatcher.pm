@@ -22,6 +22,7 @@ use Codestriker::Http::Method::ViewTopicMetricsMethod;
 use Codestriker::Http::Method::ViewTopicPropertiesMethod;
 use Codestriker::Http::Method::DownloadTopicTextMethod;
 use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
+use Codestriker::Http::Method::UpdateTopicMetricsMethod;
 use Codestriker::Http::Method::AddCommentMethod;
 use Codestriker::Http::Method::CreateCommentMethod;
 use Codestriker::Http::Method::AddTopicMethod;
@@ -55,6 +56,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::ViewTopicMetricsMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query);
 	push @methods, Codestriker::Http::Method::UpdateTopicPropertiesMethod->new($query);
+	push @methods, Codestriker::Http::Method::UpdateTopicMetricsMethod->new($query);
 	push @methods, $self->{list_topics_method};
 	push @methods, Codestriker::Http::Method::CreateCommentMethod->new($query);
 	push @methods, Codestriker::Http::Method::AddCommentMethod->new($query);

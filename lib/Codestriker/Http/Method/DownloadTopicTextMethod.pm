@@ -38,7 +38,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "download") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/download}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/download}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid', topic => 'topicid');
 		return 1;

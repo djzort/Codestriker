@@ -60,6 +60,8 @@ sub process($$$) {
 
     # Obtain a new URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
+    $vars->{'action_url'} = $url_builder->update_topic_properties_url(topicid => $topicid,
+                                                                      projectid => $topic->{project_id});
 
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
 						       $url_builder);

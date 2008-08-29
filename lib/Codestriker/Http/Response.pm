@@ -12,6 +12,7 @@ package Codestriker::Http::Response;
 
 use strict;
 use Codestriker::Http::Cookie;
+use Codestriker::Http::UrlBuilder;
 use HTML::Entities ();
 
 # Constructor for this class.  Indicate that the response header hasn't been
@@ -230,7 +231,11 @@ sub generate_header {
     } else {
     	# Use the default CSS file.
 			$codestriker_css = $query->url();
-	$codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/codestriker.css#;
+			if (defined $Codestriker::cgi_style && $Codestriker::cgi_style) {
+	            $codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/codestriker.css#;
+			} else {
+				$codestriker_css = $query->url() . "html/codestriker.css";
+			}
     }
 
     
@@ -261,6 +266,7 @@ sub generate_header {
     print "    var cs_load_anchor = '$load_anchor';\n";
     print "    var cs_reload = $reload;\n";
     print "    var cs_topicid = $topic->{topicid};\n" if defined $topic;
+    print "    var cs_projectid = $topic->{project_id};\n" if defined $topic;
     print "    var cs_email = '$email';\n" if defined $email;
     print "    var cs_css = '$codestriker_css';\n";
     print "    var cs_xbdhtml_js = '$xbdhtml_js';\n";
@@ -283,6 +289,13 @@ sub generate_header {
 		$metric_config->{default_value} . "';\n";
 	}
 	$i++;
+    }
+    
+    # Output the URL to post to for adding comments.
+    if (defined $topic) {
+        my $url_builder = Codestriker::Http::UrlBuilder->new($self->{query});
+        print "    var cs_add_comment_url = '" .
+              $url_builder->add_comment_url(topicid => $topic->{topicid}, projectid => $topic->{project_id}) . "';\n";
     }
 
     # Check that the external javascript files were loaded, and if not

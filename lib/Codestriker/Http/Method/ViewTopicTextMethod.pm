@@ -32,7 +32,7 @@ sub url() {
     } else {
    	    confess "Parameter projectid missing" unless defined $args{projectid};
     	return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/text" .
-    	       (defined $args{fview} ? "/filenumber/$args{filenumber}" : "") .
+    	       (defined $args{fview} ? "/filenumber/$args{fview}" : "") .
     	       (defined $args{mode} ? "/mode/$args{mode}" : "") .
 			   (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
     }    
@@ -46,9 +46,9 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "view") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^$self->{url_prefix}/project/\d+/topic/\d+/text}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/text}) {
 	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid',
+	                                    project => 'projectid', topic => 'topic',
 	                                    filenumber => 'fview', mode => 'mode');
 		return 1;
 	} else {

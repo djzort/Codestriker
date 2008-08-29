@@ -19,7 +19,11 @@ sub new {
 	
     my $self = {};
 	$self->{query} = $query;
-    $self->{cgi_style} = defined $cgi_style ? $cgi_style : 1;
+	if (defined $cgi_style) {
+		$self->{cgi_style} = $cgi_style;
+	} else {
+        $self->{cgi_style} = defined $Codestriker::cgi_style ? $Codestriker::cgi_style : 1;
+	}
     
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
@@ -58,6 +62,8 @@ sub execute {
 # Utility method for extracting the specified parameter from a URL if it exists.
 sub _extract_nice_parameters {
 	my ($self, $http_input, %parameters) = @_;
+
+    $http_input->extract_cgi_parameters();
 	
 	my $path_info = $http_input->{query}->path_info();
 	foreach my $nice_parameter (keys %parameters) {
