@@ -292,7 +292,7 @@ sub get_topic_list_query_params {
     my $sbody = $http_input->get('sbody') || 0;
     my $sfilename = $http_input->get('sfilename') || 0;
     my $projectid = $http_input->get('projectid');
-
+    
     # If $sproject has been set to -1, then retrieve the value of the projectid
     # from the cookie as the project search value.  This is done to facilate
     # integration with other systems, which jump straight to this URL, and
@@ -301,8 +301,8 @@ sub get_topic_list_query_params {
 	$sproject = (defined $projectid) ? $projectid : "";
     }
     
-    # Only show open topics if codestriker.pl was run without parameters.
-    if (defined($http_input->{query}->param) == 0 || !defined($sstate)) {
+    # Default to show open topics if sstate is not defined.
+    if (!defined($sstate)) {
     	$sstate = 0; 
     }
 
@@ -327,6 +327,7 @@ sub get_topic_sort_order {
     my $topic_sort_change = $http_input->get('topic_sort_change');
     my $topicsort = $http_input->get('topicsort');
 
+    return () unless defined $topicsort;
     my @sort_order = split(/,/,$topicsort); # this is always from the cookie.
 
     if (defined $topic_sort_change && $topic_sort_change ne "") {
