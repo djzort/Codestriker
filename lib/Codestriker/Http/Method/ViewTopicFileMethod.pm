@@ -43,7 +43,7 @@ sub extract_parameters {
 		return 1;
 	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/file/\d+}) {
 	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid',
+	                                    project => 'projectid', topic => 'topic',
 	                                    file => 'fn');
 		return 1;
 	} else {

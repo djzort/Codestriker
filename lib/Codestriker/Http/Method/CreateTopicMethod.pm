@@ -32,7 +32,6 @@ sub extract_parameters {
 	
 	my $action = $http_input->{query}->param('action'); 
     my $path_info = $http_input->{query}->path_info();
-    print STDERR "Check path: $path_info\n";
     if ($self->{cgi_style} && defined $action && $action eq "create") {  
 		$http_input->extract_cgi_parameters();
 		return 1;

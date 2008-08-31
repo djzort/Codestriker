@@ -20,7 +20,7 @@ sub url() {
 	my ($self, %args) = @_;
 	
 	if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=edit_topic_metrics&topic=$args{topicid}";
+        return $self->{url_prefix} . "?action=edit_topic_metrics";
 	} else {
         confess "Parameter topicid missing" unless defined $args{topicid};
    	    confess "Parameter projectid missing" unless defined $args{projectid};
@@ -38,7 +38,7 @@ sub extract_parameters {
 		return 1;
 	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/metrics/update}) {
 	    $self->_extract_nice_parameters($http_input,
-	                                    project => 'projectid', topic => 'topicid');
+	                                    project => 'projectid', topic => 'topic');
 		return 1;
 	} else {
 		return 0;

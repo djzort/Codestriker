@@ -60,9 +60,10 @@ is ($url_nice->url(sauthor => "sits", sreviewer => "engineering",
 # Check that the parameters extracted correctly.
 my $mock_http_input = Test::MockObject->new();
 $mock_http_input->{query} = $mock_query;
+$mock_http_input->mock('extract_cgi_parameters', sub { return undef; });                  
 $mock_query->mock('path_info',
                   sub {
-                  	return $mock_query->url() . '/topics/list/author/sits/reviewer/engineering' .
+                  	return '/topics/list/author/sits/reviewer/engineering' .
                            '/bugid/10%2C20/title/Example%20title/comment/Critical%20Error' .
                            '/state/0/project/10%2C30';
                   });

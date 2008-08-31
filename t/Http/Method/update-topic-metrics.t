@@ -18,7 +18,7 @@ my $url_cgi = Codestriker::Http::Method::UpdateTopicMetricsMethod->new($mock_que
 my $url_nice = Codestriker::Http::Method::UpdateTopicMetricsMethod->new($mock_query, 0);
 
 is($url_cgi->url(topicid => 1234, projectid => 10),
-   $mock_query->url() . '?action=submit_edit_topic_metrics&topic=1234',
+   $mock_query->url() . '?action=edit_topic_metrics',
    "Update topic metrics URL CGI syntax");
    
 is($url_nice->url(topicid => 1234, projectid => 10),
@@ -28,13 +28,14 @@ is($url_nice->url(topicid => 1234, projectid => 10),
 # Check that the parameters extracted correctly.
 my $mock_http_input = Test::MockObject->new();
 $mock_http_input->{query} = $mock_query;
+$mock_http_input->mock('extract_cgi_parameters', sub { return undef; });                  
 $mock_query->mock('path_info',
                   sub {
-                  	return $mock_query->url() . '/project/10/topic/1234/metrics/update';
+                  	return '/project/10/topic/1234/metrics/update';
                   });
 $mock_query->mock('param', sub { return undef; });                  
 $url_nice->extract_parameters($mock_http_input);
 is ($mock_http_input->{projectid}, "10", "project nice URL parameter extraction");
-is ($mock_http_input->{topicid}, "1234", "topicid nice URL parameter extraction");
+is ($mock_http_input->{topic}, "1234", "topicid nice URL parameter extraction");
 
                               

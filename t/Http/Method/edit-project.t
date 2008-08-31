@@ -25,9 +25,10 @@ is($url_nice->url(45), $mock_query->url() . '/admin/project/45/edit',
 # Check that the parameters extracted correctly.
 my $mock_http_input = Test::MockObject->new();
 $mock_http_input->{query} = $mock_query;
+$mock_http_input->mock('extract_cgi_parameters', sub { return undef; });                  
 $mock_query->mock('path_info',
                   sub {
-                  	return $mock_query->url() . '/admin/project/45/edit';
+                  	return '/admin/project/45/edit';
                   });
 $mock_query->mock('param', sub { return undef; });                  
 $url_nice->extract_parameters($mock_http_input);

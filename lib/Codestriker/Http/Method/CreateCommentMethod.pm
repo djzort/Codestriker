@@ -23,7 +23,7 @@ sub url() {
 
     if ($self->{cgi_style}) {
 	    return $self->{url_prefix} . "?action=edit&topic=$args{topicid}" .
-	    (defined $args{filenumber} && $args{filenumber} ne "" . "&fn=$args{filenumber}&line=$args{line}&new=$args{new}") .
+	    (defined $args{filenumber} && $args{filenumber} ne "" ? "&fn=$args{filenumber}&line=$args{line}&new=$args{new}" : "") .
 		(defined $args{anchor} ? "&a=$args{anchor}" : "") .
 		(defined $args{context} ? "&context=$args{context}" : "");
     } else {
