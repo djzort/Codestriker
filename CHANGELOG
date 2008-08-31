@@ -27,7 +27,10 @@ Version 1.9.7
   
 * Updated install.pl to support a separate Apache virtual host per
   Codestriker project as suggested by dmulter@users.sourceforge.net.
-  Manual has been updated with the appropriate instructions. 
+  Manual has been updated with the appropriate instructions.
+  
+* Help popup text windows on the create topic and search screens
+  disappear automatically when the cursor is moved off the (?) link.
 
 Version 1.9.6
 
