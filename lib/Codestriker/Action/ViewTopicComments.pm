@@ -158,7 +158,11 @@ sub process($$$) {
 
     # Store the topic status     
     $vars->{'default_state'} = $topic->{topic_state};     
-    $vars->{'topic_states'} = \@Codestriker::topic_states; 
+    $vars->{'topic_states'} = \@Codestriker::topic_states;
+    
+    # Set the action URL for the form.
+    $vars->{'action_url'} = $url_builder->update_comments_url(topicid => $topicid,
+                                                              projectid => $projectid);
 
     # Send the data to the template for rendering.
     my $template = Codestriker::Http::Template->new("viewtopiccomments");

@@ -74,7 +74,7 @@ sub process($$$) {
     }
     
     # Target URL to divert the post to.
-    $vars->{'submit_search_url'} = $url_builder->submit_search_url(); 
+    $vars->{'action_url'} = $url_builder->submit_search_url(); 
 
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars);

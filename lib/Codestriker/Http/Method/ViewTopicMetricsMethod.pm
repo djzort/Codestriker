@@ -24,7 +24,7 @@ sub url() {
 	if ($self->{cgi_style}) {
         return $self->{url_prefix} . "?action=viewinfo&topic=$args{topicid}";
 	} else {
-		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/metrics";
+		return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/metrics/view";
 	}
 }
 
@@ -36,7 +36,7 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "viewinfo") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/metrics}) {
+	} elsif ($path_info =~ m{^/project/\d+/topic/\d+/metrics/view}) {
 	    $self->_extract_nice_parameters($http_input,
 	                                    project => 'projectid', topic => 'topic');
 		return 1;

@@ -7,25 +7,6 @@
 
 # Collection of routines for building codestriker URLs.
 
-# TODO, handle URL scheme such as:
-# UrlBuilder needs to be smart and know how to handle the old and new scheme.
-# Config variable could disable old scheme, then perhaps way to set security
-# on location.
-
-# Need a populate parameters method to set http_input hash.
-# map new anchor -> a and filenumber -> fn.
-
-# TODO: fix javascript eo method.
-# 
-
-# For eahc method, need object to generate_url(%args), and another that takes query object and sets
-# parameters to $http_input.  These could be unit tested as well.  Object called Action.
-# When processing input, each object could check query, and return false if can't handle it?
-# For CGI case, can always handle it.  Could call it Method?  Might fit better into REST later.
-# Process method could return associated action object?  better than large dispatch method currently
-# present.
-# process -> (%args, %http_input).
-
 package Codestriker::Http::UrlBuilder;
 
 use strict;
@@ -52,6 +33,7 @@ use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 use Codestriker::Http::Method::UpdateTopicMetricsMethod;
+use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 
 # Constructor for this class.
 sub new {
@@ -195,7 +177,7 @@ sub view_comments_url {
 # Create the URL for updating comments.
 sub update_comments_url {
     my ($self, %args) = @_;
-#    return Codestriker::Http::Method::UpdateTopicCommentsMethod->new($self->{query})->url(%args);
+    return Codestriker::Http::Method::UpdateCommentMetricsMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for viewing the topic properties.

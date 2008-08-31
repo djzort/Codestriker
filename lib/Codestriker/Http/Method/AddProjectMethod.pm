@@ -34,6 +34,7 @@ sub extract_parameters {
 		$http_input->extract_cgi_parameters();
 		return 1;
 	} elsif ($path_info =~ m{^/admin/projects/add}) {
+	    $self->_extract_nice_parameters($http_input);
 		return 1;
 	} else {
 		return 0;

@@ -23,6 +23,7 @@ use Codestriker::Http::Method::ViewTopicPropertiesMethod;
 use Codestriker::Http::Method::DownloadTopicTextMethod;
 use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 use Codestriker::Http::Method::UpdateTopicMetricsMethod;
+use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 use Codestriker::Http::Method::AddCommentMethod;
 use Codestriker::Http::Method::CreateCommentMethod;
 use Codestriker::Http::Method::AddTopicMethod;
@@ -50,6 +51,7 @@ sub new {
         Codestriker::Http::Method::CreateTopicMethod->new($query); 
 
 	my @methods = ();
+	push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewTopicTextMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewTopicCommentsMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewTopicFileMethod->new($query);
@@ -57,6 +59,7 @@ sub new {
 	push @methods, Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query);
 	push @methods, Codestriker::Http::Method::UpdateTopicPropertiesMethod->new($query);
 	push @methods, Codestriker::Http::Method::UpdateTopicMetricsMethod->new($query);
+	push @methods, Codestriker::Http::Method::UpdateCommentMetricsMethod->new($query);
 	push @methods, $self->{list_topics_method};
 	push @methods, Codestriker::Http::Method::CreateCommentMethod->new($query);
 	push @methods, Codestriker::Http::Method::AddCommentMethod->new($query);
@@ -68,7 +71,6 @@ sub new {
 	push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
 	push @methods, Codestriker::Http::Method::UpdateProjectMethod->new($query);
 	push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
-	push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
 	push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
 	push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);

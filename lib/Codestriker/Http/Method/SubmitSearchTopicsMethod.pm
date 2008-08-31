@@ -33,7 +33,8 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "submit_search") {  
 		$http_input->extract_cgi_parameters();
 		return 1;
-	} elsif ($path_info =~ m{^/topics/submitsearch/}) {
+	} elsif ($path_info =~ m{^/topics/submitsearch}) {
+	    $self->_extract_nice_parameters($http_input);
 		return 1;
 	} else {
 		return 0;
