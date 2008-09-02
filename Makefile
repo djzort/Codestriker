@@ -28,7 +28,8 @@ build-tar-gz: build
 build: build-docs
 	$(RM) -fr $(BUILD_DIR)
 	$(MKDIR) -p $(BUILD_DIR)
-	$(RSYNC) -Cavz bin/ $(BUILD_DIR)/bin/ 
+	$(RSYNC) -Cavz bin/ $(BUILD_DIR)/bin/
+	chmod +x $(BUILD_DIR)/bin/*
 	$(RSYNC) -Cavz lib/ $(BUILD_DIR)/lib/ 
 	$(RSYNC) -Cavz html/ $(BUILD_DIR)/html/ 
 	$(RSYNC) -Cavz cgi-bin/ $(BUILD_DIR)/cgi-bin/ 
