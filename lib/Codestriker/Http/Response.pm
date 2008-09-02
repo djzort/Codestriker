@@ -234,7 +234,7 @@ sub generate_header {
 			if (defined $Codestriker::cgi_style && $Codestriker::cgi_style) {
 	            $codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/codestriker.css#;
 			} else {
-				$codestriker_css = $query->url() . "html/codestriker.css";
+				$codestriker_css = $query->url() . "/html/codestriker.css";
 			}
     }
 
