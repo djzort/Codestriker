@@ -86,7 +86,7 @@ sub parse ($$$) {
 	    # removed, and what revision it is based off.
 	    $line = <$fh>;
 	    my $count = 0;
-	    while (defined $line && $line !~ /^Index|Added|Modified|Deleted/o) {
+	    while (defined $line && $line !~ /^Index|Added|Modified|Deleted|Property changes on:/o) {
 		$line = <$fh>;
 		$count++;
 	    }

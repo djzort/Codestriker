@@ -1,0 +1,26 @@
+Index: product/lib/javamail/mail.jar
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+
+Property changes on: product\lib\javamail\mail.jar
+___________________________________________________________________
+Added: svn:mime-type
+   + application/octet-stream
+
+Index: buildCleanup.py
+===================================================================
+--- buildCleanup.py	(revision 7)
++++ buildCleanup.py	(revision 9)
+@@ -28,11 +28,7 @@
+ #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
+ #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
+ 
+-    GCOMDirectories = [ 'testdata/branches/GCOM' ]
+-    EPRODirectories = [ 'testdata/branches/EPRODATA' ]
+     
+-    activeGraingerBuild = database.getActiveBuild("PRD", "gcom")
+-    activeEPROBuild = database.getActiveBuild("PRD", "eprodata")
+ 
+     print activeGraingerBuild.getBranchIdentifier()
+     print activeEPROBuild.getBranchIdentifier()

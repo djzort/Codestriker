@@ -31,6 +31,9 @@ Version 1.9.7
   
 * Help popup text windows on the create topic and search screens
   disappear automatically when the cursor is moved off the (?) link.
+  
+* Fixed a bug where Subversion diffs with binary files that contained
+  property changes were not handled correctly.  
 
 Version 1.9.6
 

@@ -2,7 +2,7 @@
 
 use strict;
 use Fatal qw / open close /;
-use Test::More tests => 33;
+use Test::More tests => 36;
 use Test::Differences;
 
 use lib '../../lib';
@@ -148,6 +148,33 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff8.txt',
 +; woo!
 END_DELTA
 ));
+
+assert_delta_equals('../../test/testtopictexts/svn-Propdiff9.txt',
+    make_delta(filename => 'product/lib/javamail/mail.jar',
+			   old_linenumber => -1,
+			   new_linenumber => -1,
+	           revision => '1.0',
+	           text => '',
+	           binary => 1),
+    make_delta(filename => 'buildCleanup.py',
+			   old_linenumber => '28',
+			   new_linenumber => '28',
+	           revision => '7',
+	           text => <<'END_DELTA',
+ #    GCOMDirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/GCOM']
+ #    EPRODirectories = ['/usr/local/apache2/htdocs/docs', '/export/home/buildmaster/cruisecontrol/EPRODATA']
+ 
+-    GCOMDirectories = [ 'testdata/branches/GCOM' ]
+-    EPRODirectories = [ 'testdata/branches/EPRODATA' ]
+     
+-    activeGraingerBuild = database.getActiveBuild("PRD", "gcom")
+-    activeEPROBuild = database.getActiveBuild("PRD", "eprodata")
+ 
+     print activeGraingerBuild.getBranchIdentifier()
+     print activeEPROBuild.getBranchIdentifier()
+END_DELTA
+    ));
+
 
 assert_delta_equals('../../test/testtopictexts/svn-look-diff1.txt',
     make_delta(filename => 't1.txt',
