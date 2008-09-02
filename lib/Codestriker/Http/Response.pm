@@ -231,7 +231,7 @@ sub generate_header {
     } else {
     	# Use the default CSS file.
 			$codestriker_css = $query->url();
-			if (defined $Codestriker::cgi_style && $Codestriker::cgi_style) {
+			if (! defined $Codestriker::cgi_style || $Codestriker::cgi_style) {
 	            $codestriker_css =~ s#/[^/]+?/codestriker\.pl#/codestrikerhtml/codestriker.css#;
 			} else {
 				$codestriker_css = $query->url() . "/html/codestriker.css";
