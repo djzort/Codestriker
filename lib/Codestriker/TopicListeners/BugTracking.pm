@@ -113,7 +113,7 @@ sub topic_changed($$$$) {
 	my $newstate = $topic->{topic_state};
 	my $query = new CGI;
         my $url_builder = Codestriker::Http::UrlBuilder->new($query);
-        my $topic_url = $url_builder->view_url(topicid => $topic->{topicid});
+        my $topic_url = $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id});
  	my $bug_db_connection =
 	    Codestriker::BugDB::BugDBConnectionFactory->getBugDBConnection();
         
