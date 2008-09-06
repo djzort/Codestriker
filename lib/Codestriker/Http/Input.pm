@@ -40,8 +40,8 @@ sub new($$$) {
 }
 
 sub extract_cgi_parameters {
-	my ($self) = @_;
-	
+    my ($self) = @_;
+
     # Retrieve all of the known Codestriker CGI parameters, and check they
     # are valid.
     my $query = $self->{query};
@@ -107,7 +107,7 @@ sub extract_cgi_parameters {
     $self->{default_to_head} = $query->param('default_to_head');
     $self->{email_event} = $query->param('email_event');
 
-	# Set any missing parameters from the cookie.
+    # Set any missing parameters from the cookie.
     my %cookie = Codestriker::Http::Cookie->get($query);
 
     # Set things to the empty string rather than undefined.
@@ -135,31 +135,30 @@ sub extract_cgi_parameters {
     my @author_metrics = $query->param('author_metric');
     $self->{author_metric} = \@author_metrics;
 
-    for (my $userindex = 0; $userindex < 100; ++$userindex)
-    {
-	my @reviewer_metrics = $query->param("reviewer_metric,$userindex");
+    for (my $userindex = 0; $userindex < 100; ++$userindex) {
+        my @reviewer_metrics = $query->param("reviewer_metric,$userindex");
 
-	last if (scalar(@reviewer_metrics) == 0);
-	$self->{"reviewer_metric,$userindex"} = \@reviewer_metrics;
+        last if (scalar(@reviewer_metrics) == 0);
+        $self->{"reviewer_metric,$userindex"} = \@reviewer_metrics;
     }
 
     # Set the comment state metric data.
     foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
-	my $name = "comment_state_metric_" . $comment_state_metric->{name};
-	$self->{$name} = $query->param($name);
+        my $name = "comment_state_metric_" . $comment_state_metric->{name};
+        $self->{$name} = $query->param($name);
     }
 
     # Remove those annoying \r's in textareas.
     if (defined $self->{topic_description}) {
-	$self->{topic_description} =~ s/\r//g;
+        $self->{topic_description} =~ s/\r//g;
     } else {
-	$self->{topic_description} = "";
+        $self->{topic_description} = "";
     }
 
     if (defined $self->{comments}) {
-	$self->{comments} =~ s/\r//g;
+        $self->{comments} =~ s/\r//g;
     } else {
-	$self->{comments} = "";
+        $self->{comments} = "";
     }
 
     # Record the file handler for a topic text upload, if any.  Also record the
@@ -168,34 +167,33 @@ sub extract_cgi_parameters {
     # Note topic_file is forced to be a string to get the filename (and
     # not have any confusion with the file object).  CGI.pm weirdness.
     if (defined $query->param('topic_file')) {
-	$self->{fh_filename} = "" . $query->param('topic_file');
-    }
-    else {
-    	$self->{fh_filename} = undef;
+        $self->{fh_filename} = "" . $query->param('topic_file');
+    } else {
+        $self->{fh_filename} = undef;
     }
     $self->{fh} = $query->upload('topic_file');
     $self->{fh_mime_type} = 'text/plain';
 
-# This code doesn't work, it produces a warning like:
-#
-# Use of uninitialized value in hash element at (eval 34) line 3.
-#
-# Since mime-types aren't used yet, this code is skipped for now.
-#
-#    if ((defined $self->{fh_filename})) {
-#	(defined $query->uploadInfo($query->param('topic_file'))) {
-#	$self->{fh_mime_type} =
-#	    $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
-#    }
+    # This code doesn't work, it produces a warning like:
+    #
+    # Use of uninitialized value in hash element at (eval 34) line 3.
+    #
+    # Since mime-types aren't used yet, this code is skipped for now.
+    #
+    #    if ((defined $self->{fh_filename})) {
+    #    (defined $query->uploadInfo($query->param('topic_file'))) {
+    #    $self->{fh_mime_type} =
+    #        $query->uploadInfo($self->{fh_filename})->{'Content-Type'};
+    #    }
 
     # Set parameter values from the cookie if they are not set.
     $self->_set_property_from_cookie('context', $DEFAULT_CONTEXT);
     $self->_set_property_from_cookie('mode',
-				     $Codestriker::default_topic_create_mode);
+                                     $Codestriker::default_topic_create_mode);
     $self->_set_property_from_cookie('tabwidth',
-				     $Codestriker::default_tabwidth);
+                                     $Codestriker::default_tabwidth);
     $self->_set_property_from_cookie('fview',
-				     $Codestriker::default_file_to_view);
+                                     $Codestriker::default_file_to_view);
     $self->_set_property_from_cookie('email', "");
     $self->_set_property_from_cookie('repository', "");
     $self->_set_property_from_cookie('projectid', 0);
@@ -219,8 +217,8 @@ sub extract_cgi_parameters {
     $self->_untaint_digits('tabwidth');
     $self->_untaint_filename('start_tag');
     $self->_untaint_filename('end_tag');
-    
-    # VSS module names can be things like $/TestProject/Project-name, so 
+
+    # VSS module names can be things like $/TestProject/Project-name, so
     # this needs to be handled in a special way.
     $self->_untaint('module', '\$?[-_\/\w\.\s]+');
 
@@ -228,7 +226,7 @@ sub extract_cgi_parameters {
     $self->_untaint_comma_digits('sstate');
     $self->_untaint_comma_digits('sproject');
     $self->_untaint_comma_digits('obsoletes');
-    
+
     # Canonicalise the bug_ids and email list parameters if required.
     $self->{reviewers} = $self->make_canonical_email_list($self->{reviewers});
     $self->{cc} = $self->make_canonical_email_list($self->{cc});
@@ -263,9 +261,9 @@ sub make_canonical_email_list($$) {
         $emails =~ s/^[\s]*//;
         $emails =~ s/[\s]*$//;
 
-	return join ', ', split /[\s,;]+/, $emails;
+        return join ', ', split /[\s,;]+/, $emails;
     } else {
-	return $emails;
+        return $emails;
     }
 }
 
@@ -275,9 +273,9 @@ sub make_canonical_bug_list($$) {
     my ($type, $bugs) = @_;
 
     if (defined $bugs && $bugs ne "") {
-	return join ', ', split /[\s,;]+/, $bugs;
+        return join ', ', split /[\s,;]+/, $bugs;
     } else {
-	return "";
+        return "";
     }
 }
 
@@ -288,7 +286,7 @@ sub _set_property_from_cookie($$$) {
 
     my %cookie = Codestriker::Http::Cookie->get($self->{query});
     if (! defined $self->{$name} || $self->{$name} eq "") {
-	$self->{$name} = exists $cookie{$name} && $cookie{$name} ne "" ? $cookie{$name} : $default;
+        $self->{$name} = exists $cookie{$name} && $cookie{$name} ne "" ? $cookie{$name} : $default;
     }
 }
 
@@ -299,16 +297,16 @@ sub _untaint($$$) {
 
     my $value = $self->{$name};
     if (defined $value && $value ne "") {
-	if ($value =~ /^\s*(${regexp})\s*$/) {
-	    # Untaint the value.
-	    $self->{$name} = $1;
-	} else {
-	    my $error_message = "Input parameter $name has invalid value: " .
-		HTML::Entities::encode($value);
-	    $self->{http_response}->error($error_message);
-	}
+        if ($value =~ /^\s*(${regexp})\s*$/) {
+            # Untaint the value.
+            $self->{$name} = $1;
+        } else {
+            my $error_message = "Input parameter $name has invalid value: " .
+              HTML::Entities::encode($value);
+            $self->{http_response}->error($error_message);
+        }
     } else {
-	$self->{$name} = "";
+        $self->{$name} = "";
     }
 }
 
@@ -347,7 +345,7 @@ sub _untaint_comma_digits($$) {
 
     $self->_untaint($name, '[\d\,]+');
 }
-	    
+
 # Untaint a single email address, which should be a regular email address.
 sub _untaint_email($$) {
     my ($self, $name) = @_;

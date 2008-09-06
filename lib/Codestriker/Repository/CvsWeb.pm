@@ -32,13 +32,13 @@ sub retrieve ($$$\$) {
     # Retrieve the data by doing an HTPP GET to the remote viewcvs server.
     my $ua = LWP::UserAgent->new;
     my $request = $self->{cvsweb_url} . "/~checkout~" .
-	"/${filename}?rev=${revision}&content-type=text/plain";
+      "/${filename}?rev=${revision}&content-type=text/plain";
     my $response = $ua->get($request);
     my $content = Codestriker::decode_topic_text($response->content);
     # Store the content lines.
     my @content_lines = split /\n/, $content;
     for (my $i = 0; $i <= $#content_lines; $i++) {
-	$$content_array_ref[$i+1] = $content_lines[$i];
+        $$content_array_ref[$i+1] = $content_lines[$i];
     }
 }
 

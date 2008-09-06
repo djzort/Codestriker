@@ -27,31 +27,31 @@ sub process($$$) {
     my $tabwidth = $http_input->get('tabwidth');
     my $email = $http_input->get('email');
     my $feedback = $http_input->get('feedback');
-    
+
     if (Codestriker::Model::Topic::exists($topicid) == 0) {
-	# Topic no longer exists, most likely its been deleted.
-	$http_response->error("Topic no longer exists.");
+        # Topic no longer exists, most likely its been deleted.
+        $http_response->error("Topic no longer exists.");
     }
 
-    # Retrieve the appropriate topic details.           
-    my $topic = Codestriker::Model::Topic->new($topicid);     
+    # Retrieve the appropriate topic details.
+    my $topic = Codestriker::Model::Topic->new($topicid);
 
     # Retrieve the comment details for this topic.
     my @topic_comments = $topic->read_comments();
 
     $http_response->generate_header(topic=>$topic,
-				    topic_title=>"Topic Properties: $topic->{title}",
-				    mode=>$mode, tabwidth=>$tabwidth,
-				    reload=>0, cache=>1);
+                                    topic_title=>"Topic Properties: $topic->{title}",
+                                    mode=>$mode, tabwidth=>$tabwidth,
+                                    reload=>0, cache=>1);
 
     # Retrieve the repository object, if repository functionality is enabled.
     my $repository;
     if (scalar(@Codestriker::valid_repositories)) {
-	$repository =
-	    Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+        $repository =
+          Codestriker::Repository::RepositoryFactory->get($topic->{repository});
     } else {
-	# Indicate not to activate any repository-related links.
-	$topic->{repository} = "";
+        # Indicate not to activate any repository-related links.
+        $topic->{repository} = "";
     }
 
     # Create the hash for the template variables.
@@ -64,13 +64,13 @@ sub process($$$) {
                                                                       projectid => $topic->{project_id});
 
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
-						       $url_builder);
+                                                       $url_builder);
 
     my @projectids = ($topic->{project_id});
 
     $vars->{'view_topic_url'} =
-	$url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
-	                       mode => $mode);
+      $url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
+                             mode => $mode);
 
     $vars->{'view_topicinfo_url'} = $url_builder->view_topicinfo_url(topicid => $topicid,
                                                                      projectid => $topic->{project_id});
@@ -88,16 +88,16 @@ sub process($$$) {
     $vars->{'bug_db'} = $Codestriker::bug_db;
     $vars->{'bug_ids'} = $topic->{bug_ids};
     if (defined $topic->{bug_ids} && $topic->{bug_ids} ne "" &&
-	defined $Codestriker::bugtracker) {
-	my @bug_id_array = split /[\s,]+/, $topic->{bug_ids};
-	$vars->{'bug_id_array'} = \@bug_id_array;
-	$vars->{'bugtracker'} = $Codestriker::bugtracker;
+        defined $Codestriker::bugtracker) {
+        my @bug_id_array = split /[\s,]+/, $topic->{bug_ids};
+        $vars->{'bug_id_array'} = \@bug_id_array;
+        $vars->{'bugtracker'} = $Codestriker::bugtracker;
     } else {
-	$vars->{'bugtracker'} = '';
+        $vars->{'bugtracker'} = '';
     }
 
-    $vars->{'document_reviewers'} = 
-    	Codestriker->filter_email($topic->{reviewers});
+    $vars->{'document_reviewers'} =
+      Codestriker->filter_email($topic->{reviewers});
 
     # Indicate what repositories are available, and what the topic's
     # repository is.
@@ -114,13 +114,13 @@ sub process($$$) {
     $vars->{'number_of_lines'} = $topic->get_topic_size_in_lines();
 
     $vars->{'suggested_topic_size_lines'} =
-	$Codestriker::suggested_topic_size_lines eq "" ? 0 :
-	$Codestriker::suggested_topic_size_lines;    
+      $Codestriker::suggested_topic_size_lines eq "" ? 0 :
+        $Codestriker::suggested_topic_size_lines;
 
     # Prepare the data for displaying the state update option.
     # Make sure the old mode setting is no longer used.
     if ((! defined $mode) || $mode == $Codestriker::NORMAL_MODE) {
-	$mode = $Codestriker::COLOURED_MODE;
+        $mode = $Codestriker::COLOURED_MODE;
     }
     $vars->{'mode'} = $mode;
     $vars->{'topicid'} = $topic->{topicid};

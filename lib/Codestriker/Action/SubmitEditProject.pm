@@ -22,7 +22,7 @@ sub process($$$) {
 
     # Check if this operation is allowed.
     if (Codestriker->projects_disabled()) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     my $query = $http_response->get_query();
@@ -32,13 +32,13 @@ sub process($$$) {
     # Check that the state parameter is valid.
     my $found = 0;
     foreach my $state (@Codestriker::project_states) {
-	if ($project_state eq $state) {
-	    $found = 1;
-	    last;
-	}
+        if ($project_state eq $state) {
+            $found = 1;
+            last;
+        }
     }
     if (!$found) {
-	$http_response->error("Invalid project state: $project_state");
+        $http_response->error("Invalid project state: $project_state");
     }
 
     # Check that the appropriate fields have been filled in.
@@ -50,54 +50,48 @@ sub process($$$) {
     my $feedback = "";
 
     if ($name eq "") {
-	$feedback .= "No project name was entered.\n";
+        $feedback .= "No project name was entered.\n";
     }
     if ($description eq "") {
-	$feedback .= "No project description was entered.\n";
+        $feedback .= "No project description was entered.\n";
     }
 
     # Try to update the project in the model.
     if ($feedback eq "") {
-	my $rc;
+        my $rc;
 
-	if ($project_state eq "Deleted")
-	{
-	    $rc =
-		Codestriker::Model::Project->delete($id, $version);
-	}
-	else
-	{
-	    $rc =
-		Codestriker::Model::Project->update($id, $name,	$description,
-						    $version, $project_state);
-	}
+        if ($project_state eq "Deleted") {
+            $rc =
+              Codestriker::Model::Project->delete($id, $version);
+        } else {
+            $rc =
+              Codestriker::Model::Project->update($id, $name,    $description,
+                                                  $version, $project_state);
+        }
 
-	if ($rc == $Codestriker::INVALID_PROJECT) {
-	    $feedback .=
-		"Project with name \"$name\" doesn't exist.\n";
-	} elsif ($rc == $Codestriker::STALE_VERSION) {
-	    $feedback .=
-		"Project was modified by another user.\n";
-	}
+        if ($rc == $Codestriker::INVALID_PROJECT) {
+            $feedback .=
+              "Project with name \"$name\" doesn't exist.\n";
+        } elsif ($rc == $Codestriker::STALE_VERSION) {
+            $feedback .=
+              "Project was modified by another user.\n";
+        }
     }
 
     # If there was a problem, direct control back to the edit project
     # screen, otherwise go to the project list screen.
     if ($feedback ne "") {
-	$http_input->{feedback} = $feedback;
+        $http_input->{feedback} = $feedback;
     } else {
-	$http_input->{feedback} = "Project updated.\n";
+        $http_input->{feedback} = "Project updated.\n";
     }
 
-    if ($project_state ne "Deleted")
-    {
-	Codestriker::Action::EditProject->process($http_input,
-						  $http_response);
-    }
-    else
-    {
-	Codestriker::Action::ListProjects->process($http_input,
-						   $http_response);
+    if ($project_state ne "Deleted") {
+        Codestriker::Action::EditProject->process($http_input,
+                                                  $http_response);
+    } else {
+        Codestriker::Action::ListProjects->process($http_input,
+                                                   $http_response);
     }
 }
 

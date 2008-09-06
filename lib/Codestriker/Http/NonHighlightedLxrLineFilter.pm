@@ -14,29 +14,27 @@ use strict;
 use Codestriker::Http::LxrLineFilter;
 
 @Codestriker::Http::NonHighlightedLxrLineFilter::ISA =
-    ("Codestriker::Http::LxrLineFilter");
+  ("Codestriker::Http::LxrLineFilter");
 
 # Parse the line and produce the appropriate hyperlinks to LXR.
 # Currently, this is very Java/C/C++ centric, but it will do for now.
 sub _filter {
     my ($self, $text) = @_;
 
-	my $newdata = "";    
-	my @lines = split /\n/, $text;
-	foreach my $line (@lines) {
-		if ($line =~ /^(package(\s|&nbsp;)+)([\w\.]+)(.*)$/) {     
-		    # Handle package Java statements.
-			$newdata .= $1 . $self->lxr_ident($3) . $4 . "\n";
-	    }
-    	elsif ($line =~ /^(import(\s|&nbsp;)+)([\w\.]+)\.(\w+)((\s|&nbsp;)*)(.*)$/) { 
-		    # Handle Java import statements.
-			$newdata .= $1 . $self->lxr_ident($3) . "." . $self->lxr_ident($4) . "$5$7\n";
-	    }
-    	else {
-    		$newdata .= $self->_handle_identifiers($line) . "\n";
-		}
+    my $newdata = "";
+    my @lines = split /\n/, $text;
+    foreach my $line (@lines) {
+        if ($line =~ /^(package(\s|&nbsp;)+)([\w\.]+)(.*)$/) {
+            # Handle package Java statements.
+            $newdata .= $1 . $self->lxr_ident($3) . $4 . "\n";
+        } elsif ($line =~ /^(import(\s|&nbsp;)+)([\w\.]+)\.(\w+)((\s|&nbsp;)*)(.*)$/) {
+            # Handle Java import statements.
+            $newdata .= $1 . $self->lxr_ident($3) . "." . $self->lxr_ident($4) . "$5$7\n";
+        } else {
+            $newdata .= $self->_handle_identifiers($line) . "\n";
+        }
     }
-    		
+
     return $newdata;
 }
 

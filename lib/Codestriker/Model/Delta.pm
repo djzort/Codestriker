@@ -19,7 +19,7 @@ sub new {
     my $class = shift;
     my $self = {};
     bless $self;
-    
+
     $self->{filename} = decode_utf8($_[1]);
     $self->{revision} = $_[2];
     $self->{binary} = $_[3];
@@ -30,7 +30,7 @@ sub new {
     $self->{filenumber} = $_[8];
     $self->{repmatch} = $_[9];
     $self->{only_delta_in_file} = 0;
-    
+
     return $self;
 }
 
@@ -46,24 +46,24 @@ sub get_delta_size($$$) {
     my $removedLines = 0;
 
     for (my $i = 0; $i <= $#deltas; $i++) {
-	my $delta = $deltas[$i];
-	my @lines = split '\n', $delta->{text};
+        my $delta = $deltas[$i];
+        my @lines = split '\n', $delta->{text};
 
-	for (my $j = 0; $j <= $#lines; $j++) {
-	    my @aLine = $lines[$j];
-	    if (scalar( grep !/^\+/, @aLine ) == 0) {
-		$addedLines++;
-	    } elsif (scalar( grep !/^\-/, @aLine ) == 0) {
-		$removedLines++;
-	    }
-	}
+        for (my $j = 0; $j <= $#lines; $j++) {
+            my @aLine = $lines[$j];
+            if (scalar( grep !/^\+/, @aLine ) == 0) {
+                $addedLines++;
+            } elsif (scalar( grep !/^\-/, @aLine ) == 0) {
+                $removedLines++;
+            }
+        }
     }
 
     my $numLines = "";
 
     # Return the changes if one is non zero.
     if (($removedLines != 0) || ($addedLines != 0)) {
-	$numLines = "+$addedLines,-$removedLines";
+        $numLines = "+$addedLines,-$removedLines";
     }
 
     return $numLines;
@@ -87,15 +87,15 @@ sub get_delta($$$) {
     my @deltas = $type->get_deltas($topicid, $filenumber);
     my $found_delta = undef;
     for (my $i = 0; $i <= $#deltas; $i++) {
-	my $delta = $deltas[$i];
-	my $delta_linenumber = $new ?
-	    $delta->{new_linenumber} : $delta->{old_linenumber};
-	if ($delta_linenumber <= $linenumber) {
-	    $found_delta = $delta;
-	} else {
-	    # Passed the delta of interest, return the previous one found.
-	    return $found_delta;
-	}
+        my $delta = $deltas[$i];
+        my $delta_linenumber = $new ?
+          $delta->{new_linenumber} : $delta->{old_linenumber};
+        if ($delta_linenumber <= $linenumber) {
+            $found_delta = $delta;
+        } else {
+            # Passed the delta of interest, return the previous one found.
+            return $found_delta;
+        }
     }
 
     # Return the matching delta found, if any.
@@ -106,40 +106,40 @@ sub get_delta($$$) {
 # method, returns a list of delta objects.
 sub get_deltas($$$) {
     my ($type, $topicid, $filenumber) = @_;
-    
+
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     # Setup the appropriate statement and execute it.
     my $select_deltas =
-	$dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
-			     'binaryfile, old_linenumber, new_linenumber, ' .
-			     'deltatext, description, topicfile.sequence, ' .
-			     'repmatch FROM topicfile, delta ' .
-			     'WHERE delta.topicid = ? AND ' .
-			     'delta.topicid = topicfile.topicid AND ' .
-			     'delta.file_sequence = topicfile.sequence ' .
-			     (($filenumber != -1) ?
-			      'AND topicfile.sequence = ? ' : '') .
-			     'ORDER BY delta_sequence ASC');
-    
+      $dbh->prepare_cached('SELECT delta_sequence, filename, revision, ' .
+                           'binaryfile, old_linenumber, new_linenumber, ' .
+                           'deltatext, description, topicfile.sequence, ' .
+                           'repmatch FROM topicfile, delta ' .
+                           'WHERE delta.topicid = ? AND ' .
+                           'delta.topicid = topicfile.topicid AND ' .
+                           'delta.file_sequence = topicfile.sequence ' .
+                           (($filenumber != -1) ?
+                            'AND topicfile.sequence = ? ' : '') .
+                           'ORDER BY delta_sequence ASC');
+
     my $success = defined $select_deltas;
     if ($filenumber != -1) {
-	$success &&= $select_deltas->execute($topicid, $filenumber);
+        $success &&= $select_deltas->execute($topicid, $filenumber);
     } else {
-	$success &&= $select_deltas->execute($topicid);
+        $success &&= $select_deltas->execute($topicid);
     }
-    
+
     # Store the results into an array of objects.
     my @results = ();
     if ($success) {
-	my @data;
-	while (@data = $select_deltas->fetchrow_array()) {
+        my @data;
+        while (@data = $select_deltas->fetchrow_array()) {
             my $delta = Codestriker::Model::Delta->new( @data );
-	    push @results, $delta;
-	}
+            push @results, $delta;
+        }
     }
-    
+
     # The delta object needs to know if there are only delta objects
     # in this file so it can figure out if the delta is a new file.
 
@@ -159,13 +159,13 @@ sub get_deltas($$$) {
                 # only delta for this file.  If there are more deltas, the next
                 # loop will correct the assumption.
                 $results[$i]->{only_delta_in_file} = 1;
-        }
+            }
         }
     }
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
-    
+
     return @results;
 }
 
@@ -183,29 +183,29 @@ sub find_line_offset {
     my $new_linenumber = $self->{new_linenumber};
     for ($offset = 0; $offset <= $#document; $offset++) {
 
-	my $data = $document[$offset];
+        my $data = $document[$offset];
 
-	# Check if the target line as been found.
-	if ($data =~ /^ /o) {
-	    last if ($new && $new_linenumber == $targetline);
-	    last if ($new == 0 && $old_linenumber == $targetline);
-	    $old_linenumber++;
-	    $new_linenumber++;
-	} elsif ($data =~ /^\+/o) {
-	    last if ($new && $new_linenumber == $targetline);
-	    $new_linenumber++;
-	} elsif ($data =~ /^\-/o) {
-	    last if ($new == 0 && $old_linenumber == $targetline);
-	    $old_linenumber++;
-	}
+        # Check if the target line as been found.
+        if ($data =~ /^ /o) {
+            last if ($new && $new_linenumber == $targetline);
+            last if ($new == 0 && $old_linenumber == $targetline);
+            $old_linenumber++;
+            $new_linenumber++;
+        } elsif ($data =~ /^\+/o) {
+            last if ($new && $new_linenumber == $targetline);
+            $new_linenumber++;
+        } elsif ($data =~ /^\-/o) {
+            last if ($new == 0 && $old_linenumber == $targetline);
+            $old_linenumber++;
+        }
     }
 
     if (($new && $new_linenumber == $targetline) ||
-	($new == 0 && $old_linenumber == $targetline)) {
-	return $offset;
+        ($new == 0 && $old_linenumber == $targetline)) {
+        return $offset;
     } else {
-	# No match was found.
-	return -1;
+        # No match was found.
+        return -1;
     }
 }
 
@@ -216,7 +216,7 @@ sub retrieve_context {
 
     my $offset = $self->find_line_offset($targetline, $new);
     if ($offset == -1) {
-	return -1;
+        return -1;
     }
 
     # Get the minimum and maximum line numbers for this context, and return
@@ -225,7 +225,7 @@ sub retrieve_context {
     my $min_line = ($offset - $context < 0 ? 0 : $offset - $context);
     my $max_line = $offset + $context;
     for (my $i = $min_line; $i <= $max_line && $i <= $#document; $i++) {
-	push @{ $text }, $document[$i];
+        push @{ $text }, $document[$i];
     }
 
     return $offset - $min_line;

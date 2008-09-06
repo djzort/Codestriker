@@ -29,9 +29,9 @@ sub make($$$) {
     my $cookie_path = $query->url(-absolute=>1);
 
     return $query->cookie(-name=>"$COOKIE_NAME",
-			  -expires=>'+10y',
-			  -path=>"$cookie_path",
-			  -value=>$cookie_value_hash_ref);
+                          -expires=>'+10y',
+                          -path=>"$cookie_path",
+                          -value=>$cookie_value_hash_ref);
 }
 
 # Return the cookie value associated with this HTTP request.
@@ -46,9 +46,9 @@ sub get_property($$$) {
     my ($type, $query, $property) = @_;
 
     if (defined $query->cookie($COOKIE_NAME)) {
-	my %cookie = $query->cookie($COOKIE_NAME);
-	return (defined $cookie{$property} ? $cookie{$property} : "");
+        my %cookie = $query->cookie($COOKIE_NAME);
+        return (defined $cookie{$property} ? $cookie{$property} : "");
     } else {
-	return "";
+        return "";
     }
 }

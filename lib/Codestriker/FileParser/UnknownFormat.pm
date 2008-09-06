@@ -24,7 +24,7 @@ sub parse ($$) {
     # Read in all of the data as a single chunk.
     my $text = "";
     while (defined(my $line = <$fh>)) {
-	$text .= "+$line";
+        $text .= "+$line";
     }
 
     my $chunk = {};

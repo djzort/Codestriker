@@ -20,7 +20,7 @@ use Codestriker::Http::NonHighlightedLxrLineFilter;
 # Constructor.
 sub new {
     my ($type, $topic, $comments, $deltas, $query, $mode,
-		$tabwidth, $repository) = @_;
+        $tabwidth, $repository) = @_;
 
     my $self = {};
     $self->{topic} = $topic;
@@ -38,37 +38,37 @@ sub new {
     my @comment_locations = ();
     my %comment_location_map = ();
     for (my $i = 0; $i <= $#$comments; $i++) {
-	my $comment = $$comments[$i];
-	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
-	    $comment->{filenew};
-	if (! exists $comment_hash{$key}) {
-	    push @comment_locations, $key;
-	    $comment_location_map{$key} = $#comment_locations;
-	}
+        my $comment = $$comments[$i];
+        my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+          $comment->{filenew};
+        if (! exists $comment_hash{$key}) {
+            push @comment_locations, $key;
+            $comment_location_map{$key} = $#comment_locations;
+        }
         push @{ $comment_hash{$key} }, $comment;
     }
     $self->{comment_hash} = \%comment_hash;
     $self->{comment_locations} = \@comment_locations;
     $self->{comment_location_map} = \%comment_location_map;
 
-	# Determine the LXR configuration.
+    # Determine the LXR configuration.
     my $lxr_config = defined $repository ?
-		$Codestriker::lxr_map->{$repository->toString()} : undef;
+      $Codestriker::lxr_map->{$repository->toString()} : undef;
 
     # If the highlighter has been configured, use that for converting the
     # code to html.
     @{$self->{line_filters}} = ();
     if (defined $Codestriker::highlighter && $Codestriker::highlighter ne '') {
-	    push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
-    	if (defined $lxr_config) {
-		    push @{$self->{line_filters}}, Codestriker::Http::HighlightedLxrLineFilter->new($lxr_config);
-    	}
+        push @{$self->{line_filters}}, Codestriker::Http::HighlightLineFilter->new($Codestriker::highlighter, $tabwidth);
+        if (defined $lxr_config) {
+            push @{$self->{line_filters}}, Codestriker::Http::HighlightedLxrLineFilter->new($lxr_config);
+        }
     } else {
-    	push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
-    	push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
-    	if (defined $lxr_config) {
-		    push @{$self->{line_filters}}, Codestriker::Http::NonHighlightedLxrLineFilter->new($lxr_config);
-    	}
+        push @{$self->{line_filters}}, Codestriker::Http::HtmlEntityLineFilter->new();
+        push @{$self->{line_filters}}, Codestriker::Http::TabToNbspLineFilter->new($tabwidth);
+        if (defined $lxr_config) {
+            push @{$self->{line_filters}}, Codestriker::Http::NonHighlightedLxrLineFilter->new($lxr_config);
+        }
     }
 
     bless $self, $type;
@@ -77,286 +77,286 @@ sub new {
 # Add a line filter to this delta-renderer, which will be called for each
 # line that is to be rendered.
 sub add_line_filter
-{
-    my ($self, $line_filter) = @_;
-    push @{$self->{line_filters}}, $line_filter;
-}
+  {
+      my ($self, $line_filter) = @_;
+      push @{$self->{line_filters}}, $line_filter;
+  }
 
 # Render $text with the appropriate anchor attributes set for
 # displaying any existing comments and a link for adding new ones.
 sub comment_link
-{
-    my ($self, $filenumber, $line, $new, $text) = @_;
+  {
+      my ($self, $filenumber, $line, $new, $text) = @_;
 
-    # Determine the anchor and edit URL for this line number.
-    my $anchor = "$filenumber|$line|$new";
-    my $edit_url = "javascript:eo('$filenumber','$line','$new')";
+      # Determine the anchor and edit URL for this line number.
+      my $anchor = "$filenumber|$line|$new";
+      my $edit_url = "javascript:eo('$filenumber','$line','$new')";
 
-    # Set the anchor to this line number.
-    my $params = {};
-    $params->{name} = $anchor;
+      # Set the anchor to this line number.
+      my $params = {};
+      $params->{name} = $anchor;
 
-    # Only set the href attribute if the comment is in open state.
-    if (!Codestriker::topic_readonly($self->{topic}->{topic_state})) {
-	    $params->{href} = $edit_url;
-    }
+      # Only set the href attribute if the comment is in open state.
+      if (!Codestriker::topic_readonly($self->{topic}->{topic_state})) {
+          $params->{href} = $edit_url;
+      }
 
-    # If a comment exists on this line, set span and the overlib hooks onto
-    # it.
-    my %comment_hash = %{ $self->{comment_hash} };
-    my %comment_location_map = %{ $self->{comment_location_map} };
-    my $query = $self->{query};
-    if (exists $comment_hash{$anchor}) {
-	$params->{class} = "comment";
+      # If a comment exists on this line, set span and the overlib hooks onto
+      # it.
+      my %comment_hash = %{ $self->{comment_hash} };
+      my %comment_location_map = %{ $self->{comment_location_map} };
+      my $query = $self->{query};
+      if (exists $comment_hash{$anchor}) {
+          $params->{class} = "comment";
 
-	# Determine what the next comment in line is.
-	my $index = -1;
-	my @comment_locations = @{ $self->{comment_locations} };
-	for ($index = 0; $index <= $#comment_locations; $index++) {
-	    last if $anchor eq $comment_locations[$index];
-	}
+          # Determine what the next comment in line is.
+          my $index = -1;
+          my @comment_locations = @{ $self->{comment_locations} };
+          for ($index = 0; $index <= $#comment_locations; $index++) {
+              last if $anchor eq $comment_locations[$index];
+          }
 
-	$params->{onmouseover} =
-	    "return overlib(comment_text[$index],STICKY,DRAGGABLE,ALTCUT);";
-	$params->{onmouseout} = "return nd();";
-    } else {
-    	$params->{class} = "nocom";
-    }
+          $params->{onmouseover} =
+            "return overlib(comment_text[$index],STICKY,DRAGGABLE,ALTCUT);";
+          $params->{onmouseout} = "return nd();";
+      } else {
+          $params->{class} = "nocom";
+      }
 
-    return $query->a($params, $text);
-}
+      return $query->a($params, $text);
+  }
 
 # Go through all of the deltas, and append a line array for each delta with
 # enough information to render it easily.
 sub annotate_deltas
-{
-    my ($self) = @_;
+  {
+      my ($self) = @_;
 
-    foreach my $delta (@{ $self->{deltas} }) {
+      foreach my $delta (@{ $self->{deltas} }) {
 
-	# Split the delta into the left and right side so that text filtering
-	# can be applied.
-	my @diff_lines = split /\n/, $delta->{text};
-	$delta->{diff_old_lines} = "";
-	$delta->{diff_new_lines} = "";
-	for (my $i = 0; $i <= $#diff_lines; $i++) {
-	    my $data = $diff_lines[$i];
+          # Split the delta into the left and right side so that text filtering
+          # can be applied.
+          my @diff_lines = split /\n/, $delta->{text};
+          $delta->{diff_old_lines} = "";
+          $delta->{diff_new_lines} = "";
+          for (my $i = 0; $i <= $#diff_lines; $i++) {
+              my $data = $diff_lines[$i];
 
-	    if ($data =~ /^\-(.*)$/o) {
-		# Line corresponding to old code.
-		$delta->{diff_old_lines} .= "$1\n";
-	    } elsif ($data =~ /^\+(.*)$/o) {
-		# Line corresponding to new code.
-		$delta->{diff_new_lines} .= "$1\n";
-	    } elsif ($data =~ /^\\/) {
-		# A diff comment such as "No newline at end of file" - ignore it.
-	    } else {
-		# Line corresponding to both sides. Strip the first space off
-		# the diff for proper alignment.
-		$data =~ s/^\s//;
-		$delta->{diff_old_lines} .= "$data\n";
-		$delta->{diff_new_lines} .= "$data\n";
-	    }
-	}
+              if ($data =~ /^\-(.*)$/o) {
+                  # Line corresponding to old code.
+                  $delta->{diff_old_lines} .= "$1\n";
+              } elsif ($data =~ /^\+(.*)$/o) {
+                  # Line corresponding to new code.
+                  $delta->{diff_new_lines} .= "$1\n";
+              } elsif ($data =~ /^\\/) {
+                  # A diff comment such as "No newline at end of file" - ignore it.
+              } else {
+                  # Line corresponding to both sides. Strip the first space off
+                  # the diff for proper alignment.
+                  $data =~ s/^\s//;
+                  $delta->{diff_old_lines} .= "$data\n";
+                  $delta->{diff_new_lines} .= "$data\n";
+              }
+          }
 
-	# Apply the line filters through the delta text.
-	$self->_apply_line_filters($delta);
-	
-	# Now go through the delta text again to determine what lines are to be
-	# rendered.
-	my $old_linenumber = $delta->{old_linenumber};
-	my $new_linenumber = $delta->{new_linenumber};
-	@{$self->{lines}} = ();
-	@{$self->{diff_old_lines}} = ();
-	@{$self->{diff_old_lines_numbers}} = ();
-	@{$self->{diff_new_lines}} = ();
-	@{$self->{diff_new_lines_numbers}} = ();
-	$self->{current_filename} = "";
-	my $old_index = 0;
-	my $new_index = 0;
-	my @filtered_old_lines = split /\n/, $delta->{diff_old_lines};
-	my @filtered_new_lines = split /\n/, $delta->{diff_new_lines};
-	for (my $i = 0; $i <= $#diff_lines; $i++) {
-	    my $data = $diff_lines[$i];
+          # Apply the line filters through the delta text.
+          $self->_apply_line_filters($delta);
 
-	    if ($data =~ /^\-/o) {
-		# Line corresponding to old code.
-		push @{ $self->{diff_old_lines} }, $filtered_old_lines[$old_index++];
-		push @{ $self->{diff_old_lines_numbers} }, $old_linenumber;
-		$old_linenumber++;
-	    } elsif ($data =~ /^\+(.*)$/o) {
-		# Line corresponding to new code.
-		push @{ $self->{diff_new_lines} }, $filtered_new_lines[$new_index++];
-		push @{ $self->{diff_new_lines_numbers} }, $new_linenumber;
-		$new_linenumber++;
-	    } elsif ($data =~ /^\\/) {
-		# A diff comment such as "No newline at end of file" - ignore it.
-	    } else {
-		# Line corresponding to both sides.
-		$data = $filtered_old_lines[$old_index++];
-		$new_index++;
-		
-		# Render what has been currently recorded.
-		$self->_render_changes($delta->{filenumber});
-		
-		# Now that the diff changeset has been rendered, remove the state data.
-		@{$self->{diff_old_lines}} = ();
-		@{$self->{diff_old_lines_numbers}} = ();
-		@{$self->{diff_new_lines}} = ();
-		@{$self->{diff_new_lines_numbers}} = ();
+          # Now go through the delta text again to determine what lines are to be
+          # rendered.
+          my $old_linenumber = $delta->{old_linenumber};
+          my $new_linenumber = $delta->{new_linenumber};
+          @{$self->{lines}} = ();
+          @{$self->{diff_old_lines}} = ();
+          @{$self->{diff_old_lines_numbers}} = ();
+          @{$self->{diff_new_lines}} = ();
+          @{$self->{diff_new_lines_numbers}} = ();
+          $self->{current_filename} = "";
+          my $old_index = 0;
+          my $new_index = 0;
+          my @filtered_old_lines = split /\n/, $delta->{diff_old_lines};
+          my @filtered_new_lines = split /\n/, $delta->{diff_new_lines};
+          for (my $i = 0; $i <= $#diff_lines; $i++) {
+              my $data = $diff_lines[$i];
 
-		# Now render the line which is present on both sides.
-		my $line = {};
-		my $data_class =
-		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-		$line->{old_data} = $data;
-		$line->{old_data_line} =
-		    $self->comment_link($delta->{filenumber}, $old_linenumber,
-					0, $old_linenumber);
-		$line->{old_data_class} = $data_class;
-		$line->{new_data} = $data;
-		$line->{new_data_line} =
-		    $self->comment_link($delta->{filenumber}, $new_linenumber,
-					1, $new_linenumber);
-		$line->{new_data_class} = $data_class;
-		push @{$self->{lines}}, $line;
-		$old_linenumber++;
-		$new_linenumber++;
-	}
+              if ($data =~ /^\-/o) {
+                  # Line corresponding to old code.
+                  push @{ $self->{diff_old_lines} }, $filtered_old_lines[$old_index++];
+                  push @{ $self->{diff_old_lines_numbers} }, $old_linenumber;
+                  $old_linenumber++;
+              } elsif ($data =~ /^\+(.*)$/o) {
+                  # Line corresponding to new code.
+                  push @{ $self->{diff_new_lines} }, $filtered_new_lines[$new_index++];
+                  push @{ $self->{diff_new_lines_numbers} }, $new_linenumber;
+                  $new_linenumber++;
+              } elsif ($data =~ /^\\/) {
+                  # A diff comment such as "No newline at end of file" - ignore it.
+              } else {
+                  # Line corresponding to both sides.
+                  $data = $filtered_old_lines[$old_index++];
+                  $new_index++;
 
-	    # Check if the delta corresponds to a new file.  This is true
-	    # if there is only one delta for the whole file, there are no
-	    # old lines, and the diff strarts at 0,1.
-	    $delta->{new_file} = 
-		$delta->{only_delta_in_file} &&	$old_linenumber == 0 &&
-		$delta->{old_linenumber} == 0 && $delta->{new_linenumber} == 1;
-	    if ($delta->{new_file}) {
-		$delta->{new_file_class} =
-		    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
-	   }
-    }
+                  # Render what has been currently recorded.
+                  $self->_render_changes($delta->{filenumber});
 
-	# Render any remaining diff segments.
-	$self->_render_changes($delta->{filenumber});
+                  # Now that the diff changeset has been rendered, remove the state data.
+                  @{$self->{diff_old_lines}} = ();
+                  @{$self->{diff_old_lines_numbers}} = ();
+                  @{$self->{diff_new_lines}} = ();
+                  @{$self->{diff_new_lines_numbers}} = ();
 
-	# Store the processed lines with the delta object for rendering.
-	@{$delta->{lines}} = @{$self->{lines}};
+                  # Now render the line which is present on both sides.
+                  my $line = {};
+                  my $data_class =
+                    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
+                  $line->{old_data} = $data;
+                  $line->{old_data_line} =
+                    $self->comment_link($delta->{filenumber}, $old_linenumber,
+                                        0, $old_linenumber);
+                  $line->{old_data_class} = $data_class;
+                  $line->{new_data} = $data;
+                  $line->{new_data_line} =
+                    $self->comment_link($delta->{filenumber}, $new_linenumber,
+                                        1, $new_linenumber);
+                  $line->{new_data_class} = $data_class;
+                  push @{$self->{lines}}, $line;
+                  $old_linenumber++;
+                  $new_linenumber++;
+              }
 
-	if ($self->{current_filename} ne $delta->{filename}) {
-	    # Keep track of the current filename being processed.
-	    $self->{current_filename} = $delta->{filename};
-	}
-}	
-}
+              # Check if the delta corresponds to a new file.  This is true
+              # if there is only one delta for the whole file, there are no
+              # old lines, and the diff strarts at 0,1.
+              $delta->{new_file} =
+                $delta->{only_delta_in_file} &&    $old_linenumber == 0 &&
+                  $delta->{old_linenumber} == 0 && $delta->{new_linenumber} == 1;
+              if ($delta->{new_file}) {
+                  $delta->{new_file_class} =
+                    $self->{mode} == $Codestriker::COLOURED_MODE ? "n" : "msn";
+              }
+          }
+
+          # Render any remaining diff segments.
+          $self->_render_changes($delta->{filenumber});
+
+          # Store the processed lines with the delta object for rendering.
+          @{$delta->{lines}} = @{$self->{lines}};
+
+          if ($self->{current_filename} ne $delta->{filename}) {
+              # Keep track of the current filename being processed.
+              $self->{current_filename} = $delta->{filename};
+          }
+      }
+  }
 
 # Annotate any accumlated diff changes.
 sub _render_changes
-{
-    my ($self, $filenumber) = @_;
+  {
+      my ($self, $filenumber) = @_;
 
-    # Determine the class to use for displaying the comments.
-    my ($old_col, $old_notpresent_col, $new_col, $new_notpresent_col);
-    if (@{$self->{diff_new_lines}} > 0 && @{$self->{diff_old_lines}} > 0) {
-	# Lines have been added and removed.
-	if ($self->{mode} == $Codestriker::COLOURED_MODE) {
-	    $old_col = "c";
-	    $old_notpresent_col = "cb";
-	    $new_col = "c";
-	    $new_notpresent_col = "cb";
-	} else {
-	    $old_col = "msc";
-	    $old_notpresent_col = "mscb";
-	    $new_col = "msc";
-	    $new_notpresent_col = "mscb";
-	}
-    } elsif (@{$self->{diff_new_lines}} > 0 && @{$self->{diff_old_lines}} == 0) {
-	# New lines have been added.
-	if ($self->{mode} == $Codestriker::COLOURED_MODE) {
-	    $old_col = "a";
-	    $old_notpresent_col = "ab";
-	    $new_col = "a";
-	    $new_notpresent_col = "ab";
-	} else {
-	    $old_col = "msa";
-	    $old_notpresent_col = "msab";
-	    $new_col = "msa";
-	    $new_notpresent_col = "msab";
-	}
-    } else {
-	# Lines have been removed.
-	if ($self->{mode} == $Codestriker::COLOURED_MODE) {
-	    $old_col = "r";
-	    $old_notpresent_col = "rb";
-	    $new_col = "r";
-	    $new_notpresent_col = "rb";
-	} else {
-	    $old_col = "msr";
-	    $old_notpresent_col = "msrb";
-	    $new_col = "msr";
-	    $new_notpresent_col = "msrb";
-	}
-    }
-    
-    my ($old_data, $new_data, $old_data_line, $new_data_line);
-    while (@{$self->{diff_old_lines}} > 0 || @{$self->{diff_new_lines}} > 0) {
-	
-	# Retrieve the next lines which were removed (if any).
-	if (@{$self->{diff_old_lines}} > 0) {
-	    $old_data = shift @{$self->{diff_old_lines}};
-	    $old_data_line = shift @{$self->{diff_old_lines_numbers}};
-	} else {
-	    undef($old_data);
-	    undef($old_data_line);
-	}
-	
-	# Retrieve the next lines which were added (if any).
-	if (@{$self->{diff_new_lines}} > 0) {
-	    $new_data = shift @{$self->{diff_new_lines}};
-	    $new_data_line = shift @{$self->{diff_new_lines_numbers}};
-	} else {
-	    undef($new_data);
-	    undef($new_data_line);
-	}
-	
-	# Set the colours to use appropriately depending on what is defined.
-	my $render_old_colour = $old_col;
-	my $render_new_colour = $new_col;
-	if (defined $old_data && ! defined $new_data) {
-	    $render_new_colour = $new_notpresent_col;
-	} elsif (! defined $old_data && defined $new_data) {
-	    $render_old_colour = $old_notpresent_col;
-	}
+      # Determine the class to use for displaying the comments.
+      my ($old_col, $old_notpresent_col, $new_col, $new_notpresent_col);
+      if (@{$self->{diff_new_lines}} > 0 && @{$self->{diff_old_lines}} > 0) {
+          # Lines have been added and removed.
+          if ($self->{mode} == $Codestriker::COLOURED_MODE) {
+              $old_col = "c";
+              $old_notpresent_col = "cb";
+              $new_col = "c";
+              $new_notpresent_col = "cb";
+          } else {
+              $old_col = "msc";
+              $old_notpresent_col = "mscb";
+              $new_col = "msc";
+              $new_notpresent_col = "mscb";
+          }
+      } elsif (@{$self->{diff_new_lines}} > 0 && @{$self->{diff_old_lines}} == 0) {
+          # New lines have been added.
+          if ($self->{mode} == $Codestriker::COLOURED_MODE) {
+              $old_col = "a";
+              $old_notpresent_col = "ab";
+              $new_col = "a";
+              $new_notpresent_col = "ab";
+          } else {
+              $old_col = "msa";
+              $old_notpresent_col = "msab";
+              $new_col = "msa";
+              $new_notpresent_col = "msab";
+          }
+      } else {
+          # Lines have been removed.
+          if ($self->{mode} == $Codestriker::COLOURED_MODE) {
+              $old_col = "r";
+              $old_notpresent_col = "rb";
+              $new_col = "r";
+              $new_notpresent_col = "rb";
+          } else {
+              $old_col = "msr";
+              $old_notpresent_col = "msrb";
+              $new_col = "msr";
+              $new_notpresent_col = "msrb";
+          }
+      }
 
-    my %comment_location_map = %{ $self->{comment_location_map} };
-	my $line = {};
-	if (defined $old_data) {
-	    $line->{old_data} = $old_data;
-	    $line->{old_data_line} =
-		$self->comment_link($filenumber, $old_data_line, 0, $old_data_line);
-	}
-	$line->{old_data_class} = $render_old_colour;
-	if (defined $new_data) {
-	    $line->{new_data} = $new_data;
-	    $line->{new_data_line} =
-		$self->comment_link($filenumber, $new_data_line, 1, $new_data_line);
-	}
-	$line->{new_data_class} = $render_new_colour;
-	push @{$self->{lines}}, $line;
-    }
+      my ($old_data, $new_data, $old_data_line, $new_data_line);
+      while (@{$self->{diff_old_lines}} > 0 || @{$self->{diff_new_lines}} > 0) {
 
-    # Apply all of the line filters to the line of text supplied.
-    sub _apply_line_filters {
-	my ($self, $delta) = @_;
+          # Retrieve the next lines which were removed (if any).
+          if (@{$self->{diff_old_lines}} > 0) {
+              $old_data = shift @{$self->{diff_old_lines}};
+              $old_data_line = shift @{$self->{diff_old_lines_numbers}};
+          } else {
+              undef($old_data);
+              undef($old_data_line);
+          }
 
-	# TODO: perform syntax highlighting.
-	foreach my $line_filter (@{$self->{line_filters}}) {
-	    $line_filter->filter($delta);
-	}
-	    
-	# Unconditionally add a &nbsp; at the start for better alignment.
-	# Fix so count isn't stuffed.
-	# return "&nbsp;" . $text;
-    }
-}
+          # Retrieve the next lines which were added (if any).
+          if (@{$self->{diff_new_lines}} > 0) {
+              $new_data = shift @{$self->{diff_new_lines}};
+              $new_data_line = shift @{$self->{diff_new_lines_numbers}};
+          } else {
+              undef($new_data);
+              undef($new_data_line);
+          }
+
+          # Set the colours to use appropriately depending on what is defined.
+          my $render_old_colour = $old_col;
+          my $render_new_colour = $new_col;
+          if (defined $old_data && ! defined $new_data) {
+              $render_new_colour = $new_notpresent_col;
+          } elsif (! defined $old_data && defined $new_data) {
+              $render_old_colour = $old_notpresent_col;
+          }
+
+          my %comment_location_map = %{ $self->{comment_location_map} };
+          my $line = {};
+          if (defined $old_data) {
+              $line->{old_data} = $old_data;
+              $line->{old_data_line} =
+                $self->comment_link($filenumber, $old_data_line, 0, $old_data_line);
+          }
+          $line->{old_data_class} = $render_old_colour;
+          if (defined $new_data) {
+              $line->{new_data} = $new_data;
+              $line->{new_data_line} =
+                $self->comment_link($filenumber, $new_data_line, 1, $new_data_line);
+          }
+          $line->{new_data_class} = $render_new_colour;
+          push @{$self->{lines}}, $line;
+      }
+
+      # Apply all of the line filters to the line of text supplied.
+      sub _apply_line_filters {
+          my ($self, $delta) = @_;
+
+          # TODO: perform syntax highlighting.
+          foreach my $line_filter (@{$self->{line_filters}}) {
+              $line_filter->filter($delta);
+          }
+
+          # Unconditionally add a &nbsp; at the start for better alignment.
+          # Fix so count isn't stuffed.
+          # return "&nbsp;" . $text;
+      }
+  }
 
 1;

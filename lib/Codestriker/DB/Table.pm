@@ -21,15 +21,15 @@ sub new {
     $self->{name} = $params{name};
 
     if (defined $params{columns}) {
-	$self->{columns} = $params{columns};
+        $self->{columns} = $params{columns};
     } else {
-	$self->{columns} = [];
+        $self->{columns} = [];
     }
 
     if (defined $params{indexes}) {
-	$self->{indexes} = $params{indexes};
+        $self->{indexes} = $params{indexes};
     } else {
-	$self->{indexes} = [];
+        $self->{indexes} = [];
     }
 
     # Check that the column names in the indexes actually exist.
@@ -38,22 +38,22 @@ sub new {
     # Check each index is valid for this table.
     foreach my $index (@{$params{indexes}}) {
 
-	# Check each column in this index refers to a column in this table.
-	foreach my $index_column (@{$index->get_column_names()}) {
-	    my $found = 0;
+        # Check each column in this index refers to a column in this table.
+        foreach my $index_column (@{$index->get_column_names()}) {
+            my $found = 0;
 
-	    # Check this column exists.
-	    foreach my $column (@columns) {
-		if ($column->get_name() eq $index_column) {
-		    $found = 1;
-		    last;
-		}
-	    }
+            # Check this column exists.
+            foreach my $column (@columns) {
+                if ($column->get_name() eq $index_column) {
+                    $found = 1;
+                    last;
+                }
+            }
 
-	    if ($found == 0) {
-		die "Index $index->get_name() has bad column $index_column\n";
-	    }
-	}
+            if ($found == 0) {
+                die "Index $index->get_name() has bad column $index_column\n";
+            }
+        }
     }
 
     return bless $self, $type;

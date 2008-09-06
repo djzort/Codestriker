@@ -21,16 +21,17 @@ sub get_connection($) {
     my $dbname = $Codestriker::bug_db_dbname;
     $dbname = "bugs" if ($dbname eq "");
     $self->{dbh} =
-	DBI->connect("DBI:mysql:dbname=$dbname;host=$Codestriker::bug_db_host",
-		     $Codestriker::bug_db_name, $Codestriker::bug_db_password,
-		     { RaiseError => 1, AutoCommit => 1 });
+      DBI->connect("DBI:mysql:dbname=$dbname;host=$Codestriker::bug_db_host",
+                   $Codestriker::bug_db_name, $Codestriker::bug_db_password,
+                   {
+                    RaiseError => 1, AutoCommit => 1 });
     bless $self, $type;
 }
 
 # Method for releasing a bugzilla database connection.
 sub release_connection($) {
     my ($self) = @_;
-    
+
     $self->{dbh}->disconnect;
 }
 
@@ -40,7 +41,7 @@ sub bugid_exists($$) {
     my ($self, $bugid) = @_;
 
     return $self->{dbh}->selectrow_array('SELECT COUNT(*) FROM bugs ' .
-					 'WHERE bug_id = ?', {}, $bugid) != 0;
+                                         'WHERE bug_id = ?', {}, $bugid) != 0;
 }
 
 # Method for updating the bug with information that a code review has been
@@ -50,12 +51,12 @@ sub update_bug($$$$$) {
 
     # Create the necessary prepared statements.
     my $insert_comment =
-	$self->{dbh}->prepare_cached('INSERT INTO longdescs ' .
-				     '(bug_id, who, bug_when, thetext) ' .
-				     'VALUES (?, ?, now(), ?)');
+      $self->{dbh}->prepare_cached('INSERT INTO longdescs ' .
+                                   '(bug_id, who, bug_when, thetext) ' .
+                                   'VALUES (?, ?, now(), ?)');
     my $update_bug =
-	$self->{dbh}->prepare_cached('UPDATE bugs SET delta_ts = now() ' .
-				     'WHERE bug_id = ?');
+      $self->{dbh}->prepare_cached('UPDATE bugs SET delta_ts = now() ' .
+                                   'WHERE bug_id = ?');
 
     # Execute the statements.
     $insert_comment->execute($bugid, $Codestriker::bug_db_user_id, $comment);

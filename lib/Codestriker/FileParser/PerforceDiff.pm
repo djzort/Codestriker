@@ -29,7 +29,7 @@ sub parse ($$$) {
     # Skip initial whitespace.
     my $line = <$fh>;
     while (defined($line) && $line =~ /^\s*$/) {
-	$line = <$fh>;
+        $line = <$fh>;
     }
 
     # Array of results found.
@@ -41,67 +41,65 @@ sub parse ($$$) {
 
     # Now read the actual diff chunks.
     while (defined($line)) {
-	if ($line =~ /^==== (.*)\#(\d+) \- .* ==== \((.*)\)$/) {
-	    my $filename = $1;
-	    my $revision = $2;
-	    my $file_type = $3;
+        if ($line =~ /^==== (.*)\#(\d+) \- .* ==== \((.*)\)$/) {
+            my $filename = $1;
+            my $revision = $2;
+            my $file_type = $3;
 
-	    if ($file_type eq "ubinary" || $file_type eq "xbinary" ||
-		$file_type eq "binary") {
-		# Binary file, skip the next line and add the record in.
-		$line = <$fh>;
-		my $chunk = {};
-		$chunk->{filename} = $filename;
-		$chunk->{revision} = $revision;
-		$chunk->{old_linenumber} = -1;
-		$chunk->{new_linenumber} = -1;
-		$chunk->{binary} = 1;
-		$chunk->{text} = "";
-		$chunk->{description} = "";
-		$chunk->{repmatch} = $repmatch;
-		push @result, $chunk;
-	    }
-	    elsif ($file_type eq "text") {
-		# Note there may be an optional '---' and '+++' lines
-		# before the chunk.
-		my $lastpos = tell $fh;
-		if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
-		    # Move the file pointer back.
-		    seek $fh, $lastpos, 0;
-		}
+            if ($file_type eq "ubinary" || $file_type eq "xbinary" ||
+                $file_type eq "binary") {
+                # Binary file, skip the next line and add the record in.
+                $line = <$fh>;
+                my $chunk = {};
+                $chunk->{filename} = $filename;
+                $chunk->{revision} = $revision;
+                $chunk->{old_linenumber} = -1;
+                $chunk->{new_linenumber} = -1;
+                $chunk->{binary} = 1;
+                $chunk->{text} = "";
+                $chunk->{description} = "";
+                $chunk->{repmatch} = $repmatch;
+                push @result, $chunk;
+            } elsif ($file_type eq "text") {
+                # Note there may be an optional '---' and '+++' lines
+                # before the chunk.
+                my $lastpos = tell $fh;
+                if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+                    # Move the file pointer back.
+                    seek $fh, $lastpos, 0;
+                }
 
-		my @file_diffs = Codestriker::FileParser::UnidiffUtils->
-		    read_unidiff_text($fh, $filename, $revision, $repmatch);
-		push @result, @file_diffs;
-	    }
-	    else {
-		# Got knows what this is, can't parse it.
-		return ();
-	    }
-	} elsif ($line =~ /^==== (.*)\#(\d+) \-/) {
-	    my $filename = $1;
-	    my $revision = $2;
+                my @file_diffs = Codestriker::FileParser::UnidiffUtils->
+                  read_unidiff_text($fh, $filename, $revision, $repmatch);
+                push @result, @file_diffs;
+            } else {
+                # Got knows what this is, can't parse it.
+                return ();
+            }
+        } elsif ($line =~ /^==== (.*)\#(\d+) \-/) {
+            my $filename = $1;
+            my $revision = $2;
 
-	    # Now read the entire diff chunk (it may be empty if the
-	    # user hasn't actually modified the file).  Note there
-	    # may be an optional '---' and '+++' lines before the
-	    # chunk.
-	    my $lastpos = tell $fh;
-	    if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
-		# Move the file pointer back.
-		seek $fh, $lastpos, 0;
-	    }
+            # Now read the entire diff chunk (it may be empty if the
+            # user hasn't actually modified the file).  Note there
+            # may be an optional '---' and '+++' lines before the
+            # chunk.
+            my $lastpos = tell $fh;
+            if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+                # Move the file pointer back.
+                seek $fh, $lastpos, 0;
+            }
 
-	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
-		read_unidiff_text($fh, $filename, $revision, $repmatch);
-	    push @result, @file_diffs;
-	} else {
-	    # Can't parse this file.
-	    return ();
-	}
-	    
-	# Now read the next chunk.
-	$line = <$fh> if defined $line;
+            my @file_diffs = Codestriker::FileParser::UnidiffUtils->
+              read_unidiff_text($fh, $filename, $revision, $repmatch);
+            push @result, @file_diffs;
+        } else {
+            # Can't parse this file.
+            return ();
+        }
+
+        # Now read the next chunk.
+        $line = <$fh> if defined $line;
     }
 
     # Return the found diff chunks.

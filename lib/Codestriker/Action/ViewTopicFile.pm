@@ -32,7 +32,7 @@ sub process($$$) {
 
     # Check if this action is allowed.
     if (scalar(@Codestriker::valid_repositories) == 0) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     # Retrieve the appropriate topic details.
@@ -40,7 +40,7 @@ sub process($$$) {
 
     # Retrieve the corresponding repository object.
     my $repository =
-	Codestriker::Repository::RepositoryFactory->get($topic->{repository});
+      Codestriker::Repository::RepositoryFactory->get($topic->{repository});
 
     # Retrieve the deltas corresponding to this file.
     my @deltas = Codestriker::Model::Delta->get_deltas($topicid, $fn);
@@ -62,78 +62,77 @@ sub process($$$) {
         # New file, the data is contained entirely in the delta.
         $deltas[0]->{new_file} = 1;
         @filedata = ();
-    }
-    else {
+    } else {
         if (!$repository->retrieve($filename, $revision, \@filedata)) {
             $http_response->error("Couldn't get repository data for $filename " .
                                   "$revision: $!");
         }
-    }    
+    }
 
     # Output the new file, with the deltas applied.
     my $title;
     if ($parallel) {
-	$title = "View File: Parallel view of $filename v$revision";
+        $title = "View File: Parallel view of $filename v$revision";
     } else {
-	$title = $new ? "View File: New $filename" :
-	    "View File: $filename v$revision";
+        $title = $new ? "View File: New $filename" :
+          "View File: $filename v$revision";
     }
 
     $http_response->generate_header(topic=>$topic,
-				    comments=>\@comments,
-				    topic_title=>$title,
-				    mode=>$mode,
-				    tabwidth=>$tabwidth,
-				    fview=>$fview,
-				    repository=>$Codestriker::repository_name_map->{$topic->{repository}}, 
+                                    comments=>\@comments,
+                                    topic_title=>$title,
+                                    mode=>$mode,
+                                    tabwidth=>$tabwidth,
+                                    fview=>$fview,
+                                    repository=>$Codestriker::repository_name_map->{$topic->{repository}},
                                     reload=>0, cache=>1);
 
     # Need to create a single delta object that combines all of the deltas
     # together.
     my $merged_delta = {};
     if (@deltas > 0) {
-	my $delta = $deltas[0];
-	$merged_delta->{filename} = $delta->{filename};
-	$merged_delta->{revision} = $delta->{revision};
-	$merged_delta->{binary} = $delta->{binary};
-	$merged_delta->{filenumber} = $delta->{filenumber};
-	$merged_delta->{repmatch} = $delta->{repmatch};
-    $merged_delta->{new_file} = $delta->{new_file};
-    $merged_delta->{old_linenumber} = $delta->{new_file} ? 0 : 1;
-	$merged_delta->{new_linenumber} = 1;
-	$merged_delta->{only_delta_in_file} = 1;
+        my $delta = $deltas[0];
+        $merged_delta->{filename} = $delta->{filename};
+        $merged_delta->{revision} = $delta->{revision};
+        $merged_delta->{binary} = $delta->{binary};
+        $merged_delta->{filenumber} = $delta->{filenumber};
+        $merged_delta->{repmatch} = $delta->{repmatch};
+        $merged_delta->{new_file} = $delta->{new_file};
+        $merged_delta->{old_linenumber} = $delta->{new_file} ? 0 : 1;
+        $merged_delta->{new_linenumber} = 1;
+        $merged_delta->{only_delta_in_file} = 1;
     }
-    
+
     # Now compute the delta text of all the merged deltas.
     my $delta_text = "";
     my $old_linenumber = 1;
     for (my $delta_index = 0; $delta_index <= $#deltas; $delta_index++) {
-	my $delta = $deltas[$delta_index];
+        my $delta = $deltas[$delta_index];
 
-	# Output those lines leading up to the start of the next delta.
-	# Build up a delta with no changes, and render it.
-	my $next_delta_linenumber = $delta->{old_linenumber};
-	for (my $i = $old_linenumber; $i < $next_delta_linenumber; $i++) {
-	    $delta_text .= " $filedata[$i]\n";
-	    $old_linenumber++;
-	}
+        # Output those lines leading up to the start of the next delta.
+        # Build up a delta with no changes, and render it.
+        my $next_delta_linenumber = $delta->{old_linenumber};
+        for (my $i = $old_linenumber; $i < $next_delta_linenumber; $i++) {
+            $delta_text .= " $filedata[$i]\n";
+            $old_linenumber++;
+        }
 
-	# Keep track of the old linenumber so the blanks between the
-	# deltas can be filled in.
-	my @diff_lines = split /\n/, $delta->{text};
-	foreach my $line (@diff_lines) {
-	    if ($line =~ /^\-/o || $line =~ /^\s/o) {
-		$old_linenumber++;
-	    }
-	}
+        # Keep track of the old linenumber so the blanks between the
+        # deltas can be filled in.
+        my @diff_lines = split /\n/, $delta->{text};
+        foreach my $line (@diff_lines) {
+            if ($line =~ /^\-/o || $line =~ /^\s/o) {
+                $old_linenumber++;
+            }
+        }
 
-	# Add the text of this delta to the final text.
-	$delta_text .= $delta->{text};
+        # Add the text of this delta to the final text.
+        $delta_text .= $delta->{text};
     }
 
     # Add the text from the tail-end of the file.
     for (my $i = $old_linenumber; $i <= $#filedata; $i++) {
-	$delta_text .= " $filedata[$i]\n";
+        $delta_text .= " $filedata[$i]\n";
     }
 
     # Now update the merged delta with this text.
@@ -143,9 +142,9 @@ sub process($$$) {
     my @merged_deltas = ();
     push @merged_deltas, $merged_delta;
     my $delta_renderer =
-	Codestriker::Http::DeltaRenderer->new($topic, \@comments,
-					      \@merged_deltas, $query,
-					      $mode, $tabwidth, $repository);
+      Codestriker::Http::DeltaRenderer->new($topic, \@comments,
+                                            \@merged_deltas, $query,
+                                            $mode, $tabwidth, $repository);
     $delta_renderer->annotate_deltas();
 
     my $vars = {};

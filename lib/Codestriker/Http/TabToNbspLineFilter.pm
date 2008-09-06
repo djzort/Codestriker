@@ -15,7 +15,7 @@ use strict;
 use Codestriker::Http::LineFilter;
 
 @Codestriker::Http::TabToNbspLineFilter::ISA =
-    ("Codestriker::Http::LineFilter");
+  ("Codestriker::Http::LineFilter");
 
 # Take the desired tabwidth as a parameter.
 sub new {
@@ -33,7 +33,7 @@ sub _filter {
 
     my $tabwidth = $self->{tabwidth};
     1 while $text =~ s/\t+/' ' x
-	(length($&) * $tabwidth - length($`) % $tabwidth)/eo;
+      (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
 
     return $text;
 }

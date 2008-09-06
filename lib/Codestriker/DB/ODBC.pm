@@ -18,18 +18,18 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "ntext",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "nvarchar",
-    $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
-    $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "datetime",
-    $Codestriker::DB::Column::TYPE->{FLOAT}	=> "float"
-};
+             $Codestriker::DB::Column::TYPE->{TEXT}    => "ntext",
+             $Codestriker::DB::Column::TYPE->{VARCHAR}    => "nvarchar",
+             $Codestriker::DB::Column::TYPE->{INT32}    => "int",
+             $Codestriker::DB::Column::TYPE->{INT16}    => "smallint",
+             $Codestriker::DB::Column::TYPE->{DATETIME}    => "datetime",
+             $Codestriker::DB::Column::TYPE->{FLOAT}    => "float"
+            };
 
 # Create a new ODBC database object.
 sub new {
     my $type = shift;
-    
+
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     return bless $self, $type;
@@ -68,8 +68,8 @@ sub get_tables() {
     my @tables = ();
     my $table_select = $self->{dbh}->table_info();
     while (my ($qual, $owner, $table_name, $type, $remarks) =
-	   $table_select->fetchrow_array()) {
-	push @tables, $table_name;
+           $table_select->fetchrow_array()) {
+        push @tables, $table_name;
     }
     $table_select->finish();
 
@@ -86,18 +86,18 @@ sub add_field {
     my $rc = 0;
 
     eval {
-	$dbh->{PrintError} = 0;
-	my $field_type = $self->_map_type($definition);
+        $dbh->{PrintError} = 0;
+        my $field_type = $self->_map_type($definition);
 
-	$dbh->do("ALTER TABLE $table ADD $field $field_type");
-	print "Added new field $field to table $table.\n";
-	$rc = 1;
-	$self->commit();
+        $dbh->do("ALTER TABLE $table ADD $field $field_type");
+        print "Added new field $field to table $table.\n";
+        $rc = 1;
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
+        eval { $self->rollback() };
     }
-    
+
     $dbh->{PrintError} = 1;
 
     return $rc;
@@ -115,7 +115,7 @@ sub has_like_operator_for_text_field {
 # operation.
 sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
-    
+
     $expression = $self->{dbh}->quote($expression);
 
     # SQL Server is case insensitive by default, no need to do anything.

@@ -20,22 +20,22 @@ sub process($$$) {
     my ($type, $http_input, $http_response) = @_;
 
     my $query = $http_response->get_query();
-    
+
     # Extract the values from the action.
     my $topicid = $http_input->get('topic');
     my $email = $http_input->get('email');
-    
-    if (Codestriker::Model::Topic::exists($topicid) == 0) {    
-	# Topic no longer exists, most likely its been deleted.
-	$http_response->error("Topic no longer exists.");
+
+    if (Codestriker::Model::Topic::exists($topicid) == 0) {
+        # Topic no longer exists, most likely its been deleted.
+        $http_response->error("Topic no longer exists.");
         return;
     }
-    
+
     my $topic = Codestriker::Model::Topic->new($topicid);
-    
+
     # Any feedback messages to the user.
     my $feedback = "";
-    
+
     # Indicate if changes were made to stale comments.
     my $stale = 0;
 
@@ -48,87 +48,87 @@ sub process($$$) {
     my %comment_state_version_map = ();
     my %comment_state_new_map = ();
     foreach my $param_name ($query->param()) {
-	foreach my $metric (@{$Codestriker::comment_state_metrics}) {
-	    my $metric_name = $metric->{name};
-	    my $prefix = "comment_state_metric\\|$metric_name";
-	    if ($param_name =~ /^($prefix\|\-?\d+\|\-?\d+\|\d+)\|(\d+)$/) {
-		$comment_state_version_map{$1} = $2;
-		$comment_state_new_map{$1} = $query->param($param_name);
-	    }
-	}
+        foreach my $metric (@{$Codestriker::comment_state_metrics}) {
+            my $metric_name = $metric->{name};
+            my $prefix = "comment_state_metric\\|$metric_name";
+            if ($param_name =~ /^($prefix\|\-?\d+\|\-?\d+\|\d+)\|(\d+)$/) {
+                $comment_state_version_map{$1} = $2;
+                $comment_state_new_map{$1} = $query->param($param_name);
+            }
+        }
     }
-    
+
     # Go through all of the commentstate records, and change anything that
     # needs changing.
     my @topic_comments = $topic->read_comments();
     my %processed_commentstates = ();
     foreach my $comment (@topic_comments) {
-	my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
-	    $comment->{filenew};
-	if (! exists $processed_commentstates{$key}) {
-	    # For each metric, see if there is a new value posted for this
-	    # comment state.
-	    my $state_changed = 0;
-	    my $num_metrics_changed_for_comment_state = 0;
-	    foreach my $metric (@{$Codestriker::comment_state_metrics}) {
-		my $select_form_name =
-		    "comment_state_metric|" . $metric->{name} . "|" . $key;
+        my $key = $comment->{filenumber} . "|" . $comment->{fileline} . "|" .
+          $comment->{filenew};
+        if (! exists $processed_commentstates{$key}) {
+            # For each metric, see if there is a new value posted for this
+            # comment state.
+            my $state_changed = 0;
+            my $num_metrics_changed_for_comment_state = 0;
+            foreach my $metric (@{$Codestriker::comment_state_metrics}) {
+                my $select_form_name =
+                  "comment_state_metric|" . $metric->{name} . "|" . $key;
 
-		# Check if this metric has a new value associated with it.
-		my $current_metric_value =
-		    $comment->{metrics}->{$metric->{name}};
-		my $new_metric_value =
-		    $comment_state_new_map{$select_form_name};
-		if (defined $new_metric_value &&
-		    $new_metric_value ne $current_metric_value) {
-		    
-		    # Change the specific metric for this commentstate record.
-		    my $version =
-			$comment_state_version_map{$select_form_name} +
-			$num_metrics_changed_for_comment_state;
-		    my $rc = $comment->change_state($metric->{name},
-						    $new_metric_value,
-						    $version);
-		    if ($rc == $Codestriker::OK) {
-			$state_changed = 1;
-			$num_metrics_changed_for_comment_state++;
-			Codestriker::TopicListeners::Manager::comment_state_change(
-                                                 $email, $metric->{name},
-						 $current_metric_value,
-						 $new_metric_value, $topic,
-						 $comment);
-		    } elsif ($rc == $Codestriker::STALE_VERSION) {
-			$stale = 1;
-		    }
-		}
-	    }
-	    if ($state_changed) {
-		$comments_processed++;
-	    }
+                # Check if this metric has a new value associated with it.
+                my $current_metric_value =
+                  $comment->{metrics}->{$metric->{name}};
+                my $new_metric_value =
+                  $comment_state_new_map{$select_form_name};
+                if (defined $new_metric_value &&
+                    $new_metric_value ne $current_metric_value) {
 
-	    # Indicate that this commentstate has been processed for all
-	    # metrics.
-	    $processed_commentstates{$key} = 1;
-	}
+                    # Change the specific metric for this commentstate record.
+                    my $version =
+                      $comment_state_version_map{$select_form_name} +
+                        $num_metrics_changed_for_comment_state;
+                    my $rc = $comment->change_state($metric->{name},
+                                                    $new_metric_value,
+                                                    $version);
+                    if ($rc == $Codestriker::OK) {
+                        $state_changed = 1;
+                        $num_metrics_changed_for_comment_state++;
+                        Codestriker::TopicListeners::Manager::comment_state_change(
+                                                                                   $email, $metric->{name},
+                                                                                   $current_metric_value,
+                                                                                   $new_metric_value, $topic,
+                                                                                   $comment);
+                    } elsif ($rc == $Codestriker::STALE_VERSION) {
+                        $stale = 1;
+                    }
+                }
+            }
+            if ($state_changed) {
+                $comments_processed++;
+            }
+
+            # Indicate that this commentstate has been processed for all
+            # metrics.
+            $processed_commentstates{$key} = 1;
+        }
     }
-    
+
     # These message could be made more helpful in the future, but for now...
     if ($stale) {
-	$feedback = "Some comments could not be updated as they have been " .
-	    "modified by another user.";
+        $feedback = "Some comments could not be updated as they have been " .
+          "modified by another user.";
     } else {
-	if ($comments_processed == 1) {
-	    $feedback = "Comment was successfully updated.";
-	} elsif ($comments_processed > 1) {
-	    $feedback = "$comments_processed comments were successfully updated.";
-	}
+        if ($comments_processed == 1) {
+            $feedback = "Comment was successfully updated.";
+        } elsif ($comments_processed > 1) {
+            $feedback = "$comments_processed comments were successfully updated.";
+        }
     }
 
     # Direct control to the list comment action class, with the appropriate
     # feedback message.
     $http_input->{feedback} = $feedback;
     Codestriker::Action::ViewTopicComments->process($http_input,
-						    $http_response);
+                                                    $http_response);
 }
 
 1;

@@ -16,11 +16,11 @@ use Codestriker::TopicListeners::TopicListener;
 use Codestriker::DB::DBI;
 
 @Codestriker::TopicListeners::HistoryRecorder::ISA =
-    ("Codestriker::TopicListeners::TopicListener");
+  ("Codestriker::TopicListeners::TopicListener");
 
 sub new {
     my $type = shift;
-    
+
     # TopicListener is parent class.
     my $self = Codestriker::TopicListeners::TopicListener->new();
     return bless $self, $type;
@@ -34,19 +34,19 @@ sub _insert_topichistory_entry($$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my $insert =
-	$dbh->prepare_cached('INSERT INTO topichistory ' .
-			     '(topicid, author, title, ' .
-			     'description, state, modified_ts, version, ' .
-			     'repository, projectid, reviewers, ' .
-			     'cc, modified_by_user) ' .
-			     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      $dbh->prepare_cached('INSERT INTO topichistory ' .
+                           '(topicid, author, title, ' .
+                           'description, state, modified_ts, version, ' .
+                           'repository, projectid, reviewers, ' .
+                           'cc, modified_by_user) ' .
+                           'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert;
     $success &&= $insert->execute($topic->{topicid}, $topic->{author},
-				  $topic->{title}, $topic->{description},
-				  $topic->{topic_state_id},
-				  $topic->{modified_ts}, $topic->{version},
-				  $topic->{repository}, $topic->{project_id},
-				  $topic->{reviewers}, $topic->{cc}, $user);
+                                  $topic->{title}, $topic->{description},
+                                  $topic->{topic_state_id},
+                                  $topic->{modified_ts}, $topic->{version},
+                                  $topic->{repository}, $topic->{project_id},
+                                  $topic->{reviewers}, $topic->{cc}, $user);
 
     # Release the database connection.
     Codestriker::DB::DBI->release_connection($dbh, $success);
@@ -54,7 +54,7 @@ sub _insert_topichistory_entry($$$) {
 }
 
 # Create a new record in the topichistory table.
-sub topic_create($$) { 
+sub topic_create($$) {
     my ($self, $topic) = @_;
 
     # The author of the topic is the user who created the topic.
@@ -68,37 +68,34 @@ sub topic_changed($$$$) {
     my ($self, $user, $topic_orig, $topic) = @_;
 
     # This code is here to handle the case of a topic being created
-    # in the older (pre 1.8.0) versions of codestriker. The older 
-    # topics have been created without any topic history. See if 
+    # in the older (pre 1.8.0) versions of codestriker. The older
+    # topics have been created without any topic history. See if
     # topichistory row exists for the old topic, if not add it in first.
 
-    if (Codestriker::Model::Topic::exists($topic->{topicid}))
-    {
-    my $dbh = Codestriker::DB::DBI->get_connection();
+    if (Codestriker::Model::Topic::exists($topic->{topicid})) {
+        my $dbh = Codestriker::DB::DBI->get_connection();
 
-        my @array = $dbh->selectrow_array('SELECT COUNT(version) '. 
-					  'FROM topichistory ' .
-					  'WHERE ? = topicid and ? = version',
-					  {},
-					  $topic->{topicid},
-					  $topic_orig->{version});
+        my @array = $dbh->selectrow_array('SELECT COUNT(version) '.
+                                          'FROM topichistory ' .
+                                          'WHERE ? = topicid and ? = version',
+                                          {
+                                          },
+                                          $topic->{topicid},
+                                          $topic_orig->{version});
 
         my $old_topic_has_history = $array[0];
 
-    # Release the database connection.
-    Codestriker::DB::DBI->release_connection($dbh,1);
+        # Release the database connection.
+        Codestriker::DB::DBI->release_connection($dbh,1);
 
-    if ( $old_topic_has_history == 0)
-    {
-        $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
-    }
+        if ( $old_topic_has_history == 0) {
+            $self->_insert_topichistory_entry($topic_orig->{author}, $topic_orig);
+        }
 
-    $self->_insert_topichistory_entry($user, $topic);
-    }
-    else
-    {
+        $self->_insert_topichistory_entry($user, $topic);
+    } else {
         # The Topic change is a topic delete, so we don't want to add a
-        # history event to a topic that no longer exists. 
+        # history event to a topic that no longer exists.
     }
 
     return '';
@@ -113,13 +110,13 @@ sub topic_viewed($$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my $insert =
-	$dbh->prepare_cached('INSERT INTO topicviewhistory ' .
-			     '(topicid, email, creation_ts) ' .
-			     'VALUES (?, ?, ?)');
+      $dbh->prepare_cached('INSERT INTO topicviewhistory ' .
+                           '(topicid, email, creation_ts) ' .
+                           'VALUES (?, ?, ?)');
     my $success = defined $insert;
     my $creation_ts = Codestriker->get_timestamp(time);
     if (! defined $user || $user eq "") {
-	$user = "";
+        $user = "";
     }
 
     $success &&= $insert->execute($topic->{topicid}, $user, $creation_ts);
@@ -137,14 +134,14 @@ sub _insert_commentstatehistory_entry($$$$$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my $get_count =
-	$dbh->prepare_cached('SELECT COUNT(*) FROM commentstatehistory ' .
-			     'WHERE id = ?');
+      $dbh->prepare_cached('SELECT COUNT(*) FROM commentstatehistory ' .
+                           'WHERE id = ?');
 
     my $insert =
-	$dbh->prepare_cached('INSERT INTO commentstatehistory ' .
-			     '(id, state, version, metric_name, metric_value, ' .
-			     'modified_ts, modified_by_user) '.
-			     'VALUES (?, ?, ?, ?, ?, ?, ?)');
+      $dbh->prepare_cached('INSERT INTO commentstatehistory ' .
+                           '(id, state, version, metric_name, metric_value, ' .
+                           'modified_ts, modified_by_user) '.
+                           'VALUES (?, ?, ?, ?, ?, ?, ?)');
     my $success = defined $insert && defined $get_count;
     $success &&= $get_count->execute($comment->{id});
     my ($count) = $get_count->fetchrow_array() if $success;
@@ -153,9 +150,9 @@ sub _insert_commentstatehistory_entry($$$$$) {
     # The value of -100 signifies that this is a new record which
     # doesn't need any data migration.
     $success &&= $insert->execute($comment->{id}, -100, $count+1,
-				  $metric_name, $metric_value,
-				  $comment->{db_modified_ts}, $user);
-    
+                                  $metric_name, $metric_value,
+                                  $comment->{db_modified_ts}, $user);
+
     # Release the database connection.
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
@@ -168,20 +165,20 @@ sub comment_create($$$) {
     # The author of the new comment is also the user who created it.  Need
     # to add in all the new metrics created as separate rows.
     foreach my $metric_name (keys %{$comment->{metrics}}) {
-	my $metric_value = $comment->{metrics}->{$metric_name};
-	$self->_insert_commentstatehistory_entry($comment->{author}, $comment,
-						 $metric_name, $metric_value);
+        my $metric_value = $comment->{metrics}->{$metric_name};
+        $self->_insert_commentstatehistory_entry($comment->{author}, $comment,
+                                                 $metric_name, $metric_value);
     }
-    return '';    
+    return '';
 }
 
 # Add an updated record for this commentstate to the commentstatehistory table.
 sub comment_state_change($$$$$$$) {
     my ($self, $user, $metric_name, $old_value, $new_value,
-	$topic, $comment) = @_;
+        $topic, $comment) = @_;
 
     $self->_insert_commentstatehistory_entry($user, $comment, $metric_name,
-					     $new_value);
-    return '';    
+                                             $new_value);
+    return '';
 }
 

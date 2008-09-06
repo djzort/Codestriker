@@ -18,7 +18,7 @@ eval("use Scmbug::ActivityUtilities");
 # delegate repository.
 sub new {
     my ($type, $hostname, $port, $repository) = @_;
-    
+
     my $self = {};
     $self->{repository} = $repository;
     $self->{scmbug} = Scmbug::ActivityUtilities->new($hostname, $port);
@@ -65,22 +65,22 @@ sub getDiff {
     my $affected_files_list = $self->{scmbug}->get_affected_files($bugids);
 
     foreach my $changeset ( @{ $affected_files_list } ) {
-	
-	# Don't diff just directory property changes
-	if( $changeset->{file} =~ /\/$/ ) {
-	    next;
-	}
 
-	# Call the delgate repository object for retrieving the actual
-	# content.
-	my $old_rev = ($changeset->{old} == 0) ? "" : $changeset->{old};
-	my $new_rev = ($changeset->{new} == 0) ? "" : $changeset->{new};		
-	my $ret = $self->{repository}->getDiff($old_rev, $new_rev,
-					       $changeset->{file},
-					       $stdout_fh,
-					       $stderr_fh,
-					       $default_to_head);
-	return $ret if $ret != $Codestriker::OK;
+        # Don't diff just directory property changes
+        if ( $changeset->{file} =~ /\/$/ ) {
+            next;
+        }
+
+        # Call the delgate repository object for retrieving the actual
+        # content.
+        my $old_rev = ($changeset->{old} == 0) ? "" : $changeset->{old};
+        my $new_rev = ($changeset->{new} == 0) ? "" : $changeset->{new};
+        my $ret = $self->{repository}->getDiff($old_rev, $new_rev,
+                                               $changeset->{file},
+                                               $stdout_fh,
+                                               $stderr_fh,
+                                               $default_to_head);
+        return $ret if $ret != $Codestriker::OK;
     }
 
     return $Codestriker::OK;

@@ -14,7 +14,7 @@ use strict;
 use Codestriker;
 use Codestriker::DB::Database;
 
-# DBI connections are expensive to make, only have one per process, and when 
+# DBI connections are expensive to make, only have one per process, and when
 # the code asks for a connection, just keep returning the same one.
 our $connection;
 
@@ -24,7 +24,7 @@ sub get_connection($) {
 
     # Making a connection is expensive, cache it.
     if ( !defined($connection) ) {
-	my $database = Codestriker::DB::Database->get_database();
+        my $database = Codestriker::DB::Database->get_database();
 
         $connection = $database->get_connection();
     }
@@ -40,7 +40,7 @@ sub release_connection($$$) {
     # If the connection is transaction controlled, commit or abort the
     # transaction depending on the value of $success.
     if ($connection->{AutoCommit} == 0) {
-	$success ? $connection->commit : $connection->rollback;
+        $success ? $connection->commit : $connection->rollback;
     }
 }
 

@@ -21,16 +21,17 @@ sub get_connection($) {
     my $dbname = $Codestriker::flyspray_db_dbname;
     $dbname = "flyspray" if ($dbname eq "");
     $self->{dbh} =
-	DBI->connect("DBI:mysql:dbname=$dbname;host=$Codestriker::flyspray_db_host",
-		     $Codestriker::flyspray_db_name, $Codestriker::flyspray_db_password,
-		     { RaiseError => 1, AutoCommit => 1 });
+      DBI->connect("DBI:mysql:dbname=$dbname;host=$Codestriker::flyspray_db_host",
+                   $Codestriker::flyspray_db_name, $Codestriker::flyspray_db_password,
+                   {
+                    RaiseError => 1, AutoCommit => 1 });
     bless $self, $type;
 }
 
 # Method for releasing a flyspray database connection.
 sub release_connection($) {
     my ($self) = @_;
-    
+
     $self->{dbh}->disconnect;
 }
 
@@ -40,7 +41,7 @@ sub bugid_exists($$) {
     my ($self, $bugid) = @_;
 
     return $self->{dbh}->selectrow_array('SELECT COUNT(*) FROM flyspray_tasks ' .
-					 'WHERE task_id = ?', {}, $bugid) != 0;
+                                         'WHERE task_id = ?', {}, $bugid) != 0;
 }
 
 
@@ -51,13 +52,13 @@ sub update_bug($$$$$) {
 
     # Create the necessary prepared statements.
     my $insert_comment =
-	$self->{dbh}->prepare_cached('INSERT INTO flyspray_comments ' .
-				     '(task_id, user_id, date_added, comment_text) ' .
-				     'VALUES (?, ?, ?, ?)');
+      $self->{dbh}->prepare_cached('INSERT INTO flyspray_comments ' .
+                                   '(task_id, user_id, date_added, comment_text) ' .
+                                   'VALUES (?, ?, ?, ?)');
     my $insert_history =
-	$self->{dbh}->prepare_cached('INSERT INTO flyspray_history ' .
-				     '(task_id, user_id, event_date, event_type, new_value) ' .
-				     'VALUES (?, ?, ?, 4, 1)');
+      $self->{dbh}->prepare_cached('INSERT INTO flyspray_history ' .
+                                   '(task_id, user_id, event_date, event_type, new_value) ' .
+                                   'VALUES (?, ?, ?, 4, 1)');
 
     # Execute the statement.
 

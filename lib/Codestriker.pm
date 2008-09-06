@@ -21,19 +21,19 @@ use Fatal qw / open close waitpid /;
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
-	      $gzip $cvs $svn $ssh $p4 $vss $bugtracker
-	      @valid_repositories $default_topic_create_mode $default_tabwidth
-	      $file_reviewer $db $dbuser $dbpasswd $codestriker_css
-	      $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
-	      $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
-	      $lxr_map $email_send_options
-	      $allow_delete $allow_searchlist $default_file_to_view
-              $allow_projects $antispam_email $VERSION $title $BASEDIR
-	      $metric_config $tmpdir @metric_schema $comment_state_metrics
-	      $project_states $rss_enabled
-	      $repository_name_map $repository_url_map
-	      @valid_repository_names $topic_text_encoding $cgi_style
-	      );
+          $gzip $cvs $svn $ssh $p4 $vss $bugtracker
+          @valid_repositories $default_topic_create_mode $default_tabwidth
+          $file_reviewer $db $dbuser $dbpasswd $codestriker_css
+          $NORMAL_MODE $COLOURED_MODE $COLOURED_MONO_MODE $topic_states
+          $bug_db $bug_db_host $bug_db_name $bug_db_password $bug_db_user
+          $lxr_map $email_send_options
+          $allow_delete $allow_searchlist $default_file_to_view
+          $allow_projects $antispam_email $VERSION $title $BASEDIR
+          $metric_config $tmpdir @metric_schema $comment_state_metrics
+          $project_states $rss_enabled
+          $repository_name_map $repository_url_map
+          @valid_repository_names $topic_text_encoding $cgi_style
+           );
 
 # Version of Codestriker.
 $Codestriker::VERSION = "1.9.7";
@@ -77,19 +77,19 @@ $Codestriker::COMMENT_SUBMITTED = 0;
 
 # Day strings
 @Codestriker::days = ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-		      "Friday", "Saturday");
+              "Friday", "Saturday");
 
 # Month strings
 @Codestriker::months = ("January", "February", "March", "April", "May", "June",
-			"July", "August", "September", "October", "November",
-			"December");
+            "July", "August", "September", "October", "November",
+            "December");
 
 # Short day strings
 @Codestriker::short_days = ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
 
 # Short month strings
 @Codestriker::short_months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
 $metric_config = "";
 
@@ -116,180 +116,176 @@ $metric_config = "";
 # will not be stored to the database if it does not pass the format
 # expected for the filter type.
 
-my @metrics_schema = 
-( 
-  # planning time
-  {
-  name=>"entry time",
-  description=>"Work hours spent by the inspection leader to check that entry conditions are met, and to work towards meeting them.",
-  enabled=>0,
-  scope=>"author",
-  filter=>"hours"
-  },
-  {
-  name=>"kickoff time",
-  description=>"Total work hours used per individual for the kickoff meeting and for planning of the kickoff meeting.",
-  scope=>"participant",
-  enabled=>1,
-  filter=>"hours"
-  },
-  {
-  name=>"planning time",
-  description=>"Total work hours used to create the inspection master plan.",
-  scope=>"author",
-  enabled=>0,
-  filter=>"hours"
-  },
+my @metrics_schema =
+  (
+   # planning time
+   {
+    name=>"entry time",
+    description=>"Work hours spent by the inspection leader to check that entry conditions are met, and to work towards meeting them.",
+    enabled=>0,
+    scope=>"author",
+    filter=>"hours"
+   },
+   {
+    name=>"kickoff time",
+    description=>"Total work hours used per individual for the kickoff meeting and for planning of the kickoff meeting.",
+    scope=>"participant",
+    enabled=>1,
+    filter=>"hours"
+   },
+   {
+    name=>"planning time",
+    description=>"Total work hours used to create the inspection master plan.",
+    scope=>"author",
+    enabled=>0,
+    filter=>"hours"
+   },
 
-  # checking time
-  {
-  name=>"checking time",
-  description=>"The total time spent checking the topic.",
-  scope=>"participant",
-  enabled=>1, 
-  filter=>"hours"
-  },
-  {
-  name=>"lines studied",
-  description=>"The number of lines which have been closly scrutinized at or near optimum checking rate.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"count"
-  },
-  {
-  name=>"lines scanned",
-  description=>"The number of lines which have been looked at higher then the optimum checking rate.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"count"
-  },
-  {
-  name=>"studied time",
-  description=>"The time in hours spent closely scrutinized at or near optimum checking rate.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"hours"
-  },
-  {
-  name=>"scanned time",
-  description=>"The time in hours spent looking at the topic at higher then the optimum checking rate.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"hours"
-  },
+   # checking time
+   {
+    name=>"checking time",
+    description=>"The total time spent checking the topic.",
+    scope=>"participant",
+    enabled=>1,
+    filter=>"hours"
+   },
+   {
+    name=>"lines studied",
+    description=>"The number of lines which have been closly scrutinized at or near optimum checking rate.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"count"
+   },
+   {
+    name=>"lines scanned",
+    description=>"The number of lines which have been looked at higher then the optimum checking rate.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"count"
+   },
+   {
+    name=>"studied time",
+    description=>"The time in hours spent closely scrutinized at or near optimum checking rate.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"hours"
+   },
+   {
+    name=>"scanned time",
+    description=>"The time in hours spent looking at the topic at higher then the optimum checking rate.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"hours"
+   },
 
-  # logging meeting time.
-  {
-  name=>"logging meeting duration",
-  description=>"The wall clock time of the logging meeting.",
-  scope=>"topic",
-  enabled=>1, 
-  filter=>"hours"
-  },
-  {
-  name=>"logging meeting logging duration",
-  description=>"The wall clock time spent reporting issues and searching for new issues.",
-  scope=>"topic",
-  enabled=>0,
-  filter=>"hours"
-  },
-  {
-  name=>"logging meeting discussion duration",
-  description=>"The wall clock time spent not reporting issues and searching for new issues.",
-  scope=>"topic",
-  enabled=>0,
-  filter=>"hours"
-  },
-  {
-  name=>"logging meeting logging time",
-  description=>"The total time spent reporting issues and searching for new issues.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"hours"
-  },
-  {
-  name=>"logging meeting discussion time",
-  description=>"The total time spent not reporting issues and searching for new issues.",
-  scope=>"participant",
-  enabled=>0,
-  filter=>"hours"
-  },
-  ,
-  {
-  name=>"logging meeting new issues logged",
-  description=>"The total number of issues that were not noted before the meeting and found during the meeting.",
-  scope=>"topic",
-  enabled=>0,
-  filter=>"count"
-  },
+   # logging meeting time.
+   {
+    name=>"logging meeting duration",
+    description=>"The wall clock time of the logging meeting.",
+    scope=>"topic",
+    enabled=>1,
+    filter=>"hours"
+   },
+   {
+    name=>"logging meeting logging duration",
+    description=>"The wall clock time spent reporting issues and searching for new issues.",
+    scope=>"topic",
+    enabled=>0,
+    filter=>"hours"
+   },
+   {
+    name=>"logging meeting discussion duration",
+    description=>"The wall clock time spent not reporting issues and searching for new issues.",
+    scope=>"topic",
+    enabled=>0,
+    filter=>"hours"
+   },
+   {
+    name=>"logging meeting logging time",
+    description=>"The total time spent reporting issues and searching for new issues.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"hours"
+   },
+   {
+    name=>"logging meeting discussion time",
+    description=>"The total time spent not reporting issues and searching for new issues.",
+    scope=>"participant",
+    enabled=>0,
+    filter=>"hours"
+   },
+   ,
+   {
+    name=>"logging meeting new issues logged",
+    description=>"The total number of issues that were not noted before the meeting and found during the meeting.",
+    scope=>"topic",
+    enabled=>0,
+    filter=>"count"
+   },
 
-  # editing
+   # editing
 
-  {
-  name=>"edit time",
-  description=>"The total time spent editing all items.",
-  scope=>"author",
-  enabled=>0,
-  filter=>"hours"
-  },
-  {
-  name=>"follow up time",
-  description=>"The total time spent by the leader to check exit criteria and do exit activities.",
-  scope=>"author",
-  enabled=>0,
-  filter=>"hours"
-  },
+   {
+    name=>"edit time",
+    description=>"The total time spent editing all items.",
+    scope=>"author",
+    enabled=>0,
+    filter=>"hours"
+   },
+   {
+    name=>"follow up time",
+    description=>"The total time spent by the leader to check exit criteria and do exit activities.",
+    scope=>"author",
+    enabled=>0,
+    filter=>"hours"
+   },
 
-  {
-  name=>"exit time",
-  description=>"The total time spent by the leader to check exit criteria and do exit activities.",
-  scope=>"author",
-  enabled=>0,
-  filter=>"hours"
-  },
+   {
+    name=>"exit time",
+    description=>"The total time spent by the leader to check exit criteria and do exit activities.",
+    scope=>"author",
+    enabled=>0,
+    filter=>"hours"
+   },
 
-  {
-  name=>"correct fix rate",
-  description=>"The percentage of edit corrections attempts with correct fix a defect and not introduce new defects.",
-  scope=>"author",
-  enabled=>0,
-  filter=>"percent"
-  },
+   {
+    name=>"correct fix rate",
+    description=>"The percentage of edit corrections attempts with correct fix a defect and not introduce new defects.",
+    scope=>"author",
+    enabled=>0,
+    filter=>"percent"
+   },
 
-);
+  );
 
-# Return the schema for the codestriker metric support. It insures that the 
+# Return the schema for the codestriker metric support. It insures that the
 # settings in the conf file are applied to the schema.
 sub get_metric_schema {
 
     # Make each of the metrics schema's are enabled according to the .conf file.
     foreach my $metric (@metrics_schema) {
-	if ((! defined $metric_config) || $metric_config eq "" ||
-	    $metric_config eq "none") {
-	    $metric->{enabled} = 0;	
-	}
-	elsif ($metric_config eq "basic") {
-	    # Leave the default enabled values.
-	}
-	elsif ($metric_config eq "all") {
-	    $metric->{enabled} = 1;	
-	}
-	else {
-	    # Make sure it matches the entire thing.
-	    my $regex = "(^|,)$metric->{name}(,|\$)";
+        if ((! defined $metric_config) || $metric_config eq "" ||
+            $metric_config eq "none") {
+            $metric->{enabled} = 0;
+        } elsif ($metric_config eq "basic") {
+            # Leave the default enabled values.
+        } elsif ($metric_config eq "all") {
+            $metric->{enabled} = 1;
+        } else {
+            # Make sure it matches the entire thing.
+            my $regex = "(^|,)$metric->{name}(,|\$)";
 
-	    if ($metric_config =~ /$regex/) {
-		$metric->{enabled} = 1;	
-	    }
-	    else {
-		$metric->{enabled} = 0;
-	    }
-	}
+            if ($metric_config =~ /$regex/) {
+                $metric->{enabled} = 1;
+            } else {
+                $metric->{enabled} = 0;
+            }
+        }
 
-	# This metric is not a "built it" metric. Meaning that it 
-	# comes out of the db, rather than being generated on the fly
-	# from other parts of the db (like the topic history).
-	$metric->{builtin} = 0;
+        # This metric is not a "built it" metric. Meaning that it
+        # comes out of the db, rather than being generated on the fly
+        # from other parts of the db (like the topic history).
+        $metric->{builtin} = 0;
     }
 
     return @metrics_schema;
@@ -305,35 +301,34 @@ sub initialise($$) {
     # Load up the configuration file.
     my $config = "$BASEDIR/codestriker.conf";
     if (-f $config) {
-	do $config;
+        do $config;
     } else {
-	die("Couldn't find configuration file: \"$config\".\n<BR>" .
-	    "Please fix the \$config setting in codestriker.pl.");
+        die("Couldn't find configuration file: \"$config\".\n<BR>" .
+            "Please fix the \$config setting in codestriker.pl.");
     }
 
     # look for the extra file for the test scripts.
-    if ( -f "$BASEDIR/codestriker_test.conf")
-    {
-	do "$BASEDIR/codestriker_test.conf";
+    if ( -f "$BASEDIR/codestriker_test.conf") {
+        do "$BASEDIR/codestriker_test.conf";
     }
 
     # Fill in $repository_name_map for those repository entries which don't have
     # a mapping, with the same value as the repository value itself.
     foreach my $repository (@valid_repositories) {
-	if (! exists $repository_name_map->{$repository}) {
-	    $repository_name_map->{$repository} = $repository;
-	}
+        if (! exists $repository_name_map->{$repository}) {
+            $repository_name_map->{$repository} = $repository;
+        }
     }
 
     # Define the equivalent list of valid repository names.
     @valid_repository_names = ();
     foreach my $repository (@valid_repositories) {
-	push @valid_repository_names, $repository_name_map->{$repository};
+        push @valid_repository_names, $repository_name_map->{$repository};
     }
 
     # Define the reverse mapping now for convenience.
     foreach my $key (keys %${repository_name_map}) {
-	$repository_url_map->{$repository_name_map->{$key}} = $key;
+        $repository_url_map->{$repository_name_map->{$key}} = $key;
     }
 }
 
@@ -347,11 +342,11 @@ sub is_windows() {
 sub get_timestamp($$) {
     my ($type, $time) = @_;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-	localtime($time);
+      localtime($time);
     $year += 1900;
 
     return sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year, $mon+1, $mday,
-		   $hour, $min, $sec);
+                   $hour, $min, $sec);
 }
 
 # Given a database formatted timestamp, output it in a human-readable form.
@@ -359,18 +354,18 @@ sub format_timestamp($$) {
     my ($type, $timestamp) = @_;
 
     if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
-	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
-	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-	    localtime($time_value);
-	$year += 1900;
-	return sprintf("$Codestriker::days[$wday] " .
-		       "$Codestriker::months[$mon] $mday, $year %02d:%02d:%02d ",
-		       $hour, $min, $sec);
+        $timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+        my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+          localtime($time_value);
+        $year += 1900;
+        return sprintf("$Codestriker::days[$wday] " .
+                       "$Codestriker::months[$mon] $mday, $year %02d:%02d:%02d ",
+                       $hour, $min, $sec);
     } else {
-	return $timestamp;
+        return $timestamp;
     }
-}
+
 
 # Given a database formatted timestamp, output it in a short,
 # human-readable form.
@@ -378,16 +373,16 @@ sub format_short_timestamp($$) {
     my ($type, $timestamp) = @_;
 
     if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
-	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
-	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-	    localtime($time_value);
-	$year += 1900;
-	return sprintf("%02d:%02d:%02d $Codestriker::short_days[$wday], " .
-		       "$mday $Codestriker::short_months[$mon], $year",
-		       $hour, $min, $sec);
+        $timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+        my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
+        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+          localtime($time_value);
+        $year += 1900;
+        return sprintf("%02d:%02d:%02d $Codestriker::short_days[$wday], " .
+                       "$mday $Codestriker::short_months[$mon], $year",
+                       $hour, $min, $sec);
     } else {
-	return $timestamp;
+        return $timestamp;
     }
 }
 
@@ -397,15 +392,14 @@ sub format_date_timestamp($$) {
     my ($type, $timestamp) = @_;
 
     if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
-	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
-	my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
-	    localtime($time_value);
-	$year += 1900;
-	return "$Codestriker::short_days[$wday] $Codestriker::short_months[$mon] $mday, $year";
-		      
+        $timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+        my $time_value = Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
+        my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+          localtime($time_value);
+        $year += 1900;
+        return "$Codestriker::short_days[$wday] $Codestriker::short_months[$mon] $mday, $year";
     } else {
-	return $timestamp;
+        return $timestamp;
     }
 }
 
@@ -415,12 +409,11 @@ sub convert_date_timestamp_time($$) {
     my ($type, $timestamp) = @_;
 
     if ($timestamp =~ /(\d\d\d\d)\-(\d\d)\-(\d\d) (\d\d):(\d\d):(\d\d)/ ||
-	$timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
-	return Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
-		      
+        $timestamp =~ /(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)/) {
+        return Time::Local::timelocal($6, $5, $4, $3, $2-1, $1);
     } else {
-	print STDERR "Unable to convert timestamp \"$timestamp\" to time_t.\n";
-	return 0;
+        print STDERR "Unable to convert timestamp \"$timestamp\" to time_t.\n";
+        return 0;
     }
 }
 
@@ -436,11 +429,11 @@ sub make_antispam_email($$) {
 
 sub filter_email {
     my ($type, $email) = @_;
-    
+
     if ($Codestriker::antispam_email) {
-	$email = $type->make_antispam_email($email);
+        $email = $type->make_antispam_email($email);
     }
-    
+
     return $email;
 }
 
@@ -449,56 +442,53 @@ sub filter_email {
 # references to lists. Mainly used to compare lists of reviewers and
 # cc.
 sub set_differences($$$$)
-{
-    my ($list1_r, $list2_r, $added, $removed) = @_;
+  {
+      my ($list1_r, $list2_r, $added, $removed) = @_;
 
-    my @list1 = sort @$list1_r;
-    my @list2 = sort @$list2_r;
+      my @list1 = sort @$list1_r;
+      my @list2 = sort @$list2_r;
 
-    my $new_index = 0;
-    my $old_index = 0;
-    while ($new_index < @list1 || $old_index < @list2) {
-        my $r = 0;
+      my $new_index = 0;
+      my $old_index = 0;
+      while ($new_index < @list1 || $old_index < @list2) {
+          my $r = 0;
 
-        if ($new_index < @list1 && $old_index < @list2) {
-	    $r = $list1[$new_index] cmp $list2[$old_index];
-        }
-        elsif ($new_index < @list1) {
-	    $r = -1;
-        }
-        else {
-	    $r = 1;
-        }
+          if ($new_index < @list1 && $old_index < @list2) {
+              $r = $list1[$new_index] cmp $list2[$old_index];
+          } elsif ($new_index < @list1) {
+              $r = -1;
+          } else {
+              $r = 1;
+          }
 
-        if ($r == 0) {
-	    ++$new_index;
-	    ++$old_index;
+          if ($r == 0) {
+              ++$new_index;
+              ++$old_index;
 
-        }
-        elsif ($r < 0) {
-	    push(@$added, $list1[$new_index]);
-	    ++$new_index;
-        }
-        else {
-	    push(@$removed, $list2[$old_index]);
-	    ++$old_index;
-        }
-    }
+          } elsif ($r < 0) {
+              push(@$added, $list1[$new_index]);
+              ++$new_index;
+          } else {
+              push(@$removed, $list2[$old_index]);
+              ++$old_index;
+          }
+      }
+  }
 }
 
 # Return true if project support has been enabled.
 sub projects_disabled {
     if (defined @Codestriker::project_states) {
-	return $#Codestriker::project_states == -1;
+        return $#Codestriker::project_states == -1;
     } elsif (defined $Codestriker::allow_projects) {
-	# Support for older codestriker.conf files.
-	if ($Codestriker::allow_projects) {
-	    $Codestriker::project_states = ('Open');
-	}
-	return $Codestriker::allow_projects == 0;
+        # Support for older codestriker.conf files.
+        if ($Codestriker::allow_projects) {
+            $Codestriker::project_states = ('Open');
+        }
+        return $Codestriker::allow_projects == 0;
     } else {
-	# Don't support projects if none of the above are defined.
-	return 1;
+        # Don't support projects if none of the above are defined.
+        return 1;
     }
 }
 
@@ -506,15 +496,15 @@ sub projects_disabled {
 sub project_state_change_enabled {
     return $#Codestriker::project_states > 0;
 }
-    
+
 # Returns true if the given topic is 'readonly', i.e. if the given topic
 # status is in the list of readonly_states in codestriker.conf.
 sub topic_readonly {
     my ($topic_state) = @_;
     if (defined @Codestriker::readonly_states) {
-	return (grep /^$topic_state$/, @Codestriker::readonly_states);
+        return (grep /^$topic_state$/, @Codestriker::readonly_states);
     } else {
-	# Backwards compatibility for older configs.
+        # Backwards compatibility for older configs.
         return $topic_state eq "Open" ? 0 : 1;
     }
 }
@@ -526,8 +516,8 @@ sub decode_topic_text {
     # Assume input text is set to UTF8 by default, unless
     # it has been explicitly over-ridden in the codestriker.conf file.
     if ((! defined $Codestriker::topic_text_encoding) ||
-	$Codestriker::topic_text_encoding eq '') {
-	$Codestriker::topic_text_encoding = 'utf8';
+        $Codestriker::topic_text_encoding eq '') {
+        $Codestriker::topic_text_encoding = 'utf8';
     }
 
     return decode($Codestriker::topic_text_encoding, $string);
@@ -547,79 +537,80 @@ sub execute_command {
 
     my $command_tmpdir;
     eval {
-	if (exists $ENV{'MOD_PERL'}) {
-	    # The open3() call doesn't work under mod_perl/apache2,
-	    # so create a command which stores the stdout and stderr
-	    # into temporary files.
-	    if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
-		$command_tmpdir = tempdir(DIR => $Codestriker::tmpdir);
-	    } else {
-		$command_tmpdir = tempdir();
-	    }
+        if (exists $ENV{'MOD_PERL'}) {
+            # The open3() call doesn't work under mod_perl/apache2,
+            # so create a command which stores the stdout and stderr
+            # into temporary files.
+            if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
+                $command_tmpdir = tempdir(DIR => $Codestriker::tmpdir);
+            } else {
+                $command_tmpdir = tempdir();
+            }
 
-	    # Build up the command string with naive quoting.
-	    my $command_line = "\"$command\"";
-	    foreach my $arg (@args) {
-		$command_line .= " \"$arg\"";
-	    }
+            # Build up the command string with naive quoting.
+            my $command_line = "\"$command\"";
+            foreach my $arg (@args) {
+                $command_line .= " \"$arg\"";
+            }
 
-	    my $stdout_filename = "$command_tmpdir/stdout.txt";
-	    my $stderr_filename = "$command_tmpdir/stderr.txt";
+            my $stdout_filename = "$command_tmpdir/stdout.txt";
+            my $stderr_filename = "$command_tmpdir/stderr.txt";
 
-	    # Thankfully this works under Windows.
-	    my $system_line =
-		"$command_line > \"$stdout_filename\" 2> \"$stderr_filename\"";
-	    system($system_line) == 0 ||
-		croak "Failed to execute $system_line: $!\n";
+            # Thankfully this works under Windows.
+            my $system_line =
+              "$command_line > \"$stdout_filename\" 2> \"$stderr_filename\"";
+            system($system_line) == 0 ||
+              croak "Failed to execute $system_line: $!\n";
 
-	    open(TMP_STDOUT, $stdout_filename);
-	    binmode TMP_STDOUT;
-	    while (<TMP_STDOUT>) {
-		print $stdout_fh $_;
-	    }
-	    binmode TMP_STDERR;
+            open(TMP_STDOUT, $stdout_filename);
+            binmode TMP_STDOUT;
+            while (<TMP_STDOUT>) {
+                print $stdout_fh $_;
+            }
+            binmode TMP_STDERR;
 
-	    open(TMP_STDERR, $stderr_filename);
-	    while (<TMP_STDERR>) {
-		print $stderr_fh $_;
-	    }
+            open(TMP_STDERR, $stderr_filename);
+            while (<TMP_STDERR>) {
+                print $stderr_fh $_;
+            }
 
-	    close TMP_STDOUT;
-	    close TMP_STDERR;
-	} else {
-	    my $write_stdin_fh = new FileHandle;
-	    my $read_stdout_fh = new FileHandle;
-	    my $read_stderr_fh = new FileHandle;
+            close TMP_STDOUT;
+            close TMP_STDERR;
+        } else {
+            my $write_stdin_fh = new FileHandle;
+            my $read_stdout_fh = new FileHandle;
+            my $read_stderr_fh = new FileHandle;
 
-	    my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
-			    $command, @args);
+            my $pid = open3($write_stdin_fh, $read_stdout_fh, $read_stderr_fh,
+                            $command, @args);
 
-	    # Ideally, we should use IO::Select, but that is broken on Win32.
-	    # This is not ideal, but read first from stdout.  If that is empty,
-	    # then an error has occurred, and that can be read from stderr.
-	    my $buf = "";
-	    while (read($read_stdout_fh, $buf, 16384)) {
-		print $stdout_fh $buf;
-	    }
-	    while (read($read_stderr_fh, $buf, 16384)) {
-		print $stderr_fh $buf;
-	    }
-	    
-	    # Wait for the process to terminate.
-	    waitpid($pid, 0);
-	}
-    };
+            # Ideally, we should use IO::Select, but that is broken on Win32.
+            # This is not ideal, but read first from stdout.  If that is empty,
+            # then an error has occurred, and that can be read from stderr.
+            my $buf = "";
+            while (read($read_stdout_fh, $buf, 16384)) {
+                print $stdout_fh $buf;
+            }
+            while (read($read_stderr_fh, $buf, 16384)) {
+                print $stderr_fh $buf;
+            }
+
+            # Wait for the process to terminate.
+            waitpid($pid, 0);
+        }
+    }
+      ;
     my $exception = $@;
 
     # Make sure the temporary directory is removed if it was created.
     if (defined $command_tmpdir) {
-	rmtree($command_tmpdir);
+        rmtree($command_tmpdir);
     }
 
     if ($exception) {
-	croak("Command failed: $@\n",
-	      "$command " . join(' ', @args) . "\n",
-	      "Check your webserver error log for more information.\n");
+        croak("Command failed: $@\n",
+              "$command " . join(' ', @args) . "\n",
+              "Check your webserver error log for more information.\n");
     }
 
     # Flush the output file handles.
@@ -634,12 +625,11 @@ sub tabadjust ($$$) {
 
     $_ = $input;
     if ($htmlmode) {
-	1 while s/\t+/'&nbsp;' x
-	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
-    }
-    else {
-	1 while s/\t+/' ' x
-	    (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
+        1 while s/\t+/'&nbsp;' x
+          (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
+    } else {
+        1 while s/\t+/' ' x
+          (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
     }
     return $_;
 }

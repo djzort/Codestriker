@@ -38,7 +38,7 @@ sub process($$$) {
 
     # Check if this action is allowed, and that the state is valid.
     if (! grep /^$topic_state$/, @Codestriker::topic_states) {
-	$http_response->error("Topic state $topic_state unrecognised");
+        $http_response->error("Topic state $topic_state unrecognised");
     }
 
     # Retrieve the current state of the topic.
@@ -50,108 +50,105 @@ sub process($$$) {
 
     # Make sure the topic being operated on is the most recent version.
     if ($topic->check_for_stale($version)) {
-	$feedback .= "Topic properties have been modified by another user.";
+        $feedback .= "Topic properties have been modified by another user.";
     }
 
     # Check that the topic properties are valid.
     if ($topic_title eq "") {
-	$feedback .= "Topic title cannot be empty.\n";
+        $feedback .= "Topic title cannot be empty.\n";
     }
     if ($topic_description eq "") {
-	$feedback .= "Topic description cannot be empty.\n";
+        $feedback .= "Topic description cannot be empty.\n";
     }
 
     if ($Codestriker::antispam_email == 0) {
-	if ($author eq "") {
-	    $feedback .= "Author cannot be empty.\n";
-	}
-	if ($reviewers eq "") {
-	    $feedback .= "Reviewers cannot be empty.\n";
-	}
+        if ($author eq "") {
+            $feedback .= "Author cannot be empty.\n";
+        }
+        if ($reviewers eq "") {
+            $feedback .= "Reviewers cannot be empty.\n";
+        }
     } else {
-	# Note if anti_spam email is on, don't allow the user to
-	# change the $author, $reviewers or $cc properties.
-	$author = $topic->{author};
-	$reviewers = $topic->{reviewers};
-	$cc = $topic->{cc};
+        # Note if anti_spam email is on, don't allow the user to
+        # change the $author, $reviewers or $cc properties.
+        $author = $topic->{author};
+        $reviewers = $topic->{reviewers};
+        $cc = $topic->{cc};
     }
 
     # Make sure the repository value is correct.
     my $repository_url = '';
     if (defined $repository_name && $repository_name ne '') {
-	$repository_url = $Codestriker::repository_url_map->{$repository_name};
-	if ($repository_url eq "") {
-	    $feedback .= "Repository name \"$repository_name\" is unknown.\n" .
-		"Update your codestriker.conf file with this entry.\n";
-	}
+        $repository_url = $Codestriker::repository_url_map->{$repository_name};
+        if ($repository_url eq "") {
+            $feedback .= "Repository name \"$repository_name\" is unknown.\n" .
+              "Update your codestriker.conf file with this entry.\n";
+        }
     }
 
     if ($feedback eq "") {
-	# Create a clone of this topic, which will contain the
-	# original state of the topic, and the proposed new state,
-	# used for the topic listeners below.
-	my $topic_orig = Codestriker::Model::Topic->new($topicid);
-	my $topic_new = Codestriker::Model::Topic->new($topicid);
+        # Create a clone of this topic, which will contain the
+        # original state of the topic, and the proposed new state,
+        # used for the topic listeners below.
+        my $topic_orig = Codestriker::Model::Topic->new($topicid);
+        my $topic_new = Codestriker::Model::Topic->new($topicid);
 
-	if ($topic_state eq "Deleted") {
-	    $rc = $topic->delete();
-	    if ($rc == $Codestriker::INVALID_TOPIC) {
-		$feedback .= "Topic no longer exists.\n";
-	    } elsif ($rc == $Codestriker::OK) {
-		$feedback = "Topic has been deleted.";
-	    }
-	}
-	elsif ($topic_state eq "Obsoleted") {
-	    # Redirect to the create topic screen with this topic being
-	    # the one to obsolete.
-	    my $create_topic_url =
-		$url_builder->create_topic_url("$topicid,$version");
-	    print $query->redirect(-URI=>$create_topic_url);
-	    return;
-	}
-	else {
-	    # Set the fields into the new topic object for checking.
-	    $topic_new->{title} = $topic_title;
-	    $topic_new->{author} = $author;
-	    $topic_new->{reviewers} = $reviewers;
-	    $topic_new->{cc} = $cc;
-	    $topic_new->{repository} = $repository_url;
-	    $topic_new->{bug_ids} = $bug_ids;
-	    $topic_new->{project_id} = $projectid;
-	    $topic_new->{description} = $topic_description;
-	    $topic_new->{topic_state} = $topic_state;
+        if ($topic_state eq "Deleted") {
+            $rc = $topic->delete();
+            if ($rc == $Codestriker::INVALID_TOPIC) {
+                $feedback .= "Topic no longer exists.\n";
+            } elsif ($rc == $Codestriker::OK) {
+                $feedback = "Topic has been deleted.";
+            }
+        } elsif ($topic_state eq "Obsoleted") {
+            # Redirect to the create topic screen with this topic being
+            # the one to obsolete.
+            my $create_topic_url =
+              $url_builder->create_topic_url("$topicid,$version");
+            print $query->redirect(-URI=>$create_topic_url);
+            return;
+        } else {
+            # Set the fields into the new topic object for checking.
+            $topic_new->{title} = $topic_title;
+            $topic_new->{author} = $author;
+            $topic_new->{reviewers} = $reviewers;
+            $topic_new->{cc} = $cc;
+            $topic_new->{repository} = $repository_url;
+            $topic_new->{bug_ids} = $bug_ids;
+            $topic_new->{project_id} = $projectid;
+            $topic_new->{description} = $topic_description;
+            $topic_new->{topic_state} = $topic_state;
 
-	    # Make sure all the topic listeners are happy with this change
-	    # before allowing it.
-	    $feedback =
-		Codestriker::TopicListeners::Manager::topic_pre_changed($email,
-									$topic_orig,
-									$topic_new);
-	    if ($feedback eq '') {
-		# Topic listeners are happy with this change.
-		$rc = $topic->update($topic_title, $author, $reviewers, $cc,
-				     $repository_url, $bug_ids, $projectid,
-				     $topic_description, $topic_state);
-		if ($rc == $Codestriker::INVALID_TOPIC) {
-		    $feedback .= "Topic no longer exists.\n";
-		} elsif ($rc == $Codestriker::STALE_VERSION) {
-		    $feedback .=
-			"Topic was modified by another user, no changes done.\n";
-		} elsif ($rc == $Codestriker::OK) {
-		    $feedback .= "Topic properties successfully updated.\n";
-		}
-	    }
-	    else {
-		$rc = $Codestriker::LISTENER_ABORT;
-	    }
-	}
+            # Make sure all the topic listeners are happy with this change
+            # before allowing it.
+            $feedback =
+              Codestriker::TopicListeners::Manager::topic_pre_changed($email,
+                                                                      $topic_orig,
+                                                                      $topic_new);
+            if ($feedback eq '') {
+                # Topic listeners are happy with this change.
+                $rc = $topic->update($topic_title, $author, $reviewers, $cc,
+                                     $repository_url, $bug_ids, $projectid,
+                                     $topic_description, $topic_state);
+                if ($rc == $Codestriker::INVALID_TOPIC) {
+                    $feedback .= "Topic no longer exists.\n";
+                } elsif ($rc == $Codestriker::STALE_VERSION) {
+                    $feedback .=
+                      "Topic was modified by another user, no changes done.\n";
+                } elsif ($rc == $Codestriker::OK) {
+                    $feedback .= "Topic properties successfully updated.\n";
+                }
+            } else {
+                $rc = $Codestriker::LISTENER_ABORT;
+            }
+        }
 
-	# Indicate to the topic listeners that the topic has changed.
-	if ($rc == $Codestriker::OK) {
-	    Codestriker::TopicListeners::Manager::topic_changed($email,
-								$topic_orig,
-								$topic);
-	}
+        # Indicate to the topic listeners that the topic has changed.
+        if ($rc == $Codestriker::OK) {
+            Codestriker::TopicListeners::Manager::topic_changed($email,
+                                                                $topic_orig,
+                                                                $topic);
+        }
     }
 
     # Direct control to the appropriate action class, depending on the result
@@ -161,22 +158,22 @@ sub process($$$) {
     $feedback =~ s/\n/<BR>/g;
     $http_input->{feedback} = $feedback;
     if ($rc == $Codestriker::INVALID_TOPIC ||
-	($rc == $Codestriker::OK && $topic_state eq "Deleted")) {
-	if ($Codestriker::allow_searchlist) {
-	    # Go to the topic list screen for just open topics.
-	    $http_input->{sstate} = "0";
-	    Codestriker::Action::ListTopics->process($http_input,
-						     $http_response);
-	} else {
-	    # Go to the create topic screen.
-	    Codestriker::Action::CreateTopic->process($http_input,
-						      $http_response);
+        ($rc == $Codestriker::OK && $topic_state eq "Deleted")) {
+        if ($Codestriker::allow_searchlist) {
+            # Go to the topic list screen for just open topics.
+            $http_input->{sstate} = "0";
+            Codestriker::Action::ListTopics->process($http_input,
+                                                     $http_response);
+        } else {
+            # Go to the create topic screen.
+            Codestriker::Action::CreateTopic->process($http_input,
+                                                      $http_response);
         }
     } else {
-	# Go to the view topic properties screen.
-	    Codestriker::Action::ViewTopicProperties->process($http_input,
-						      $http_response);
-    }	
+        # Go to the view topic properties screen.
+        Codestriker::Action::ViewTopicProperties->process($http_input,
+                                                          $http_response);
+    }
 }
 
 1;

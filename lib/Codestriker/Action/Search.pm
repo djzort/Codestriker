@@ -22,11 +22,11 @@ sub process($$$) {
 
     # Check if this action is allowed.
     if ($Codestriker::allow_searchlist == 0) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     $http_response->generate_header(topic_title=>"Search",
-				    reload=>0, cache=>1);
+                                    reload=>0, cache=>1);
 
     # Obtain a URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
@@ -48,7 +48,7 @@ sub process($$$) {
     push @projects, $any_project;
 
     foreach my $project (@projects_db) {
-	push @projects, $project;
+        push @projects, $project;
     }
     $vars->{'projects'} = \@projects;
 
@@ -56,25 +56,24 @@ sub process($$$) {
     my $database = Codestriker::DB::Database->get_database();
 
     if ($database->has_like_operator_for_text_field()) {
-	# Can use LIKE over text fields, everything is searchable.
-	$vars->{'enable_title'} = 1;
-	$vars->{'enable_description'} = 1;
-	$vars->{'enable_comment'} = 1;
-	$vars->{'enable_body'} = 1;
-	$vars->{'enable_filename'} = 1;
+        # Can use LIKE over text fields, everything is searchable.
+        $vars->{'enable_title'} = 1;
+        $vars->{'enable_description'} = 1;
+        $vars->{'enable_comment'} = 1;
+        $vars->{'enable_body'} = 1;
+        $vars->{'enable_filename'} = 1;
+    } else {
+        # Only varchar fields can be searched over, limit the search
+        # capability.
+        $vars->{'enable_title'} = 1;
+        $vars->{'enable_description'} = 0;
+        $vars->{'enable_comment'} = 0;
+        $vars->{'enable_body'} = 0;
+        $vars->{'enable_filename'} = 1;
     }
-    else {
-	# Only varchar fields can be searched over, limit the search
-	# capability.
-	$vars->{'enable_title'} = 1;
-	$vars->{'enable_description'} = 0;
-	$vars->{'enable_comment'} = 0;
-	$vars->{'enable_body'} = 0;
-	$vars->{'enable_filename'} = 1;
-    }
-    
+
     # Target URL to divert the post to.
-    $vars->{'action_url'} = $url_builder->submit_search_url(); 
+    $vars->{'action_url'} = $url_builder->submit_search_url();
 
     my $template = Codestriker::Http::Template->new("search");
     $template->process($vars);

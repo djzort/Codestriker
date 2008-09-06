@@ -24,7 +24,7 @@ sub process($$$) {
     my $scc = $http_input->get('scc') || "";
     my $sbugid = $http_input->get('sbugid') || "";
     my $stext = $http_input->get('stext') || "";
-    
+
     # Process the text search checkboxes.
     my @text_group = $query->param('text_group');
     my $search_title = 0;
@@ -33,60 +33,60 @@ sub process($$$) {
     my $search_body = 0;
     my $search_filename = 0;
     if ($stext ne "") {
-	for (my $i = 0; $i <= $#text_group; $i++) {
-	    if ($text_group[$i] eq "title") {
-		$search_title = 1;
-	    } elsif ($text_group[$i] eq "description") {
-		$search_description = 1;
-	    } elsif ($text_group[$i] eq "comment") {
-		$search_comments = 1;
-	    } elsif ($text_group[$i] eq "body") {
-		$search_body = 1;
-	    } elsif ($text_group[$i] eq "filename") {
-		$search_filename = 1;
-	    }
-	}
+        for (my $i = 0; $i <= $#text_group; $i++) {
+            if ($text_group[$i] eq "title") {
+                $search_title = 1;
+            } elsif ($text_group[$i] eq "description") {
+                $search_description = 1;
+            } elsif ($text_group[$i] eq "comment") {
+                $search_comments = 1;
+            } elsif ($text_group[$i] eq "body") {
+                $search_body = 1;
+            } elsif ($text_group[$i] eq "filename") {
+                $search_filename = 1;
+            }
+        }
     }
 
     # Process the state multi-popup.
     my @state_group = $query->param('state_group');
     my @stateids;
     for (my $i = 0; $i <= $#state_group; $i++) {
-	if ($state_group[$i] eq "Any") {
-	    # No need to encode anything in the URL.
-	    @stateids = ();
-	    last;
-	}
-	for (my $j = 0; $j <= $#Codestriker::topic_states; $j++) {
-	    if ($state_group[$i] eq $Codestriker::topic_states[$j]) {
-		push @stateids, $j;
-		    last;
-	    }
-	}
+        if ($state_group[$i] eq "Any") {
+            # No need to encode anything in the URL.
+            @stateids = ();
+            last;
+        }
+        for (my $j = 0; $j <= $#Codestriker::topic_states; $j++) {
+            if ($state_group[$i] eq $Codestriker::topic_states[$j]) {
+                push @stateids, $j;
+                last;
+            }
+        }
     }
 
     # Process the project multi-popup.
     my @project_group = $query->param('project_group');
     my @projectids;
     for (my $i = 0; $i <= $#project_group; $i++) {
-	if ($project_group[$i] == -1) {
-	    # No need to encode anything in the URL.
-	    @projectids = ();
-	    last;
-	}
-	push @projectids, $project_group[$i];
+        if ($project_group[$i] == -1) {
+            # No need to encode anything in the URL.
+            @projectids = ();
+            last;
+        }
+        push @projectids, $project_group[$i];
     }
 
     # Redirect the user to the list topics page.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     my $redirect_url =
-	$url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer,
-	                              scc => $scc, sbugid => $sbugid,
-				                  stext => $stext, stitle => $search_title,
-				                  sdescription => $search_description,
-				                  scomments => $search_comments,
-				                  sbody => $search_body, sfilename => $search_filename,
-				                  sstate => \@stateids, sproject => \@projectids);
+      $url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer,
+                                    scc => $scc, sbugid => $sbugid,
+                                    stext => $stext, stitle => $search_title,
+                                    sdescription => $search_description,
+                                    scomments => $search_comments,
+                                    sbody => $search_body, sfilename => $search_filename,
+                                    sstate => \@stateids, sproject => \@projectids);
 
     print $query->redirect(-URI=>$redirect_url);
 }

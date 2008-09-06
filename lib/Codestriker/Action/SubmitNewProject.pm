@@ -22,7 +22,7 @@ sub process($$$) {
 
     # Check if this operation is allowed.
     if (Codestriker->projects_disabled()) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     my $query = $http_response->get_query();
@@ -34,34 +34,34 @@ sub process($$$) {
     my $feedback = "";
 
     if ($project_name eq "") {
-	$feedback .= "No project name was entered.\n";
+        $feedback .= "No project name was entered.\n";
     }
     if ($project_description eq "") {
-	$feedback .= "No project description was entered.\n";
+        $feedback .= "No project description was entered.\n";
     }
 
     # Try to create the project in the model.
     if ($feedback eq "") {
-	my $rc =
-	    Codestriker::Model::Project->create($project_name,
-						$project_description);
+        my $rc =
+          Codestriker::Model::Project->create($project_name,
+                                              $project_description);
 
-	if ($rc == $Codestriker::DUPLICATE_PROJECT_NAME) {
-	    $feedback .=
-		"Project with name \"$project_name\" already exists.\n";
-	}
+        if ($rc == $Codestriker::DUPLICATE_PROJECT_NAME) {
+            $feedback .=
+              "Project with name \"$project_name\" already exists.\n";
+        }
     }
 
     # If there was a problem, direct control back to the create project
     # screen, otherwise go to the project list screen.
     if ($feedback ne "") {
-	$http_input->{feedback} = $feedback;
-	Codestriker::Action::CreateProject->process($http_input,
-						    $http_response);
+        $http_input->{feedback} = $feedback;
+        Codestriker::Action::CreateProject->process($http_input,
+                                                    $http_response);
     } else {
-	$http_input->{feedback} = "Project created.\n";
-	Codestriker::Action::ListProjects->process($http_input,
-						   $http_response);
+        $http_input->{feedback} = "Project created.\n";
+        Codestriker::Action::ListProjects->process($http_input,
+                                                   $http_response);
     }
 }
 

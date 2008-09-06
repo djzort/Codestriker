@@ -17,25 +17,25 @@ use Codestriker::Http::Method;
 # Generate a URL for this method.
 sub url() {
     my ($self) = @_;
-    
+
     # Check if the HTML files are accessible via another URL (required for
     # sourceforge deployment), which is specified via $Codestriker::codestriker_css.
     my $htmlurl;
     if (defined $Codestriker::codestriker_css &&
-	    $Codestriker::codestriker_css ne "" &&
-	    $Codestriker::codestriker_css =~ /[\/\\]/o) {
-	    $htmlurl = $Codestriker::codestriker_css;
-	    $htmlurl =~ s/\/.+?\.css//;
+        $Codestriker::codestriker_css ne "" &&
+        $Codestriker::codestriker_css =~ /[\/\\]/o) {
+        $htmlurl = $Codestriker::codestriker_css;
+        $htmlurl =~ s/\/.+?\.css//;
     } else {
-	    # Standard Codestriker deployment.
-	    $htmlurl = $self->{url_prefix};
-	    $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
+        # Standard Codestriker deployment.
+        $htmlurl = $self->{url_prefix};
+        $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
     }
-	
+
     if ($self->{cgi_style}) {
         return $htmlurl;
     } else {
-    	return $self->{url_prefix} . "/html";
+        return $self->{url_prefix} . "/html";
     }
 }
 

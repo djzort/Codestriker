@@ -43,20 +43,20 @@ sub process($$$) {
 
     # Display the header of this page.
     $http_response->generate_header(topic=>$topic,
-				    topic_title=>"Edit Comment: $topic->{title}",
-				    email=>$email, 
-    				    mode=>$mode,
-				    tabwidth=>$tabwidth,
-				    repository=>$Codestriker::repository_name_map->{$topic->{repository}}, 
-				    reload=>0, cache=>0);
+                                    topic_title=>"Edit Comment: $topic->{title}",
+                                    email=>$email,
+                                    mode=>$mode,
+                                    tabwidth=>$tabwidth,
+                                    repository=>$Codestriker::repository_name_map->{$topic->{repository}},
+                                    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};
     $vars->{'topic_title'} = $topic->{title};
 
     Codestriker::Action::ViewTopic::ProcessTopicHeader($vars, $topic,
-						       $url_builder, $fview,
-						       $tabwidth, 1, 0);
+                                                       $url_builder, $fview,
+                                                       $tabwidth, 1, 0);
 
     my $view_topic_url = $url_builder->view_url(topicid => $topicid, projectid => $topic->{project_id},
                                                 mode => $mode, fview => $fn, filenumber => $fn,
@@ -65,65 +65,65 @@ sub process($$$) {
                                                             projectid => $topic->{project_id});
     my $add_comment_url = $url_builder->add_comment_url(topicid => $topicid, projectid => $topic->{project_id},
                                                         filenumber => $fn, new => $new, line => $line);
-    
+
     $vars->{'view_topic_url'} = $view_topic_url;
     $vars->{'view_comments_url'} = $view_comments_url;
     $vars->{'doc_url'} = $url_builder->doc_url();
     $vars->{'action_url'} = $add_comment_url;
-    
+
     # Retrieve the context in question.  Allow the user to increase it
     # or decrease it appropriately.
     my $inc_context = ($context <= 0) ? 1 : $context*2;
     my $dec_context = ($context <= 0) ? 0 : int($context/2);
     my $inc_context_url =
-	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
-	                       topicid => $topicid, projectid => $topic->{project_id},
-			               context => $inc_context, anchor => $anchor);
+      $url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
+                             topicid => $topicid, projectid => $topic->{project_id},
+                             context => $inc_context, anchor => $anchor);
     my $dec_context_url =
-	$url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
-	                       topicid => $topicid, projectid => $topic->{project_id},
-			               context => $dec_context, anchor => $anchor);
+      $url_builder->edit_url(filenumber => $fn, line => $line, new => $new,
+                             topicid => $topicid, projectid => $topic->{project_id},
+                             context => $dec_context, anchor => $anchor);
     $vars->{'inc_context_url'} = $inc_context_url;
     $vars->{'dec_context_url'} = $dec_context_url;
     $vars->{'context'} = "";
     if ($line != -1) {
-	# Retrieve the context for a comment made against a specific line.
-	my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
-							 $line, $new);
+        # Retrieve the context for a comment made against a specific line.
+        my $delta = Codestriker::Model::Delta->get_delta($topicid, $fn,
+                                                         $line, $new);
 
-	my @text = ();
-	my $offset = $delta->retrieve_context($line, $new, $context, \@text);
-	for (my $i = 0; $i <= $#text; $i++) {
-	    $text[$i] = HTML::Entities::encode($text[$i]);
-	    if ($i == $offset) {
-		$text[$i] = "<font color=\"red\">" . $text[$i] . "</font>";
-	    }
-	}
+        my @text = ();
+        my $offset = $delta->retrieve_context($line, $new, $context, \@text);
+        for (my $i = 0; $i <= $#text; $i++) {
+            $text[$i] = HTML::Entities::encode($text[$i]);
+            if ($i == $offset) {
+                $text[$i] = "<font color=\"red\">" . $text[$i] . "</font>";
+            }
+        }
 
-	$vars->{'context'} = $query->pre(join "\n", @text) . $query->p;
+        $vars->{'context'} = $query->pre(join "\n", @text) . $query->p;
     }
 
     # Display the comments which have been made for this line number
     # in chronological order.
     my @display_comments = ();
     for (my $i = 0; $i <= $#comments; $i++) {
-	if ($comments[$i]{fileline} == $line &&
-	    $comments[$i]{filenumber} == $fn &&
-	    $comments[$i]{filenew} == $new) {
-	    my $display_comment = {};
-	    my $author = $comments[$i]{author};
-	    $display_comment->{author} = Codestriker->filter_email($author);
-	    $display_comment->{date} = $comments[$i]{date};
-	    $display_comment->{data} = $comments[$i]{data};
-	    $display_comment->{metrics} = $comments[$i]{metrics};
-	    $display_comment->{line} = "";
-	    $display_comment->{lineurl} = "";
-	    $display_comment->{linename} = "";
-	    $display_comment->{line} = "";
-	    $display_comment->{lineurl} = "";
-	    $display_comment->{linename} = "";
-	    push @display_comments, $display_comment;
-	}
+        if ($comments[$i]{fileline} == $line &&
+            $comments[$i]{filenumber} == $fn &&
+            $comments[$i]{filenew} == $new) {
+            my $display_comment = {};
+            my $author = $comments[$i]{author};
+            $display_comment->{author} = Codestriker->filter_email($author);
+            $display_comment->{date} = $comments[$i]{date};
+            $display_comment->{data} = $comments[$i]{data};
+            $display_comment->{metrics} = $comments[$i]{metrics};
+            $display_comment->{line} = "";
+            $display_comment->{lineurl} = "";
+            $display_comment->{linename} = "";
+            $display_comment->{line} = "";
+            $display_comment->{lineurl} = "";
+            $display_comment->{linename} = "";
+            push @display_comments, $display_comment;
+        }
     }
     $vars->{'comments'} = \@display_comments;
 
@@ -133,16 +133,16 @@ sub process($$$) {
     my @metrics = ();
     my $current_metrics_for_comment;
     if ($#display_comments > -1) {
-	$current_metrics_for_comment = $display_comments[0]->{metrics};
+        $current_metrics_for_comment = $display_comments[0]->{metrics};
     }
     foreach my $metric_config (@{ $Codestriker::comment_state_metrics }) {
-	my $metric_data = {};
-	$metric_data->{name} = $metric_config->{name};
-	$metric_data->{values} = $metric_config->{values};
-	$metric_data->{default_value} = $metric_config->{default_value};
-	$metric_data->{current_value} =
-	    $current_metrics_for_comment->{$metric_config->{name}};
-	push @metrics, $metric_data;
+        my $metric_data = {};
+        $metric_data->{name} = $metric_config->{name};
+        $metric_data->{values} = $metric_config->{values};
+        $metric_data->{default_value} = $metric_config->{default_value};
+        $metric_data->{current_value} =
+          $current_metrics_for_comment->{$metric_config->{name}};
+        push @metrics, $metric_data;
     }
     $vars->{'metrics'} = \@metrics;
 

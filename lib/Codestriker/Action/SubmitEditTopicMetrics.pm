@@ -26,7 +26,7 @@ sub process($$$) {
     my $version = $http_input->get('version');
     my $email = $http_input->get('email');
 
-    my $topic = Codestriker::Model::Topic->new($topicid);    
+    my $topic = Codestriker::Model::Topic->new($topicid);
     my $metrics = $topic->get_metrics();
     my $feedback = "";
     my @topic_metric = @{$http_input->get('topic_metric')};
@@ -36,7 +36,7 @@ sub process($$$) {
     $metrics->set_topic_metrics(@topic_metric);
 
     $metrics->set_user_metric($topic->{author},
-			      @{$http_input->{author_metric}});
+                              @{$http_input->{author_metric}});
 
     my @reviewer_list = $topic->get_metrics()->get_complete_list_of_topic_participants();
 
@@ -46,28 +46,27 @@ sub process($$$) {
 
     for (my $userindex = 0; $userindex < scalar(@reviewer_list); ++$userindex) {
 
-	if (defined($http_input->get("reviewer_metric,$userindex"))) {
-	    my @usermetrics = @{$http_input->get("reviewer_metric,$userindex")};
+        if (defined($http_input->get("reviewer_metric,$userindex"))) {
+            my @usermetrics = @{$http_input->get("reviewer_metric,$userindex")};
 
-	$feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex],
-						   @usermetrics);
-	$metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);
-	}
+            $feedback .= $metrics->verify_user_metrics($reviewer_list[$userindex],
+                                                       @usermetrics);
+            $metrics->set_user_metric($reviewer_list[$userindex], @usermetrics);
+        }
     }
-    
+
     my @author_metrics = @{$http_input->get('author_metric')};
     $feedback .= $metrics->verify_user_metrics($topic->{author},
-					       @author_metrics);
+                                               @author_metrics);
     $metrics->set_user_metric($topic->{author}, @author_metrics);
     $metrics->store();
 
-    if ( $feedback eq "")
-    {
+    if ( $feedback eq "") {
         $feedback = "Topic metrics successfully updated.";
     }
 
     # The feedback var is not html escaped in the template, so it must be done directly
-    # with HTML::Entities::encode if needed.    
+    # with HTML::Entities::encode if needed.
     $http_input->{feedback} = $feedback;
 
     # Go to the view topic metrics screen.

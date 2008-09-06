@@ -16,13 +16,13 @@ use vars qw ( $TYPE );
 
 # List of column datatypes that can be used in specifying a column.
 $Codestriker::DB::Column::TYPE = {
-    TEXT => 0,
-    VARCHAR => 1,
-    INT32 => 2,
-    INT16 => 3,
-    DATETIME => 4,
-    FLOAT => 5
-};
+                                  TEXT => 0,
+                                  VARCHAR => 1,
+                                  INT32 => 2,
+                                  INT16 => 3,
+                                  DATETIME => 4,
+                                  FLOAT => 5
+                                 };
 
 # A column object consists of a name, type, optional type parameter and
 # an indication as to whether it is an autoincrement field or not (integer
@@ -41,31 +41,31 @@ sub new {
     $self->{type} = $params{type};
 
     if ($self->{type} == $Codestriker::DB::Column::TYPE->{VARCHAR}) {
-	$self->{length} = $params{length};
+        $self->{length} = $params{length};
     }
 
     if (exists $params{autoincrement}) {
-	$self->{autoincrement} = $params{autoincrement};
+        $self->{autoincrement} = $params{autoincrement};
     } else {
-	$self->{autoincrement} = 0;
+        $self->{autoincrement} = 0;
     }
 
     if (exists $params{autoincr}) {
-	$self->{autoincrement} = $params{autoincr};
+        $self->{autoincrement} = $params{autoincr};
     } else {
-	$self->{autoincrement} = 0;
+        $self->{autoincrement} = 0;
     }
 
     if (exists $params{pk}) {
-	$self->{pk} = $params{pk};
+        $self->{pk} = $params{pk};
     } else {
-	$self->{pk} = 0;
+        $self->{pk} = 0;
     }
 
     if (exists $params{mandatory}) {
-	$self->{mandatory} = $params{mandatory};
+        $self->{mandatory} = $params{mandatory};
     } else {
-	$self->{mandatory} = 1;
+        $self->{mandatory} = 1;
     }
 
     return bless $self, $type;
@@ -100,7 +100,7 @@ sub is_mandatory {
     my $self = shift;
     return $self->{mandatory};
 }
-    
+
 # Return the varchar length.
 sub get_length {
     my $self = shift;

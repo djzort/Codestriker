@@ -14,7 +14,7 @@ use strict;
 use Codestriker::Http::LineFilter;
 
 @Codestriker::Http::HtmlEntityLineFilter::ISA =
-    ("Codestriker::Http::LineFilter");
+  ("Codestriker::Http::LineFilter");
 
 sub new {
     my $type = shift;

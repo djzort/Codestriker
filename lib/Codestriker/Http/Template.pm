@@ -20,32 +20,32 @@ sub new($$) {
 
     my $self = {};
     $self->{name} = $name;
-    
+
     if (defined $ttype && $ttype ne "") {
-    	$self->{type} = $ttype;
+        $self->{type} = $ttype;
     } else {
-    	$self->{type} = "html";
+        $self->{type} = "html";
     }
 
     # Template configuration.
     my $config = {
-	    # Location of templates.
-	    INCLUDE_PATH => 
-		$Codestriker::BASEDIR . "/template/en/custom:" .
-		$Codestriker::BASEDIR . "/template/en/default" ,
+                  # Location of templates.
+                  INCLUDE_PATH =>
+                  $Codestriker::BASEDIR . "/template/en/custom:" .
+                  $Codestriker::BASEDIR . "/template/en/default" ,
 
-	    # Remove white-space before template directives
-	    # (PRE_CHOMP) and at the beginning and end of templates
-	    # and template blocks (TRIM) for better looking, more
-	    # compact content.  Use the plus sign at the beginning #
-	    # of directives to maintain white space (i.e. [%+
-	    # DIRECTIVE %]).
-	    PRE_CHOMP => 1,
-	    TRIM => 1, 
+                  # Remove white-space before template directives
+                  # (PRE_CHOMP) and at the beginning and end of templates
+                  # and template blocks (TRIM) for better looking, more
+                  # compact content.  Use the plus sign at the beginning #
+                  # of directives to maintain white space (i.e. [%+
+                  # DIRECTIVE %]).
+                  PRE_CHOMP => 1,
+                  TRIM => 1,
 
-	    # Codestriker-specific plugins.
-	    PLUGIN_BASE => 'Codestriker::Template::Plugin'
-    };
+                  # Codestriker-specific plugins.
+                  PLUGIN_BASE => 'Codestriker::Template::Plugin'
+                 };
 
     # If the Codestriker tmpdir has been defined, use that for
     # location for generating the templates.
@@ -66,14 +66,14 @@ sub get_template($) {
 }
 
 # Process the template.  Note the results are stored into a variable, which is
-# then output to STDOUT.  This is required, as if the HTTP response is a 
+# then output to STDOUT.  This is required, as if the HTTP response is a
 # compressed stream (which is tied to STDOUT), for some reason, this doesn't
 # play well with TT's default STDOUT writing.  Storing it to a temporary
 # variable does the trick.
 sub process($$) {
     my ($self, $vars) = @_;
 
-    # Add into the vars the standard .conf file options. 	
+    # Add into the vars the standard .conf file options.
 
     # Indicate if the "delete" button should be visible or not.
     $vars->{'delete_enabled'} = $Codestriker::allow_delete;
@@ -86,7 +86,7 @@ sub process($$) {
 
     # Indicate if bug db integration is enabled.
     $vars->{'bugdb_enabled'} =
-	(defined $Codestriker::bug_db && $Codestriker::bug_db ne "") ? 1 : 0;
+      (defined $Codestriker::bug_db && $Codestriker::bug_db ne "") ? 1 : 0;
 
     # Indicate if antispam_email is enabled.
     $vars->{'antispam_email'} = $Codestriker::antispam_email;
@@ -102,19 +102,19 @@ sub process($$) {
     $vars->{'allow_repositories'} = scalar(@Codestriker::valid_repositories) ? 1 : 0;
 
     # Display the topic size limit if any.
-    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::maximum_topic_size_lines;
-                                          
-    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ? 
-                                          0 : 
-                                          $Codestriker::suggested_topic_size_lines;
+    $vars->{'maximum_topic_size_lines'} = $Codestriker::maximum_topic_size_lines eq "" ?
+      0 :
+          $Codestriker::maximum_topic_size_lines;
+
+    $vars->{'suggested_topic_size_lines'} = $Codestriker::suggested_topic_size_lines eq "" ?
+      0 :
+          $Codestriker::suggested_topic_size_lines;
 
     # Determine whether the current topic is 'readonly'; this determines
     # the editability of various fields.
     if (defined $vars->{'default_state'}) {
-	$vars->{'topic_readonly'} = 
-	    Codestriker::topic_readonly($vars->{'default_state'});
+        $vars->{'topic_readonly'} =
+          Codestriker::topic_readonly($vars->{'default_state'});
     }
 
     my $query = new CGI;
@@ -122,18 +122,18 @@ sub process($$) {
 
     # Handle the links and parameters in the main title bar.
     $vars->{'list_url'} =
-	$url_builder->list_topics_url(sstate => [0]);
+      $url_builder->list_topics_url(sstate => [0]);
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
 
     my $data = "";
     my $rc = $self->{template}->process($self->{name} . "." . $self->{type} . ".tmpl",
-					$vars, \$data);
+                                        $vars, \$data);
     die $self->{template}->error() if (!defined $rc || $rc == 0);
     print $data;
     return $rc;
 }
 
 1;
-    
+

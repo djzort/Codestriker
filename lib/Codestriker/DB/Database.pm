@@ -35,17 +35,17 @@ sub get_database {
     my $type = shift;
 
     if ($Codestriker::db =~ /^DBI:mysql/i) {
-	return Codestriker::DB::MySQL->new();
+        return Codestriker::DB::MySQL->new();
     } elsif ($Codestriker::db =~ /^DBI:Pg/i) {
-	return Codestriker::DB::PostgreSQL->new($Codestriker::db);
+        return Codestriker::DB::PostgreSQL->new($Codestriker::db);
     } elsif ($Codestriker::db =~ /^DBI:Odbc/i) {
-	return Codestriker::DB::ODBC->new();
+        return Codestriker::DB::ODBC->new();
     } elsif ($Codestriker::db =~ /^DBI:Oracle/i) {
-	return Codestriker::DB::Oracle->new();
+        return Codestriker::DB::Oracle->new();
     } elsif ($Codestriker::db =~ /^DBI:SQLite/i) {
-	return Codestriker::DB::SQLite->new();
+        return Codestriker::DB::SQLite->new();
     } else {
-	die "Unsupported database type: $Codestriker::db\n";
+        die "Unsupported database type: $Codestriker::db\n";
     }
 }
 
@@ -59,10 +59,10 @@ sub _get_connection {
     return $self->{dbh} if (exists $self->{dbh});
 
     $self->{dbh} = DBI->connect($Codestriker::db, $Codestriker::dbuser,
-				$Codestriker::dbpasswd,
-				{AutoCommit=>$auto_commit,
-				 RaiseError=>$raise_error,
-				 LongReadLen=>10240000});
+                                $Codestriker::dbpasswd,
+                                {AutoCommit=>$auto_commit,
+                                 RaiseError=>$raise_error,
+                                 LongReadLen=>10240000});
 
     # To see debugging from the DBI driver.
     # $self->{dbh}->{TraceLevel} = 1;
@@ -78,7 +78,7 @@ sub release_connection {
 
     # Check there is an active connection.
     if (! defined $self->{dbh}) {
-	die "Cannot release connection on database as no active connection\n";
+        die "Cannot release connection on database as no active connection\n";
     }
 
     # Disconnect the connection.
@@ -93,41 +93,41 @@ sub create_table {
 
     # Create the initial table entry.
     my $stmt = "CREATE TABLE " . $table->get_name() . "(\n";
-    
+
     # For each column, add the appropriate statement.
     my @pk = ();
     my $first_column = 1;
     foreach my $column (@{$table->get_columns()}) {
-	push @pk, $column->get_name() if $column->is_primarykey();
+        push @pk, $column->get_name() if $column->is_primarykey();
 
-	# Add the comma for the start of the next field if necessary.
-	if ($first_column) {
-	    $first_column = 0;
-	} else {
-	    $stmt .= ",\n";
-	}
+        # Add the comma for the start of the next field if necessary.
+        if ($first_column) {
+            $first_column = 0;
+        } else {
+            $stmt .= ",\n";
+        }
 
-	# Add in the basic field definition.
-	$stmt .= $column->get_name() . " " .
-	    $self->_map_type($column->get_type());
+        # Add in the basic field definition.
+        $stmt .= $column->get_name() . " " .
+          $self->_map_type($column->get_type());
 
-	# Check if the length constraint is required for a varchar expression.
-	if ($column->get_type() == $Codestriker::DB::Column::TYPE->{VARCHAR}) {
-	    $stmt .= "(" . $column->get_length() . ")";
-	}
+        # Check if the length constraint is required for a varchar expression.
+        if ($column->get_type() == $Codestriker::DB::Column::TYPE->{VARCHAR}) {
+            $stmt .= "(" . $column->get_length() . ")";
+        }
 
-	# Add the "NOT NULL" constraint if the column is mandatory.
-	$stmt .= " NOT NULL" if $column->is_mandatory();
+        # Add the "NOT NULL" constraint if the column is mandatory.
+        $stmt .= " NOT NULL" if $column->is_mandatory();
 
-	# Add any autoincrement field decorations if required.
-	if ($column->is_autoincrement()) {
-	    $stmt .= " " . $self->_get_autoincrement_type();
-	}
+        # Add any autoincrement field decorations if required.
+        if ($column->is_autoincrement()) {
+            $stmt .= " " . $self->_get_autoincrement_type();
+        }
     }
 
     # Now add in the primary definition if required.
     if (scalar(@pk) > 0) {
-	$stmt .= ",\nPRIMARY KEY (" . (join ', ', @pk) . ")\n";
+        $stmt .= ",\nPRIMARY KEY (" . (join ', ', @pk) . ")\n";
     }
 
     # Close off the statement.
@@ -136,27 +136,27 @@ sub create_table {
     print STDERR "Statement is: $stmt\n" if $_DEBUG;
 
     eval {
-	# Now create the table.
-	$self->{dbh}->do($stmt);
+        # Now create the table.
+        $self->{dbh}->do($stmt);
 
-	# Now create the indexes for this table.
-	foreach my $index (@{$table->get_indexes()}) {
-	    my $index_stmt = "CREATE INDEX " . $index->get_name . " ON " .
-		$table->get_name() . "(";
-	    $index_stmt .= (join ', ', @{$index->get_column_names()}) . ")";
-	    
-	    print STDERR "Index statement is: $index_stmt\n" if $_DEBUG;
-	    
-	    # Now execute the statement to create the index.
-	    $self->{dbh}->do($index_stmt);
-	}
+        # Now create the indexes for this table.
+        foreach my $index (@{$table->get_indexes()}) {
+            my $index_stmt = "CREATE INDEX " . $index->get_name . " ON " .
+              $table->get_name() . "(";
+            $index_stmt .= (join ', ', @{$index->get_column_names()}) . ")";
 
-	# Commit the table creation.
-	$self->commit();
+            print STDERR "Index statement is: $index_stmt\n" if $_DEBUG;
+
+            # Now execute the statement to create the index.
+            $self->{dbh}->do($index_stmt);
+        }
+
+        # Commit the table creation.
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
-	die "Unable to create table/indexes.\n";
+        eval { $self->rollback() };
+        die "Unable to create table/indexes.\n";
     }
 }
 
@@ -170,7 +170,7 @@ sub get_tables() {
     my @tables = $self->{dbh}->tables;
     @tables = map { $_ =~ s/.*\.//; $_ } @tables;
     @tables = map { $_ =~ s/\`//g; $_ } @tables;
-    
+
     return @tables;
 }
 
@@ -183,18 +183,18 @@ sub add_field {
     my $rc = 0;
 
     eval {
-	$dbh->{PrintError} = 0;
-	my $field_type = $self->_map_type($definition);
+        $dbh->{PrintError} = 0;
+        my $field_type = $self->_map_type($definition);
 
-	$dbh->do("ALTER TABLE $table ADD COLUMN $field $field_type");
-	print "Added new field $field to table $table.\n";
-	$rc = 1;
-	$self->commit();
+        $dbh->do("ALTER TABLE $table ADD COLUMN $field $field_type");
+        print "Added new field $field to table $table.\n";
+        $rc = 1;
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
+        eval { $self->rollback() };
     }
-    
+
     $dbh->{PrintError} = 1;
 
     return $rc;
@@ -208,16 +208,16 @@ sub column_exists {
     my $rc = 0;
 
     eval {
-	$dbh->{PrintError} = 0;
+        $dbh->{PrintError} = 0;
 
-	my $stmt = $dbh->prepare_cached("SELECT COUNT($columnname) " .
-					"FROM $tablename");
-	$rc = defined $stmt && $stmt->execute() ? 1 : 0;
-	$stmt->finish();
-	$self->commit();
+        my $stmt = $dbh->prepare_cached("SELECT COUNT($columnname) " .
+                                        "FROM $tablename");
+        $rc = defined $stmt && $stmt->execute() ? 1 : 0;
+        $stmt->finish();
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
+        eval { $self->rollback() };
     }
 
     $dbh->{PrintError} = 1;
@@ -233,23 +233,23 @@ sub move_table {
     my $rc = 0;
 
     eval {
-	$dbh->{PrintError} = 0;
+        $dbh->{PrintError} = 0;
 
-	my $stmt =
-	    $dbh->prepare_cached("ALTER TABLE $old_tablename RENAME TO " .
-				 "$new_tablename");
-	my $rc = defined $stmt && $stmt->execute() ? 1 : 0;
-	$stmt->finish() if (defined $stmt);
-	$self->commit();
+        my $stmt =
+          $dbh->prepare_cached("ALTER TABLE $old_tablename RENAME TO " .
+                               "$new_tablename");
+        my $rc = defined $stmt && $stmt->execute() ? 1 : 0;
+        $stmt->finish() if (defined $stmt);
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
+        eval { $self->rollback() };
     }
 
     $dbh->{PrintError} = 1;
 
     return $rc;
-}    
+}
 
 # Simple method for committing the current database transaction.
 sub commit {

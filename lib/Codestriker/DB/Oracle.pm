@@ -18,18 +18,18 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "clob",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar2",
-    $Codestriker::DB::Column::TYPE->{INT32}	=> "number(10)",
-    $Codestriker::DB::Column::TYPE->{INT16}	=> "number(4)",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "date",
-    $Codestriker::DB::Column::TYPE->{FLOAT}	=> "float"
-};
+             $Codestriker::DB::Column::TYPE->{TEXT}    => "clob",
+             $Codestriker::DB::Column::TYPE->{VARCHAR}    => "varchar2",
+             $Codestriker::DB::Column::TYPE->{INT32}    => "number(10)",
+             $Codestriker::DB::Column::TYPE->{INT16}    => "number(4)",
+             $Codestriker::DB::Column::TYPE->{DATETIME}    => "date",
+             $Codestriker::DB::Column::TYPE->{FLOAT}    => "float"
+            };
 
 # Create a new Oracle database object.
 sub new {
     my $type = shift;
-    
+
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     $self->{sequence_created} = 0;
@@ -63,10 +63,10 @@ sub get_tables() {
 
     my @tables = ();
     my $table_select =
-	$self->{dbh}->prepare_cached("SELECT table_name FROM user_tables");
+      $self->{dbh}->prepare_cached("SELECT table_name FROM user_tables");
     $table_select->execute();
     while (my ($table_name) = $table_select->fetchrow_array()) {
-	push @tables, $table_name;
+        push @tables, $table_name;
     }
     $table_select->finish();
 
@@ -94,12 +94,12 @@ sub create_table {
 
     # Create the necessary triggers for any autoincrement fields.
     foreach my $column (@{$table->get_columns()}) {
-	if ($column->is_autoincrement()) {
-	    print "Creating autoincrement trigger for table: " .
-		$table->get_name() . " field: " . $column->get_name() . "\n";
-	    $self->_oracle_handle_auto_increment($table->get_name(),
-						 $column->get_name());
-	}
+        if ($column->is_autoincrement()) {
+            print "Creating autoincrement trigger for table: " .
+              $table->get_name() . " field: " . $column->get_name() . "\n";
+            $self->_oracle_handle_auto_increment($table->get_name(),
+                                                 $column->get_name());
+        }
     }
 }
 
@@ -108,40 +108,40 @@ sub create_table {
 # This is used since Oracle doesn't support auto-increment or default values
 # for fields.
 sub _oracle_handle_auto_increment
-{
-    my ($self, $tablename, $fieldname) = @_;
+  {
+      my ($self, $tablename, $fieldname) = @_;
 
-    my $dbh = $self->{dbh};
+      my $dbh = $self->{dbh};
 
-    # Make sure the sequence is present in the database for the trigger to
-    # work.
-    eval {
-	if ($self->{sequence_created} == 0) {
+      # Make sure the sequence is present in the database for the trigger to
+      # work.
+      eval {
+          if ($self->{sequence_created} == 0) {
 
-	    $dbh->do("CREATE SEQUENCE sequence");
-	    print "Created sequence\n";
-	    $self->{sequence_created} = 1;
-	}
+              $dbh->do("CREATE SEQUENCE sequence");
+              print "Created sequence\n";
+              $self->{sequence_created} = 1;
+          }
 
-	# Now create the actual trigger on the table.
-	$dbh->do("CREATE TRIGGER ${tablename}_${fieldname}_ins_row " .
-		 "BEFORE INSERT ON ${tablename} FOR EACH ROW " .
-		 "DECLARE newid integer; " .
-		 "BEGIN " .
-		 "IF (:NEW.${fieldname} IS NULL) " .
-		 "THEN " .
-		 "SELECT sequence.NextVal INTO newid FROM DUAL; " .
-		 ":NEW.${fieldname} := newid; " .
-		 "END IF; " .
-		 "END;");
-	print "Created trigger\n";
-	$dbh->commit();
-    };
-    if ($@) {
-	eval { $self->rollback() };
-	die "Unable to create sequence/trigger.\n";
-    }
-}
+          # Now create the actual trigger on the table.
+          $dbh->do("CREATE TRIGGER ${tablename}_${fieldname}_ins_row " .
+                   "BEFORE INSERT ON ${tablename} FOR EACH ROW " .
+                   "DECLARE newid integer; " .
+                   "BEGIN " .
+                   "IF (:NEW.${fieldname} IS NULL) " .
+                   "THEN " .
+                   "SELECT sequence.NextVal INTO newid FROM DUAL; " .
+                   ":NEW.${fieldname} := newid; " .
+                   "END IF; " .
+                   "END;");
+          print "Created trigger\n";
+          $dbh->commit();
+      };
+      if ($@) {
+          eval { $self->rollback() };
+          die "Unable to create sequence/trigger.\n";
+      }
+  }
 
 # Add a field to a specific table.  If the field already exists, then catch
 # the error and continue silently.  The SYNTAX for SQL Server is slightly
@@ -153,18 +153,18 @@ sub add_field {
     my $rc = 0;
 
     eval {
-	$dbh->{PrintError} = 0;
-	my $field_type = $self->_map_type($definition);
+        $dbh->{PrintError} = 0;
+        my $field_type = $self->_map_type($definition);
 
-	$dbh->do("ALTER TABLE $table ADD $field $field_type");
-	print "Added new field $field to table $table.\n";
-	$rc = 1;
-	$self->commit();
+        $dbh->do("ALTER TABLE $table ADD $field $field_type");
+        print "Added new field $field to table $table.\n";
+        $rc = 1;
+        $self->commit();
     };
     if ($@) {
-	eval { $self->rollback() };
+        eval { $self->rollback() };
     }
-    
+
     $dbh->{PrintError} = 1;
 
     return $rc;
@@ -181,7 +181,7 @@ sub has_like_operator_for_text_field {
 # operation.
 sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
-    
+
     # Convert the field and expression to lower case to get case insensitivity.
     my $field_lower = "lower($field)";
     my $expression_lower = $expression;

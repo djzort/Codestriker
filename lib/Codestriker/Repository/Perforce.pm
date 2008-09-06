@@ -21,8 +21,8 @@ sub new ($$$$$) {
     $self->{hostname} = $hostname;
     $self->{port} = $port;
     $self->{root} = "perforce:${user}" .
-	(defined $password && $password ne '' ? ":${password}" : '') .
-	"@" . "${hostname}:${port}";
+      (defined $password && $password ne '' ? ":${password}" : '') .
+        "@" . "${hostname}:${port}";
     bless $self, $type;
 }
 
@@ -34,18 +34,18 @@ sub retrieve ($$$\$) {
     # Open a pipe to the local CVS repository.
     my $password = $self->{password};
     open(P4, "\"$Codestriker::p4\"" .
-	 " -p " . $self->{hostname} . ':' . $self->{port} .
-	 " -u " . $self->{user} .
-	 (defined $password && $password ne '' ?
-	  " -P " . $self->{password} : '') .
-	 " print -q \"$filename\"" . "#" . "$revision |")
-	|| die "Can't retrieve data using p4: $!";
+         " -p " . $self->{hostname} . ':' . $self->{port} .
+         " -u " . $self->{user} .
+         (defined $password && $password ne '' ?
+          " -P " . $self->{password} : '') .
+         " print -q \"$filename\"" . "#" . "$revision |")
+      || die "Can't retrieve data using p4: $!";
 
     # Read the data.
     for (my $i = 1; <P4>; $i++) {
-	$_ = Codestriker::decode_topic_text($_);
-	chop;
-	$$content_array_ref[$i] = $_;
+        $_ = Codestriker::decode_topic_text($_);
+        chop;
+        $$content_array_ref[$i] = $_;
     }
     close P4;
 }
@@ -76,20 +76,20 @@ sub toString ($) {
 # limit, then return the appropriate error code.
 sub getDiff ($$$$$) {
     my ($self, $start_tag, $end_tag, $module_name,
-	$stdout_fh, $stderr_fh) = @_;
+        $stdout_fh, $stderr_fh) = @_;
 
     # Currently diff retrievals are only supported for a single tag.
-	if ($start_tag ne '' && $end_tag ne '') {
-		print $stderr_fh, "Diff retrieval cannot be performed with both tags defined.\n";
-	    return $Codestriker::OK;
-	}
-	my $tag = $start_tag ne '' ? $start_tag : $end_tag;
+    if ($start_tag ne '' && $end_tag ne '') {
+        print $stderr_fh, "Diff retrieval cannot be performed with both tags defined.\n";
+        return $Codestriker::OK;
+    }
+    my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::p4,
-   	             '-p', $self->{hostname} . ':' . $self->{port},
-                 '-u', $self->{user}, 
-                 '-P', $self->{password}, 'describe',
-                 '-du', $tag);
+                                 '-p', $self->{hostname} . ':' . $self->{port},
+                                 '-u', $self->{user},
+                                 '-P', $self->{password}, 'describe',
+                                 '-du', $tag);
     return $Codestriker::OK;
 }
 

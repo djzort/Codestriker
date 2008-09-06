@@ -25,17 +25,17 @@ sub get_connection($) {
     my $conn = Win32::OLE->new('TDapiole80.TDconnection');
 
     if (!$conn) {
-	die "Cannot start TestDirector object";
+        die "Cannot start TestDirector object";
     }
 
-    # Connect to specified server. 
+    # Connect to specified server.
     $conn->InitConnectionEx($Codestriker::testdirector_url);
 
     # Connect to specified project.
     $conn->Login($Codestriker::testdirector_user_id,
-		 $Codestriker::testdirector_password); 
+                 $Codestriker::testdirector_password);
     $conn->Connect($Codestriker::testdirector_domain,
-		   $Codestriker::testdirector_project); 
+                   $Codestriker::testdirector_project);
 
     $self->{dbh} = $conn;
     bless $self, $type;
@@ -44,8 +44,8 @@ sub get_connection($) {
 # Method for releasing a Test Director connection.
 sub release_connection($) {
     my ($self) = @_;
-    
-    # Close the TD connection. 
+
+    # Close the TD connection.
     # Disconnect the project and release the server.
     $self->{dbh}->Disconnect();
     $self->{dbh}->Logout();
@@ -57,7 +57,7 @@ sub _retrieve_bug_record {
     my ($self, $bugid) = @_;
 
     if (! defined $self->{dbh}->bugfactory) {
-	die "Unable to retrieve bug factory object";
+        die "Unable to retrieve bug factory object";
     }
 
     return $self->{dbh}->bugfactory->item($bugid);
@@ -67,7 +67,7 @@ sub _retrieve_bug_record {
 # false otherwise.
 sub bugid_exists($$) {
     my ($self, $bugid) = @_;
-    
+
     my $bug = $self->_retrieve_bug_record($bugid);
     return defined $bug;
 }
@@ -83,7 +83,7 @@ sub update_bug($$$$$) {
     # Test director stores comments as html so convert the comment to html.
     my $parsed_comment = $comment;
     $parsed_comment =~ s/\n/<BR>/g;
-    
+
     my $full_comment = "";
     $full_comment .= "\n<HTML><BODY>\n";
     $full_comment .= "<font color=\"\#000080\">";
@@ -94,17 +94,15 @@ sub update_bug($$$$$) {
     $full_comment .= "</BODY></HTML>\n";
 
     if (defined $bug->Attachments) {
-        if( $topic_state eq "Deleted" ) {
+        if ( $topic_state eq "Deleted" ) {
             $self->_update_bug_delete( $bug->Attachments, $topic_url );
         } else {
             my $attach = $bug->Attachments->AddItem([$topic_url,
-						     "TDATT_INTERNET",
-						     $full_comment]);
+                                                     "TDATT_INTERNET",
+                                                     $full_comment]);
             $attach->post();
         }
-    }
-    else
-    {
+    } else {
         $$bug{"BG_DEV_COMMENTS"} .= $full_comment;
         $bug->post();
     }
@@ -115,19 +113,19 @@ sub update_bug($$$$$) {
 sub _update_bug_delete($$$) {
     my ($self, $attachments, $topic_url) = @_;
 
-    if( $attachments ) {
-	my $attachment_list = $attachments->NewList("");
+    if ( $attachments ) {
+        my $attachment_list = $attachments->NewList("");
 
-	my $attach_counter = 1;
-	while ( $attach_counter <= $attachment_list->Count ) {
-	    my $attachment = $attachment_list->Item($attach_counter);
+        my $attach_counter = 1;
+        while ( $attach_counter <= $attachment_list->Count ) {
+            my $attachment = $attachment_list->Item($attach_counter);
 
-	    if( $attachment->Name eq $topic_url ) {
-	        # Remove the attachment for the deleted topic
-		$attachments->RemoveItem($attachment->ID);
-	    }
-	    $attach_counter++;
-	}
+            if ( $attachment->Name eq $topic_url ) {
+                # Remove the attachment for the deleted topic
+                $attachments->RemoveItem($attachment->ID);
+            }
+            $attach_counter++;
+        }
     }
 }
 

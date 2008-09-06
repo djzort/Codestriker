@@ -61,15 +61,14 @@ sub retrieve ($$$\$) {
     # will be written to.
     my $tempdir;
     if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
-	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
-    }
-    else {
-	$tempdir = tempdir(CLEANUP => 1);
+        $tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
+    } else {
+        $tempdir = tempdir(CLEANUP => 1);
 
-	# Hack alert for windows - temporary directory needs to start
-	# with a letter, or commands below will fail.  Most people will
-	# set the temporary directory explicitly in the conf file.
-	$tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
+        # Hack alert for windows - temporary directory needs to start
+        # with a letter, or commands below will fail.  Most people will
+        # set the temporary directory explicitly in the conf file.
+        $tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
     }
 
     # Temporary Batch file for executing VSS commands.
@@ -81,21 +80,21 @@ sub retrieve ($$$\$) {
     my $varg = ($revision =~ /^\d+$/) ? "-V$revision" : "\"-VL$revision\"";
     my $command_output = "$tempdir\\___output.txt";
     my $cmd = "\"$vss\" get \"$filename\"" .
-	" -y" . $self->{username} . "," . $self->{password} .
-	" $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
+      " -y" . $self->{username} . "," . $self->{password} .
+        " $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
     $self->_write_vss_command($cmd, $tmp_batch_file);
     system("\"$tmp_batch_file\"");
 
     $filename =~ /\/([^\/]+)$/o;
     my $basefilename = $1;
     if (open(VSS, "$tempdir/$basefilename")) {
-	for (my $i = 1; <VSS>; $i++) {
-	    $_ = Codestriker::decode_topic_text($_);
-	    chop;
-	    $$content_array_ref[$i] = $_;
-	}
-	close VSS;
-	unlink "$tempdir/$basefilename";
+        for (my $i = 1; <VSS>; $i++) {
+            $_ = Codestriker::decode_topic_text($_);
+            chop;
+            $$content_array_ref[$i] = $_;
+        }
+        close VSS;
+        unlink "$tempdir/$basefilename";
     }
 
     # Remove the temporary directory and batch file.
@@ -143,15 +142,14 @@ sub getDiff ($$$$$) {
     # will be written to.
     my $tempdir;
     if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
-	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
-    }
-    else {
-	$tempdir = tempdir(CLEANUP => 1);
-	
-	# Hack alert for windows - temporary directory needs to start
-	# with a letter, or commands below will fail.  Most people will
-	# set the temporary directory explicitly in the conf file.
-	$tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
+        $tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
+    } else {
+        $tempdir = tempdir(CLEANUP => 1);
+
+        # Hack alert for windows - temporary directory needs to start
+        # with a letter, or commands below will fail.  Most people will
+        # set the temporary directory explicitly in the conf file.
+        $tempdir = 'C:' . $tempdir if $tempdir =~ /^[\\\/]/o;
     }
 
     # Temporary Batch file for executing VSS commands.
@@ -164,12 +162,12 @@ sub getDiff ($$$$$) {
     my $ssdir = $self->{ssdir};
     my $varg = ($tag =~ /^\d+$/) ? "-V$tag" : "\"-VL$tag\"";
     my $cmd = "\"$vss\" dir \"$module_name\"" .
-	" -y" . $self->{username} . "," . $self->{password} .
-	" -R $varg -I-Y";
+      " -y" . $self->{username} . "," . $self->{password} .
+        " -R $varg -I-Y";
     $self->_write_vss_command($cmd, $tmp_batch_file);
 
     open(VSS, "\"$tmp_batch_file\" |")
-	|| die "Can't open connection to VSS repository: $!";
+      || die "Can't open connection to VSS repository: $!";
 
     # Collect the list of filename and revision numbers into a list.
     my @files = ();
@@ -178,24 +176,24 @@ sub getDiff ($$$$$) {
     # Initialise this in case module just refers to a single file.
     my $current_dir = '';
     if ($module_name =~ /^(.*)\/[^\/]+$/o) {
-	$current_dir = $1;
+        $current_dir = $1;
     }
 
     while (<VSS>) {
-	if (/^(\$\/.*):$/o) {
-	    # Entering a new top-level directory.
-	    $current_dir = $1;
-	} elsif (/^\$[^\/]/o) {
-	    # Sub-directory entry which can be skipped.
-	} elsif (/^\d+ item/o) {
-	    # Item count line which can be skipped.
-	} elsif (/^\s*$/o) {
-	    # Skip blank lines.
-	} elsif (/^(.*);(\d+)$/o) {
-	    # Actual file entry with version number.
-	    push @files, "$current_dir/$1";
-	    push @versions, $2;
-	}
+        if (/^(\$\/.*):$/o) {
+            # Entering a new top-level directory.
+            $current_dir = $1;
+        } elsif (/^\$[^\/]/o) {
+            # Sub-directory entry which can be skipped.
+        } elsif (/^\d+ item/o) {
+            # Item count line which can be skipped.
+        } elsif (/^\s*$/o) {
+            # Skip blank lines.
+        } elsif (/^(.*);(\d+)$/o) {
+            # Actual file entry with version number.
+            push @files, "$current_dir/$1";
+            push @versions, $2;
+        }
     }
     close VSS;
 
@@ -203,74 +201,74 @@ sub getDiff ($$$$$) {
     # it into a diff file.  First, create a temporary directory to store the
     # files.
     for (my $i = 0; $i <= $#files; $i++) {
-	# Determine if the file is a text file, and if not, skip it.
-	$cmd = "\"$vss\" properties \"$files[$i]\"" .
-	    " -y" . $self->{username} . "," . $self->{password} .
-	    " -I-Y";
-	$self->_write_vss_command($cmd, $tmp_batch_file);
-	open(VSS, "\"$tmp_batch_file\" |")
-	    || die "Unable to run ss properties on $files[$i]\n";
-	my $text_type = 0;
-	while (<VSS>) {
-	    if (/Type:\s*Text/o) {
-		$text_type = 1;
-		last;
-	    }
-	}
-	close(VSS);
-	next if $text_type == 0;
+        # Determine if the file is a text file, and if not, skip it.
+        $cmd = "\"$vss\" properties \"$files[$i]\"" .
+          " -y" . $self->{username} . "," . $self->{password} .
+            " -I-Y";
+        $self->_write_vss_command($cmd, $tmp_batch_file);
+        open(VSS, "\"$tmp_batch_file\" |")
+          || die "Unable to run ss properties on $files[$i]\n";
+        my $text_type = 0;
+        while (<VSS>) {
+            if (/Type:\s*Text/o) {
+                $text_type = 1;
+                last;
+            }
+        }
+        close(VSS);
+        next if $text_type == 0;
 
-	my $command_output = "$tempdir\\___output.txt";
-	if ($start_tag ne '' && $end_tag ne '') {
-	    my $varg = "\"";
+        my $command_output = "$tempdir\\___output.txt";
+        if ($start_tag ne '' && $end_tag ne '') {
+            my $varg = "\"";
             $varg .= ($start_tag =~ /^\d+$/) ? "-V${start_tag}~" : "-VL${start_tag}~";
             $varg .= ($end_tag =~ /^\d+$/) ? $end_tag : "L${end_tag}";
             $varg .= "\"";
-	    $cmd = "\"$vss\" diff \"$files[$i]\"" .
-		   " -y" . $self->{username} . "," . $self->{password} .
-		   " -I-Y -DU3000X5 $varg" .
-		   " -O\"$command_output\"";
-	    $self->_write_vss_command($cmd, $tmp_batch_file);
-	    system("\"$tmp_batch_file\"");
-	    if (open(VSS, $command_output)) {
-		while (<VSS>) {
-		    print $fh $_;
-		}
-		close VSS;
-	    }
-	} else {
-	    # Retrieve a read-only copy of the file into a temporary
-	    # directory.  Make sure the command output is put into
-	    # a temporary file, rather than stdout/stderr.
-	    my $varg = ($tag =~ /^\d+$/) ? "-V$tag" : "\"-VL$tag\"";
-	    $cmd = "\"$vss\" get \"$files[$i]\"" .
-		   " -y" . $self->{username} . "," . $self->{password} .
-		   " $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
-	    $self->_write_vss_command($cmd, $tmp_batch_file);
-	    system("\"$tmp_batch_file\"");
+            $cmd = "\"$vss\" diff \"$files[$i]\"" .
+              " -y" . $self->{username} . "," . $self->{password} .
+                " -I-Y -DU3000X5 $varg" .
+                  " -O\"$command_output\"";
+            $self->_write_vss_command($cmd, $tmp_batch_file);
+            system("\"$tmp_batch_file\"");
+            if (open(VSS, $command_output)) {
+                while (<VSS>) {
+                    print $fh $_;
+                }
+                close VSS;
+            }
+        } else {
+            # Retrieve a read-only copy of the file into a temporary
+            # directory.  Make sure the command output is put into
+            # a temporary file, rather than stdout/stderr.
+            my $varg = ($tag =~ /^\d+$/) ? "-V$tag" : "\"-VL$tag\"";
+            $cmd = "\"$vss\" get \"$files[$i]\"" .
+              " -y" . $self->{username} . "," . $self->{password} .
+                " $varg -I-Y -O\"$command_output\" -GWR -GL\"$tempdir\"";
+            $self->_write_vss_command($cmd, $tmp_batch_file);
+            system("\"$tmp_batch_file\"");
 
-	    $files[$i] =~ /\/([^\/]+)$/o;
-	    my $basefilename = $1;
-	    my @data = ();
-	    if (open(VSS, "$tempdir/$basefilename")) {
-		while (<VSS>) {
-		    push @data, $_;
-		}
-		close VSS;
-		unlink "$tempdir/$basefilename";
-	    }
-	    my $data_size = $#data + 1;
-	
-	    # Output the file header information in VSS diff format.
-	    print $fh "Diffing: $files[$i];$versions[$i]\n";
-	    print $fh "Against: \n\n";
-	    print $fh "0a1,$data_size\n";
-	    for (my $index = 0; $index <= $#data; $index++) {
-		print $fh "> " . $data[$index];
-	    }
-	}
-	unlink $command_output;
-	print $fh "\n";
+            $files[$i] =~ /\/([^\/]+)$/o;
+            my $basefilename = $1;
+            my @data = ();
+            if (open(VSS, "$tempdir/$basefilename")) {
+                while (<VSS>) {
+                    push @data, $_;
+                }
+                close VSS;
+                unlink "$tempdir/$basefilename";
+            }
+            my $data_size = $#data + 1;
+
+            # Output the file header information in VSS diff format.
+            print $fh "Diffing: $files[$i];$versions[$i]\n";
+            print $fh "Against: \n\n";
+            print $fh "0a1,$data_size\n";
+            for (my $index = 0; $index <= $#data; $index++) {
+                print $fh "> " . $data[$index];
+            }
+        }
+        unlink $command_output;
+        print $fh "\n";
     }
 
     # Remove the temporary directory and temporary batch file.

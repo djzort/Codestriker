@@ -6,7 +6,7 @@
 # the terms of the GPL.
 
 # Base object for all line filter objects to extend from.  A line filter takes
-# a line of code and transforms it in some fashion.  
+# a line of code and transforms it in some fashion.
 
 package Codestriker::Http::LineFilter;
 
@@ -20,7 +20,7 @@ sub new {
 
 sub filter {
     my ($self, $delta) = @_;
-    
+
     $delta->{diff_old_lines} = $self->_filter($delta->{diff_old_lines});
     $delta->{diff_new_lines} = $self->_filter($delta->{diff_new_lines});
 }

@@ -20,9 +20,9 @@ sub process($$$) {
     my $format = $http_input->get('format');
 
     if (defined $format && $format eq "xml") {
-	process_xml($type, $http_input, $http_response);
+        process_xml($type, $http_input, $http_response);
     } else {
-	process_default($type, $http_input, $http_response);
+        process_default($type, $http_input, $http_response);
     }
 }
 
@@ -35,7 +35,7 @@ sub process_default($$$) {
 
     # Check if this action is allowed.
     if ($Codestriker::allow_searchlist == 0) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     # Obtain a new URL builder object.
@@ -48,29 +48,29 @@ sub process_default($$$) {
     my ( $sauthor, $sreviewer, $scc, $sbugid,
          $sstate, $sproject, $stext,
          $stitle, $sdescription,
-	 $scomments, $sbody, $sfilename,
+         $scomments, $sbody, $sfilename,
          $sort_order) = get_topic_list_query_params($http_input);
 
     # Query the model for the specified data.
     my @topics = Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
-				     $sstate, $sproject, $stext,
-				     $stitle, $sdescription,
-				     $scomments, $sbody, $sfilename,
-                                     $sort_order);
+                                                  $sstate, $sproject, $stext,
+                                                  $stitle, $sdescription,
+                                                  $scomments, $sbody, $sfilename,
+                                                  $sort_order);
 
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
     # cookie.
     my @project_ids = ();
     if (defined $sproject && $sproject ne "") {
-	@project_ids = split ',', $sproject;
+        @project_ids = split ',', $sproject;
     }
     my $projectid_cookie = ($#project_ids == 0) ? $project_ids[0] : "";
 
-    $http_response->generate_header(topic_title=>"Topic List", 
-				    projectid=>$projectid_cookie, 
-				    topicsort=>join(',',@$sort_order),
-				    reload=>0, cache=>0);
+    $http_response->generate_header(topic_title=>"Topic List",
+                                    projectid=>$projectid_cookie,
+                                    topicsort=>join(',',@$sort_order),
+                                    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -95,8 +95,9 @@ sub process_default($$$) {
         if (exists($comment_state_metric->{show_on_mainpage})) {
             foreach my $value (@{$comment_state_metric->{show_on_mainpage}}) {
                 push @comment_metric_names,
-		     { name => $comment_state_metric->{name},
-		       value => $value };
+                  {
+                   name => $comment_state_metric->{name},
+                   value => $value };
             }
         }
     }
@@ -107,78 +108,78 @@ sub process_default($$$) {
     # that the current list of topics the user it viewing does not
     # revert back to the default open topic list.  The search is
     # applied each time they change the sort order.
-    $vars->{'list_sort_url'} = 
-	$url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer, 
-	                              scc => $scc, sbugid => $sbugid,
-				                  stext => $stext, stitle => $stitle,
-				                  sdescription => $sdescription, scomments => $scomments,
-				                  sbody => $sbody, sfilename => $sfilename,
-				                  sstate => [split ',', $sstate] , sprojects => \@project_ids);
+    $vars->{'list_sort_url'} =
+      $url_builder->list_topics_url(sauthor => $sauthor, sreviewer => $sreviewer,
+                                    scc => $scc, sbugid => $sbugid,
+                                    stext => $stext, stitle => $stitle,
+                                    sdescription => $sdescription, scomments => $scomments,
+                                    sbody => $sbody, sfilename => $sfilename,
+                                    sstate => [split ',', $sstate] , sprojects => \@project_ids);
 
-    $vars->{'list_sort_url_rss'} = 
-	$url_builder->list_topics_url_rss(sauthor => $sauthor, sreviewer => $sreviewer, 
-	                                  scc => $scc, sbugid => $sbugid,
-				                      stext => $stext, stitle => $stitle,
-				                      sdescription => $sdescription, scomments => $scomments,
-				                      sbody => $sbody, sfilename => $sfilename,
-				                      sstate => [split ',', $sstate] , sprojects => \@project_ids);
+    $vars->{'list_sort_url_rss'} =
+      $url_builder->list_topics_url_rss(sauthor => $sauthor, sreviewer => $sreviewer,
+                                        scc => $scc, sbugid => $sbugid,
+                                        stext => $stext, stitle => $stitle,
+                                        sdescription => $sdescription, scomments => $scomments,
+                                        sbody => $sbody, sfilename => $sfilename,
+                                        sstate => [split ',', $sstate] , sprojects => \@project_ids);
 
     # The list of topics in the template toolkit.
     my @template_topics;
 
     # For each topic, collect all the reviewers, CC, and bugs, and display it
-    # as a row in the table.  Each bug should be linked appropriately. 
+    # as a row in the table.  Each bug should be linked appropriately.
     foreach my $topic (@topics) {
 
         # do the easy stuff first, 1 to 1 mapping into the template.
-   
-	my $template_topic = {};
 
-	$template_topic->{'view_topic_url'} = 
-	    $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
-	                           mode => $mode);
-        
-	$template_topic->{'description'} = $topic->{description};
+        my $template_topic = {};
 
-	$template_topic->{'created'} =
-	    Codestriker->format_short_timestamp($topic->{creation_ts});
+        $template_topic->{'view_topic_url'} =
+          $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
+                                 mode => $mode);
 
-	$template_topic->{'id'}      = $topic->{topicid};
-	$template_topic->{'title'}   = $topic->{title};
+        $template_topic->{'description'} = $topic->{description};
 
-	$template_topic->{'version'} = $topic->{version};
+        $template_topic->{'created'} =
+          Codestriker->format_short_timestamp($topic->{creation_ts});
 
-	$template_topic->{'state'}   = $Codestriker::topic_states[$topic->{topic_state_id}];
+        $template_topic->{'id'}      = $topic->{topicid};
+        $template_topic->{'title'}   = $topic->{title};
 
-	# Only include the username part of the email address to save space.
-	my $accum_author = $topic->{author};
+        $template_topic->{'version'} = $topic->{version};
+
+        $template_topic->{'state'}   = $Codestriker::topic_states[$topic->{topic_state_id}];
+
+        # Only include the username part of the email address to save space.
+        my $accum_author = $topic->{author};
         $accum_author =~ s/\@.*$//o;
-	$template_topic->{'author'} = $accum_author;
+        $template_topic->{'author'} = $accum_author;
 
         # cc
-	my $cc = $topic->{cc};
+        my $cc = $topic->{cc};
         $cc =~ s/\@.*$//o;
-	$template_topic->{'cc'}     = $cc;
+        $template_topic->{'cc'}     = $cc;
 
         # bug ids
-	my @accum_bugs = split /, /, $topic->{bug_ids};
-	for (my $index = 0; $index < scalar(@accum_bugs); ++$index) {
-	    # Allow for no direct web link to a bug.
-	    if (defined $Codestriker::bugtracker &&
+        my @accum_bugs = split /, /, $topic->{bug_ids};
+        for (my $index = 0; $index < scalar(@accum_bugs); ++$index) {
+            # Allow for no direct web link to a bug.
+            if (defined $Codestriker::bugtracker &&
                 $Codestriker::bugtracker ne '') {
-	        $accum_bugs[$index] =
-		    $query->a({href=>"$Codestriker::bugtracker$accum_bugs[$index]"},
-      	                      $accum_bugs[$index]);
-	    }
-	}
-	$template_topic->{'bugids'} = join ', ', @accum_bugs;
+                $accum_bugs[$index] =
+                  $query->a({href=>"$Codestriker::bugtracker$accum_bugs[$index]"},
+                            $accum_bugs[$index]);
+            }
+        }
+        $template_topic->{'bugids'} = join ', ', @accum_bugs;
 
         # do the reviewers
-        my @reviewers_vistited = 
-            $topic->get_metrics()->get_list_of_actual_topic_participants();
+        my @reviewers_vistited =
+          $topic->get_metrics()->get_list_of_actual_topic_participants();
 
-	my @reviewers = split /, /, $topic->{reviewers};
-	for ( my $index = 0; $index < scalar(@reviewers); ++$index) {
+        my @reviewers = split /, /, $topic->{reviewers};
+        for ( my $index = 0; $index < scalar(@reviewers); ++$index) {
 
             my $reviewer = $reviewers[$index];
 
@@ -188,46 +189,46 @@ sub process_default($$$) {
                     $is_visted = 1;
                     last;
                 }
-	    }
+            }
 
-	    # Output the accumulated information into the row.  Only
-	    # include the username part of an email address for now to
-	    # save some space.  This should be made a dynamic option
-	    # in the future.
+            # Output the accumulated information into the row.  Only
+            # include the username part of an email address for now to
+            # save some space.  This should be made a dynamic option
+            # in the future.
             $reviewer =~ s/\@.*$//o;
 
             if ( $is_visted == 0) {
                 $reviewer = "(" . $reviewer . ")";
-            }           
-                    
-            $reviewers[$index] = $reviewer;      
-                    }
+            }
 
-	$template_topic->{'reviewer'} = join(", ",@reviewers);
+            $reviewers[$index] = $reviewer;
+        }
+
+        $template_topic->{'reviewer'} = join(", ",@reviewers);
 
         my @main_page_comment_metrics = ();
         foreach my $comment_state_metric (@{$Codestriker::comment_state_metrics}) {
-        
+
             if ( exists($comment_state_metric->{show_on_mainpage})) {
                 foreach my $value (@{$comment_state_metric->{show_on_mainpage}}) {
 
                     my $count = $topic->get_comment_metric_count($comment_state_metric->{name},$value);
 
-                    my $template_comment_metric = 
-                    {
-                        name  => $comment_state_metric->{name},
-                        value => $value,
-                        count => $count
-                    };
+                    my $template_comment_metric =
+                      {
+                       name  => $comment_state_metric->{name},
+                       value => $value,
+                       count => $count
+                      };
 
                     push @main_page_comment_metrics,$template_comment_metric;
-		}
-	    }
-	}
+                }
+            }
+        }
 
         $template_topic->{'commentmetrics'} = \@main_page_comment_metrics;
 
-	push @template_topics, $template_topic;
+        push @template_topics, $template_topic;
     }
 
     $vars->{'topics'} = \@template_topics;
@@ -255,13 +256,13 @@ sub process_xml($$$) {
 
     my @sort_order;
     my @topics = Codestriker::Model::Topic->query($sauthor,
-    						  $sreviewer,
-    						  $scc,
-    						  $sbugid,
-						  "", "",
-						  $stext,
-						  "", "", "", "", "",
-						  \@sort_order );
+                                                  $sreviewer,
+                                                  $scc,
+                                                  $sbugid,
+                                                  "", "",
+                                                  $stext,
+                                                  "", "", "", "", "",
+                                                  \@sort_order );
 
     my $var;
     $var->{ alltopics } = \@topics;
@@ -292,33 +293,33 @@ sub get_topic_list_query_params {
     my $sbody = $http_input->get('sbody') || 0;
     my $sfilename = $http_input->get('sfilename') || 0;
     my $projectid = $http_input->get('projectid');
-    
+
     # If $sproject has been set to -1, then retrieve the value of the projectid
     # from the cookie as the project search value.  This is done to facilate
     # integration with other systems, which jump straight to this URL, and
     # set the cookie explicitly.
     if (defined $sproject && $sproject eq "-1") {
-	$sproject = (defined $projectid) ? $projectid : "";
+        $sproject = (defined $projectid) ? $projectid : "";
     }
-    
+
     # Default to show open topics if sstate is not defined.
     if (!defined($sstate)) {
-    	$sstate = 0; 
+        $sstate = 0;
     }
 
     # handle the sort order of the topics.
     my @sort_order = get_topic_sort_order($http_input);
 
     return ( $sauthor, $sreviewer, $scc, $sbugid,
-				     $sstate, $sproject, $stext,
-				     $stitle, $sdescription,
-				     $scomments, $sbody, $sfilename,
-                                     \@sort_order);
+             $sstate, $sproject, $stext,
+             $stitle, $sdescription,
+             $scomments, $sbody, $sfilename,
+             \@sort_order);
 }
 
-# Process the topic_sort_change input request (if any), and the current sort 
+# Process the topic_sort_change input request (if any), and the current sort
 # cookie (topicsort), and returns a list that defines the topic sort order
-# that should be used for this request. The function will ensure that 
+# that should be used for this request. The function will ensure that
 # column types are not repeated, and will sort in the opposite direction
 # if the user clicks on the same column twice.
 sub get_topic_sort_order {
@@ -335,22 +336,21 @@ sub get_topic_sort_order {
 
             # If the user clicked on the same column twice in a row, reverse
             # the direction of the sort.
-            
+
             $sort_order[0] =~ s/\+$topic_sort_change/\-$topic_sort_change/ or
-            $sort_order[0] =~ s/\-$topic_sort_change/\+$topic_sort_change/ or        
-            unshift @sort_order, "+" . $topic_sort_change;
-        }
-        else {
+              $sort_order[0] =~ s/\-$topic_sort_change/\+$topic_sort_change/ or
+                unshift @sort_order, "+" . $topic_sort_change;
+        } else {
             unshift @sort_order, "+" . $topic_sort_change;
         }
 
         # look for duplicate sort keys, and remove
         my %sort_hash;
 
-        for ( my $index = 0; 
-              $index < scalar( @sort_order); 
+        for ( my $index = 0;
+              $index < scalar( @sort_order);
               # Incremented in the if...
-              ) {
+            ) {
 
             # chew off the leading +-
             my $current = $sort_order[$index];
@@ -359,15 +359,14 @@ sub get_topic_sort_order {
                 if (exists $sort_hash{$current}) {
                     # remove from the list.
                     splice @sort_order, $index,1;
-                }
-                else {
+                } else {
                     # have not seem this before, keep it, and look at the next
                     # string.
-                    ++$index;                
+                    ++$index;
                 }
 
                 $sort_hash{$current} = 1;
-            } 
+            }
         }
     }
 
@@ -380,7 +379,7 @@ sub get_topic_sort_order {
             $sort_order[$index] ne "+author" && $sort_order[$index] ne "-author" &&
             $sort_order[$index] ne "+created" && $sort_order[$index] ne "-created" &&
             $sort_order[$index] ne "+state" && $sort_order[$index] ne "-state") {
-            
+
             splice @sort_order,$index,1;
             --$index;
         }

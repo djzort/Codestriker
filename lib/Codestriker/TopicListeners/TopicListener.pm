@@ -19,23 +19,23 @@ sub new {
     return bless $self, $type;
 }
 
-sub topic_pre_create($$) { 
+sub topic_pre_create($$) {
     my ($self, $user, $topic_title, $topic_description, $bug_ids,
-	$reviewers, $cc, $repository_url, $projectid) = @_;
-    
+        $reviewers, $cc, $repository_url, $projectid) = @_;
+
     # Default version of function that does nothing, and allowed the
     # event to continue.
 
-    return '';    
+    return '';
 }
 
-sub topic_create($$) { 
+sub topic_create($$) {
     my ($self, $user, $topic) = @_;
-    
+
     # Default version of function that does nothing, and allowed the
     # event to continue.
 
-    return '';    
+    return '';
 }
 
 sub topic_pre_changed($$$) {
@@ -43,8 +43,8 @@ sub topic_pre_changed($$$) {
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    return '';    
+
+    return '';
 }
 
 sub topic_changed($$$) {
@@ -52,8 +52,8 @@ sub topic_changed($$$) {
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    return '';    
+
+    return '';
 }
 
 sub topic_viewed($$$) {
@@ -61,8 +61,8 @@ sub topic_viewed($$$) {
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    return '';    
+
+    return '';
 }
 
 sub comment_create($$$) {
@@ -70,18 +70,18 @@ sub comment_create($$$) {
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    return '';    
+
+    return '';
 }
 
 sub comment_state_change($$$$$$$) {
     my ($self, $user, $metric_name, $old_value, $new_value,
-	$topic, $comment) = @_;
+        $topic, $comment) = @_;
 
     # Default version of function that does nothing, and allowed the
     # event to continue.
-    
-    return '';    
+
+    return '';
 }
 
 1;

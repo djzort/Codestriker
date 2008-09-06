@@ -19,7 +19,7 @@ sub process($$$) {
 
     # Check if this operation is allowed.
     if (Codestriker->projects_disabled()) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     my $query = $http_response->get_query();
@@ -27,7 +27,7 @@ sub process($$$) {
     $feedback =~ s/\n/<BR>/g;
 
     $http_response->generate_header(topic_title=>"Create New Project",
-				    reload=>0, cache=>1);
+                                    reload=>0, cache=>1);
 
     # Obtain a URL builder object.
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);

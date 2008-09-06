@@ -22,7 +22,7 @@ sub process($$$) {
 
     # Check if this action is allowed.
     if ($Codestriker::allow_searchlist == 0) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     # Query the model for the specified data.
@@ -32,27 +32,27 @@ sub process($$$) {
     my ( $sauthor, $sreviewer, $scc, $sbugid,
          $sstate, $sproject, $stext,
          $stitle, $sdescription,
-	 $scomments, $sbody, $sfilename,
+         $scomments, $sbody, $sfilename,
          $sort_order) = Codestriker::Action::ListTopics::get_topic_list_query_params($http_input);
 
     # Query the model for the specified data.
     my @topics = Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
-				     $sstate, $sproject, $stext,
-				     $stitle, $sdescription,
-				     $scomments, $sbody, $sfilename,
-                                     $sort_order);
-   
+                                                  $sstate, $sproject, $stext,
+                                                  $stitle, $sdescription,
+                                                  $scomments, $sbody, $sfilename,
+                                                  $sort_order);
+
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
     # cookie.
     my @project_ids = ();
     if ($sproject ne "") {
-	@project_ids = split ',', $sproject;
+        @project_ids = split ',', $sproject;
     }
 
-    # Print the header. Should really be application/rss+xml, except when 
+    # Print the header. Should really be application/rss+xml, except when
     # people click on the link they get a pop-up asking for an application
-    # that knows how to show application/rss+xml. Very confusing, so we 
+    # that knows how to show application/rss+xml. Very confusing, so we
     # will just say it is xml, (which it is of coarse). The link tag in
     # the template lists it as application/rss+xml.
     print $query->header(-type=>'application/xml');
@@ -62,39 +62,39 @@ sub process($$$) {
 
     my $rss = new XML::RSS(version => '2.0');
 
-    my $this_url  = 
-	$url_builder->list_topics_url_rss($sauthor, $sreviewer, $scc, $sbugid,
-				      $stext, $stitle,
-				      $sdescription, $scomments,
-				      $sbody, $sfilename,
-				      [ split ',', $sstate] , \@project_ids);
+    my $this_url  =
+      $url_builder->list_topics_url_rss($sauthor, $sreviewer, $scc, $sbugid,
+                                        $stext, $stitle,
+                                        $sdescription, $scomments,
+                                        $sbody, $sfilename,
+                                        [ split ',', $sstate] , \@project_ids);
 
 
     $rss->channel(title=>$Codestriker::title, language=>"en",link=>$this_url);
 
     # For each topic, collect all the reviewers, CC, and bugs, and display it
-    # as a row in the table.  Each bug should be linked appropriately. 
+    # as a row in the table.  Each bug should be linked appropriately.
     foreach my $topic (@topics) {
 
         # do the easy stuff first, 1 to 1 mapping into the template.
-	my $link =
-	    $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
-	                           mode => $mode);
+        my $link =
+          $url_builder->view_url(topicid => $topic->{topicid}, projectid => $topic->{project_id},
+                                 mode => $mode);
 
-	my $comment_link = $url_builder->view_comments_url(topicid => $topic->{topicid},
-	                                                   projectid => $topic->{project_id});
+        my $comment_link = $url_builder->view_comments_url(topicid => $topic->{topicid},
+                                                           projectid => $topic->{project_id});
 
-	my $description = $topic->{description};
-	my $title = $topic->{title};
+        my $description = $topic->{description};
+        my $title = $topic->{title};
 
         # Change to 1 to send out the list of files changes in the RSS description.
         if (0) {
             my (@filenames, @revisions, @offsets, @binary);
             $topic->get_filestable(
-    		        \@filenames,
-                        \@revisions,
-                        \@offsets,
-                        \@binary);
+                                   \@filenames,
+                                   \@revisions,
+                                   \@offsets,
+                                   \@binary);
 
             $description .= "<p>" . join( "\n",@filenames);
         }
@@ -106,14 +106,14 @@ sub process($$$) {
         $description .= "Author: " . Codestriker->filter_email($topic->{author});
 
         $rss->add_item(
-            title=>$title, 
-            permaLink=>$link, 
-            description=>$description,
-            author=> Codestriker->filter_email($topic->{author}),
-            pubDate=>Codestriker->format_short_timestamp($topic->{creation_ts}),
-            category=>$topic->{project_name},
-            comments=>$comment_link
-            );
+                       title=>$title,
+                       permaLink=>$link,
+                       description=>$description,
+                       author=> Codestriker->filter_email($topic->{author}),
+                       pubDate=>Codestriker->format_short_timestamp($topic->{creation_ts}),
+                       category=>$topic->{project_name},
+                       comments=>$comment_link
+                      );
 
     }
 

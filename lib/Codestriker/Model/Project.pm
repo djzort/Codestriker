@@ -40,32 +40,32 @@ sub create($$$$) {
     my ($type, $name, $description) = @_;
 
     my $rc = $Codestriker::OK;
-    
+
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     # Check that a project with this name doesn't already exist.
     my $select = $dbh->prepare_cached('SELECT COUNT(*) FROM project ' .
-				      'WHERE name = ?');
+                                      'WHERE name = ?');
     my $success = defined $select;
     $success &&= $select->execute($name);
     if ($success) {
-	my ($count) = $select->fetchrow_array();
-	$select->finish();
-	if ($count != 0) {
-	    $success = 0;
-	    $rc = $Codestriker::DUPLICATE_PROJECT_NAME;
-	}
+        my ($count) = $select->fetchrow_array();
+        $select->finish();
+        if ($count != 0) {
+            $success = 0;
+            $rc = $Codestriker::DUPLICATE_PROJECT_NAME;
+        }
     }
 
     # Create the project entry.
     my $timestamp = Codestriker->get_timestamp(time);
     my $create = $dbh->prepare_cached('INSERT INTO project ' .
-				      '(name, description, creation_ts, ' .
-				      'modified_ts, version, state ) ' .
-				      'VALUES (?, ?, ?, ?, ?, ?) ');
+                                      '(name, description, creation_ts, ' .
+                                      'modified_ts, version, state ) ' .
+                                      'VALUES (?, ?, ?, ?, ?, ?) ');
     $success &&=
-	$create->execute($name, $description, $timestamp, $timestamp, 0, 0);
+      $create->execute($name, $description, $timestamp, $timestamp, 0, 0);
     $success &&= $create->finish();
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
@@ -84,27 +84,26 @@ sub list($$) {
 
     # Retrieve all of the comment information for the specified topicid.
     my $select =
-	$dbh->prepare_cached('SELECT id, name, description, version, state ' .
-			     'FROM project ORDER BY state, name, creation_ts');
+      $dbh->prepare_cached('SELECT id, name, description, version, state ' .
+                           'FROM project ORDER BY state, name, creation_ts');
     my $success = defined $select;
     $success &&= $select->execute();
 
     # Store the results in the array.
     if ($success) {
-	my @data;
-	while (@data = $select->fetchrow_array()) {
-	    my $project = {};
-	    $project->{id} = $data[0];
-	    $project->{name} = decode_utf8($data[1]);
-	    $project->{description} = decode_utf8($data[2]);
-	    $project->{version} = $data[3];
-	    $project->{state} = _state_id_to_string($data[4]);
-	    if (!defined $state || $project->{state} eq $state)
-	    {
-		push @results, $project;
-	    }
-	}
-	$select->finish();
+        my @data;
+        while (@data = $select->fetchrow_array()) {
+            my $project = {};
+            $project->{id} = $data[0];
+            $project->{name} = decode_utf8($data[1]);
+            $project->{description} = decode_utf8($data[2]);
+            $project->{version} = $data[3];
+            $project->{state} = _state_id_to_string($data[4]);
+            if (!defined $state || $project->{state} eq $state) {
+                push @results, $project;
+            }
+        }
+        $select->finish();
     }
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
@@ -121,26 +120,26 @@ sub read($$) {
     my $dbh = Codestriker::DB::DBI->get_connection();
 
     my $select =
-	$dbh->prepare_cached('SELECT name, description, version, state ' .
-			     'FROM project WHERE id = ?');
+      $dbh->prepare_cached('SELECT name, description, version, state ' .
+                           'FROM project WHERE id = ?');
     my $success = defined $select;
     $success &&= $select->execute($id);
     my ($name, $description, $version, $state);
     if ($success &&
-	! (($name, $description, $version, $state) =
-	   $select->fetchrow_array())) {
-	$success = 0;
+        ! (($name, $description, $version, $state) =
+           $select->fetchrow_array())) {
+        $success = 0;
     }
     $success &&= $select->finish();
 
     my $project = {};
     if ($success) {
-	# Populate return object.
-	$project->{id} = $id;
-	$project->{name} = decode_utf8($name);
-	$project->{description} = decode_utf8($description);
-	$project->{version} = $version;
-	$project->{state} = _state_id_to_string($state);
+        # Populate return object.
+        $project->{id} = $id;
+        $project->{name} = decode_utf8($name);
+        $project->{description} = decode_utf8($description);
+        $project->{version} = $version;
+        $project->{state} = _state_id_to_string($state);
     }
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
@@ -160,12 +159,12 @@ sub update($$$$$$) {
 
     # Check that the version reflects the current version in the DB.
     my $select =
-	$dbh->prepare_cached('SELECT version FROM project ' .
-			     'WHERE id = ?');
+      $dbh->prepare_cached('SELECT version FROM project ' .
+                           'WHERE id = ?');
     my $update =
-	$dbh->prepare_cached('UPDATE project SET version = ?, ' .
-			     'name = ?, description = ?, modified_ts = ?, ' .
-			     'state = ? WHERE id = ?');
+      $dbh->prepare_cached('UPDATE project SET version = ?, ' .
+                           'name = ?, description = ?, modified_ts = ?, ' .
+                           'state = ? WHERE id = ?');
 
     my $success = defined $select && defined $update;
     my $rc = $Codestriker::OK;
@@ -176,22 +175,22 @@ sub update($$$$$$) {
     # Make sure that the project still exists, and is therefore valid.
     my $current_version;
     if ($success && ! (($current_version) = $select->fetchrow_array())) {
-	# Invalid project id.
-	$success = 0;
-	$rc = $Codestriker::INVALID_PROJECT;
+        # Invalid project id.
+        $success = 0;
+        $rc = $Codestriker::INVALID_PROJECT;
     }
     $success &&= $select->finish();
 
     # Check the version number.
     if ($success && $version != $current_version) {
-	$success = 0;
-	$rc = $Codestriker::STALE_VERSION;
+        $success = 0;
+        $rc = $Codestriker::STALE_VERSION;
     }
 
     # Update the project details.
     my $timestamp = Codestriker->get_timestamp(time);
     $success &&= $update->execute($version+1, $name, $description,
-				  $timestamp, $new_stateid, $id);
+                                  $timestamp, $new_stateid, $id);
     Codestriker::DB::DBI->release_connection($dbh, $success);
     return $rc;
 }
@@ -205,8 +204,8 @@ sub delete($$) {
 
     # Check that the version reflects the current version in the DB.
     my $select =
-	$dbh->prepare_cached('SELECT version FROM project ' .
-			     'WHERE id = ?');
+      $dbh->prepare_cached('SELECT version FROM project ' .
+                           'WHERE id = ?');
 
     # Create the prepared statements.
     my $delete = $dbh->prepare_cached('DELETE FROM project WHERE id = ?');
@@ -220,39 +219,39 @@ sub delete($$) {
     # Make sure that the project still exists, and is therefore valid.
     my $current_version;
     if ($success && ! (($current_version) = $select->fetchrow_array())) {
-	# Invalid project id.
-	$success = 0;
-	$rc = $Codestriker::INVALID_PROJECT;
+        # Invalid project id.
+        $success = 0;
+        $rc = $Codestriker::INVALID_PROJECT;
     }
     $success &&= $select->finish();
 
     # Check the version number.
     if ($success && $version != $current_version) {
-	$success = 0;
-	$rc = $Codestriker::STALE_VERSION;
+        $success = 0;
+        $rc = $Codestriker::STALE_VERSION;
     }
 
     if ($success == 0) {
-	Codestriker::DB::DBI->release_connection($dbh, $success);
-	return $rc;
+        Codestriker::DB::DBI->release_connection($dbh, $success);
+        return $rc;
     } else {
-	# Delete the topics in this project.
-	my @sort_order;
-	my @topics = Codestriker::Model::Topic->query("", "", "", "",
-						      "", $id, "",
-						      "", "", "", "", "",
-						      \@sort_order );
-	
-	# Delete each of the topics for this project
-	foreach my $topic ( @topics ) {
-	    $topic->delete();
-	}
+        # Delete the topics in this project.
+        my @sort_order;
+        my @topics = Codestriker::Model::Topic->query("", "", "", "",
+                                                      "", $id, "",
+                                                      "", "", "", "", "",
+                                                      \@sort_order );
 
-	# Now delete the project.
-	$delete->execute($id);
-	Codestriker::DB::DBI->release_connection($dbh, $success);
+        # Delete each of the topics for this project
+        foreach my $topic ( @topics ) {
+            $topic->delete();
+        }
 
-	return $rc;
+        # Now delete the project.
+        $delete->execute($id);
+        Codestriker::DB::DBI->release_connection($dbh, $success);
+
+        return $rc;
     }
 }
 
@@ -263,14 +262,14 @@ sub num_open_topics {
     my $dbh = Codestriker::DB::DBI->get_connection();
     my $count;
     eval {
-	$count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
-				       'FROM topic ' .
-				       'WHERE topic.projectid = ? ' .
-				       'AND topic.state = 0', {}, $id);
+        $count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
+                                       'FROM topic ' .
+                                       'WHERE topic.projectid = ? ' .
+                                       'AND topic.state = 0', {}, $id);
     };
     Codestriker::DB::DBI->release_connection($dbh, 1);
     if ($@) {
-	carp "Problem retrieving count of open topics in project: $@";
+        carp "Problem retrieving count of open topics in project: $@";
     }
 
     return $count;
@@ -283,14 +282,14 @@ sub num_topics {
     my $dbh = Codestriker::DB::DBI->get_connection();
     my $count;
     eval {
-	$count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
-				       'FROM topic ' .
-				       'WHERE topic.projectid = ? ', {}, $id);
+        $count = $dbh->selectrow_array('SELECT COUNT(topic.id) ' .
+                                       'FROM topic ' .
+                                       'WHERE topic.projectid = ? ', {}, $id);
     };
     Codestriker::DB::DBI->release_connection($dbh, 1);
 
     if ($@) {
-	carp "Problem retrieving count of topics in project: $@";
+        carp "Problem retrieving count of topics in project: $@";
     }
 
     return $count;

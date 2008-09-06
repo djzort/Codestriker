@@ -20,7 +20,7 @@ sub process($$$) {
 
     # Check if this operation is allowed.
     if (Codestriker->projects_disabled()) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     my $query = $http_response->get_query();
@@ -31,7 +31,7 @@ sub process($$$) {
 
     # Display the data, with each prject title linked to edit project page.
     $http_response->generate_header(topic_title=>"Project List",
-				    reload=>0, cache=>0);
+                                    reload=>0, cache=>0);
 
     # Create the hash for the template variables.
     my $vars = {};
@@ -42,15 +42,15 @@ sub process($$$) {
 
     # Go through all of the projects, and construct an edit_project URL.
     foreach my $project (@projects) {
-	$project->{edit_url} = $url_builder->edit_project_url($project->{id});
-	$project->{num_open_topics} =
-	    Codestriker::Model::Project->num_open_topics($project->{id});
-	$project->{open_topic_list_url} =
-	    $url_builder->list_topics_url(sproject => [$project->{id}], sstate => [0]);
-	$project->{num_topics} =
-	    Codestriker::Model::Project->num_topics($project->{id});
-	$project->{topic_list_url} =
-	    $url_builder->list_topics_url(sproject => [$project->{id}]);
+        $project->{edit_url} = $url_builder->edit_project_url($project->{id});
+        $project->{num_open_topics} =
+          Codestriker::Model::Project->num_open_topics($project->{id});
+        $project->{open_topic_list_url} =
+          $url_builder->list_topics_url(sproject => [$project->{id}], sstate => [0]);
+        $project->{num_topics} =
+          Codestriker::Model::Project->num_topics($project->{id});
+        $project->{topic_list_url} =
+          $url_builder->list_topics_url(sproject => [$project->{id}]);
     }
     $vars->{'projects'} = \@projects;
 

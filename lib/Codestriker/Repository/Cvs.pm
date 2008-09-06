@@ -37,7 +37,7 @@ sub build_pserver {
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
     $self->{url} = ":pserver${optional_args}:${username}:${password}\@" .
-	"${hostname}:${cvsroot}";
+      "${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
@@ -90,14 +90,14 @@ sub retrieve {
     push @args, $revision;
     push @args, $filename;
     Codestriker::execute_command($read_stdout_fh, undef,
-				 $Codestriker::cvs, @args);
+                                 $Codestriker::cvs, @args);
 
     # Process the data for the topic.
     open($read_stdout_fh, '<', \$read_data);
     for (my $i = 1; <$read_stdout_fh>; $i++) {
-	$_ = Codestriker::decode_topic_text($_);
-	chop;
-	$$content_array_ref[$i] = $_;
+        $_ = Codestriker::decode_topic_text($_);
+        chop;
+        $$content_array_ref[$i] = $_;
     }
     close $read_stdout_fh;
 }
@@ -128,17 +128,17 @@ sub toString ($) {
 # limit, then return the appropriate error code.
 sub getDiff ($$$$$$) {
     my ($self, $start_tag, $end_tag, $module_name,
-	$stdout_fh, $stderr_fh, $default_to_head) = @_;
+        $stdout_fh, $stderr_fh, $default_to_head) = @_;
 
     # If $end_tag is empty, but the $start_tag has a value, or
-    # $start_tag is empty, but $end_tag has a value, simply 
+    # $start_tag is empty, but $end_tag has a value, simply
     # retrieve the diff that corresponds to the files full
     # contents corresponding to that tag value.
     if ($start_tag eq "" && $end_tag ne "") {
-	$start_tag = "1.0";
+        $start_tag = "1.0";
     } elsif ($start_tag ne "" && $end_tag eq "") {
-	$end_tag = $start_tag;
-	$start_tag = "1.0";
+        $end_tag = $start_tag;
+        $start_tag = "1.0";
     }
 
     # Cheat - having two '-u's changes nothing.
@@ -147,9 +147,9 @@ sub getDiff ($$$$$$) {
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
 
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::cvs,
-				 '-q', '-d', $self->{url}, 'rdiff',
-				 $extra_options, '-u', '-r', $start_tag,
-				 '-r', $end_tag, $module_name);
+                                 '-q', '-d', $self->{url}, 'rdiff',
+                                 $extra_options, '-u', '-r', $start_tag,
+                                 '-r', $end_tag, $module_name);
     return $Codestriker::OK;
 }
 

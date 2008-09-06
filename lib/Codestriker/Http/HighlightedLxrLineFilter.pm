@@ -14,14 +14,14 @@ use strict;
 use Codestriker::Http::LxrLineFilter;
 
 @Codestriker::Http::HighlightedLxrLineFilter::ISA =
-    ("Codestriker::Http::LxrLineFilter");
+  ("Codestriker::Http::LxrLineFilter");
 
 # Replace all variables with the appropriate link to LXR.
 sub _filter {
     my ($self, $text) = @_;
 
-	$text =~ s#(<span class="hl kwd">)(.*?)(</span>)#$1 . $self->lxr_ident($2) . $3#geo;
-	$text =~ s#(<span class="kwd">)(.*?)(</span>)#$1 . $self->lxr_ident($2) . $3#geo;
-	$text =~ s#(>\s*)([^<]+?)<#$1 . $self->_handle_identifiers($2) . '<'#gemo;
+    $text =~ s#(<span class="hl kwd">)(.*?)(</span>)#$1 . $self->lxr_ident($2) . $3#geo;
+    $text =~ s#(<span class="kwd">)(.*?)(</span>)#$1 . $self->lxr_ident($2) . $3#geo;
+    $text =~ s#(>\s*)([^<]+?)<#$1 . $self->_handle_identifiers($2) . '<'#gemo;
     return $text;
 }

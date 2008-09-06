@@ -19,19 +19,19 @@ use Codestriker::DB::Column;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "text",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
-    $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
-    $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "timestamp",
-    $Codestriker::DB::Column::TYPE->{FLOAT}	=> "float"
-};
+             $Codestriker::DB::Column::TYPE->{TEXT}    => "text",
+             $Codestriker::DB::Column::TYPE->{VARCHAR}    => "varchar",
+             $Codestriker::DB::Column::TYPE->{INT32}    => "int",
+             $Codestriker::DB::Column::TYPE->{INT16}    => "smallint",
+             $Codestriker::DB::Column::TYPE->{DATETIME}    => "timestamp",
+             $Codestriker::DB::Column::TYPE->{FLOAT}    => "float"
+            };
 
 # Create a new PostgreSQL database object.
 sub new {
     my $type = shift;
     my $url = shift;
-    
+
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     $self->{sequence_created} = 0;
@@ -79,21 +79,21 @@ sub create_table {
     # Make sure the sequence is present in the database for autoincrement
     # fields.
     if ($self->{sequence_created} == 0) {
-	my $dbh = $self->{dbh};
+        my $dbh = $self->{dbh};
 
-	eval {
-	    $dbh->{PrintError} = 0;
+        eval {
+            $dbh->{PrintError} = 0;
 
-	    $dbh->do("CREATE SEQUENCE sequence");
-	    print "Created sequence\n";
-	    $self->commit();
-	};
-	if ($@) {
-	    eval { $self->rollback() };
-	}
+            $dbh->do("CREATE SEQUENCE sequence");
+            print "Created sequence\n";
+            $self->commit();
+        };
+        if ($@) {
+            eval { $self->rollback() };
+        }
 
-	$dbh->{PrintError} = 1;
-	$self->{sequence_created} = 1;
+        $dbh->{PrintError} = 1;
+        $self->{sequence_created} = 1;
     }
 
     # Now let the base class actually do the work in creating the table.
@@ -113,12 +113,12 @@ sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
 
     $expression = $self->{dbh}->quote($expression);
-    
+
     # Use the ILIKE operator.
     return "$field ILIKE $expression";
 }
 
 1;
 
-	
+
 

@@ -32,7 +32,7 @@ sub retrieve ($$$\$) {
 
     # full_element_name = {snapshot_dir}/{filename}@@{revision}
     my $full_element_name = File::Spec->catfile($self->{snapshot_dir},
-						$filename);
+                                                $filename);
     if (defined($revision) && length($revision) > 0) {
         $full_element_name = $full_element_name . '@@' . $revision;
     }
@@ -40,10 +40,9 @@ sub retrieve ($$$\$) {
     # Create a temporary directory to store the results of 'cleartool get'.
     my $tempdir;
     if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
-	$tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
-    }
-    else {
-	$tempdir = tempdir(CLEANUP => 1);
+        $tempdir = tempdir(DIR => $Codestriker::tmpdir, CLEANUP => 1);
+    } else {
+        $tempdir = tempdir(CLEANUP => 1);
     }
 
     my $tempfile = File::Spec->catfile($tempdir, "Temp_YouCanDeleteThis");
@@ -53,8 +52,8 @@ sub retrieve ($$$\$) {
 
     # Call 'cleartool get' to load the element
     my $command = "\"$Codestriker::cleartool\" get " .
-                  "-to \"$tempfile\" \"$full_element_name\" " .
-                  "2> \"$errorfile\"";
+      "-to \"$tempfile\" \"$full_element_name\" " .
+        "2> \"$errorfile\"";
     my $ret = system($command);
 
     eval {
@@ -64,16 +63,16 @@ sub retrieve ($$$\$) {
             # Read in that file and store it in the "$error_msg" variable
             # so that we can return it to the caller.
             open (ERRORFILE, "<$errorfile")
-                || die "ClearTool returned an error, but Codestriker couldn't read from the error file.";
+              || die "ClearTool returned an error, but Codestriker couldn't read from the error file.";
             my (@errorlines) = <ERRORFILE>;
             $error_msg = "Error from ClearTool: " . join(" ", @errorlines);
             close ERRORFILE;
         } else {
             # Operation was successful.  Load the file into the given array.
             open (CONTENTFILE, "<$tempfile")
-                || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
+              || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
             for (my $i = 1; <CONTENTFILE>; $i++) {
-		$_ = Codestriker::decode_topic_text($_);
+                $_ = Codestriker::decode_topic_text($_);
                 chop;
                 $$content_array_ref[$i] = $_;
             }

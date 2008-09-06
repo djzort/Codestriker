@@ -19,7 +19,7 @@ sub process($$$) {
 
     # Check if this operation is allowed.
     if (Codestriker->projects_disabled()) {
-	$http_response->error("This function has been disabled");
+        $http_response->error("This function has been disabled");
     }
 
     # Get the project id that is being edited.
@@ -29,7 +29,7 @@ sub process($$$) {
     $feedback =~ s/\n/<BR>/g;
 
     $http_response->generate_header(topic_title=> "Edit Project",
-				    reload=>0, cache=>1);
+                                    reload=>0, cache=>1);
 
     # Read the project information from the model.
     my $project = Codestriker::Model::Project->read($projectid);
@@ -46,7 +46,7 @@ sub process($$$) {
     $vars->{'doc_url'} = $url_builder->doc_url();
     $vars->{'project_states'} = \@Codestriker::project_states;
     $vars->{'project_state_change_enabled'} =
-	Codestriker->project_state_change_enabled() ? 1 : 0;
+      Codestriker->project_state_change_enabled() ? 1 : 0;
 
     # Display the output via the template.
     my $template = Codestriker::Http::Template->new("editproject");

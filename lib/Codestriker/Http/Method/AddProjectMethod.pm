@@ -17,34 +17,34 @@ use Codestriker::Http::Method;
 # Generate a URL for this method.
 sub url() {
     my ($self, %args) = @_;
-	
+
     if ($self->{cgi_style}) {
         return $self->{url_prefix} . "?action=submit_project";
     } else {
-    	return $self->{url_prefix} . "/admin/projects/add";
+        return $self->{url_prefix} . "/admin/projects/add";
     }
 }
 
 sub extract_parameters {
-	my ($self, $http_input) = @_;
-	
-	my $action = $http_input->{query}->param('action'); 
+    my ($self, $http_input) = @_;
+
+    my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "submit_project") {  
-		$http_input->extract_cgi_parameters();
-		return 1;
-	} elsif ($path_info =~ m{^/admin/projects/add}) {
-	    $self->_extract_nice_parameters($http_input);
-		return 1;
-	} else {
-		return 0;
-	}
+    if ($self->{cgi_style} && defined $action && $action eq "submit_project") {
+        $http_input->extract_cgi_parameters();
+        return 1;
+    } elsif ($path_info =~ m{^/admin/projects/add}) {
+        $self->_extract_nice_parameters($http_input);
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 sub execute {
-	my ($self, $http_input, $http_output) = @_;
-	
-	Codestriker::Action::SubmitNewProject->process($http_input, $http_output);
+    my ($self, $http_input, $http_output) = @_;
+
+    Codestriker::Action::SubmitNewProject->process($http_input, $http_output);
 }
 
 1;

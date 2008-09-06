@@ -18,18 +18,18 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "text",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
-    $Codestriker::DB::Column::TYPE->{INT32}	=> "integer",
-    $Codestriker::DB::Column::TYPE->{INT16}	=> "integer",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "datetime",
-    $Codestriker::DB::Column::TYPE->{FLOAT}	=> "numeric"
-};
+             $Codestriker::DB::Column::TYPE->{TEXT}    => "text",
+             $Codestriker::DB::Column::TYPE->{VARCHAR}    => "varchar",
+             $Codestriker::DB::Column::TYPE->{INT32}    => "integer",
+             $Codestriker::DB::Column::TYPE->{INT16}    => "integer",
+             $Codestriker::DB::Column::TYPE->{DATETIME}    => "datetime",
+             $Codestriker::DB::Column::TYPE->{FLOAT}    => "numeric"
+            };
 
 # Create a new SQLite database object.
 sub new {
     my $type = shift;
-    
+
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     return bless $self, $type;
@@ -52,7 +52,7 @@ sub get_connection {
 sub _map_type {
     my ($self, $type) = @_;
     return $_TYPE->{$type};
-}    
+}
 
 # Autoincrement type for SQLite.  No need to set this, as by default if
 # no entry is set into an integer primary key field, it will act as an
@@ -72,7 +72,7 @@ sub has_like_operator_for_text_field {
 # operation.
 sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
-    
+
     $expression = $self->{dbh}->quote($expression);
 
     # SQLite is case insensitive by default, no need to do anything.

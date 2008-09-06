@@ -18,18 +18,18 @@ use Codestriker::DB::Database;
 
 # Type mappings.
 my $_TYPE = {
-    $Codestriker::DB::Column::TYPE->{TEXT}	=> "longtext",
-    $Codestriker::DB::Column::TYPE->{VARCHAR}	=> "varchar",
-    $Codestriker::DB::Column::TYPE->{INT32}	=> "int",
-    $Codestriker::DB::Column::TYPE->{INT16}	=> "smallint",
-    $Codestriker::DB::Column::TYPE->{DATETIME}	=> "datetime",
-    $Codestriker::DB::Column::TYPE->{FLOAT}	=> "float"
-};
+             $Codestriker::DB::Column::TYPE->{TEXT}    => "longtext",
+             $Codestriker::DB::Column::TYPE->{VARCHAR}    => "varchar",
+             $Codestriker::DB::Column::TYPE->{INT32}    => "int",
+             $Codestriker::DB::Column::TYPE->{INT16}    => "smallint",
+             $Codestriker::DB::Column::TYPE->{DATETIME}    => "datetime",
+             $Codestriker::DB::Column::TYPE->{FLOAT}    => "float"
+            };
 
 # Create a new MySQL database object.
 sub new {
     my $type = shift;
-    
+
     # Database is parent class.
     my $self = Codestriker::DB::Database->new();
     return bless $self, $type;
@@ -51,10 +51,10 @@ sub get_connection {
     # Older MySQL 3.X installations don't support these commands.  Wrap them
     # for now in a block and silently ignore the errors.
     {
-	local $dbh->{RaiseError};
-	local $dbh->{PrintError};
-	$dbh->do("SET NAMES 'utf8'");
-	$dbh->do("SET character_set_results='utf8'");
+        local $dbh->{RaiseError};
+        local $dbh->{PrintError};
+        $dbh->do("SET NAMES 'utf8'");
+        $dbh->do("SET character_set_results='utf8'");
     }
     $dbh->do("SET max_allowed_packet=128000000");
     return $dbh;
@@ -64,7 +64,7 @@ sub get_connection {
 sub _map_type {
     my ($self, $type) = @_;
     return $_TYPE->{$type};
-}    
+}
 
 # Autoincrement type for MySQL.
 sub _get_autoincrement_type {
@@ -76,7 +76,7 @@ sub get_field_def {
     my ($self, $table, $field) = @_;
     my $sth = $self->{dbh}->prepare("SHOW COLUMNS FROM $table");
     $sth->execute;
-    
+
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
         return $ref;
@@ -94,7 +94,7 @@ sub has_like_operator_for_text_field {
 # operation.
 sub case_insensitive_like {
     my ($self, $field, $expression) = @_;
-    
+
     $expression = $self->{dbh}->quote($expression);
 
     # MySQL is case insensitive by default, no need to do anything.

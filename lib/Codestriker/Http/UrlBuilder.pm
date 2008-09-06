@@ -13,8 +13,8 @@ use strict;
 use CGI;
 
 use Codestriker::Http::Method;
-use Codestriker::Http::Method::ListTopicsMethod; 
-use Codestriker::Http::Method::CreateTopicMethod; 
+use Codestriker::Http::Method::ListTopicsMethod;
+use Codestriker::Http::Method::CreateTopicMethod;
 use Codestriker::Http::Method::ViewTopicTextMethod;
 use Codestriker::Http::Method::ViewTopicCommentsMethod;
 use Codestriker::Http::Method::ViewTopicFileMethod;
@@ -40,34 +40,33 @@ sub new {
     my ($type, $query) = @_;
     my $self = {};
 
-	$self->{query} = $query;
+    $self->{query} = $query;
     $self->{cgi_style} = defined $Codestriker::cgi_style ? $Codestriker::cgi_style : 1;
 
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
-  	# else.
-  	$self->{url_prefix} = $query->url();
-   	my $browser = $ENV{'HTTP_USER_AGENT'};
-   	if (defined $browser && $browser =~ m%^Mozilla/(\d)% && $1 <= 4) {
-		$self->{url_prefix} = $self->{query}->url(-relative=>1);
-   	}
+    # else.
+    $self->{url_prefix} = $query->url();
+    my $browser = $ENV{'HTTP_USER_AGENT'};
+    if (defined $browser && $browser =~ m%^Mozilla/(\d)% && $1 <= 4) {
+        $self->{url_prefix} = $self->{query}->url(-relative=>1);
+    }
 
     # Check if the HTML files are accessible via another URL (required for
     # sourceforge deployment).  Check $Codestriker::codestriker_css.
     my $htmlurl;
     if (defined $Codestriker::codestriker_css &&
-	$Codestriker::codestriker_css ne "" &&
-	$Codestriker::codestriker_css =~ /[\/\\]/o) {
-	$htmlurl = $Codestriker::codestriker_css;
-	$htmlurl =~ s/\/.+?\.css//;
-    }
-    else {
-	# Standard Codestriker deployment.
-	$htmlurl = $self->{url_prefix};
-	$htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
+        $Codestriker::codestriker_css ne "" &&
+        $Codestriker::codestriker_css =~ /[\/\\]/o) {
+        $htmlurl = $Codestriker::codestriker_css;
+        $htmlurl =~ s/\/.+?\.css//;
+    } else {
+        # Standard Codestriker deployment.
+        $htmlurl = $self->{url_prefix};
+        $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
     }
     $self->{htmldir} = $htmlurl;
-    
+
     return bless $self, $type;
 }
 
@@ -87,13 +86,13 @@ sub download_url {
 sub create_topic_url {
     my ($self, $obsoletes) = @_;
     return Codestriker::Http::Method::CreateTopicMethod->new($self->{query})->url($obsoletes);
-}	    
+}
 
 # Create the URL for adding a topic to a project.
 sub add_topic_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::AddTopicMethod->new($self->{query})->url(%args);
-}	    
+}
 
 # Create the URL for editing a topic.
 sub edit_url {

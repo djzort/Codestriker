@@ -30,7 +30,7 @@ sub parse ($$$) {
     # Skip initial whitespace.
     my $line = <$fh>;
     while (defined($line) && $line =~ /^\s*$/) {
-	$line = <$fh>;
+        $line = <$fh>;
     }
 
     # Array of results found.
@@ -51,8 +51,8 @@ sub parse ($$$) {
     # Skip the lines up to the table of contents.
     $line = <$fh>;
     while (defined($line) && $line !~ /^\.\.\./) {
-	$line = <$fh>;
-	return () unless defined $line;
+        $line = <$fh>;
+        return () unless defined $line;
     }
 
     # Now read the initial table of contents entries.  For added or
@@ -60,37 +60,37 @@ sub parse ($$$) {
     # repository, as it isn't included in the text of the diff,
     # unlike CVS.
     while (defined($line) && $line =~ /^\.\.\. (.*)\#(\d+) (.*)$/) {
-	my $entry = {};
-	$entry->{filename} = $1;
-	$entry->{revision} = $2;
-	$entry->{change_type} = $3;
-	$entry->{repmatch} = 1;
-	$entry->{old_linenumber} = 0;
-	$entry->{new_linenumber} = 0;
-	$entry->{text} = "";
-	if ($entry->{change_type} eq 'add') {
-	    _retrieve_file($entry, $repository);
-	} elsif ($entry->{change_type} eq 'delete') {
-	    # Need to retrieve the text of the previous revision number,
-	    # as the current one is empty.
-	    $entry->{revision}--;
-	    _retrieve_file($entry, $repository);
-	    $entry->{revision}++;
-	} else {
-	    # Assume it is an edit, nothing else to do, as the diffs
-	    # will be included below.
-	}
-	
-	# Add this to the table of contents array.
-	push @toc, $entry;
-	
-	$line = <$fh>;
-	return () unless defined $line;
+        my $entry = {};
+        $entry->{filename} = $1;
+        $entry->{revision} = $2;
+        $entry->{change_type} = $3;
+        $entry->{repmatch} = 1;
+        $entry->{old_linenumber} = 0;
+        $entry->{new_linenumber} = 0;
+        $entry->{text} = "";
+        if ($entry->{change_type} eq 'add') {
+            _retrieve_file($entry, $repository);
+        } elsif ($entry->{change_type} eq 'delete') {
+            # Need to retrieve the text of the previous revision number,
+            # as the current one is empty.
+            $entry->{revision}--;
+            _retrieve_file($entry, $repository);
+            $entry->{revision}++;
+        } else {
+            # Assume it is an edit, nothing else to do, as the diffs
+            # will be included below.
+        }
+
+        # Add this to the table of contents array.
+        push @toc, $entry;
+
+        $line = <$fh>;
+        return () unless defined $line;
     }
 
     # Skip the lines until the first diff chunk.
     while (defined($line) && $line !~ /^==== /) {
-	$line = <$fh>;
+        $line = <$fh>;
     }
 
     # Now read the actual diff chunks.  Any entries not here will be added
@@ -98,66 +98,66 @@ sub parse ($$$) {
     # retrieved from the repository.
     my $toc_index = 0;
     while (defined($line) && $line =~ /^====/) {
-	# Read the next diff chunk.
-	return () unless $line =~ /^==== (.*)\#(\d+) \((.*)\) ====$/;
-	my $filename = $1;
-	my $revision = $2;
-	my $filetype = $3;
+        # Read the next diff chunk.
+        return () unless $line =~ /^==== (.*)\#(\d+) \((.*)\) ====$/;
+        my $filename = $1;
+        my $revision = $2;
+        my $filetype = $3;
 
-	# Check if there are any outstanding added/removed entries from the
-	# toc that need to be processed first.
-	my $entry = $toc[$toc_index];
-	while ($entry->{filename} ne $filename) {
-	    my $chunk = _make_chunk($entry);
-	    push @result, $chunk;
+        # Check if there are any outstanding added/removed entries from the
+        # toc that need to be processed first.
+        my $entry = $toc[$toc_index];
+        while ($entry->{filename} ne $filename) {
+            my $chunk = _make_chunk($entry);
+            push @result, $chunk;
 
-	    # Check the next TOC entry, if any.
-	    last if ($toc_index >= $#toc);
+            # Check the next TOC entry, if any.
+            last if ($toc_index >= $#toc);
 
-	    $toc_index++;
-	    $entry = $toc[$toc_index];
-	}
+            $toc_index++;
+            $entry = $toc[$toc_index];
+        }
 
-	# Skip the next blank line before the unidiff.
-	$line = <$fh>;
-	next unless defined $line;
+        # Skip the next blank line before the unidiff.
+        $line = <$fh>;
+        next unless defined $line;
 
-	if ($filetype =~ /.*text/) {
-	    # Now read the entire diff chunk.
-	    # Note there may be an optional '---' and '+++' lines
-	    # before the chunk.
-	    my $lastpos = tell $fh;
-	    if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
-		# Move the file pointer back.
-		seek $fh, $lastpos, 0;
-	    }
+        if ($filetype =~ /.*text/) {
+            # Now read the entire diff chunk.
+            # Note there may be an optional '---' and '+++' lines
+            # before the chunk.
+            my $lastpos = tell $fh;
+            if (<$fh> !~ /^\-\-\-/ || <$fh> !~ /^\+\+\+/) {
+                # Move the file pointer back.
+                seek $fh, $lastpos, 0;
+            }
 
-	    my @file_diffs = Codestriker::FileParser::UnidiffUtils->
-		read_unidiff_text($fh, $filename, $revision, $repmatch);
-	    push @result, @file_diffs;
-	} else {
-	    # Assume it is a binary file, initialise the chunk from the
-	    # TOC entry, and flag it as binary.
-	    my $chunk = _make_chunk($entry);
-	    $chunk->{binary} = 1;
-	    push @result, $chunk;
-	}
+            my @file_diffs = Codestriker::FileParser::UnidiffUtils->
+              read_unidiff_text($fh, $filename, $revision, $repmatch);
+            push @result, @file_diffs;
+        } else {
+            # Assume it is a binary file, initialise the chunk from the
+            # TOC entry, and flag it as binary.
+            my $chunk = _make_chunk($entry);
+            $chunk->{binary} = 1;
+            push @result, $chunk;
+        }
 
-	# Move on to the next entry in the TOC.
-	$toc_index++;
+        # Move on to the next entry in the TOC.
+        $toc_index++;
 
-	# Skip the next blank line before the next chunk.
-	$line = <$fh>;
-	while (defined $line && $line =~ /^\s*$/) {
-		$line = <$fh>;
-	}
+        # Skip the next blank line before the next chunk.
+        $line = <$fh>;
+        while (defined $line && $line =~ /^\s*$/) {
+            $line = <$fh>;
+        }
     }
 
     # Finally, add any remaining TOC netries that are unaccounted for.
     while ($toc_index <= $#toc) {
-	my $chunk = _make_chunk($toc[$toc_index]);
-	push @result, $chunk;
-	$toc_index++;
+        my $chunk = _make_chunk($toc[$toc_index]);
+        push @result, $chunk;
+        $toc_index++;
     }
 
     # Return the found diff chunks.
@@ -185,24 +185,24 @@ sub _retrieve_file ($$) {
     my ($entry, $repository) = @_;
 
     eval {
-	my $added = $entry->{change_type} eq 'add';
-	my @text = ();
-	$repository->retrieve($entry->{filename}, $entry->{revision},
-			      \@text);
-	if ($#text >= 0) {
-	    if ($added) {
-		$entry->{new_linenumber} = 1;
-	    } else {
-		$entry->{old_linenumber} = 1;
-	    }
-	    for (my $i = 1; $i <= $#text; $i++) {
-		$entry->{text} .= ($added ? "+" : "-") . $text[$i] . "\n";
-	    }
-	}
+        my $added = $entry->{change_type} eq 'add';
+        my @text = ();
+        $repository->retrieve($entry->{filename}, $entry->{revision},
+                              \@text);
+        if ($#text >= 0) {
+            if ($added) {
+                $entry->{new_linenumber} = 1;
+            } else {
+                $entry->{old_linenumber} = 1;
+            }
+            for (my $i = 1; $i <= $#text; $i++) {
+                $entry->{text} .= ($added ? "+" : "-") . $text[$i] . "\n";
+            }
+        }
     };
     if ($@) {
-	# Problem retrieving text, assume there is no repository match.
-	$entry->{repmatch} = 0;
+        # Problem retrieving text, assume there is no repository match.
+        $entry->{repmatch} = 0;
     }
 }
 

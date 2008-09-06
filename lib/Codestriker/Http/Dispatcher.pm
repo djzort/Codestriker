@@ -13,8 +13,8 @@ use strict;
 use CGI;
 
 use Codestriker::Http::Method;
-use Codestriker::Http::Method::ListTopicsMethod; 
-use Codestriker::Http::Method::CreateTopicMethod; 
+use Codestriker::Http::Method::ListTopicsMethod;
+use Codestriker::Http::Method::CreateTopicMethod;
 use Codestriker::Http::Method::ViewTopicTextMethod;
 use Codestriker::Http::Method::ViewTopicCommentsMethod;
 use Codestriker::Http::Method::ViewTopicFileMethod;
@@ -42,63 +42,64 @@ use Codestriker::Http::Method::AddProjectMethod;
 # Initialise all of the methods that are known to the system.
 # TODO: add configuration to the parameter.
 sub new {
-	my ($type, $query) = @_;
-	
+    my ($type, $query) = @_;
+
     my $self = {};
+    $self->{query} = $query;
     $self->{list_topics_method} =
-        Codestriker::Http::Method::ListTopicsMethod->new($query); 
+      Codestriker::Http::Method::ListTopicsMethod->new($query);
     $self->{create_topic_method} =
-        Codestriker::Http::Method::CreateTopicMethod->new($query); 
+      Codestriker::Http::Method::CreateTopicMethod->new($query);
 
-	my @methods = ();
-	push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewTopicTextMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewTopicCommentsMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewTopicFileMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewTopicMetricsMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query);
-	push @methods, Codestriker::Http::Method::UpdateTopicPropertiesMethod->new($query);
-	push @methods, Codestriker::Http::Method::UpdateTopicMetricsMethod->new($query);
-	push @methods, Codestriker::Http::Method::UpdateCommentMetricsMethod->new($query);
-	push @methods, $self->{list_topics_method};
-	push @methods, Codestriker::Http::Method::CreateCommentMethod->new($query);
-	push @methods, Codestriker::Http::Method::AddCommentMethod->new($query);
-	push @methods, Codestriker::Http::Method::AddTopicMethod->new($query);
-	push @methods, Codestriker::Http::Method::CreateProjectMethod->new($query);
-	push @methods, $self->{create_topic_method};
-	push @methods, Codestriker::Http::Method::DownloadTopicTextMethod->new($query);
-	push @methods, Codestriker::Http::Method::DownloadMetricsMethod->new($query);
-	push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
-	push @methods, Codestriker::Http::Method::UpdateProjectMethod->new($query);
-	push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
-	push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
-	push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
-	push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
-	push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
-	push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
+    my @methods = ();
+    push @methods, Codestriker::Http::Method::SearchTopicsMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewTopicTextMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewTopicCommentsMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewTopicFileMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewTopicMetricsMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewTopicPropertiesMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdateTopicPropertiesMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdateTopicMetricsMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdateCommentMetricsMethod->new($query);
+    push @methods, $self->{list_topics_method};
+    push @methods, Codestriker::Http::Method::CreateCommentMethod->new($query);
+    push @methods, Codestriker::Http::Method::AddCommentMethod->new($query);
+    push @methods, Codestriker::Http::Method::AddTopicMethod->new($query);
+    push @methods, Codestriker::Http::Method::CreateProjectMethod->new($query);
+    push @methods, $self->{create_topic_method};
+    push @methods, Codestriker::Http::Method::DownloadTopicTextMethod->new($query);
+    push @methods, Codestriker::Http::Method::DownloadMetricsMethod->new($query);
+    push @methods, Codestriker::Http::Method::EditProjectMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdateProjectMethod->new($query);
+    push @methods, Codestriker::Http::Method::ListProjectsMethod->new($query);
+    push @methods, Codestriker::Http::Method::SubmitSearchTopicsMethod->new($query);
+    push @methods, Codestriker::Http::Method::StaticResourcesMethod->new($query);
+    push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
+    push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
 
-	$self->{methods} = \@methods;
+    $self->{methods} = \@methods;
     return bless $self, $type;
 }
 
 # Determine which method can satisfy the input request and dispatch it
 # to the appropriate action.
 sub dispatch {
-	my ($self, $http_input, $http_output) = @_;
-	
-	foreach my $method ( @{$self->{methods}} ) {
-		if ($method->extract_parameters($http_input)) {
-			$method->execute($http_input, $http_output);
-			return;
-		}
-	}
-	
-	# If we have reached here, execute the default method.
-	if ($Codestriker::allow_searchlist) {
-		$self->{list_topics_method}->execute($http_input, $http_output);
+    my ($self, $http_input, $http_output) = @_;
+
+    foreach my $method ( @{$self->{methods}} ) {
+        if ($method->extract_parameters($http_input)) {
+            $method->execute($http_input, $http_output);
+            return;
+        }
+    }
+
+    # If we have reached here, execute the default method.
+    if ($Codestriker::allow_searchlist) {
+        $self->{list_topics_method}->execute($http_input, $http_output);
     } else {
-		$self->{create_topic_method}->execute($http_input, $http_output);
-	}
+        $self->{create_topic_method}->execute($http_input, $http_output);
+    }
 }
 
 1;
