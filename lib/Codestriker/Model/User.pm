@@ -45,6 +45,44 @@ sub new {
     return $self;
 }
 
+# Update an existing user record with a new password.
+sub update_password {
+    my ($self, $new_password) = @_;
+
+    my $password_hash = _hash_password($new_password);
+    my $dbh = Codestriker::DB::DBI->get_connection();
+    eval {
+        my $update_user =
+          $dbh->prepare_cached('UPDATE usertable SET password_hash = ? ' .
+                               'WHERE email = ?');
+        $update_user->execute($password_hash, $self->{email});
+    };
+    my $success = $@ ? 0 : 1;
+
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+
+    $self->{password_hash} = $password_hash;
+}
+
+# Update an existing user record with new admin status.
+sub update_admin {
+    my ($self, $new_admin) = @_;
+
+    my $dbh = Codestriker::DB::DBI->get_connection();
+    eval {
+        my $update_user =
+          $dbh->prepare_cached('UPDATE usertable SET admin = ? ' .
+                               'WHERE email = ?');
+        $update_user->execute($new_admin, $self->{email});
+    };
+    my $success = $@ ? 0 : 1;
+
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+
+    $self->{admin} = $new_admin;
+}
 
 # Create a new user into the database with all of the specified properties.
 # Return the new password which has been assigned to the user.

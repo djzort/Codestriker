@@ -55,6 +55,7 @@ eval("use Codestriker::FileParser::Parser");
 eval("use Codestriker::FileParser::UnknownFormat");
 eval("use Codestriker::Model::File");
 eval("use Codestriker::Model::User");
+use Codestriker::Model::User;
 
 # Set this variables, to avoid compilation warnings below.
 $Codestriker::COMMENT_SUBMITTED = 0;
@@ -1077,6 +1078,14 @@ if (defined $Codestriker::admin_users) {
             Codestriker::Model::User->create($admin_user, 1);
             # TODO: consider sending email with password details.
             print "Done\n";
+        } else {
+            # Existing user, check if they are an admin already.
+            my $user = Codestriker::Model::User->new($admin_user);
+            if (! $user->{admin}) {
+                print "Upgrading non-admin user $admin_user to admin...\n";
+                $user->update_admin(1);
+                print "Done\n";
+            }
         }
     }
 }
