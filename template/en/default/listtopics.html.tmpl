@@ -10,7 +10,7 @@
 [% END %]
 
 [%# Display the heading and create the table #%]
-<FORM METHOD="post" ENCTYPE="multipart/form-data">
+<FORM METHOD="post" ENCTYPE="multipart/form-data" ACTION="[% action_url %]">
 <input TYPE="hidden" NAME="action" VALUE="change_topics_state" />
 
 [%# Store the search parameters as hidden variables #%]

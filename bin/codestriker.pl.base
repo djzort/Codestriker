@@ -1,141 +1,140 @@
-        [% hash_ex_line %]
+[% hash_ex_line %]
 
-        [% scary_warning %]
+[% scary_warning %]
 
-        ###############################################################################
-        # Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
-        # sits@users.sourceforge.net
-        #
-        # This program is free software; you can redistribute it and modify it under
-        # the terms of the GPL.
+###############################################################################
+# Codestriker: Copyright (c) 2001, 2002 David Sitsky.  All rights reserved.
+# sits@users.sourceforge.net
+#
+# This program is free software; you can redistribute it and modify it under
+# the terms of the GPL.
 
-        # This is the top level package which receives all HTTP requests, and
-        # delegates it to the appropriate Action module.
+# This is the top level package which receives all HTTP requests, and
+# delegates it to the appropriate Action module.
 
-        require 5.008_0;
+require 5.008_0;
 
-        # Set this to the location of the Codestriker libraries on your system.
-        # Ideally, this should be done in the apache configs, but trying to do this
-        # in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
-        # checking turned out to be a major headache.  For mod_perl, setting this
-        # ensures the first time Codestriker is loaded, it can be compiled properly,
-        # even if @INC is blatted later.  Also note all the use declarations below
-        # effectively "pre-load" all of the Codestriker modules in the system, as the
-        # modules below load all of their supporting modules.  That is why the
-        # template plugins are "pre-loaded" here.
-        [% scmbug_lib %]
-        [% codestriker_lib %]
+# Set this to the location of the Codestriker libraries on your system.
+# Ideally, this should be done in the apache configs, but trying to do this
+# in an easy way for Apache1/Apache2 with/without mod_perl with/without taint
+# checking turned out to be a major headache.  For mod_perl, setting this
+# ensures the first time Codestriker is loaded, it can be compiled properly,
+# even if @INC is blatted later.  Also note all the use declarations below
+# effectively "pre-load" all of the Codestriker modules in the system, as the
+# modules below load all of their supporting modules.  That is why the
+# template plugins are "pre-loaded" here.
+[% scmbug_lib %]
+[% codestriker_lib %]
 
-        use strict;
+use strict;
 
-        use CGI qw/:standard :html3/;
-        use CGI::Carp 'fatalsToBrowser';
+use CGI qw/:standard :html3/;
+use CGI::Carp 'fatalsToBrowser';
 
-        use Codestriker;
-        use Codestriker::Http::Input;
-        use Codestriker::Http::Response;
-        use Codestriker::Http::Dispatcher;
-        use Codestriker::Action::CreateTopic;
-        use Codestriker::Action::EditComment;
-        use Codestriker::Action::Search;
-        use Codestriker::Action::ListTopics;
-        use Codestriker::Action::DownloadTopic;
-        use Codestriker::Action::ListProjects;
-        use Codestriker::Action::EditProject;
-        use Codestriker::Action::CreateProject;
-        use Codestriker::Action::MetricsReport;
-        use Codestriker::Action::SubmitEditTopicProperties;
-        use Codestriker::Action::SubmitEditTopicMetrics;
-        use Codestriker::Action::SubmitEditTopicsState;
-        use Codestriker::Action::SubmitEditCommentsState;
-        use Codestriker::Action::SubmitEditProject;
-        use Codestriker::Action::SubmitNewProject;
-        use Codestriker::Action::SubmitNewTopic;
-        use Codestriker::Action::SubmitNewComment;
-        use Codestriker::Action::SubmitSearch;
-        use Codestriker::Action::ViewTopicFile;
-        use Codestriker::Action::ViewTopicInfo;
-        use Codestriker::Action::ViewTopic;
-        use Codestriker::Action::ViewTopicProperties;
-        use Codestriker::Action::ViewTopicComments;
-        [% IF has_rss %]use Codestriker::Action::ListTopicsRSS; [% END %]
+use Codestriker;
+use Codestriker::Http::Input;
+use Codestriker::Http::Response;
+use Codestriker::Http::Dispatcher;
+use Codestriker::Action::CreateTopic;
+use Codestriker::Action::EditComment;
+use Codestriker::Action::Search;
+use Codestriker::Action::ListTopics;
+use Codestriker::Action::DownloadTopic;
+use Codestriker::Action::ListProjects;
+use Codestriker::Action::EditProject;
+use Codestriker::Action::CreateProject;
+use Codestriker::Action::MetricsReport;
+use Codestriker::Action::SubmitEditTopicProperties;
+use Codestriker::Action::SubmitEditTopicMetrics;
+use Codestriker::Action::SubmitEditTopicsState;
+use Codestriker::Action::SubmitEditCommentsState;
+use Codestriker::Action::SubmitEditProject;
+use Codestriker::Action::SubmitNewProject;
+use Codestriker::Action::SubmitNewTopic;
+use Codestriker::Action::SubmitNewComment;
+use Codestriker::Action::SubmitSearch;
+use Codestriker::Action::ViewTopicFile;
+use Codestriker::Action::ViewTopicInfo;
+use Codestriker::Action::ViewTopic;
+use Codestriker::Action::ViewTopicProperties;
+use Codestriker::Action::ViewTopicComments;
+[% IF has_rss %]use Codestriker::Action::ListTopicsRSS; [% END %]
 
-        use Codestriker::Template::Plugin::AutomagicLinks;
-        use Codestriker::Template::Plugin::JavascriptEscape;
-        use Codestriker::Template::Plugin::StringObfuscator;
-        use Codestriker::Template::Plugin::FormatWhitespace;
+use Codestriker::Template::Plugin::AutomagicLinks;
+use Codestriker::Template::Plugin::JavascriptEscape;
+use Codestriker::Template::Plugin::StringObfuscator;
+use Codestriker::Template::Plugin::FormatWhitespace;
 
-        # Set the temp file location, if one has been specified.
-        if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
-            $CGITempFile::TMPDIRECTORY = $Codestriker::tmpdir;
-            }
+# Set the temp file location, if one has been specified.
+if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne '') {
+    $CGITempFile::TMPDIRECTORY = $Codestriker::tmpdir;
+}
 
-            # Set the PATH to something sane if we aren't running under windows.
-            # For a lot of annoying reasons, we can't run Codestriker in
-            # tainted mode under Win32.
-            if (Codestriker::is_windows()) {
-                $ENV{'PATH'} = '';
-                } else {
-                    $ENV{'PATH'} = '/bin:/usr/bin';
-                    }
+# Set the PATH to something sane if we aren't running under windows.
+# For a lot of annoying reasons, we can't run Codestriker in
+# tainted mode under Win32.
+if (Codestriker::is_windows()) {
+    $ENV{'PATH'} = '';
+} else {
+    $ENV{'PATH'} = '/bin:/usr/bin';
+}
 
-                    # Prototypes of subroutines used in this module.
-                    sub main();
+# Prototypes of subroutines used in this module.
+sub main();
 
-                    main;
+main;
 
-                    sub main() {
-                        # Initialise Codestriker, load up the configuration file.
-                            Codestriker->initialise([% codestriker_conf %]);
+sub main() {
+    # Initialise Codestriker, load up the configuration file.
+    Codestriker->initialise([% codestriker_conf %]);
 
-                            [% IF has_rss %]
-                                # Only generated if install.pl found a good version of XML::RSS.
-                                    $Codestriker::rss_enabled = 1;
-                                    [% ELSE %]
-                                        # valid XML::RSS not found
-                                            $Codestriker::rss_enabled = 0;
-                                            [% END %]
+    [% IF has_rss %]
+      # Only generated if install.pl found a good version of XML::RSS.
+      $Codestriker::rss_enabled = 1;
+    [% ELSE %]
+      # valid XML::RSS not found
+      $Codestriker::rss_enabled = 0;
+    [% END %]
 
-                                                # If allow_delete is defined, but topic state 'Delete' is not, add it
-                                                    # in.  This accounts for older configuration files.
-                                                        if (defined $Codestriker::allow_delete && $Codestriker::allow_delete &&
-                                                            (! grep /^Deleted$/, @Codestriker::topic_states)) {
-                                                                push @Codestriker::topic_states, 'Deleted';
-                                                                    }
+    # If allow_delete is defined, but topic state 'Delete' is not, add it
+    # in.  This accounts for older configuration files.
+    if (defined $Codestriker::allow_delete && $Codestriker::allow_delete &&
+        (! grep /^Deleted$/, @Codestriker::topic_states)) {
+        push @Codestriker::topic_states, 'Deleted';
+    }
 
-                                                                        # Check if the old $allow_comment_email configuration option has been
-                                                                            # specified in the config file, rather than the new $email_send_options
-                                                                                # setting.
-                                                                                    if (defined $Codestriker::allow_comment_email &&
-                                                                                        ! defined $Codestriker::email_send_options) {
-                                                                                            $Codestriker::email_send_options =
-                                                                                                {
-                                                                                                      comments_sent_to_topic_author => $Codestriker::allow_comment_email,
-                                                                                                            comments_sent_to_commenter => $Codestriker::allow_comment_email,
-                                                                                                                  topic_state_change_sent_to_reviewers => 0
-                                                                                                                      };
-                                                                                                                          }
+    # Check if the old $allow_comment_email configuration option has been
+    # specified in the config file, rather than the new $email_send_options
+    # setting.
+    if (defined $Codestriker::allow_comment_email &&
+        ! defined $Codestriker::email_send_options) {
+        $Codestriker::email_send_options =
+          {
+           comments_sent_to_topic_author => $Codestriker::allow_comment_email,
+           comments_sent_to_commenter => $Codestriker::allow_comment_email,
+           topic_state_change_sent_to_reviewers => 0
+          };
+    }
 
-                                                                                                                              # Limit the size of the posts that can be done.
-                                                                                                                                  $CGI::POST_MAX=$Codestriker::DIFF_SIZE_LIMIT;
+    # Limit the size of the posts that can be done.
+    $CGI::POST_MAX=$Codestriker::DIFF_SIZE_LIMIT;
 
-                                                                                                                                      # Load the CGI object, and prepare the HTTP response.
-                                                                                                                                          my $query = new CGI;
-                                                                                                                                              my $http_response = Codestriker::Http::Response->new($query);
+    # Load the CGI object, and prepare the HTTP response.
+    my $query = new CGI;
+    my $http_response = Codestriker::Http::Response->new($query);
 
-                                                                                                                                                  # TODO: need to put in mapping here from new URL scheme to old
-                                                                                                                                                      # scheme.
+    # TODO: need to put in mapping here from new URL scheme to old
+    # scheme.
 
-                                                                                                                                                          # Process the HTTP input to ensure it is consistent.
-                                                                                                                                                              my $http_input = Codestriker::Http::Input->new($query, $http_response);
+    # Process the HTTP input to ensure it is consistent.
+    my $http_input = Codestriker::Http::Input->new($query, $http_response);
 
-                                                                                                                                                                  my $dispatcher = Codestriker::Http::Dispatcher->new($query);
-                                                                                                                                                                      $dispatcher->dispatch($http_input, $http_response);
+    my $dispatcher = Codestriker::Http::Dispatcher->new($query);
+    $dispatcher->dispatch($http_input, $http_response);
 
-                                                                                                                                                                      #[% IF has_rss %]
-                                                                                                                                                                          # only generated if checksetup.pl found a good version of XML::RSS.
-                                                                                                                                                                          #    } elsif ($action eq "list_topics_rss") {
-                                                                                                                                                                          #    Codestriker::Action::ListTopicsRSS->process($http_input,
-                                                                                                                                                                          #                                $http_response);
-                                                                                                                                                                          #[% END %]
-                                                                                                                                                                          }
+    # only generated if checksetup.pl found a good version of XML::RSS.
+    #    } elsif ($action eq "list_topics_rss") {
+    #    Codestriker::Action::ListTopicsRSS->process($http_input,
+    #                                $http_response);
+    #
+}

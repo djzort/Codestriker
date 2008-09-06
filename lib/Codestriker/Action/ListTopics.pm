@@ -52,11 +52,12 @@ sub process_default($$$) {
          $sort_order) = get_topic_list_query_params($http_input);
 
     # Query the model for the specified data.
-    my @topics = Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
-                                                  $sstate, $sproject, $stext,
-                                                  $stitle, $sdescription,
-                                                  $scomments, $sbody, $sfilename,
-                                                  $sort_order);
+    my @topics =
+      Codestriker::Model::Topic->query($sauthor, $sreviewer, $scc, $sbugid,
+                                       $sstate, $sproject, $stext,
+                                       $stitle, $sdescription,
+                                       $scomments, $sbody, $sfilename,
+                                       $sort_order);
 
     # Display the data, with each topic title linked to the view topic screen.
     # If only a single project id is being searched over, set that id in the
@@ -236,6 +237,7 @@ sub process_default($$$) {
 
     $vars->{'list_projects_url'} = $url_builder->list_projects_url();
     $vars->{'view_metrics_url'} = $url_builder->metric_report_url();
+    $vars->{'action_url'} = $url_builder->update_topic_states_url();
 
     my $template = Codestriker::Http::Template->new("listtopics");
     $template->process($vars);

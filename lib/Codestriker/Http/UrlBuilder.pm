@@ -34,6 +34,7 @@ use Codestriker::Http::Method::ViewMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 use Codestriker::Http::Method::UpdateTopicMetricsMethod;
 use Codestriker::Http::Method::UpdateCommentMetricsMethod;
+use Codestriker::Http::Method::UpdateTopicStateMethod;
 
 # Constructor for this class.
 sub new {
@@ -201,6 +202,12 @@ sub view_topicinfo_url {
 sub update_topicinfo_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::UpdateTopicMetricsMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for updating a number of topic states.
+sub update_topic_states_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::UpdateTopicStateMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for adding new comments.

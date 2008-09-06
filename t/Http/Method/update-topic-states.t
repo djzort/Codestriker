@@ -22,7 +22,7 @@ is($url_cgi->url(projectid => 10),
    "Update topic state URL CGI syntax");
    
 is($url_nice->url(projectid => 10),
-   $mock_query->url() . '/project/10/topic/update',
+   $mock_query->url() . '/topics/update',
    "Update topic state URL nice syntax");
 
 # Check that the parameters extracted correctly.
@@ -31,10 +31,9 @@ $mock_http_input->{query} = $mock_query;
 $mock_http_input->mock('extract_cgi_parameters', sub { return undef; });                  
 $mock_query->mock('path_info',
                   sub {
-                  	return '/project/10/topic/update';
+                  	return '/topics/update';
                   });
 $mock_query->mock('param', sub { return undef; });                  
 $url_nice->extract_parameters($mock_http_input);
-is ($mock_http_input->{projectid}, "10", "project nice URL parameter extraction");
 
                               

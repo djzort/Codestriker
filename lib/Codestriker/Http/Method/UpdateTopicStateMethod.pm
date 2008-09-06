@@ -22,8 +22,7 @@ sub url() {
     if ($self->{cgi_style}) {
         return $self->{url_prefix} . "?action=change_topics_state";
     } else {
-        confess "Parameter projectid missing" unless defined $args{projectid};
-        return $self->{url_prefix} . "/project/$args{projectid}/topic/update";
+        return $self->{url_prefix} . "/topics/update";
     }
 }
 
@@ -32,12 +31,12 @@ sub extract_parameters {
 
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "change_topics_state") {
+    if ($self->{cgi_style} && defined $action &&
+        $action eq "change_topics_state") {
         $http_input->extract_cgi_parameters();
         return 1;
-    } elsif ($path_info =~ m{^/project/\d+/topic/update}) {
-        $self->_extract_nice_parameters($http_input,
-                                        project => 'projectid');
+    } elsif ($path_info =~ m{^/topics/update}) {
+        $self->_extract_nice_parameters($http_input);
         return 1;
     } else {
         return 0;
