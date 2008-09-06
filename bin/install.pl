@@ -54,6 +54,7 @@ eval("use Codestriker::Repository::RepositoryFactory");
 eval("use Codestriker::FileParser::Parser");
 eval("use Codestriker::FileParser::UnknownFormat");
 eval("use Codestriker::Model::File");
+eval("use Codestriker::Model::User");
 
 # Set this variables, to avoid compilation warnings below.
 $Codestriker::COMMENT_SUBMITTED = 0;
@@ -572,6 +573,15 @@ my $project_table =
         indexes => [dbindex(name=>"project_name_idx",
                             column_names=>["name"])]);
 
+# This table records all users which are present in the system.
+my $user_table =
+  table(name => "usertable",
+        columns => [col(name=>"email", type=>$VARCHAR, length=>200, pk=>1),
+                    col(name=>"password_hash", type=>$VARCHAR, length=>128),
+                    col(name=>"admin", type=>$INT16)
+                   ],
+        indexes => []);
+
 # Add all of the Codestriker tables into an array.
 my @tables = ();
 push @tables, $topic_table;
@@ -589,6 +599,7 @@ push @tables, $topicbug_table;
 push @tables, $topicfile_table;
 push @tables, $delta_table;
 push @tables, $project_table;
+push @tables, $user_table;
 
 # Move a table into table_old, create the table with the new definitions,
 # and create the indexes.
@@ -1057,7 +1068,18 @@ if ($@) {
     print "Failed because of $@\n";
 }
 
+# Now create any admin users, if necessary.
 $dbh->{PrintError} = 1;
+if (defined $Codestriker::admin_users) {
+    foreach my $admin_user (@{ $Codestriker::admin_users }) {
+        if (!Codestriker::Model::User->exists($admin_user)) {
+            print "Creating admin user $admin_user...\n";
+            Codestriker::Model::User->create($admin_user, 1);
+            # TODO: consider sending email with password details.
+            print "Done\n";
+        }
+    }
+}
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).
