@@ -1,7 +1,7 @@
 # Tests for the UpdateTopicStates method.
 
 use strict;
-use Test::More tests => 3;
+use Test::More tests => 2;
 
 use lib '../../../lib';
 use Test::MockObject;
@@ -35,5 +35,3 @@ $mock_query->mock('path_info',
                   });
 $mock_query->mock('param', sub { return undef; });                  
 $url_nice->extract_parameters($mock_http_input);
-
-                              

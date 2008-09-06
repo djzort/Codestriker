@@ -20,7 +20,8 @@
 <p>
 [% END %]
 
-<FORM METHOD="post" ENCTYPE="multipart/form-data" ACCEPT-CHARSET="UTF-8" ACTION="[% action_url %]">
+<FORM NAME="createtopicform" METHOD="post" ENCTYPE="multipart/form-data" ACCEPT-CHARSET="UTF-8" action="[% action_url %]" 
+      ONSUBMIT="document.createtopicform.action = '[% action_url %]/project/' + document.createtopicform.elements['projectid'].options[document.createtopicform.elements['projectid'].selectedIndex].value + '/topics/add';">
 <INPUT TYPE="hidden" NAME="action" VALUE="submit_new_topic" />
 <INPUT TYPE="hidden" NAME="obsoletes" VALUE="[% obsoletes %]" />
 

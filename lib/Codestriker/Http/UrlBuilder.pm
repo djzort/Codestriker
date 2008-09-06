@@ -42,7 +42,6 @@ sub new {
     my $self = {};
 
     $self->{query} = $query;
-    $self->{cgi_style} = defined $Codestriker::cgi_style ? $Codestriker::cgi_style : 1;
 
     # Determine what prefix is required when using relative URLs.
     # Unfortunately, Netcsape 4.x does things differently to everyone
