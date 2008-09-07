@@ -5,13 +5,12 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Method for going to the reset password form.
+# Method for resetting a password.
 
 package Codestriker::Http::Method::ResetPasswordMethod;
 
 use strict;
 use Codestriker::Http::Method;
-use Codestriker::Action::ResetPassword;
 
 @Codestriker::Http::Method::ResetPasswordMethod::ISA = ("Codestriker::Http::Method");
 
@@ -21,11 +20,10 @@ sub url() {
 
     if ($self->{cgi_style}) {
         return $self->{url_prefix} . "?action=reset_password" .
-          "&email=" . CGI::escape($args{email}) .
-          "&challenge=" . CGI::escape($args{challenge});
+          "&email=" . CGI::escape($args{email});
     } else {
         return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/reset/challenge/" . CGI::escape($args{challenge});
+          "/password/reset";
     }
 }
 
@@ -37,10 +35,9 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "reset_password") {
         $http_input->extract_cgi_parameters();
         return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/reset/challenge/}) {
+    } elsif ($path_info =~ m{^/user/.*/password/reset$}) {
         $self->_extract_nice_parameters($http_input,
-                                        user => 'email',
-                                        challenge => 'challenge');
+                                        user => 'email');
         return 1;
     } else {
         return 0;
@@ -50,7 +47,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-    Codestriker::Action::ResetPassword->process($http_input, $http_output);
+#    Codestriker::Action::UpdatePassword->process($http_input, $http_output);
 }
 
 1;

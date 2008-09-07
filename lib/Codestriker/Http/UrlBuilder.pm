@@ -37,8 +37,9 @@ use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::LoginMethod;
 use Codestriker::Http::Method::AuthenticateMethod;
-use Codestriker::Http::Method::ResetPasswordMethod;
+use Codestriker::Http::Method::NewPasswordMethod;
 use Codestriker::Http::Method::UpdatePasswordMethod;
+use Codestriker::Http::Method::ResetPasswordMethod;
 
 # Constructor for this class.
 sub new {
@@ -235,16 +236,22 @@ sub login_url {
     return Codestriker::Http::Method::LoginMethod->new($self->{query})->url(%args);
 }
 
-# Create the URL for resetting a password.
-sub reset_password_url {
+# Create the URL for setting a new password.
+sub new_password_url {
     my ($self, %args) = @_;
-    return Codestriker::Http::Method::ResetPasswordMethod->new($self->{query})->url(%args);
+    return Codestriker::Http::Method::NewPasswordMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for updating a password.
 sub update_password_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::UpdatePasswordMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for resetting a password.
+sub reset_password_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::ResetPasswordMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for authenticating.

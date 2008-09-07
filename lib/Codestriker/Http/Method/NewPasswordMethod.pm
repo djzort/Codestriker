@@ -5,25 +5,27 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Method for updating a password.
+# Method for going to the reset password form.
 
-package Codestriker::Http::Method::UpdatePasswordMethod;
+package Codestriker::Http::Method::NewPasswordMethod;
 
 use strict;
 use Codestriker::Http::Method;
+use Codestriker::Action::NewPassword;
 
-@Codestriker::Http::Method::UpdatePasswordMethod::ISA = ("Codestriker::Http::Method");
+@Codestriker::Http::Method::NewPasswordMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
 sub url() {
     my ($self, %args) = @_;
 
     if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=update_password" .
-          "&email=" . CGI::escape($args{email});
+        return $self->{url_prefix} . "?action=new_password" .
+          "&email=" . CGI::escape($args{email}) .
+          "&challenge=" . CGI::escape($args{challenge});
     } else {
         return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/update";
+          "/password/new/challenge/" . CGI::escape($args{challenge});
     }
 }
 
@@ -32,12 +34,13 @@ sub extract_parameters {
 
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "update_password") {
+    if ($self->{cgi_style} && defined $action && $action eq "new_password") {
         $http_input->extract_cgi_parameters();
         return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/update$}) {
+    } elsif ($path_info =~ m{^/user/.*/password/new/challenge/}) {
         $self->_extract_nice_parameters($http_input,
-                                        user => 'email');
+                                        user => 'email',
+                                        challenge => 'challenge');
         return 1;
     } else {
         return 0;
@@ -47,7 +50,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-#    Codestriker::Action::UpdatePassword->process($http_input, $http_output);
+    Codestriker::Action::NewPassword->process($http_input, $http_output);
 }
 
 1;
