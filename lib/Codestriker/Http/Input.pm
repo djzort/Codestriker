@@ -106,6 +106,8 @@ sub extract_cgi_parameters {
     $self->{selected_comments} = \@selected_comments;
     $self->{default_to_head} = $query->param('default_to_head');
     $self->{email_event} = $query->param('email_event');
+    $self->{redirect} = $query->param('redirect');
+    $self->{challenge} = $query->param('challenge');
 
     # Set any missing parameters from the cookie.
     my %cookie = Codestriker::Http::Cookie->get($query);

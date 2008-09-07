@@ -40,6 +40,8 @@ use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::AddProjectMethod;
 use Codestriker::Http::Method::LoginMethod;
 use Codestriker::Http::Method::AuthenticateMethod;
+use Codestriker::Http::Method::ResetPasswordMethod;
+use Codestriker::Http::Method::UpdatePasswordMethod;
 
 # Initialise all of the methods that are known to the system.
 # TODO: add configuration to the parameter.
@@ -81,6 +83,8 @@ sub new {
     push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
     push @methods, Codestriker::Http::Method::LoginMethod->new($query);
     push @methods, Codestriker::Http::Method::AuthenticateMethod->new($query);
+    push @methods, Codestriker::Http::Method::ResetPasswordMethod->new($query);
+    push @methods, Codestriker::Http::Method::UpdatePasswordMethod->new($query);
 
     $self->{methods} = \@methods;
     return bless $self, $type;

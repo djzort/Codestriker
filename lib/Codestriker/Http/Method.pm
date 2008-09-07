@@ -24,7 +24,7 @@ sub new {
     if (defined $cgi_style) {
         $self->{cgi_style} = $cgi_style;
     } else {
-        $self->{cgi_style} = $query->url() =~ /codestriker.pl$/ ? 1 : 0;
+        $self->{cgi_style} = $query->url() =~ /codestriker.pl/ ? 1 : 0;
     }
 
     # Determine what prefix is required when using relative URLs.

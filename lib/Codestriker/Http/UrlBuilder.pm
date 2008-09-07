@@ -37,6 +37,8 @@ use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::LoginMethod;
 use Codestriker::Http::Method::AuthenticateMethod;
+use Codestriker::Http::Method::ResetPasswordMethod;
+use Codestriker::Http::Method::UpdatePasswordMethod;
 
 # Constructor for this class.
 sub new {
@@ -231,6 +233,18 @@ sub metric_report_download_raw_data {
 sub login_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::LoginMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for resetting a password.
+sub reset_password_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::ResetPasswordMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for updating a password.
+sub update_password_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::UpdatePasswordMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for authenticating.
