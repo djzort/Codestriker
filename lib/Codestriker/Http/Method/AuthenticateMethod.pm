@@ -44,7 +44,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-    Codestriker::Action::AuthenticateAction->process($http_input, $http_output);
+    Codestriker::Action::Authenticate->process($http_input, $http_output);
 }
 
 1;

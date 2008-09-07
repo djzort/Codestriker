@@ -11,6 +11,7 @@ package Codestriker::Http::Method::LoginMethod;
 
 use strict;
 use Codestriker::Http::Method;
+use Codestriker::Action::Login;
 
 @Codestriker::Http::Method::LoginMethod::ISA = ("Codestriker::Http::Method");
 
@@ -50,7 +51,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-    Codestriker::Action::LoginAction->process($http_input, $http_output);
+    Codestriker::Action::Login->process($http_input, $http_output);
 }
 
 1;

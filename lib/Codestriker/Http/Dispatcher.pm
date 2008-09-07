@@ -38,6 +38,8 @@ use Codestriker::Http::Method::StaticResourcesMethod;
 use Codestriker::Http::Method::ViewMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::AddProjectMethod;
+use Codestriker::Http::Method::LoginMethod;
+use Codestriker::Http::Method::AuthenticateMethod;
 
 # Initialise all of the methods that are known to the system.
 # TODO: add configuration to the parameter.
@@ -77,6 +79,8 @@ sub new {
     push @methods, Codestriker::Http::Method::ViewMetricsMethod->new($query);
     push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
     push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
+    push @methods, Codestriker::Http::Method::LoginMethod->new($query);
+    push @methods, Codestriker::Http::Method::AuthenticateMethod->new($query);
 
     $self->{methods} = \@methods;
     return bless $self, $type;
@@ -86,6 +90,9 @@ sub new {
 # to the appropriate action.
 sub dispatch {
     my ($self, $http_input, $http_output) = @_;
+
+    # TODO: put login in here which redirects to the login form
+    # if appropriate with the full URL in the redirect parameter.
 
     foreach my $method ( @{$self->{methods}} ) {
         if ($method->extract_parameters($http_input)) {

@@ -24,15 +24,16 @@ sub new {
     my $dbh = Codestriker::DB::DBI->get_connection();
     eval {
         my $select_user =
-          $dbh->prepare_cached('SELECT password_hash, admin ' .
+          $dbh->prepare_cached('SELECT password_hash, challenge, admin ' .
                                'FROM usertable ' .
                                'WHERE email = ?');
         $select_user->execute($email);
 
-        my ($password_hash, $admin) = $select_user->fetchrow_array();
+        my ($password_hash, $challenge, $admin) = $select_user->fetchrow_array();
         $select_user->finish();
 
         $self->{password_hash} = $password_hash;
+        $self->{challenge} = $challenge;
         $self->{admin} = $admin;
     };
     my $success = $@ ? 0 : 1;
@@ -45,11 +46,41 @@ sub new {
     return $self;
 }
 
+# Determine if the specific user already exists.
+sub exists {
+    my ($type, $email) = @_;
+
+    # Obtain a database connection.
+    my $dbh = Codestriker::DB::DBI->get_connection();
+
+    my $count = 0;
+    eval {
+        my $select_email =
+          $dbh->prepare_cached('SELECT COUNT(*) FROM usertable ' .
+                               'WHERE email = ?');
+        $select_email->execute($email);
+        ($count) = $select_email->fetchrow_array();
+        $select_email->finish();
+    };
+    my $success = $@ ? 0 : 1;
+
+    Codestriker::DB::DBI->release_connection($dbh, $success);
+    die $dbh->errstr unless $success;
+
+    return $count;
+}
+
 # Update an existing user record with a new password.
 sub update_password {
     my ($self, $new_password) = @_;
 
-    my $password_hash = _hash_password($new_password);
+    $self->update_password_hash(_hash_password($new_password));
+}
+
+# Update an existing user record with a new password_hash.
+sub update_password_hash {
+    my ($self, $password_hash) = @_;
+
     my $dbh = Codestriker::DB::DBI->get_connection();
     eval {
         my $update_user =
@@ -113,28 +144,33 @@ sub create {
     return $new_password;
 }
 
-# Determine if the specific user already exists.
-sub exists {
-    my ($type, $email) = @_;
+# Create a challenge key into the user table for supporting the
+# case where a user can update their password via a
+# challenge/response protocol.
+sub create_challenge {
+    my ($self, $email) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
 
-    my $count = 0;
+    # Create a random challenge for the user.
+    my $new_password = _create_random_password();
+    my $challenge = _hash_password($new_password);
+
+    # Set this challenge into the user record.
     eval {
-        my $select_email =
-          $dbh->prepare_cached('SELECT COUNT(*) FROM usertable ' .
-                               'WHERE email = ?');
-        $select_email->execute($email);
-        ($count) = $select_email->fetchrow_array();
-        $select_email->finish();
+        my $challenge_update =
+          $dbh->prepare_cached('UPDATE usertable ' .
+                               'SET challenge = ? ' .
+                               'WHERE email = ? ');
+        $challenge_update->execute($self->{email}, $challenge);
     };
     my $success = $@ ? 0 : 1;
 
     Codestriker::DB::DBI->release_connection($dbh, $success);
     die $dbh->errstr unless $success;
 
-    return $count;
+    return $challenge;
 }
 
 # Method for producing a hash from a password.

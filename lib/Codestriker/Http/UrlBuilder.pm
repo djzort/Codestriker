@@ -35,6 +35,8 @@ use Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 use Codestriker::Http::Method::UpdateTopicMetricsMethod;
 use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
+use Codestriker::Http::Method::LoginMethod;
+use Codestriker::Http::Method::AuthenticateMethod;
 
 # Constructor for this class.
 sub new {
@@ -224,5 +226,18 @@ sub metric_report_download_raw_data {
     my ($self) = @_;
     return Codestriker::Http::Method::DownloadMetricsMethod->new($self->{query})->url();
 }
+
+# Create the URL for going to the login page.
+sub login_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::LoginMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for authenticating.
+sub authenticate_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::AuthenticateMethod->new($self->{query})->url(%args);
+}
+
 
 1;

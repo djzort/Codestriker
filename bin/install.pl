@@ -579,6 +579,7 @@ my $user_table =
   table(name => "usertable",
         columns => [col(name=>"email", type=>$VARCHAR, length=>200, pk=>1),
                     col(name=>"password_hash", type=>$VARCHAR, length=>128),
+                    col(name=>"challenge", type=>$VARCHAR, length=>128, mandatory=>0),
                     col(name=>"admin", type=>$INT16)
                    ],
         indexes => []);
@@ -1071,12 +1072,14 @@ if ($@) {
 
 # Now create any admin users, if necessary.
 $dbh->{PrintError} = 1;
+my $user_added = 0;
 if (defined $Codestriker::admin_users) {
     foreach my $admin_user (@{ $Codestriker::admin_users }) {
         if (!Codestriker::Model::User->exists($admin_user)) {
             print "Creating admin user $admin_user...\n";
             Codestriker::Model::User->create($admin_user, 1);
             # TODO: consider sending email with password details.
+            $user_added = 1;
             print "Done\n";
         } else {
             # Existing user, check if they are an admin already.
@@ -1084,11 +1087,13 @@ if (defined $Codestriker::admin_users) {
             if (! $user->{admin}) {
                 print "Upgrading non-admin user $admin_user to admin...\n";
                 $user->update_admin(1);
+                $user_added = 1;
                 print "Done\n";
             }
         }
     }
 }
+$database->commit() if $user_added;
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).
