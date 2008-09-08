@@ -46,6 +46,16 @@ sub url {
     return undef;
 }
 
+# Indicates that this method requires authentication.
+sub requires_authentication {
+    return 1;
+}
+
+# Indicates that this method can only be executed by an admin.
+sub requires_admin {
+    return 0;
+}
+
 # If this query type is recognised, extract the parameters and store them into
 # $http_input and return true, otherwise return false.
 sub extract_parameters {

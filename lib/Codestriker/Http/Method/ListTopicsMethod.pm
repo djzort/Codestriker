@@ -16,7 +16,7 @@ use Codestriker::Http::Method;
   ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self, %args) = @_;
 
     my $sstate = defined $args{sstate} ? CGI::escape(join ',', @{$args{sstate}}) : "";
@@ -64,7 +64,6 @@ sub extract_parameters {
     my $path_info = $http_input->{query}->path_info();
     if ($self->{cgi_style} && defined $action &&
         ($action eq "list_topics" || $action eq "list_topics_rss")) {
-        $http_input->extract_cgi_parameters();
         return 1;
     } elsif ($path_info =~ m{^/feed/topics/list} ||
              $path_info =~ m{^/topics/list}) {

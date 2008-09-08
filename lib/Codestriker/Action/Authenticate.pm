@@ -43,17 +43,19 @@ sub process {
         print $query->redirect(-URI => $url);
     } else {
         # Redirect to the specified URL, if present, otherwise go to the default
-        # URL.  Get the current cookie, and set the password hash into it.
+        # URL.  Get the current cookie, and set the email and password hash
+        # into it.
         my %cookie_hash = Codestriker::Http::Cookie->get($query);
+        $cookie_hash{email} = $user->{email};
         $cookie_hash{password_hash} = $user->{password_hash};
         my $cookie = Codestriker::Http::Cookie->make($query, \%cookie_hash);
 
         if (defined $redirect && $redirect ne "") {
             print $query->redirect(-cookie => $cookie,
-                                   -URI => $redirect);
+                                   -location => $redirect);
         } else {
             print $query->redirect(-cookie => $cookie,
-                                   -URI => $query->url());
+                                   -location => $query->url());
         }
     }
 }

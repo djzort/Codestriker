@@ -15,7 +15,7 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::ViewMetricsMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self) = @_;
 
     if ($self->{cgi_style}) {
@@ -31,7 +31,6 @@ sub extract_parameters {
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
     if ($self->{cgi_style} && defined $action && $action eq "metrics_report") {
-        $http_input->extract_cgi_parameters();
         return 1;
     } elsif ($path_info =~ m{^/metrics/view$}) {
         $self->_extract_nice_parameters($http_input);

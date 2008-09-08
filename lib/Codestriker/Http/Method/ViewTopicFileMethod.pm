@@ -15,7 +15,7 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::ViewTopicFileMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self, %args) = @_;
 
     die "Parameter topicid missing" unless defined $args{topicid};
@@ -39,7 +39,6 @@ sub extract_parameters {
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
     if ($self->{cgi_style} && defined $action && $action eq "view_file") {
-        $http_input->extract_cgi_parameters();
         return 1;
     } elsif ($path_info =~ m{^/project/\d+/topic/\d+/file/\d+}) {
         $self->_extract_nice_parameters($http_input,

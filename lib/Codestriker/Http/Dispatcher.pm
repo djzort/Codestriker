@@ -47,7 +47,6 @@ use Codestriker::Http::Method::CreateNewUserMethod;
 use Codestriker::Http::Method::AddNewUserMethod;
 
 # Initialise all of the methods that are known to the system.
-# TODO: add configuration to the parameter.
 sub new {
     my ($type, $query) = @_;
 
@@ -101,22 +100,63 @@ sub new {
 sub dispatch {
     my ($self, $http_input, $http_output) = @_;
 
-    # TODO: put login in here which redirects to the login form
-    # if appropriate with the full URL in the redirect parameter.
+    # Extract all cookie and CGI parameters.
+    $http_input->extract_cgi_parameters();
 
+    # Determine which method can handle this URL.
+    my $found_method;
     foreach my $method ( @{$self->{methods}} ) {
         if ($method->extract_parameters($http_input)) {
-            $method->execute($http_input, $http_output);
+            $found_method = $method;
+        }
+    }
+
+    # Set to a default method if none were found.
+    if (! defined $found_method) {
+        $found_method = $Codestriker::allow_searchlist ?
+          $self->{list_topics_method} : $self->{create_topics_method};
+    }
+
+    # Check if the method requires authentication.
+    my $user;
+    if ($found_method->requires_authentication()) {
+        my $query = $http_output->get_query();
+        my $email = $http_input->get('email');
+        my $password_hash = $http_input->get('password_hash');
+
+        # If the user is not logged in, redirect to the login screen.
+        my $full_url = $query->url(-path_info => 1, -query => 1);
+        my $login_url =
+          Codestriker::Http::Method::LoginMethod->new($query)->url(redirect => $full_url);
+        if (!defined($email) || $email eq '' ||
+            !defined($password_hash) || $password_hash eq '') {
+            print $query->redirect(-URI => $login_url);
+            return;
+        }
+
+        # If email has been specified, but it doesn't exist, redirect
+        # to the login screen.
+        if (!Codestriker::Model::User->exists($email)) {
+            print $query->redirect(-URI => $login_url);
+            return;
+        }
+
+        # Check that the user has supplied the right credentials.
+        $user = Codestriker::Model::User->new($email);
+        if ($user->{password_hash} ne $password_hash) {
+            print $query->redirect(-URI => $login_url);
             return;
         }
     }
 
-    # If we have reached here, execute the default method.
-    if ($Codestriker::allow_searchlist) {
-        $self->{list_topics_method}->execute($http_input, $http_output);
-    } else {
-        $self->{create_topic_method}->execute($http_input, $http_output);
+    # Check if the method requires admin priviledges.
+    if ($found_method->requires_admin() && !$user->{admin}) {
+        $http_output->error("This function requires admin access.");
+        return;
     }
+
+    # All checks have completed, execute the method.
+    $found_method->execute($http_input, $http_output);
 }
 
 1;

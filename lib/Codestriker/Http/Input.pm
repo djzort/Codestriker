@@ -204,6 +204,7 @@ sub extract_cgi_parameters {
     $self->_set_property_from_cookie('projectid', 0);
     $self->_set_property_from_cookie('module', "");
     $self->_set_property_from_cookie('topicsort', "");
+    $self->_set_property_from_cookie('password_hash', "");
 
     $self->_untaint('topic_sort_change', '(title)|(author)|(created)|(state)');
 

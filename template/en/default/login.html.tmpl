@@ -12,9 +12,11 @@
 Please enter your email address and password to continue. 
 </p>
 
-<form method="post" enctype="application/x-www-form-urlencoded" action="[% action_url %]">
+<form method="post" enctype="multipart/form-data" action="[% action_url %]">
 
 <input type="hidden" name="action" value="authenticate" />
+<input type="hidden" name="redirect" value="[% redirect %]" />
+
   <table>
     <tr>
       <th align="right">E-mail address:</th>

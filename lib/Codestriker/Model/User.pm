@@ -184,8 +184,9 @@ sub create_challenge {
 sub _hash_password {
     my ($password) = @_;
 
-    # List of characters that can be used for the salt.
-    my @salt_characters = ( '.', '/', 'A'..'Z', 'a'..'z', '0' ..'9' );
+    # List of characters that can be used for the salt.  Exclude '.' for
+    # now since that can cause issues when outputting URLs ending in a '.'.
+    my @salt_characters = ( '/', 'A'..'Z', 'a'..'z', '0' ..'9' );
 
     # Generate the salt.  Generate an 8 character value in case we are on
     # a system which uses MD5 digests (48 bit - 6 * 8).  Older systems just

@@ -16,7 +16,7 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::UpdateTopicStateMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self, %args) = @_;
 
     if ($self->{cgi_style}) {
@@ -33,7 +33,6 @@ sub extract_parameters {
     my $path_info = $http_input->{query}->path_info();
     if ($self->{cgi_style} && defined $action &&
         $action eq "change_topics_state") {
-        $http_input->extract_cgi_parameters();
         return 1;
     } elsif ($path_info =~ m{^/topics/update}) {
         $self->_extract_nice_parameters($http_input);

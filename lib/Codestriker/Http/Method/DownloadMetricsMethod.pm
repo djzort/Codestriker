@@ -15,7 +15,7 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::DownloadMetricsMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self) = @_;
 
     if ($self->{cgi_style}) {
@@ -31,7 +31,6 @@ sub extract_parameters {
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
     if ($self->{cgi_style} && defined $action && $action eq "metrics_download") {
-        $http_input->extract_cgi_parameters();
         return 1;
     } elsif ($path_info =~ m{^/metrics/download$}) {
         $self->_extract_nice_parameters($http_input);
@@ -39,6 +38,10 @@ sub extract_parameters {
     } else {
         return 0;
     }
+}
+
+sub requires_admin {
+    return 1;
 }
 
 sub execute {

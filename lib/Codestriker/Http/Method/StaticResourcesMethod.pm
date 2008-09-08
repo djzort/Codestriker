@@ -15,7 +15,7 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::StaticResourcesMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
-sub url() {
+sub url {
     my ($self) = @_;
 
     # Check if the HTML files are accessible via another URL (required for
@@ -37,6 +37,10 @@ sub url() {
     } else {
         return $self->{url_prefix} . "/html";
     }
+}
+
+sub requires_authentication {
+    return 0;
 }
 
 1;
