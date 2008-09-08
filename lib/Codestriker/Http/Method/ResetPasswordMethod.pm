@@ -10,6 +10,7 @@
 package Codestriker::Http::Method::ResetPasswordMethod;
 
 use strict;
+use Carp;
 use Codestriker::Http::Method;
 use Codestriker::Action::ResetPassword;
 
@@ -20,11 +21,9 @@ sub url() {
     my ($self, %args) = @_;
 
     if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=reset_password" .
-          "&email=" . CGI::escape($args{email});
+        return $self->{url_prefix} . "?action=reset_password";
     } else {
-        return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/reset";
+        return $self->{url_prefix} . "/users/reset";
     }
 }
 
@@ -36,9 +35,8 @@ sub extract_parameters {
     if ($self->{cgi_style} && defined $action && $action eq "reset_password") {
         $http_input->extract_cgi_parameters();
         return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/reset$}) {
-        $self->_extract_nice_parameters($http_input,
-                                        user => 'email');
+    } elsif ($path_info eq '/users/reset') {
+        $self->_extract_nice_parameters($http_input);
         return 1;
     } else {
         return 0;

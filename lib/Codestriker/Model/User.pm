@@ -70,6 +70,13 @@ sub exists {
     return $count;
 }
 
+# Checks if the specified password matches this user record.
+sub check_password {
+    my ($self, $password) = @_;
+
+    return crypt($password, $self->{password_hash}) eq $self->{password_hash};
+}
+
 # Update an existing user record with a new password.
 sub update_password {
     my ($self, $new_password) = @_;

@@ -18,6 +18,7 @@
     [% END %]
     | <a href="[% create_topic_url | html_entity %]">Create new topic</a>
     [% IF searchlist_enabled != 0 %] | <a href="[% search_url | html_entity %]">Search</a> [% END %]
+    [% IF login_url != "" %] | <a href="[% login_url %]">Log In</a>[% END %]
     [% IF help != "" %] | <a href="[% doc_url | html_entity %]/[% help %]">Help</a>[% END %]
   </div>
   [% END %]

@@ -38,7 +38,7 @@ sub process {
               "Your password has not been changed.";
         } else {
             $user->update_password($password);
-            $feedback = "Password has been updated.";
+            $feedback = "Your password has been updated.";
         }
     }
 

@@ -11,6 +11,7 @@ package Codestriker::Http::Method::AuthenticateMethod;
 
 use strict;
 use Codestriker::Http::Method;
+use Codestriker::Action::Authenticate;
 
 @Codestriker::Http::Method::AuthenticateMethod::ISA = ("Codestriker::Http::Method");
 
