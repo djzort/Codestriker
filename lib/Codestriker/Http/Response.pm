@@ -52,6 +52,7 @@ sub generate_header {
     my $projectid = "";
     my $load_anchor = "";
     my $topicsort = "";
+    my $password_hash = "";
     my $fview = -1;
 
     my $reload = $params{reload};
@@ -129,6 +130,13 @@ sub generate_header {
         $topicsort = $params{topicsort};
     }
 
+    if (! defined $params{password_hash} || $params{password_hash} eq "") {
+        $password_hash = Codestriker::Http::Cookie->get_property($query,
+                                                                 'password_hash');
+    } else {
+        $password_hash = $params{password_hash};
+    }
+
     $cookie{'email'} = $email if $email ne "";
     $cookie{'reviewers'} = $reviewers if $reviewers ne "";
     $cookie{'cc'} = $cc if $cc ne "";
@@ -137,6 +145,7 @@ sub generate_header {
     $cookie{'repository'} = $repository if $repository ne "";
     $cookie{'projectid'} = $projectid if $projectid ne "";
     $cookie{'topicsort'} = $topicsort if $topicsort ne "";
+    $cookie{'password_hash'} = $password_hash if $password_hash ne "";
 
     my $cookie_obj = Codestriker::Http::Cookie->make($query, \%cookie);
 

@@ -1080,7 +1080,7 @@ if (defined $Codestriker::admin_users) {
             Codestriker::Model::User->create($admin_user, 1);
             # TODO: consider sending email with password details.
             $user_added = 1;
-            print "Done\n";
+            print "Done.  You will need to use \"Reset Password\" on the login page.\n";
         } else {
             # Existing user, check if they are an admin already.
             my $user = Codestriker::Model::User->new($admin_user);

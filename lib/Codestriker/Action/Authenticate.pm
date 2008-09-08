@@ -24,10 +24,11 @@ sub process {
     my $feedback = "";
 
     # Check if the account for this email address is valid.
+    my $user;
     if (!Codestriker::Model::User->exists($email)) {
         $feedback = "The username or password you entered is not valid.";
     } else {
-        my $user = Codestriker::Model::User->new($email);
+        $user = Codestriker::Model::User->new($email);
 
         # Check that the password entered is correct.
         if (! $user->check_password($password)) {
@@ -42,11 +43,17 @@ sub process {
         print $query->redirect(-URI => $url);
     } else {
         # Redirect to the specified URL, if present, otherwise go to the default
-        # URL.
+        # URL.  Get the current cookie, and set the password hash into it.
+        my %cookie_hash = Codestriker::Http::Cookie->get($query);
+        $cookie_hash{password_hash} = $user->{password_hash};
+        my $cookie = Codestriker::Http::Cookie->make($query, \%cookie_hash);
+
         if (defined $redirect && $redirect ne "") {
-            print $query->redirect(-URI => $redirect);
+            print $query->redirect(-cookie => $cookie,
+                                   -URI => $redirect);
         } else {
-            print $query->redirect(-URI => $query->url());
+            print $query->redirect(-cookie => $cookie,
+                                   -URI => $query->url());
         }
     }
 }
