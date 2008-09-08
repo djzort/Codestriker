@@ -3,6 +3,12 @@
 
 Version 1.9.7
 
+* Introduced basic user authentication / authorisation into the
+  system.  If the $admin_users configuration variable is specified
+  in codestriker.conf, this contains a list of "admin" users.
+  If defined, admin users are the only ones who can
+  create/edit/delete projects.
+	
 * Created another Subversion post-commit script which is an extension
   of the standard commit-email.pl script which ships with Subversion.
   The email sent also includes an additional line, which is the URL to

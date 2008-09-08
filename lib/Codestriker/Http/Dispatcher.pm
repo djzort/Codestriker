@@ -150,7 +150,8 @@ sub dispatch {
     }
 
     # Check if the method requires admin priviledges.
-    if ($found_method->requires_admin() && !$user->{admin}) {
+    if (defined $Codestriker::admin_users &&
+        $found_method->requires_admin() && !$user->{admin}) {
         $http_output->error("This function requires admin access.");
         return;
     }

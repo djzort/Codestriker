@@ -46,9 +46,11 @@ sub url {
     return undef;
 }
 
-# Indicates that this method requires authentication.
+# Indicates that this method requires authentication.  If an admin
+# user has been specified in codestriker.conf, then assume
+# authentication is required.
 sub requires_authentication {
-    return 1;
+    return defined $Codestriker::admin_users;
 }
 
 # Indicates that this method can only be executed by an admin.
