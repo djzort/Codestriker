@@ -40,6 +40,8 @@ use Codestriker::Http::Method::AuthenticateMethod;
 use Codestriker::Http::Method::NewPasswordMethod;
 use Codestriker::Http::Method::UpdatePasswordMethod;
 use Codestriker::Http::Method::ResetPasswordMethod;
+use Codestriker::Http::Method::CreateNewUserMethod;
+use Codestriker::Http::Method::AddNewUserMethod;
 
 # Constructor for this class.
 sub new {
@@ -260,5 +262,16 @@ sub authenticate_url {
     return Codestriker::Http::Method::AuthenticateMethod->new($self->{query})->url(%args);
 }
 
+# Create the URL for creating a new user.
+sub create_new_user_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::CreateNewUserMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for adding a new user.
+sub add_new_user_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::AddNewUserMethod->new($self->{query})->url(%args);
+}
 
 1;

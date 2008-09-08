@@ -25,6 +25,9 @@ sub process {
     my $vars = {};
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
     $vars->{'action_url'} = $url_builder->authenticate_url();
+    $vars->{'new_user_url'} = $url_builder->create_new_user_url();
+    $vars->{'reset_password_url'} = $url_builder->reset_password_url();
+    $vars->{'feedback'} = $http_input->get('feedback');
 
     my $template = Codestriker::Http::Template->new("login");
     $template->process($vars);

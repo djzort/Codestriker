@@ -5,26 +5,26 @@
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
 
-# Method for resetting a password.
+# Method for creating a new user.
 
-package Codestriker::Http::Method::ResetPasswordMethod;
+package Codestriker::Http::Method::CreateNewUserMethod;
 
 use strict;
 use Codestriker::Http::Method;
-use Codestriker::Action::ResetPassword;
+use Codestriker::Action::CreateNewUser;
 
-@Codestriker::Http::Method::ResetPasswordMethod::ISA = ("Codestriker::Http::Method");
+@Codestriker::Http::Method::CreateNewUserMethod::ISA = ("Codestriker::Http::Method");
 
 # Generate a URL for this method.
 sub url() {
     my ($self, %args) = @_;
 
     if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=reset_password" .
-          "&email=" . CGI::escape($args{email});
+        return $self->{url_prefix} . "?action=create_new_user" .
+          (defined $args{feedback} ? "&feedback=" . CGI::escape($args{feedback}) : "");
     } else {
-        return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/reset";
+        return $self->{url_prefix} . "/users/create" .
+          (defined $args{feedback} ? "/feedback/" . CGI::escape($args{feedback}) : "");
     }
 }
 
@@ -33,12 +33,11 @@ sub extract_parameters {
 
     my $action = $http_input->{query}->param('action');
     my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "reset_password") {
+    if ($self->{cgi_style} && defined $action && $action eq "create_new_user") {
         $http_input->extract_cgi_parameters();
         return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/reset$}) {
-        $self->_extract_nice_parameters($http_input,
-                                        user => 'email');
+    } elsif ($path_info eq "/users/create") {
+        $self->_extract_nice_parameters($http_input);
         return 1;
     } else {
         return 0;
@@ -48,7 +47,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-    Codestriker::Action::ResetPassword->process($http_input, $http_output);
+    Codestriker::Action::CreateNewUser->process($http_input, $http_output);
 }
 
 1;

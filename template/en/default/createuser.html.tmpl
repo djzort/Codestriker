@@ -1,0 +1,34 @@
+[%# Screen for the create new user form. #%]
+
+[% PROCESS header.html.tmpl version = version displaymenu = 1 
+                            closehead = 1 subtitle = "Create new Account" %]
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <span class="feedback">[% feedback %]</span>
+[% END %]
+
+<p>
+Please enter the email address of the new account.
+</p>
+
+<form method="post" enctype="application/x-www-form-urlencoded" action="[% action_url %]">
+
+<input type="hidden" name="action" value="add_new_user" />
+  <table>
+    <tr>
+      <th align="right">E-mail address:</th>
+      <td>
+        <input size="40" maxlength="80" name="email">
+      </td>
+    </tr>
+  </table>
+
+  <input type="submit" name=".submit" value="Create new Account" />
+
+</form>
+
+[% PROCESS trailer.html.tmpl %]
+
+</body>
+</html>

@@ -2,6 +2,12 @@
 
 [% PROCESS header.html.tmpl version = version displaymenu = 1 
                             closehead = 1 subtitle = "Login" %]
+
+[%# Display any "feedback" to the user if necessary. #%]
+[% IF feedback != '' %]
+    <span class="feedback">[% feedback %]</span>
+[% END %]
+
 <p>
 Please enter your email address and password to continue. 
 </p>
@@ -31,25 +37,23 @@ Please enter your email address and password to continue.
 
 </form>
 
-<!--
 <hr>
 
 <p>
-If you don't have a Codestriker account, you can create a new account.
+If you don't have a Codestriker account, you can <a href="[% new_user_url %]">create a new account</a>.
 </p>
 
 <hr>
 
-<form method="post" enctype="application/x-www-form-urlencoded" action="[% action_url %]">
+<form method="post" enctype="application/x-www-form-urlencoded" action="[% reset_password_url %]">
   <input type="hidden" name="action" value="reset_password">
   <p>
     If you have an account, but have forgotten your password,
     enter your e-mail address below to generate a new password.
   </p>
   <input size="40" maxlength="80" name="email">
-  <input type="submit" name=".submit2" value="Regenerate Password">
+  <input type="submit" name=".submit2" value="Reset Password">
 </form>
--->
 
 [% PROCESS trailer.html.tmpl %]
 

@@ -116,7 +116,7 @@ sub update_admin {
 }
 
 # Create a new user into the database with all of the specified properties.
-# Return the new password which has been assigned to the user.
+# Return the new challenge which has been assigned to the user.
 sub create {
     my ($type, $email, $admin) = @_;
 
@@ -148,7 +148,7 @@ sub create {
 # case where a user can update their password via a
 # challenge/response protocol.
 sub create_challenge {
-    my ($self, $email) = @_;
+    my ($self) = @_;
 
     # Obtain a database connection.
     my $dbh = Codestriker::DB::DBI->get_connection();
@@ -163,7 +163,7 @@ sub create_challenge {
           $dbh->prepare_cached('UPDATE usertable ' .
                                'SET challenge = ? ' .
                                'WHERE email = ? ');
-        $challenge_update->execute($self->{email}, $challenge);
+        $challenge_update->execute($challenge, $self->{email});
     };
     my $success = $@ ? 0 : 1;
 

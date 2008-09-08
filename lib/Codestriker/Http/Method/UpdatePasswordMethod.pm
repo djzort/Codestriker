@@ -11,6 +11,7 @@ package Codestriker::Http::Method::UpdatePasswordMethod;
 
 use strict;
 use Codestriker::Http::Method;
+use Codestriker::Action::UpdatePassword;
 
 @Codestriker::Http::Method::UpdatePasswordMethod::ISA = ("Codestriker::Http::Method");
 
@@ -47,7 +48,7 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-#    Codestriker::Action::UpdatePassword->process($http_input, $http_output);
+    Codestriker::Action::UpdatePassword->process($http_input, $http_output);
 }
 
 1;

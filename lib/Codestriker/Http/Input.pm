@@ -108,6 +108,8 @@ sub extract_cgi_parameters {
     $self->{email_event} = $query->param('email_event');
     $self->{redirect} = $query->param('redirect');
     $self->{challenge} = $query->param('challenge');
+    $self->{password} = $query->param('password');
+    $self->{feedback} = $query->param('feedback');
 
     # Set any missing parameters from the cookie.
     my %cookie = Codestriker::Http::Cookie->get($query);
@@ -130,6 +132,7 @@ sub extract_cgi_parameters {
     $self->{obsoletes} = "" if ! defined $self->{obsoletes};
     $self->{default_to_head} = 0 if ! defined $self->{default_to_head};
     $self->{email_event} = 1 if ! defined $self->{email_event};
+    $self->{feedback} = "" if ! defined $self->{feedback};
 
     my @topic_metrics = $query->param('topic_metric');
     $self->{topic_metric} = \@topic_metrics;
@@ -234,9 +237,6 @@ sub extract_cgi_parameters {
     $self->{cc} = $self->make_canonical_email_list($self->{cc});
     $self->{bug_ids} = $self->make_canonical_bug_list($self->{bug_ids});
     $self->{comment_cc} = $self->make_canonical_email_list($self->{comment_cc});
-
-    # Initialise the feedback field to empty.
-    $self->{feedback} = "";
 }
 
 # Return the query object associated with this object.
@@ -352,14 +352,14 @@ sub _untaint_comma_digits($$) {
 sub _untaint_email($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*[-_\w\.]{1,200}(\@[-_\w\.]{1,200})?[\s]*');
+    $self->_untaint($name, '[\s]*[-_\+\w\.]{1,200}(\@[-_\+\w\.]{1,200})?[\s]*');
 }
 
 # Untaint a list of email addresses.
 sub _untaint_emails($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[\s]*([-_\w\.]{1,200}(\@[-_\w\.]{1,200})?[\s,;]*){1,100}[\s]*');
+    $self->_untaint($name, '[\s]*([-_\+\w\.]{1,200}(\@[-_\+\w\.]{1,200})?[\s,;]*){1,100}[\s]*');
 }
 
 # Untaint a list of bug ids.
