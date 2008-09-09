@@ -13,15 +13,17 @@ use strict;
 use FileHandle;
 use Fatal qw / open close /;
 
+use Codestriker::Repository;
+@Codestriker::Repository::Cvs::ISA = ("Codestriker::Repository");
+
 # Factory method for creating a local CVS repository object.
 sub build_local {
     my ($type, $cvsroot, $optional_prefix) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new("${optional_prefix}${cvsroot}");
     $self->{cvsroot} = $cvsroot;
     $optional_prefix = "" unless defined $optional_prefix;
     $self->{optional_prefix} = $optional_prefix;
-    $self->{url} = "${optional_prefix}${cvsroot}";
     bless $self, $type;
 }
 
@@ -29,15 +31,14 @@ sub build_local {
 sub build_pserver {
     my ($type, $optional_args, $username, $password, $hostname, $cvsroot) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new(":pserver${optional_args}:${username}:${password}\@" .
+                                            "${hostname}:${cvsroot}");
     $optional_args = "" unless defined $optional_args;
     $self->{optional_args} = $optional_args;
     $self->{username} = $username;
     $self->{password} = $password;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
-    $self->{url} = ":pserver${optional_args}:${username}:${password}\@" .
-      "${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
@@ -45,13 +46,12 @@ sub build_pserver {
 sub build_ext {
     my ($type, $optional_args, $username, $hostname, $cvsroot) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new(":ext${optional_args}:${username}\@${hostname}:${cvsroot}");
     $optional_args = "" unless defined $optional_args;
     $self->{optional_args} = $optional_args;
     $self->{username} = $username;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
-    $self->{url} = ":ext${optional_args}:${username}\@${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
@@ -59,12 +59,11 @@ sub build_ext {
 sub build_sspi {
     my ($type, $username, $password, $hostname, $cvsroot) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new(":sspi:${username}:${password}\@${hostname}:${cvsroot}");
     $self->{optional_args} = "";
     $self->{username} = $username;
     $self->{hostname} = $hostname;
     $self->{cvsroot} = $cvsroot;
-    $self->{url} = ":sspi:${username}:${password}\@${hostname}:${cvsroot}";
     bless $self, $type;
 }
 
@@ -83,7 +82,7 @@ sub retrieve {
     my @args = ();
     push @args, '-q';
     push @args, '-d';
-    push @args, $self->{url};
+    push @args, $self->{repository_string};
     push @args, 'co';
     push @args, '-p';
     push @args, '-r';
@@ -106,21 +105,6 @@ sub retrieve {
 sub getRoot ($) {
     my ($self) = @_;
     return $self->{cvsroot};
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->{url}};
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return $self->{url};
 }
 
 # Given a start tag, end tag and a module name, store the text into
@@ -147,7 +131,7 @@ sub getDiff ($$$$$$) {
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
 
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::cvs,
-                                 '-q', '-d', $self->{url}, 'rdiff',
+                                 '-q', '-d', $self->{repository_string}, 'rdiff',
                                  $extra_options, '-u', '-r', $start_tag,
                                  '-r', $end_tag, $module_name);
     return $Codestriker::OK;

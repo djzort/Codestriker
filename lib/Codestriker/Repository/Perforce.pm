@@ -11,18 +11,22 @@ package Codestriker::Repository::Perforce;
 
 use strict;
 
+use Codestriker::Repository;
+@Codestriker::Repository::Perforce::ISA = ("Codestriker::Repository");
+
 # Constructor, which takes as a parameter the password, hostname and port.
 sub new ($$$$$) {
     my ($type, $user, $password, $hostname, $port) = @_;
 
-    my $self = {};
+    my $repository_string = "perforce:${user}" .
+      (defined $password && $password ne '' ? ":${password}" : '') .
+        "@" . "${hostname}:${port}";
+    my $self = Codestriker::Repository->new($repository_string);
+
     $self->{user} = $user;
     $self->{password} = $password;
     $self->{hostname} = $hostname;
     $self->{port} = $port;
-    $self->{root} = "perforce:${user}" .
-      (defined $password && $password ne '' ? ":${password}" : '') .
-        "@" . "${hostname}:${port}";
     bless $self, $type;
 }
 
@@ -53,22 +57,7 @@ sub retrieve ($$$\$) {
 # Retrieve the "root" of this repository.
 sub getRoot ($) {
     my ($self) = @_;
-    return $self->{root};
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->{root}};
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return $self->{root};
+    return $self->{repository_string};
 }
 
 # Given a start tag, end tag and a module name, store the text into

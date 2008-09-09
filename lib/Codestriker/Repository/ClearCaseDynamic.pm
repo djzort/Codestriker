@@ -13,6 +13,9 @@ package Codestriker::Repository::ClearCaseDynamic;
 use strict;
 use File::Spec;
 
+use Codestriker::Repository;
+@Codestriker::Repository::ClearCaseDynamic::ISA = ("Codestriker::Repository");
+
 # Put this in an eval block so that this becomes an optional dependency for
 # those people who don't use this module.
 eval("use ClearCase::CtCmd");
@@ -26,8 +29,7 @@ sub new ($$)
   {
       my ($type, $url) = @_;
 
-      my $self = {};
-
+      my $self = Codestriker::Repository->new("clearcase:dyn:$url");
       $url =~ /([^:]*):(.*)/;
       $self->{dynamic_view_name} = $1;
       $self->{vobs_dir} = $2;
@@ -105,22 +107,6 @@ sub retrieve ($$$\$)
 sub getRoot ($) {
     my ($self) = @_;
     return $self->{vobs_dir};
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->toString()};
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return "clearcase:dyn:" . $self->{dynamic_view_name} .
-      ":" . $self->{vobs_dir};
 }
 
 # Given a start tag, end tag and a module name, store the text into

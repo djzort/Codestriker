@@ -577,11 +577,16 @@ $repository_name_map =
 	  During a review, it is sometimes beneficial to see the
 	  revision history of a file, such as information provided by
 	  CVSweb or ViewCVS.  You can specify a mapping of repository
-	  names to URLs for this purpose, for example:
+	  names to URLs for this purpose. When viewing reviews, links
+          from filenames will be mapped to these URLs, to obtain
+          revision log information for that file.  The filename will
+          be appended to the end of the URL, before any CGI parameters.
 	  <programlisting>
 $file_viewer =
 {
-    '/home/sits/cvs' => 'http://localhost/cgi-bin/cvsweb.cgi'
+    '/home/sits/cvs' => 'http://localhost/cgi-bin/cvsweb.cgi',
+    'svn:file:///var/svn/project/trunk' =>
+        'http://some.whe.re/cgi-bin/viewvc.cgi/trunk/?root=Project&view=markup'
 };
 	  </programlisting>
 	  This indicates that for any review made against the

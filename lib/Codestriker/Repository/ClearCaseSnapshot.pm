@@ -14,13 +14,16 @@ use strict;
 use File::Temp qw/ tempdir /;
 use File::Spec;
 
+use Codestriker::Repository;
+@Codestriker::Repository::ClearCaseSnapshot::ISA = ("Codestriker::Repository");
+
 # Constructor.
 #   - snapshot_dir:  Absolute path to the location that you access the
 #     files in the snapshot view from.  NOT the view storage directory.
 sub new ($$) {
     my ($type, $snapshot_dir) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new("clearcase:$snapshot_dir");
     $self->{snapshot_dir} = $snapshot_dir;
     bless $self, $type;
 }
@@ -100,21 +103,6 @@ sub retrieve ($$$\$) {
 sub getRoot ($) {
     my ($self) = @_;
     return $self->{snapshot_dir};
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->toString()};
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return "clearcase:" . $self->{snapshot_dir};
 }
 
 # Given a start tag, end tag and a module name, store the text into

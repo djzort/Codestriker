@@ -11,6 +11,9 @@ package Codestriker::Repository::ScmBug;
 
 use strict;
 
+use Codestriker::Repository;
+@Codestriker::Repository::ScmBug::ISA = ("Codestriker::Repository");
+
 # Optional dependencies for people who don't require ScmBug functionality.
 eval("use Scmbug::ActivityUtilities");
 
@@ -19,7 +22,7 @@ eval("use Scmbug::ActivityUtilities");
 sub new {
     my ($type, $hostname, $port, $repository) = @_;
 
-    my $self = {};
+    my $self = Codestriker::Repository->new("scmbug: ${hostname}:${port} " . $repository->toString());
     $self->{repository} = $repository;
     $self->{scmbug} = Scmbug::ActivityUtilities->new($hostname, $port);
 

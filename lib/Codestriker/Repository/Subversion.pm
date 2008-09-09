@@ -13,9 +13,25 @@ use IPC::Open3;
 use strict;
 use Fatal qw / open close /;
 
+use Codestriker::Repository;
+@Codestriker::Repository::Subversion::ISA = ("Codestriker::Repository");
+
 # Constructor, which takes as a parameter the repository url.
 sub new {
     my ($type, $repository_url, $user, $password) = @_;
+
+    # Sanitise the repository URL.
+    $repository_url = sanitise_url_component($repository_url);
+
+    # Set the repository string.
+    my $repository_string = $repository_url;
+    $repository_string .= ";$user" if defined $user;
+    $repository_string .= ";$password" if defined $password;
+    if ($repository_string !~ /^svn:/) {
+        $repository_string = "svn:" . $repository_string;
+    }
+    my $self = Codestriker::Repository->new($repository_string);
+    $self->{repository_url} = $repository_url;
 
     # Determine if there are additional parameters required for user
     # authentication.
@@ -26,19 +42,7 @@ sub new {
         push @userCmdLine, '--password';
         push @userCmdLine, $password;
     }
-
-    # Sanitise the repository URL.
-    $repository_url = sanitise_url_component($repository_url);
-
-    my $self = {};
-    $self->{repository_url} = $repository_url;
     $self->{userCmdLine} = \@userCmdLine;
-    $self->{repository_string} = $repository_url;
-    $self->{repository_string} .= ";$user" if defined $user;
-    $self->{repository_string} .= ";$password" if defined $password;
-    if ($self->{repository_string} !~ /^svn:/) {
-        $self->{repository_string} = "svn:" . $self->{repository_string};
-    }
 
     bless $self, $type;
 }
@@ -90,25 +94,6 @@ sub retrieve ($$$\$) {
 sub getRoot ($) {
     my ($self) = @_;
     return $self->{repository_url};
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->toString()};
-    if (! (defined $viewer)) {
-        $viewer = $Codestriker::file_viewer->{$self->{repository_string}};
-    }
-
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return $self->{repository_string};
 }
 
 # Given a Subversion URL, determine if it refers to a directory or a file.

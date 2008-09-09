@@ -13,13 +13,15 @@ use strict;
 
 use LWP::UserAgent;
 
+use Codestriker::Repository;
+@Codestriker::Repository::ViewCvs::ISA = ("Codestriker::Repository");
+
 # Constructor, which takes as a parameter the URL to the viewcvs repository,
 # and the CVSROOT.
 sub new ($$) {
     my ($type, $viewcvs_url, $cvsroot) = @_;
 
-    my $self = {};
-    $self->{viewcvs_url} = $viewcvs_url;
+    my $self = Codestriker::Repository->new($viewcvs_url);
     $self->{cvsroot} = $cvsroot;
     bless $self, $type;
 }
@@ -31,7 +33,7 @@ sub retrieve ($$$\$) {
 
     # Retrieve the data by doing an HTPP GET to the remote viewcvs server.
     my $ua = LWP::UserAgent->new;
-    my $request = $self->{viewcvs_url} .
+    my $request = $self->{repository_string} .
       "/${filename}?rev=${revision}&content-type=text/plain";
     my $response = $ua->get($request);
     my $content = Codestriker::decode_topic_text($response->content);
@@ -49,17 +51,10 @@ sub getRoot ($) {
     return $self->{cvsroot};
 }
 
-# Return a URL which views the specified file.
-sub getViewUrl ($$) {
-    my ($self, $filename) = @_;
-
-    return $self->{viewcvs_url} . "/" . $filename;
-}
-
 # Return a string representation of this repository.
 sub toString ($) {
     my ($self) = @_;
-    return $self->{viewcvs_url} . " " . $self->{cvsroot};
+    return $self->{repository_string} . " " . $self->{cvsroot};
 }
 
 # The getDiff operation is not supported.

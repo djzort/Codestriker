@@ -14,6 +14,9 @@ use Cwd;
 use File::Temp qw/ tmpnam tempdir /;
 use IO::Handle;
 
+use Codestriker::Repository;
+@Codestriker::Repository::Vss::ISA = ("Codestriker::Repository");
+
 # Switch for emitting debug information.
 my $_DEBUG = 0;
 
@@ -21,7 +24,10 @@ my $_DEBUG = 0;
 sub new {
     my ($type, $username, $password, $ssdir) = @_;
 
-    my $self = {};
+    my $repository_string =
+      "vss:" . (defined $ssdir && $ssdir ne '' ? "$ssdir;" : '') .
+        $username . ":" . $password;
+    my $self = Codestriker::Repository->new($repository_string);
     $self->{username} = $username;
     $self->{password} = $password;
     $self->{ssdir} = $ssdir;
@@ -106,21 +112,6 @@ sub retrieve ($$$\$) {
 sub getRoot ($) {
     my ($self) = @_;
     return "vss:";
-}
-
-# Return a URL which views the specified file and revision.
-sub getViewUrl ($$$) {
-    my ($self, $filename, $revision) = @_;
-
-    # Lookup the file viewer from the configuration.
-    my $viewer = $Codestriker::file_viewer->{$self->toString()};
-    return (defined $viewer) ? $viewer . "/" . $filename : "";
-}
-
-# Return a string representation of this repository.
-sub toString ($) {
-    my ($self) = @_;
-    return "vss:" . $self->{username} . ":" . $self->{password};
 }
 
 # Retrieve the specified VSS diff directly using VSS commands.

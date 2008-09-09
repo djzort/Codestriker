@@ -39,7 +39,10 @@ Version 1.9.7
   disappear automatically when the cursor is moved off the (?) link.
   
 * Fixed a bug where Subversion diffs with binary files that contained
-  property changes were not handled correctly.  
+  property changes were not handled correctly.
+
+* Make $file_viewer more flexible so it can handle file mapping URLs
+  which have CGI parameters.  Submitted by vadz@users.sourceforge.net.
 
 Version 1.9.6
 
