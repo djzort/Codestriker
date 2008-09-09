@@ -305,7 +305,7 @@ sub get_topic_list_query_params {
     }
 
     # Default to show open topics if sstate is not defined.
-    if (!defined($sstate)) {
+    if (!defined($sstate) || $sstate eq "") {
         $sstate = 0;
     }
 
