@@ -27,6 +27,13 @@ sub url {
     }
 }
 
+# For now don't require authentication so that automated scripts can still
+# create topics.  Will need to modify CodestrikerClient.pm so that it can
+# take a username/password.
+sub requires_authentication {
+    return 0;
+}
+
 sub extract_parameters {
     my ($self, $http_input) = @_;
 
