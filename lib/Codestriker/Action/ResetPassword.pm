@@ -26,8 +26,8 @@ sub process {
     # Check that the user account exists.
     if (!Codestriker::Model::User->exists($email)) {
         my $feedback = "Unknown user $email specified.";
-        my $login_url = $url_builder->login(email => $email,
-                                            feedback => $feedback);
+        my $login_url = $url_builder->login_url(email => $email,
+						feedback => $feedback);
         print $query->redirect(-URI => $login_url);
         return;
     }
