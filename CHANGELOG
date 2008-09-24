@@ -44,6 +44,10 @@ Version 1.9.7
 * Make $file_viewer more flexible so it can handle file mapping URLs
   which have CGI parameters.  Submitted by vadz@users.sourceforge.net.
 
+* Scmbug integration now works correctly when there are multiple
+  commits to the same file under the one Bug ID.  Fixed by
+  rob_webset@users.sourceforge.net.
+
 Version 1.9.6
 
 * Ability to create Codestriker topics automatically from a Subversion

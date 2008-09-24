@@ -66,13 +66,38 @@ sub getDiff {
     # Scmbug::ActivityUtilities expects.
     $bugids =~ s/ //g;
     my $affected_files_list = $self->{scmbug}->get_affected_files($bugids);
+    
+    my @reducedChangesets = ();
 
+    # Tidy up the returned data, joining any changes done one after another
+    # this will produce a much more readable topic
     foreach my $changeset ( @{ $affected_files_list } ) {
 
         # Don't diff just directory property changes
         if ( $changeset->{file} =~ /\/$/ ) {
             next;
         }
+        
+        my $foundfile = 0;
+
+        foreach my $existingChangeSet ( @reducedChangesets ) {
+            if ($changeset->{file} eq $existingChangeSet->{file}) {
+                $foundfile = 1;
+            	# File matches now update the old and new revision
+                if ($changeset->{old} eq $existingChangeSet->{new}) {
+		            $existingChangeSet->{new} = $changeset->{new};
+                } elsif($changeset->{new} eq $existingChangeSet->{old}) {
+                    $existingChangeSet->{old} = $changeset->{old};
+                }
+            }
+        }
+        
+        if ($foundfile == 0) {
+            push @reducedChangesets, $changeset;
+        }
+    }
+
+    foreach my $changeset ( @reducedChangesets ) {        
 
         # Call the delgate repository object for retrieving the actual
         # content.
