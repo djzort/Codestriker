@@ -54,11 +54,12 @@ sub process($$$) {
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Indicate whether the topic text needs to be retrieved by the repository
-    # object.
+    # object.  Need to handle the case where ScmBug is defined, but the user
+    # is still uploading their topic text manually, and have specified a bug ID.
     my $retrieve_text_from_rep = 0;
     if ((($start_tag ne "" || $end_tag ne "") && $module ne "") ||
         (defined $Codestriker::scmbug_hostname && $Codestriker::scmbug_hostname ne '' &&
-         $bug_ids ne '')) {
+         $bug_ids ne '' && (! defined $fh))) {
         $retrieve_text_from_rep = 1;
 
         # Check if this action is permitted.
