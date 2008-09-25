@@ -47,6 +47,9 @@ Version 1.9.7
 * Scmbug integration now works correctly when there are multiple
   commits to the same file under the one Bug ID.  Fixed by
   rob_webset@users.sourceforge.net.
+  
+* ScmBug integration now works correctly when deleted files are
+  present in a Subversion changeset.  
 
 Version 1.9.6
 

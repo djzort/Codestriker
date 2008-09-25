@@ -98,7 +98,7 @@ sub getRoot ($) {
 
 # Given a Subversion URL, determine if it refers to a directory or a file.
 sub is_file_url {
-    my ($self, $url) = @_;
+    my ($self, $url, $revision) = @_;
     my $file_url;
 
     eval {
@@ -108,8 +108,8 @@ sub is_file_url {
         push @args, '--no-auth-cache';
         push @args, @{ $self->{userCmdLine} };
         push @args, '--xml';
-        push @args, $self->{repository_url} . '/' . $url;
-        my $read_data;
+        push @args, $self->{repository_url} . '/' . $url . '@' . $revision;
+        my $read_data = '';
         my $read_stdout_fh = new FileHandle;
         open($read_stdout_fh, '>', \$read_data);
 
@@ -132,15 +132,13 @@ sub is_file_url {
         push @args, '--non-interactive';
         push @args, '--no-auth-cache';
         push @args, @{ $self->{userCmdLine} };
-        push @args, '--revision';
-        push @args, 'HEAD';
-        push @args, $self->{repository_url} . '/' . $url;
+        push @args, $self->{repository_url} . '/' . $url . '@' . $revision;
 
-        my $read_stdout_data;
+        my $read_stdout_data = '';
         my $read_stdout_fh = new FileHandle;
         open($read_stdout_fh, '>', \$read_stdout_data);
 
-        my $read_stderr_data;
+        my $read_stderr_data = '';
         my $read_stderr_fh = new FileHandle;
         open($read_stderr_fh, '>', \$read_stderr_data);
 
@@ -164,10 +162,25 @@ sub is_file_url {
 sub getDiff {
     my ($self, $start_tag, $end_tag, $module_name, $stdout_fh, $stderr_fh) = @_;
 
+    my $revision;
+    my $removed_file = 0;
+    if ($start_tag eq "" && $end_tag ne "") {
+        $revision = $end_tag;
+    } elsif ($start_tag ne "") {
+	if ($end_tag eq "") {
+	    $revision = $start_tag;
+	} elsif ($end_tag eq $Codestriker::REMOVED_REVISION) {
+	    # Indicates a removed file.
+	    $revision = $start_tag;
+	    $removed_file = 1;
+	}
+    }
+
     # Sanitise the URL, and determine if it refers to a directory or filename.
     $module_name = sanitise_url_component($module_name);
     my $directory;
-    if ($self->is_file_url($module_name)) {
+
+    if ($self->is_file_url($module_name, defined $revision ? $revision : $start_tag)) {
         $module_name =~ /(.*)\/[^\/]+/;
         $directory = $1;
     } else {
@@ -181,44 +194,43 @@ sub getDiff {
 
     my @args = ();
 
-    my $revision;
-    if ($start_tag eq "" && $end_tag ne "") {
-        $revision = $end_tag;
-    } elsif ($start_tag ne "" && $end_tag eq "") {
-        $revision = $start_tag;
-    }
-
     if (defined $revision) {
         # Just pull out the actual contents of the file.
         push @args, 'cat';
         push @args, '--non-interactive';
         push @args, '--no-auth-cache';
         push @args, @{ $self->{userCmdLine} };
-        push @args, '-r';
-        push @args, $revision;
-        push @args, $self->{repository_url} . '/' . $module_name;
+        push @args, $self->{repository_url} . '/' . $module_name . '@' . $revision;
         Codestriker::execute_command($read_stdout_fh, $stderr_fh,
                                      $Codestriker::svn, @args);
 
+	# First determine the line count.
         open($read_stdout_fh, '<', \$read_stdout_data);
         my $number_lines = 0;
         while (<$read_stdout_fh>) {
             $number_lines++;
         }
-        Codestriker::execute_command($read_stdout_fh, $stderr_fh,
-                                     $Codestriker::svn, @args);
-
-        open($read_stdout_fh, '<', \$read_stdout_data);
-
 
         # Fake the diff header.
         print $stdout_fh "Index: $module_name\n";
         print $stdout_fh "===================================================================\n";
-        print $stdout_fh "--- /dev/null\n";
-        print $stdout_fh "+++ $module_name\t(revision $revision)\n";
-        print $stdout_fh "@@ -0,0 +1,$number_lines @@\n";
+	my $prefix;
+	if ($removed_file) {
+	    print $stdout_fh "--- $module_name\t(revision $revision)\n";
+	    print $stdout_fh "+++ /dev/null\n";
+	    print $stdout_fh "@@ -0,$number_lines +0,0 @@\n";
+	    $prefix = '-';
+	} else {
+	    print $stdout_fh "--- /dev/null\n";
+	    print $stdout_fh "+++ $module_name\t(revision $revision)\n";
+	    print $stdout_fh "@@ -0,0 +1,$number_lines @@\n";
+	    $prefix = '+';
+	}
+
+        # Now write out the content.
+        open($read_stdout_fh, '<', \$read_stdout_data);
         while (<$read_stdout_fh>) {
-            print $stdout_fh "+ $_";
+            print $stdout_fh "$prefix $_";
         }
     } else {
         push @args, 'diff';

@@ -85,7 +85,7 @@ sub getDiff {
                 $foundfile = 1;
             	# File matches now update the old and new revision
                 if ($changeset->{old} eq $existingChangeSet->{new}) {
-		            $existingChangeSet->{new} = $changeset->{new};
+		    $existingChangeSet->{new} = $changeset->{new};
                 } elsif($changeset->{new} eq $existingChangeSet->{old}) {
                     $existingChangeSet->{old} = $changeset->{old};
                 }
@@ -101,8 +101,23 @@ sub getDiff {
 
         # Call the delgate repository object for retrieving the actual
         # content.
-        my $old_rev = ($changeset->{old} == 0) ? "" : $changeset->{old};
-        my $new_rev = ($changeset->{new} == 0) ? "" : $changeset->{new};
+	my $old_rev;
+	my $new_rev;
+
+	if ($changeset->{old} == 0) {
+	    # File has been added.
+	    $old_rev = '';
+	    $new_rev = $changeset->{new};
+	} elsif ($changeset->{new} == 0) {
+	    # File has been removed.
+	    $old_rev = $changeset->{old};
+	    $new_rev = $Codestriker::REMOVED_REVISION;
+	} else {
+	    # File has been modified;
+	    $old_rev = $changeset->{old};
+	    $new_rev = $changeset->{new};
+	}
+
         my $ret = $self->{repository}->getDiff($old_rev, $new_rev,
                                                $changeset->{file},
                                                $stdout_fh,
