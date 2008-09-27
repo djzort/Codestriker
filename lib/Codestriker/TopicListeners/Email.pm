@@ -395,10 +395,6 @@ sub comment_create($$$) {
     if ($comment->{fileline} != -1) {
         $body .= " line $comment->{fileline}.\n\n";
 
-        # Only show the context for a comment made against a specific line.
-        $body .= "Context:\n$EMAIL_HR\n\n";
-        my $email_context = $Codestriker::EMAIL_CONTEXT;
-
         # Retrieve the diff hunk for this file and line number.
         my $delta =
           Codestriker::Model::Delta->get_delta($comment->{topicid},
@@ -407,6 +403,11 @@ sub comment_create($$$) {
                                                $comment->{filenew});
 
         if (defined $delta) {
+            # Only show the context for a comment made against a specific line
+            # in the original review text.
+            $body .= "Context:\n$EMAIL_HR\n\n";
+            my $email_context = $Codestriker::EMAIL_CONTEXT;
+
             my @text = ();
             my $offset = $delta->retrieve_context($comment->{fileline}, $comment->{filenew},
                                                   $email_context, \@text);
