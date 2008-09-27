@@ -1077,6 +1077,14 @@ $scmbug_lib_dir = 'C:/Program Files/Scmbug/share/scmbug/lib';
           codestriker and the <varname>$scmbug_lib_dir</varname>
           variable made to point at this.
 	</para>
+        <para>
+          Using ScmBug for creating topics can generate a very large
+          number of requests to your SCM system.  If your SCM system
+          is running under a Unix system, you might need to increase
+          the number of allowed requests per-minute in your inetd
+          configuration, otherwise you might experience hangs while
+          creating ScmBug topics.
+        </para>
       </sect2>
     </sect1>
 
