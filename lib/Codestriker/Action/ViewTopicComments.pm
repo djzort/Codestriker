@@ -98,8 +98,15 @@ sub process($$$) {
                                           filenumber => $comment->{filenumber},
                                           new => $comment->{filenew},
                                           line => $comment->{fileline}, mode => $mode);
+            my $view_diff_file =
+              $url_builder->view_url(topicid => $topicid, projectid => $projectid,
+                                     fview => $comment->{filenumber},
+                                     filenumber => $comment->{filenumber},
+                                     new => $comment->{filenew},
+                                     line => $comment->{fileline}, mode => $mode);
 
             $comment->{view_file} = "javascript: myOpen('$new_file','CVS')";
+            $comment->{view_diff} = "javascript: myOpen('$view_diff_file','CVS')";
             my $parallel = $new_file;
             $comment->{view_parallel} =
               "javascript: myOpen('$parallel','CVS')";

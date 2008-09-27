@@ -49,7 +49,11 @@ Version 1.9.7
   rob_webset@users.sourceforge.net.
   
 * ScmBug integration now works correctly when deleted files are
-  present in a Subversion changeset.  
+  present in a Subversion changeset.
+
+* Added "Diff" link for each comment on the list comments page so that for
+  those reviews which aren't linked to an SCM, it is still possible
+  to quickly link back to the coloured topic text.
 
 Version 1.9.6
 

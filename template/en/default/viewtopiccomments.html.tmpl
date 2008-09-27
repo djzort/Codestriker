@@ -116,6 +116,7 @@ with
 	<TD>
 	    [% IF comment.filename != '' %]
 	       <A HREF="[% comment.view_file %]">[% comment.filename %][% IF comment.fileline != -1 %]:[% comment.fileline %]</A>[% ELSE %]</A> (File Level)[% END %]
+	       | <A HREF="[% comment.view_diff %]">Diff</A>
 	       [% IF allow_repositories != 0 %] | <A HREF="[% comment.view_parallel %]">Parallel</A> [% END %]
 	    [% ELSIF comment.fileline == -1 && comment.filenumber == -1 %]
 	       Topic Level
