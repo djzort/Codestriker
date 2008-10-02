@@ -58,12 +58,12 @@ sub _filter {
     # example if it is an unknown file type.
     eval {
         Codestriker::execute_command($read_stdout_fh, undef, $self->{highlight}, @args);
+	$read_data = decode_utf8($read_data);
     };
     if ($read_data eq "") {
         # Assume this occurred because the filename was an unsupported type.
         # Just return the text appropriately encoded for html output.
         $read_data = HTML::Entities::encode($text);
-	$read_data = decode_utf8($read_data);
     }
 
     # Delete the temp file.
