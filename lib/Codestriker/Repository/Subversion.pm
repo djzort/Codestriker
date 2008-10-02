@@ -194,6 +194,7 @@ sub getDiff {
 
     my @args = ();
 
+    my $last_line;
     if (defined $revision) {
         # Just pull out the actual contents of the file.
         push @args, 'cat';
@@ -218,7 +219,7 @@ sub getDiff {
 	if ($removed_file) {
 	    print $stdout_fh "--- $module_name\t(revision $revision)\n";
 	    print $stdout_fh "+++ /dev/null\n";
-	    print $stdout_fh "@@ -0,$number_lines +0,0 @@\n";
+	    print $stdout_fh "@@ -1,$number_lines +0,0 @@\n";
 	    $prefix = '-';
 	} else {
 	    print $stdout_fh "--- /dev/null\n";
@@ -230,7 +231,8 @@ sub getDiff {
         # Now write out the content.
         open($read_stdout_fh, '<', \$read_stdout_data);
         while (<$read_stdout_fh>) {
-            print $stdout_fh "$prefix $_";
+	    $last_line ="$prefix $_";
+            print $stdout_fh $last_line;
         }
     } else {
         push @args, 'diff';
@@ -270,7 +272,14 @@ sub getDiff {
             }
 
             print $stdout_fh $line;
+	    $last_line = $line;
         }
+    }
+
+    # Make sure the last line has a new-line, so when creating text for
+    # ScmBug they are all appended correctly.
+    if (defined $last_line && substr($last_line, length($last_line)-1, 1) ne "\n") {
+	print $stdout_fh "\n";
     }
 
     return $Codestriker::OK;

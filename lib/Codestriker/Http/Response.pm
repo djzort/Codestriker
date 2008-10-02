@@ -256,6 +256,8 @@ sub generate_header {
     print "\n";
     print '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">';
     print "\n";
+    print '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
+    print "\n";
     print "<head><title>$title</title>\n";
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"$codestriker_css\" />\n";
     print "<script src=\"$overlib_js\" type=\"text/javascript\"></script>\n";

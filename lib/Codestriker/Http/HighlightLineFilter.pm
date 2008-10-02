@@ -11,6 +11,7 @@
 package Codestriker::Http::HighlightLineFilter;
 
 use strict;
+use Encode;
 
 use File::Temp qw/ tempfile /;
 
@@ -50,6 +51,8 @@ sub _filter {
     push @args, '-f';
     push @args, '-t';
     push @args, $self->{tabwidth};
+    push @args, '-u';
+    push @args, 'UTF-8';
 
     # Wrap the command in an eval in case highlight fails running over the file - for
     # example if it is an unknown file type.
@@ -60,6 +63,7 @@ sub _filter {
         # Assume this occurred because the filename was an unsupported type.
         # Just return the text appropriately encoded for html output.
         $read_data = HTML::Entities::encode($text);
+	$read_data = decode_utf8($read_data);
     }
 
     # Delete the temp file.

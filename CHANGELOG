@@ -55,6 +55,9 @@ Version 1.9.7
   those reviews which aren't linked to an SCM, it is still possible
   to quickly link back to the coloured topic text.
 
+* Fixed the rendering of non-latin characters when highlighting is
+  enabled.
+
 Version 1.9.6
 
 * Ability to create Codestriker topics automatically from a Subversion
