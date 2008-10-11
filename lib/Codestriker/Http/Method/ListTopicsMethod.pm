@@ -83,7 +83,13 @@ sub extract_parameters {
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 
-    Codestriker::Action::ListTopics->process($http_input, $http_output);
+    my $action = $http_input->{query}->param('action');
+    if ($action eq "list_topics_rss") {
+        Codestriker::Action::ListTopicsRSS->process($http_input, $http_output);
+    } else {
+        Codestriker::Action::ListTopics->process($http_input, $http_output);
+    }
+
 }
 
 1;
