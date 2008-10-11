@@ -96,8 +96,11 @@ sub _send_email {
     }
 
     # Set the from/to addresses.
-    $smtp->mail("codestriker");
-    $smtp->ok() || die "Couldn't set sender to \"codestriker\": $!, " .
+    if (! defined $Codestriker::daemon_email_address) {
+        die '$daemon_email_address is not set in codestriker.conf';
+    }
+    $smtp->mail($Codestriker::daemon_email_address);
+    $smtp->ok() || die "Couldn't set sender to \"$Codestriker::daemon_email_address\": $!, " .
       $smtp->message();
     $smtp->recipient($email);
     $smtp->ok() || die "Couldn't set recipient to \"$email\" $!, " .
@@ -105,7 +108,7 @@ sub _send_email {
 
     # Set the email text.
     $smtp->data();
-    $smtp->datasend("From: codestriker\n");
+    $smtp->datasend("From: $Codestriker::daemon_email_address\n");
     $smtp->datasend("To: $email\n");
     $smtp->datasend("Subject: $subject\n");
 
