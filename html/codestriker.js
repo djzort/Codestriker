@@ -107,6 +107,7 @@ function add_comment_html(file, line, new_value)
             '<span class="hidden" id="statusField">&nbsp;</span>\n' +
 	    '<form name="add_comment" method="POST" ' +
             'action="' + url + '" ' +
+            'accept-charset="UTF-8" ' +
             'onSubmit="return top.verify(document.add_comment, getElt(\'statusField\'));" ' +
             'enctype="application/x-www-form-urlencoded" action="' + url + '">\n' +
 	    '<input type="hidden" name="action" value="submit_comment">\n' +
