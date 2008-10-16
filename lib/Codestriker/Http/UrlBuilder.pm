@@ -66,7 +66,7 @@ sub new {
         $Codestriker::codestriker_css ne "" &&
         $Codestriker::codestriker_css =~ /[\/\\]/o) {
         $htmlurl = $Codestriker::codestriker_css;
-        $htmlurl =~ s/\/.+?\.css//;
+        $htmlurl =~ s/\/[^\/]+\.css//;
     } else {
         # Standard Codestriker deployment.
         $htmlurl = $self->{url_prefix};
