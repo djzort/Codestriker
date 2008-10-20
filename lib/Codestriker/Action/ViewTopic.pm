@@ -177,7 +177,7 @@ sub process($$$) {
 
     # Set the display all, display single URLs.
     $vars->{'display_all_files_url'} =
-      $url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode);
+      $url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode, fview => -1);
     $vars->{'display_single_file_url'} =
       $url_builder->view_url(topicid => $topicid, projectid => $projectid, mode => $mode);
     $vars->{'fview'} = $fview;
