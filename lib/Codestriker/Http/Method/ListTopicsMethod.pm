@@ -24,7 +24,7 @@ sub url {
     my $action = defined $args{rss} && $args{rss} ? "list_topics_rss" : "list_topics";
 
     if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=$action" .
+        return $self->{url_prefix} . "?action=$args{action}" .
           (defined $args{sauthor} && $args{sauthor} ne "" ? "&sauthor=" . CGI::escape($args{sauthor}) : "") .
             (defined $args{sreviewer} && $args{sreviewer} ne "" ? "&sreviewer=" . CGI::escape($args{sreviewer}) : "") .
               (defined $args{scc} && $args{scc} ne "" ? "&scc=" . CGI::escape($args{scc}) : "") .
@@ -40,7 +40,7 @@ sub url {
                                   ($sproject ne "" ? "&sproject=$sproject" : "");
     } else {
         return $self->{url_prefix} .
-          ($action eq "list_topics_rss" ? "/feed" : "") . "/topics/list" .
+          ($args{action} eq "list_topics_rss" ? "/feed" : "") . "/topics/list" .
             (defined $args{sauthor} && $args{sauthor} ne "" ? "/author/" . CGI::escape($args{sauthor}) : "") .
               (defined $args{sreviewer} && $args{sreviewer} ne "" ? "/reviewer/" . CGI::escape($args{sreviewer}) : "") .
                 (defined $args{scc} && $args{scc} ne "" ? "/cc/" . CGI::escape($args{scc}) : "") .
