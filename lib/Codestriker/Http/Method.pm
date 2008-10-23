@@ -27,14 +27,7 @@ sub new {
         $self->{cgi_style} = $query->url() =~ /codestriker.pl/ ? 1 : 0;
     }
 
-    # Determine what prefix is required when using relative URLs.
-    # Unfortunately, Netcsape 4.x does things differently to everyone
-    # else.
     $self->{url_prefix} = $query->url();
-    my $browser = $ENV{'HTTP_USER_AGENT'};
-    if (defined $browser && $browser =~ m%^Mozilla/(\d)% && $1 <= 4) {
-        $self->{url_prefix} = $self->{query}->url(-relative=>1);
-    }
 
     return bless $self, $type;
 }
