@@ -23,29 +23,6 @@ function myOpen(url,name)
     windowHandle.focus();
 }
 
-// Retrieve the value of a cookie by name.
-function getCookie(name)
-{
-   var regexp = new RegExp(name + "=([^;]+)");
-   var value = regexp.exec(document.cookie);
-   return (value != null) ? value[1] : null;
-}
-
-// Set the value of the cookie to the specific value.
-function setCookie(name, value, expirySeconds)
-{
-   if (!expirySeconds) {
-       // Default to one hour
-       expirySeconds = 60 * 60;
-   }
-
-   var now = new Date();
-   var expiry = new Date(now.getTime() + (expirySeconds * 1000))
-   document.cookie = name + "=" + value +
-                     "; expires=" + expiry.toGMTString() +
-                     "; path=" + document.location.pathname;
-}
-
 // Edit open function.  Name is kept short to reduce output size.
 function eo(fn,line,newfile)
 {
@@ -98,12 +75,7 @@ function add_comment_html(file, line, new_value)
               
     // Create the hidden error span, and the initial form, with the
     // appropriate hidden fields.
-    var html = '<html><head>' +
-            '<link rel="stylesheet" type="text/css" ' +
-            '      href="' + cs_css + '"/>\n' +
-            '<script src="' + cs_xbdhtml_js + '" type="text/javascript"></script>\n' +
-            '</head>\n' +
-            '<body bgcolor="#eeeeee">\n' +
+    var html =
             '<span class="hidden" id="statusField">&nbsp;</span>\n' +
 	    '<form name="add_comment" method="POST" ' +
             'action="' + url + '" ' +
@@ -203,7 +175,7 @@ function add_comment_html(file, line, new_value)
 	    '<input type="text" name="comment_cc" size="25" ' +
                     'maxlength="1024"></td>\n' +
             '<td><input type="submit" name="submit" value="Submit"></td>' +
-            '</tr></table></form></body></html>\n';
+            '</tr></table></form>\n';
 
     // Return the generated html.
     return html;
@@ -244,23 +216,6 @@ function verify(comment_form, status_field)
 	    return false;
         }
     }
-
-    // Make sure the email field is stored into the Codestriker
-    // cookie, so that it is remembered for the next add comment tooltip.
-    var cookie = getCookie('codestriker_cookie');
-    cs_email = comment_form.email.value;
-    var email_value = encodeURIComponent(cs_email);
-    if (cookie == null || cookie == '') {
-        cookie = 'email&' + email_value;
-    }
-    else if (cookie.match(/[&^]email&[^&]+/)) {
-        // Email field is already in cookie.
-        cookie = cookie.replace(/([&^])email&([^&]+)/, "$1email&" + email_value);
-    } else {
-        // Tack the email field onto the end.
-        cookie += '&email&' + email_value;
-    }
-    setCookie('codestriker_cookie', cookie, 10 * 356 * 24 * 60 * 60);
 
     // If we reached here, then all metrics have been set.  Send the 
     // request as an XMLHttpRequest, and return false so the browser
@@ -331,12 +286,7 @@ function add_comment_tooltip(file, line, new_value)
 {
     var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
                'Close</a><p>' +
-               '<iframe width="480" height="300" name="comment_frame" ' +
-               'src="javascript:top.add_comment_html(' +
-               file + ',' + line + ',' + new_value + ');">' +
-                'This browser is not supported.  Please use ' +
-                'a modern browser, such as Firefox or IE which ' +
-                'supports iframes.</iframe>';
+               add_comment_html(file, line, new_value);
     overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 480,
             HEIGHT, 300);
 }
