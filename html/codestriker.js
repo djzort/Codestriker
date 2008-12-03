@@ -75,7 +75,12 @@ function add_comment_html(file, line, new_value)
               
     // Create the hidden error span, and the initial form, with the
     // appropriate hidden fields.
-    var html =
+    var html = '<html><head>' +
+            '<link rel="stylesheet" type="text/css" ' +
+            '      href="' + cs_css + '"/>\n' +
+            '<script src="' + cs_xbdhtml_js + '" type="text/javascript"></script>\n' +
+            '</head>\n' +
+            '<body bgcolor="#eeeeee">\n' +
             '<span class="hidden" id="statusField">&nbsp;</span>\n' +
 	    '<form name="add_comment" method="POST" ' +
             'action="' + url + '" ' +
@@ -175,7 +180,7 @@ function add_comment_html(file, line, new_value)
 	    '<input type="text" name="comment_cc" size="25" ' +
                     'maxlength="1024"></td>\n' +
             '<td><input type="submit" name="submit" value="Submit"></td>' +
-            '</tr></table></form>\n';
+            '</tr></table></form></body></html>\n';
 
     // Return the generated html.
     return html;
@@ -286,7 +291,12 @@ function add_comment_tooltip(file, line, new_value)
 {
     var html = '<a href="javascript:hideElt(getElt(\'overDiv\')); void(0);">' +
                'Close</a><p>' +
-               add_comment_html(file, line, new_value);
+               '<iframe width="480" height="300" name="comment_frame" ' +
+               'src="javascript:top.add_comment_html(' +
+               file + ',' + line + ',' + new_value + ');">' +
+               'This browser is not supported.  Please use ' +
+               'a modern browser, such as Firefox or IE which ' +
+               'supports iframes.</iframe>';
     overlib(html, STICKY, DRAGGABLE, ALTCUT, CENTERPOPUP, WIDTH, 480,
             HEIGHT, 300);
 }
