@@ -71,7 +71,10 @@ function view_topic_on_load_handler()
 function add_comment_html(file, line, new_value)
 {
     // Get the location of the codestriker URL.
-    var url = cs_add_comment_url + '/' + file + '|' + line + '|' + new_value + '/add';
+    var url = cs_add_comment_url;
+    if (url.match(/\/project\//)) {
+        url += '/' + file + '|' + line + '|' + new_value + '/add';
+    }
               
     // Create the hidden error span, and the initial form, with the
     // appropriate hidden fields.
@@ -225,9 +228,13 @@ function verify(comment_form, status_field)
     // If we reached here, then all metrics have been set.  Send the 
     // request as an XMLHttpRequest, and return false so the browser
     // does nothing else.
-    var url = cs_add_comment_url + '/' + 
+    var url = cs_add_comment_url;
+    if (url.match(/\/project\//)) {
+        url += '/' + 
               comment_form.fn.value + '|' + comment_form.line.value + '|' +
               comment_form.newval.value + '/add';
+    }
+
     var params = 'action=submit_comment';
     params += '&line=' + encodeURIComponent(comment_form.line.value);
     params += '&topic=' + encodeURIComponent(comment_form.topic.value);
