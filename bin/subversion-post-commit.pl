@@ -41,8 +41,8 @@ my $svnlook = "/usr/bin/svnlook";
 ##############################################################################
 
 # First argument is the repository followed by the revision number.
-my $repository = pop @ARGV;
-my $revision = pop @ARGV;
+my $repository = shift @ARGV;
+my $revision = shift @ARGV;
 
 # Get the author, date, and log from svnlook.
 my @svnlooklines = &read_from_process($svnlook, 'info', $repository, '-r', $revision);
@@ -83,7 +83,8 @@ $client->create_topic({
 	email => $author . '@' . $email_domain,
 	reviewers => $CODESTRIKER_REVIEWERS,
 	cc => $CODESTRIKER_CC,
-	topic_text => join("\n", @difflines)
+	topic_text => join("\n", @difflines),
+        topic_state => "Open"
 	});
 
 # Start a child process safely without using /bin/sh.
