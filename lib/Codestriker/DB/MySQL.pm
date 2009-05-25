@@ -56,7 +56,14 @@ sub get_connection {
         $dbh->do("SET NAMES 'utf8'");
         $dbh->do("SET character_set_results='utf8'");
     }
-    $dbh->do("SET max_allowed_packet=128000000");
+
+    # MySQL 5.1 or later doesn't support this setting, which is used for
+    # allowing very large topics to be created.  Its now a global setting.
+    {
+        local $dbh->{RaiseError};
+        local $dbh->{PrintError};
+        $dbh->do("SET max_allowed_packet=128000000");
+    }
     return $dbh;
 }
 
