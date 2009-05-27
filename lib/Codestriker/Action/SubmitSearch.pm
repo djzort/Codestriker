@@ -53,8 +53,9 @@ sub process($$$) {
     my @stateids;
     for (my $i = 0; $i <= $#state_group; $i++) {
         if ($state_group[$i] eq "Any") {
-            # No need to encode anything in the URL.
-            @stateids = ();
+            for (my $j = 0; $j <= $#Codestriker::topic_states; $j++) {
+                push @stateids, $j;
+            }
             last;
         }
         for (my $j = 0; $j <= $#Codestriker::topic_states; $j++) {

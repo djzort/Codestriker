@@ -5,6 +5,9 @@ Version 1.9.9
 
 * Removed incompatible setting from MySQL database driver, which was
   preventing it from working with MySQL 5.1 or later.
+
+* Fixed regression where selecting state "All" from the search topics
+  screen would only return "Open" topics.
 	
 Version 1.9.8
 
