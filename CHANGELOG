@@ -1,6 +1,10 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version 1.9.10
+
+* Implemented "log out" action.	
+	
 Version 1.9.9
 
 * Removed incompatible setting from MySQL database driver, which was

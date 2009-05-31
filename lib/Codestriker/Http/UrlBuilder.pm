@@ -36,6 +36,7 @@ use Codestriker::Http::Method::UpdateTopicMetricsMethod;
 use Codestriker::Http::Method::UpdateCommentMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::LoginMethod;
+use Codestriker::Http::Method::LogoutMethod;
 use Codestriker::Http::Method::AuthenticateMethod;
 use Codestriker::Http::Method::NewPasswordMethod;
 use Codestriker::Http::Method::UpdatePasswordMethod;
@@ -236,6 +237,12 @@ sub metric_report_download_raw_data {
 sub login_url {
     my ($self, %args) = @_;
     return Codestriker::Http::Method::LoginMethod->new($self->{query})->url(%args);
+}
+
+# Create the URL for executing the logout action.
+sub logout_url {
+    my ($self, %args) = @_;
+    return Codestriker::Http::Method::LogoutMethod->new($self->{query})->url(%args);
 }
 
 # Create the URL for setting a new password.

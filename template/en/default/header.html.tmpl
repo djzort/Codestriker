@@ -18,8 +18,12 @@
     [% END %]
     | <a href="[% create_topic_url | html_entity %]">Create new topic</a>
     [% IF searchlist_enabled != 0 %] | <a href="[% search_url | html_entity %]">Search</a> [% END %]
-    [% IF login_url != "" %] | <a href="[% login_url %]">Log In</a>[% END %]
     | <a href="[% doc_url | html_entity %]/codestriker.html">Manual</a>
+    [% IF use_authentication %]
+        [% IF login_name != "" && password_hash != "" %] | <a href="[% logout_url %]">Log out</a> [% login_name %]
+        [% ELSE %] | <a href="[% login_url %]">Log in</a>
+        [% END %]
+    [% END %]
   </div>
   [% END %]
 </div>

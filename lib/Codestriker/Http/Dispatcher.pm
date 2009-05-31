@@ -39,6 +39,7 @@ use Codestriker::Http::Method::ViewMetricsMethod;
 use Codestriker::Http::Method::UpdateTopicStateMethod;
 use Codestriker::Http::Method::AddProjectMethod;
 use Codestriker::Http::Method::LoginMethod;
+use Codestriker::Http::Method::LogoutMethod;
 use Codestriker::Http::Method::AuthenticateMethod;
 use Codestriker::Http::Method::NewPasswordMethod;
 use Codestriker::Http::Method::UpdatePasswordMethod;
@@ -84,6 +85,7 @@ sub new {
     push @methods, Codestriker::Http::Method::UpdateTopicStateMethod->new($query);
     push @methods, Codestriker::Http::Method::AddProjectMethod->new($query);
     push @methods, Codestriker::Http::Method::LoginMethod->new($query);
+    push @methods, Codestriker::Http::Method::LogoutMethod->new($query);
     push @methods, Codestriker::Http::Method::AuthenticateMethod->new($query);
     push @methods, Codestriker::Http::Method::NewPasswordMethod->new($query);
     push @methods, Codestriker::Http::Method::UpdatePasswordMethod->new($query);

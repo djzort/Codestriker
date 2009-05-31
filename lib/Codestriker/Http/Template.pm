@@ -126,7 +126,15 @@ sub process($$) {
     $vars->{'create_topic_url'} = $url_builder->create_topic_url();
     $vars->{'search_url'} = $url_builder->search_url();
     $vars->{'doc_url'} = $url_builder->doc_url();
-    $vars->{'login_url'} = $url_builder->login_url();
+
+    if (defined $Codestriker::admin_users) {
+        $vars->{'use_authentication'} = 1;
+        $vars->{'login_url'} = $url_builder->login_url();
+        $vars->{'logout_url'} = $url_builder->logout_url();
+        my %cookie_hash = Codestriker::Http::Cookie->get($query);
+        $vars->{'login_name'} = $cookie_hash{email};
+        $vars->{'password_hash'} = $cookie_hash{password_hash};
+    }
 
     my $data = "";
     my $rc = $self->{template}->process($self->{name} . "." . $self->{type} . ".tmpl",
