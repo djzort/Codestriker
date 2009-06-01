@@ -9,10 +9,10 @@ use lib '../../lib';
 use Codestriker;
 use Codestriker::FileParser::SubversionDiff;
 
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff1.txt', ());
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff2.txt', ());
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff3.txt', ());
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff4.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff1.txt', ());
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff2.txt', ());
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff3.txt', ());
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff4.txt',
     make_delta(filename => 'parseBuildLogs',
 			   old_linenumber => '9',
 			   new_linenumber => '9',
@@ -49,7 +49,7 @@ END_DELTA
 END_DELTA
     ));
    
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff5.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff5.txt',
     make_delta(filename => 'parseBuildLogs',
 			   old_linenumber => '9',
 			   new_linenumber => '9',
@@ -86,7 +86,7 @@ END_DELTA
 END_DELTA
     ));
     
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff6.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff6.txt',
     make_delta(filename => 'parseBuildLogs',
 			   old_linenumber => '9',
 			   new_linenumber => '9',
@@ -123,7 +123,7 @@ END_DELTA
 END_DELTA
     ));
     
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff7.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff7.txt',
     make_delta(filename => 'users/clechasseur/local/devsetup/CoveoDevSetup.iss',
 			   old_linenumber => '31',
 			   new_linenumber => '31',
@@ -136,7 +136,7 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff7.txt',
 END_DELTA
 ));
 
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff8.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff8.txt',
     make_delta(filename => 'users/clechasseur/local/devsetup/CoveoDevSetup.iss',
 			   old_linenumber => '31',
 			   new_linenumber => '31',
@@ -149,7 +149,7 @@ assert_delta_equals('../../test/testtopictexts/svn-Propdiff8.txt',
 END_DELTA
 ));
 
-assert_delta_equals('../../test/testtopictexts/svn-Propdiff9.txt',
+assert_delta_equals('../../test/testtopictexts/svn-PropDiff9.txt',
     make_delta(filename => 'product/lib/javamail/mail.jar',
 			   old_linenumber => -1,
 			   new_linenumber => -1,
