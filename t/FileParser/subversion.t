@@ -7,7 +7,7 @@ use Test::Differences;
 
 use lib '../../lib';
 use Codestriker;
-use Codestriker::FileParser::SubversionDiff;
+use Codestriker::FileParser::Parser;
 
 assert_delta_equals('../../test/testtopictexts/svn-PropDiff1.txt', ());
 assert_delta_equals('../../test/testtopictexts/svn-PropDiff2.txt', ());
@@ -293,7 +293,24 @@ END_DELTA
 	           text => <<'END_DELTA',
 +labuda
 END_DELTA
-));    
+));
+
+assert_delta_equals('../../test/testtopictexts/svn-diff2.txt',
+    make_delta(filename => 'empty.txt',
+	       old_linenumber => 0,
+	       new_linenumber => 0,
+	       text => '',
+	       binary => 0,
+	       revision => '0'
+    ),
+    make_delta(filename => 'more.txt',
+	       old_linenumber => 0,
+	       new_linenumber => 0,
+	       text => '/* Some content */',
+	       binary => 0,
+	       revision => '0'
+    ),
+);
 
 # Convenience function for creating a delta object.
 sub make_delta {
@@ -326,7 +343,8 @@ sub assert_delta_equals {
 	# from it.
 	my $fh;
 	open( $fh, '<', $filename );
-	my @actual = Codestriker::FileParser::SubversionDiff->parse($fh);
+        my @actual = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
+                                                            undef, 111, undef);
 	close($fh);
 
 	# Check that the extracted deltas match what is expected.

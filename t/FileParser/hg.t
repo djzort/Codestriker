@@ -6,12 +6,13 @@ use Test::More tests => 6;
 
 use lib '../../lib';
 use Codestriker;
-use Codestriker::FileParser::PatchUnidiff;
+use Codestriker::FileParser::Parser;
 
 # Parse the test hg patch file.
 my $fh;
 open( $fh, '<', '../../test/testtopictexts/hg-diff1.txt' );
-my @deltas = Codestriker::FileParser::PatchUnidiff->parse($fh);
+my @deltas = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
+                                                   undef, 111, undef);
 close($fh);
 
 # Set what the expected output should be.

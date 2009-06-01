@@ -7,12 +7,13 @@ use Test::Differences;
 
 use lib '../../lib';
 use Codestriker;
-use Codestriker::FileParser::PerforceDescribe;
+use Codestriker::FileParser::Parser;
 
 # Parse the test perforce describe file.
 my $fh;
 open( $fh, '<', '../../test/testtopictexts/perforce-diff14.txt' );
-my @deltas = Codestriker::FileParser::PerforceDescribe->parse($fh);
+my @deltas = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
+                                                   undef, 111, undef);
 close($fh);
 
 # Set what the expected output should be.
