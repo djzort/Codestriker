@@ -121,10 +121,10 @@ sub parse ($$$) {
                 # an appropriate entry.
                 my $chunk = {};
                 $chunk->{filename} = $filename;
-                $chunk->{revision} = 0;
-                $chunk->{old_linenumber} = 0;
-                $chunk->{new_linenumber} = 0;
-                $chunk->{binary} = 0;
+                $chunk->{revision} = $Codestriker::ADDED_REVISION;
+                $chunk->{old_linenumber} = -1;
+                $chunk->{new_linenumber} = -1;
+                $chunk->{binary} = 1;
                 $chunk->{text} = "";
                 $chunk->{description} = "";
                 $chunk->{repmatch} = 1;

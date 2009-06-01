@@ -3,7 +3,10 @@
 
 Version 1.9.10
 
-* Implemented "log out" action.	
+* Implemented "log out" action.
+
+* Implemented another corner case with Subversion diffs for handling
+  empty file entries.
 	
 Version 1.9.9
 

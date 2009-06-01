@@ -2,7 +2,7 @@
 
 use strict;
 use Fatal qw / open close /;
-use Test::More tests => 37;
+use Test::More tests => 39;
 use Test::Differences;
 
 use lib '../../lib';
@@ -298,16 +298,16 @@ END_DELTA
 
 assert_delta_equals('../../test/testtopictexts/svn-diff2.txt',
     make_delta(filename => 'empty.txt',
-	       old_linenumber => 0,
-	       new_linenumber => 0,
+	       old_linenumber => -1,
+	       new_linenumber => -1,
 	       text => '',
-	       binary => 0,
-	       revision => '0'
+	       binary => 1,
+	       revision => '1.0'
     ),
     make_delta(filename => 'more.txt',
-	       old_linenumber => 0,
-	       new_linenumber => 0,
-	       text => '/* Some content */',
+	       old_linenumber => '0',
+	       new_linenumber => '1',
+	       text => "+/* Some content */\n",
 	       binary => 0,
 	       revision => '0'
     ),
