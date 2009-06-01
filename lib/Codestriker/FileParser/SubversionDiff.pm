@@ -117,7 +117,19 @@ sub parse ($$$) {
             if ($line =~ /^\-\-\- .*\s.*\(.*?(\d+)\)/io) {
                 $base_revision = $1;
             } elsif ($line !~ /^\-\-\- .*/io) {
-                return ();
+                # This appears to be a new entry with no data - construct
+                # an appropriate entry.
+                my $chunk = {};
+                $chunk->{filename} = $filename;
+                $chunk->{revision} = 0;
+                $chunk->{old_linenumber} = 0;
+                $chunk->{new_linenumber} = 0;
+                $chunk->{binary} = 0;
+                $chunk->{text} = "";
+                $chunk->{description} = "";
+                $chunk->{repmatch} = 1;
+                push @result, $chunk;
+                next;
             }
 
             # Make sure the +++ line is present next.

@@ -2,12 +2,12 @@
 
 use strict;
 use Fatal qw / open close /;
-use Test::More tests => 36;
+use Test::More tests => 37;
 use Test::Differences;
 
 use lib '../../lib';
 use Codestriker;
-use Codestriker::FileParser::Parser;
+use Codestriker::FileParser::SubversionDiff;
 
 assert_delta_equals('../../test/testtopictexts/svn-PropDiff1.txt', ());
 assert_delta_equals('../../test/testtopictexts/svn-PropDiff2.txt', ());
@@ -49,6 +49,7 @@ END_DELTA
 END_DELTA
     ));
    
+
 assert_delta_equals('../../test/testtopictexts/svn-PropDiff5.txt',
     make_delta(filename => 'parseBuildLogs',
 			   old_linenumber => '9',
@@ -343,8 +344,7 @@ sub assert_delta_equals {
 	# from it.
 	my $fh;
 	open( $fh, '<', $filename );
-        my @actual = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
-                                                            undef, 111, undef);
+        my @actual = Codestriker::FileParser::SubversionDiff->parse($fh);
 	close($fh);
 
 	# Check that the extracted deltas match what is expected.
