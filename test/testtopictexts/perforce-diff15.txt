@@ -1,0 +1,5 @@
+==== //seine/current/src/mods/stub_drv/indus_stub.c#1 - /home/mani/seine/current/src/mods/stub_drv/indus_stub.c ====
+22a23
+> //COMMENT SPECIFICALLY ADDED TO TEST CODESTRIKER
+31a33
+> //COMMENT SPECIFICALLY ADDED TO TEST CODESTRIKER

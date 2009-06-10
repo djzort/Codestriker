@@ -119,6 +119,40 @@ for ( my $index = 0; $index < @deltas; $index++ ) {
 		        "Delta $index in perforce patch 1" );
 }
 
+open( $fh, '<', '../../test/testtopictexts/perforce-diff15.txt' );
+@deltas = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
+                                                 undef, 111, undef);
+close($fh);
+
+# Set what the expected output should be.
+@expected = ();
+push @expected, make_delta(
+	filename       => '//seine/current/src/mods/stub_drv/indus_stub.c',
+	revision       => '1',
+	old_linenumber => '22',
+	new_linenumber => '23',
+	text => <<'END_DELTA',
+//COMMENT SPECIFICALLY ADDED TO TEST CODESTRIKER
+END_DELTA
+);
+
+push @expected, make_delta(
+	filename       => '//seine/current/src/mods/stub_drv/indus_stub.c',
+	revision       => '1',
+	old_linenumber => '31',
+	new_linenumber => '33',
+	text => <<'END_DELTA',
+//COMMENT SPECIFICALLY ADDED TO TEST CODESTRIKER
+END_DELTA
+);
+
+# Check that the extracted deltas match what is expected.
+is( @deltas, @expected, "Number of deltas in perforce patch 2" );
+for ( my $index = 0; $index < @deltas; $index++ ) {
+	eq_or_diff( $deltas[$index], $expected[$index],
+		        "Delta $index in perforce patch 2" );
+}
+
 # Convenience function for creating a delta object.
 sub make_delta {
 
