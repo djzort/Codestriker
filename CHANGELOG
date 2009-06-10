@@ -7,6 +7,9 @@ Version 1.9.10
 
 * Implemented another corner case with Subversion diffs for handling
   empty file entries.
+
+* Fixed issue where duplicate bug IDs specified on topic creation would
+  prevent the topic from being created.
 	
 Version 1.9.9
 

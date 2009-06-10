@@ -108,6 +108,11 @@ sub _insert_bug_ids($$$) {
     my $success = defined $insert_bugs;
 
     my @bug_ids = split /, /, $bug_ids;
+
+    # Deduplicate bug IDs.
+    my %dedup_hash;
+    @bug_ids = grep { !$dedup_hash{$_}++ } @bug_ids;
+
     for (my $i = 0; $i <= $#bug_ids; $i++) {
         $success &&= $insert_bugs->execute($self->{topicid}, $bug_ids[$i]);
     }
