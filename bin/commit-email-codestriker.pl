@@ -116,6 +116,7 @@ my %opt_to_hash_key = ('--from' => 'from_address',
                        '-m'     => '',
                        '-r'     => 'reply_to',
                        '-s'     => 'subject_prefix',
+                       '-i'     => 'list_id',
 		       '--codestriker-url' => 'codestriker_url',
 		       '--codestriker-project' => 'codestriker_project',
 		       '--codestriker-repository' => 'codestriker_repository',
@@ -467,6 +468,7 @@ foreach my $project (@project_settings_list)
     my $log_file        = $project->{log_file};
     my $reply_to        = $project->{reply_to};
     my $subject_prefix  = $project->{subject_prefix};
+    my $list_id         = $project->{list_id};
     my $subject;
 
     if ($commondir ne '')
@@ -497,6 +499,7 @@ foreach my $project (@project_settings_list)
     push(@head, "From: $mail_from\n");
     push(@head, "Subject: $subject\n");
     push(@head, "Reply-to: $reply_to\n") if $reply_to;
+    push(@head, "List-id: $list_id\n") if $list_id;
 
     ### Below, we set the content-type etc, but see these comments
     ### from Greg Stein on why this is not a full solution.
@@ -573,6 +576,7 @@ sub usage
       "  -m regex                             Regular expression to match committed path\n",
       "  -r email_address                     Email address for 'Reply-To:'\n",
       "  -s subject_prefix                    Subject line prefix\n",
+      "  -i list_id                           Value to set for List-Id email header\n",
       "  --codestriker_url url                Base URL of Codestriker installation\n",
       "  --codestriker_project project        Project new topics get created into\n",
       "  --codestriker_repository repository  Codestriker repository to use for new topics\n",
@@ -612,6 +616,7 @@ sub new_project
           match_regex     => '.',
           reply_to        => '',
           subject_prefix  => '',
+          list_id         => '',
 	  codestriker_url => '',
 	  codestriker_project => '',
 	  codestriker_repository => '',

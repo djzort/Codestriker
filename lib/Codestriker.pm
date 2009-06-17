@@ -20,7 +20,7 @@ use File::Path;
 use Fatal qw / open close waitpid /;
 
 # Export codestriker.conf configuration variables.
-use vars qw ( $mailhost $mailuser $mailpasswd $use_compression
+use vars qw ( $mailhost $mailuser $mailpasswd $listid $use_compression
           $gzip $cvs $svn $ssh $p4 $vss $bugtracker
           @valid_repositories $default_topic_create_mode $default_tabwidth
           $file_reviewer $db $dbuser $dbpasswd $codestriker_css

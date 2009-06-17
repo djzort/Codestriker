@@ -10,6 +10,12 @@ Version 1.9.10
 
 * Fixed issue where duplicate bug IDs specified on topic creation would
   prevent the topic from being created.
+
+* Added new configuration option in codestriker.conf for setting the
+  List-Id header for all emails sent, to assist in filtering,
+  particularly for gmail.  Also added -i parameter to
+  commit-email-codestriker.pl script to specify the List-Id header
+  value to use.
 	
 Version 1.9.9
 
