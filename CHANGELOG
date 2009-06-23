@@ -16,6 +16,10 @@ Version 1.9.10
   particularly for gmail.  Also added -i parameter to
   commit-email-codestriker.pl script to specify the List-Id header
   value to use.
+
+* Support for integration with Mantis bug tracking system.  Code was
+  implemented by Gustavo Silva <gramirez@dextratech.com> with support
+  from Dextra Technologies.
 	
 Version 1.9.9
 

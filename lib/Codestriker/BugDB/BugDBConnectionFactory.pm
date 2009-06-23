@@ -12,6 +12,7 @@ package Codestriker::BugDB::BugDBConnectionFactory;
 use strict;
 use Codestriker::BugDB::BugzillaConnection;
 use Codestriker::BugDB::FlysprayConnection;
+use Codestriker::BugDB::MantisConnection;
 use Codestriker::BugDB::NoConnection;
 use Codestriker::BugDB::TestDirectorConnection;
 
@@ -24,6 +25,8 @@ sub getBugDBConnection ($) {
         return Codestriker::BugDB::BugzillaConnection->get_connection();
     } elsif ($dbtype eq "flyspray") {
         return Codestriker::BugDB::FlysprayConnection->get_connection();
+    } elsif ($dbtype eq "mantis") {
+        return Codestriker::BugDB::MantisConnection->get_connection();
     } elsif ($dbtype eq "testdirector") {
         return Codestriker::BugDB::TestDirectorConnection->get_connection();
     } elsif ($dbtype =~ /^noconnect/) {

@@ -635,7 +635,7 @@ $cvs = 'c:/gnu/bin/cvs';
 	  review topic, which shows the actual code which fixed the
 	  bug (and any important decisions made in the Codestriker
 	  comments).  Currently, there is support for Bugzilla, Flyspray
-	  and TestDirector, but it is not difficult to add in support
+	  Mantis and TestDirector, but it is not difficult to add in support
           for other systems.
 	</para>
 	<para>
