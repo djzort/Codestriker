@@ -551,7 +551,7 @@ sub doit($$$$$$$$$) {
 
     # Set the List-Id header if required.
     if (defined $Codestriker::listid && $Codestriker::listid ne '') {
-        $smtp->datasend("ListId: " . $Codestriker::listid . "\n";
+        $smtp->datasend("ListId: " . $Codestriker::listid . "\n");
     }
 
     # Make sure the subject is appropriately encoded to handle UTF-8
