@@ -332,7 +332,7 @@ sub _untaint_digits($$) {
 sub _untaint_filename($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '[-_\/\@\w\.\s]+');
+    $self->_untaint($name, '[-_^~{}\/\@\w\.\s]+');
 }
 
 # Untaint a parameter that should be a revision number.

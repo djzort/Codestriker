@@ -21,6 +21,9 @@ Version 1.9.10
   implemented by Gustavo Silva <gramirez@dextratech.com>,
   <silvagustavo@users.sourceforge.net> with support from Dextra 
   Technologies <http://www.dextratech.com>.
+
+* Support for git repositories from Jeffrey Middleton
+  <jefromi@gmail.com>.
 	
 Version 1.9.9
 

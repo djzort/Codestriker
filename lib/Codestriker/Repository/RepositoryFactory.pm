@@ -19,6 +19,7 @@ use Codestriker::Repository::Perforce;
 use Codestriker::Repository::Vss;
 use Codestriker::Repository::ClearCaseSnapshot;
 use Codestriker::Repository::ClearCaseDynamic;
+use Codestriker::Repository::Git;
 
 # Factory method for retrieving a Repository object, given a descriptor.
 sub get ($$) {
@@ -99,6 +100,10 @@ sub get ($$) {
     } elsif ($repository =~ /^\s*clearcase:(.*)$/i) {
         # ClearCase Snapshot repository.
         return Codestriker::Repository::ClearCaseSnapshot->new($1);
+
+    } elsif ($repository =~ /^\s*git:(.*)$/i) {
+        # Git repository
+        return Codestriker::Repository::Git->new_local($1);
 
     } else {
         # Unknown repository type.
