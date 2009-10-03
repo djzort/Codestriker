@@ -2,7 +2,7 @@
 
 use strict;
 use Fatal qw / open close /;
-use Test::More tests => 7;
+use Test::More tests => 10;
 
 use lib '../../lib';
 use Codestriker;
@@ -12,15 +12,16 @@ use Codestriker::FileParser::Parser;
 my $fh;
 open( $fh, '<', '../../test/testtopictexts/git-diff1.txt' );
 my @deltas = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
-                                                   undef, 111, undef);
+                                                    undef, 111, undef);
 close($fh);
 
 # Set what the expected output should be.
 my @expected;
 push @expected, make_delta(
-	filename       => 'b/builtin-apply.c',
+	filename       => 'builtin-apply.c',
 	old_linenumber => 2296,
 	new_linenumber => 2296,
+        revision       => 'b3fc290',
 	description    =>
 		'static int apply_data(struct patch *patch, struct stat *st, struct cache_entry *',
 	text => <<'END_DELTA',
@@ -37,9 +38,10 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename       => 'b/builtin-apply.c',
+	filename       => 'builtin-apply.c',
 	old_linenumber => 2375,
 	new_linenumber => 2376,
+        revision       => 'b3fc290',
 	description    =>
 		'static int verify_index_match(struct cache_entry *ce, struct stat *st)',
 	text => <<'END_DELTA',
@@ -55,9 +57,10 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename       => 'b/builtin-apply.c',
+	filename       => 'builtin-apply.c',
 	old_linenumber => 2389,
 	new_linenumber => 2390,
+        revision       => 'b3fc290',
 	description    =>
 		'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
 	text => <<'END_DELTA',
@@ -75,9 +78,10 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename       => 'b/builtin-apply.c',
+	filename       => 'builtin-apply.c',
 	old_linenumber => 2399,
 	new_linenumber => 2402,
+        revision       => 'b3fc290',
 	description    =>
 		'static int check_preimage(struct patch *patch, struct cache_entry **ce, struct s',
 	text => <<'END_DELTA',
@@ -92,9 +96,10 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename       => 'b/t/t4112-apply-renames.sh',
+	filename       => 't/t4112-apply-renames.sh',
 	old_linenumber => 36,
 	new_linenumber => 36,
+        revision       => '70a1859',
 	description    => 'typedef struct __jmp_buf jmp_buf[1];',
 	text           => <<'END_DELTA',
  
@@ -110,9 +115,10 @@ END_DELTA
 );
 
 push @expected, make_delta(
-	filename       => 'b/t/t4112-apply-renames.sh',
+	filename       => 't/t4112-apply-renames.sh',
 	old_linenumber => 113,
 	new_linenumber => 116,
+        revision       => '70a1859',
 	description    => 'rename to include/arch/m32r/klibc/archsetjmp.h',
 	text           => <<'END_DELTA',
  
@@ -148,6 +154,58 @@ for ( my $index = 0; $index < @deltas; $index++ ) {
 		"Delta $index in git patch 1" );
 }
 
+# Check another git patch for new files.
+open( $fh, '<', '../../test/testtopictexts/git-diff2.txt' );
+@deltas = Codestriker::FileParser::Parser->parse($fh, 'text/plain',
+                                                    undef, 111, undef);
+close($fh);
+
+@expected = ();
+push @expected, make_delta(
+	filename       => 'lib/Codestriker/FileParser/GitDiff.pm',
+	old_linenumber => 0,
+	new_linenumber => 1,
+        revision       => '3fd6a56',
+        description    => '',
+	text => <<'END_DELTA',
++###############################################################################
++# Codestriker: Copyright (c) 2001, 2002, 2003 David Sitsky.
++# All rights reserved.
++# sits@users.sourceforge.net
++#
++# This program is free software; you can redistribute it and modify it under
++# the terms of the GPL.
++
++# Parser object for reading git diffs
++
+END_DELTA
+);
+
+push @expected, make_delta(
+	filename       => 'lib/Codestriker/Http/Input.pm',
+	old_linenumber => 332,
+	new_linenumber => 332,
+        description    => 'sub _untaint_digits($$) {',
+        revision       => '01670a2',
+	text => <<'END_DELTA',
+ sub _untaint_filename($$) {
+     my ($self, $name) = @_;
+ 
+-    $self->_untaint($name, '[-_\/\@\w\.\s]+');
++    $self->_untaint($name, '[-_^~{}\/\@\w\.\s]+');
+ }
+ 
+ # Untaint a parameter that should be a revision number.
+END_DELTA
+);
+
+# Check that the extracted deltas match what is expected.
+is( @deltas, @expected, "Number of deltas in git patch 2" );
+for ( my $index = 0; $index < @deltas; $index++ ) {
+	is_deeply( $deltas[$index], $expected[$index],
+		"Delta $index in git patch 2" );
+}
+
 # Convenience function for creating a delta object.
 sub make_delta {
 
@@ -155,13 +213,13 @@ sub make_delta {
 	my $delta = {};
 	$delta->{binary}   = 0;
 	$delta->{repmatch} = 0;
-	$delta->{revision} = $Codestriker::PATCH_REVISION;
 
 	# Apply the passed in arguments.
 	my %arg = @_;
 	$delta->{filename}       = $arg{filename};
 	$delta->{old_linenumber} = $arg{old_linenumber};
 	$delta->{new_linenumber} = $arg{new_linenumber};
+        $delta->{revision}       = $arg{revision};
 	$delta->{description}    = $arg{description};
 	$delta->{text}           = $arg{text};
 
