@@ -16,43 +16,25 @@ use Codestriker::Http::Method;
 @Codestriker::Http::Method::ViewTopicTextMethod::ISA =
   ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'view');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
     confess "Parameter topicid missing" unless defined $args{topicid};
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=view&topic=$args{topicid}" .
-          (defined $args{updated} ? "&updated=$args{updated}" : "") .
-            (defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
-              (defined $args{mode} ? "&mode=$args{mode}" : "") .
-                (defined $args{fview} ? "&fview=$args{fview}" : "") .
-                  (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
-    } else {
-        confess "Parameter projectid missing" unless defined $args{projectid};
-        return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/text" .
-          (defined $args{fview} ? "/filenumber/$args{fview}" : "") .
-            (defined $args{mode} ? "/mode/$args{mode}" : "") .
+    return $self->{url_prefix} . "?action=" . $self->{action} . "&topic=$args{topicid}" .
+      (defined $args{updated} ? "&updated=$args{updated}" : "") .
+        (defined $args{tabwidth} ? "&tabwidth=$args{tabwidth}" : "") .
+          (defined $args{mode} ? "&mode=$args{mode}" : "") .
+            (defined $args{fview} ? "&fview=$args{fview}" : "") .
               (defined $args{filenumber} ? "#" . "$args{filenumber}|$args{line}|$args{new}" : "");
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "view") {
-        return 1;
-    } elsif ($path_info =~ m{^/project/\d+/topic/\d+/text}) {
-        $self->_extract_nice_parameters($http_input,
-                                        project => 'projectid', topic => 'topic',
-                                        filenumber => 'fview', mode => 'mode');
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 sub execute {

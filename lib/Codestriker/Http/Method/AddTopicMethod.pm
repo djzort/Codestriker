@@ -14,17 +14,20 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::AddTopicMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'submit_new_topic');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
     die "Parameter projectid missing" unless defined $args{projectid};
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=submit_new_topic";
-    } else {
-        return $self->{url_prefix} . "/project/$args{projectid}/topics/add";
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 # For now don't require authentication so that automated scripts can still
@@ -32,22 +35,6 @@ sub url {
 # take a username/password.
 sub requires_authentication {
     return 0;
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "submit_new_topic") {
-        return 1;
-    } elsif ($path_info =~ m{^/project/\d+/topics/add}) {
-        $self->_extract_nice_parameters($http_input,
-                                        project => 'projectid');
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 sub execute {

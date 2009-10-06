@@ -14,30 +14,18 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::SubmitSearchTopicsMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'submit_search');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=submit_search";
-    } else {
-        return $self->{url_prefix} . "/topics/submitsearch";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "submit_search") {
-        return 1;
-    } elsif ($path_info =~ m{^/topics/submitsearch}) {
-        $self->_extract_nice_parameters($http_input);
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 sub execute {

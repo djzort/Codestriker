@@ -14,31 +14,18 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::EditProjectMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'edit_project');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, $projectid) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=edit_project&projectid=$projectid";
-    } else {
-        return $self->{url_prefix} . "/admin/project/$projectid/edit";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "edit_project") {
-        return 1;
-    } elsif ($path_info =~ m{^/admin/project/\d+/edit$}) {
-        $self->_extract_nice_parameters($http_input,
-                                        project => 'projectid');
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=edit_project&projectid=$projectid";
 }
 
 sub requires_admin {

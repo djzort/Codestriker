@@ -108,7 +108,7 @@ sub dispatch {
     # Determine which method can handle this URL.
     my $found_method;
     foreach my $method ( @{$self->{methods}} ) {
-        if ($method->extract_parameters($http_input)) {
+        if ($method->can_handle($http_input)) {
             $found_method = $method;
         }
     }

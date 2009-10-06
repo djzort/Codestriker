@@ -15,33 +15,19 @@ use Codestriker::Action::UpdatePassword;
 
 @Codestriker::Http::Method::UpdatePasswordMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'update_password');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=update_password" .
-          "&email=" . CGI::escape($args{email});
-    } else {
-        return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/update";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "update_password") {
-        return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/update$}) {
-        $self->_extract_nice_parameters($http_input,
-                                        user => 'email');
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action} .
+      "&email=" . CGI::escape($args{email});
 }
 
 sub requires_authentication {

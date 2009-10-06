@@ -16,30 +16,18 @@ use Codestriker::Action::ResetPassword;
 
 @Codestriker::Http::Method::ResetPasswordMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'reset_password');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=reset_password";
-    } else {
-        return $self->{url_prefix} . "/users/reset";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "reset_password") {
-        return 1;
-    } elsif ($path_info eq '/users/reset') {
-        $self->_extract_nice_parameters($http_input);
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 sub requires_authentication {

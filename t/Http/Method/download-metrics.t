@@ -1,7 +1,7 @@
 # Tests for the DownloadMetrics method.
 
 use strict;
-use Test::More tests => 2;
+use Test::More tests => 1;
 
 use lib '../../../lib';
 use Test::MockObject;
@@ -13,13 +13,8 @@ my $mock_query = Test::MockObject->new();
 $mock_query->mock('url',
             sub { 'http://localhost.localdomain/codestriker/codestriker.pl' } );
 
-# Create two method objects to test each URL scheme.
-my $url_cgi = Codestriker::Http::Method::DownloadMetricsMethod->new($mock_query, 1);
-my $url_nice = Codestriker::Http::Method::DownloadMetricsMethod->new($mock_query, 0);
+my $url_cgi = Codestriker::Http::Method::DownloadMetricsMethod->new($mock_query);
 
 is($url_cgi->url(),
    $mock_query->url() . '?action=metrics_download',
    "Download metrics report URL cgi syntax");
-is($url_nice->url(),
-   $mock_query->url() . '/metrics/download',
-   "Download metrics report URL nice syntax");

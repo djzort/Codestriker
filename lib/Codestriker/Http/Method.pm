@@ -12,22 +12,13 @@ use strict;
 use CGI;
 use CGI::Carp qw(fatalsToBrowser);
 
-# The optional $cgi_style parameter indicates whether the old-style
-# CGI URLs are to be generated.  Default is for old-style URLs.
 sub new {
-    my ($type, $query, $cgi_style) = @_;
+    my ($type, $query, $action) = @_;
 
     my $self = {};
     $self->{query} = $query;
-
-    # Determine what style URLs are being used.
-    if (defined $cgi_style) {
-        $self->{cgi_style} = $cgi_style;
-    } else {
-        $self->{cgi_style} = $query->url() =~ /codestriker.pl/ ? 1 : 0;
-    }
-
     $self->{url_prefix} = $query->url();
+    $self->{action} = $action;
 
     return bless $self, $type;
 }
@@ -51,12 +42,11 @@ sub requires_admin {
     return 0;
 }
 
-# If this query type is recognised, extract the parameters and store them into
-# $http_input and return true, otherwise return false.
-sub extract_parameters {
+# Indicates if this method can handle the specified http request.
+sub can_handle {
     my ($self, $http_input) = @_;
 
-    return 0;
+    return $http_input->{action} =~ $self->{action};
 }
 
 # Return the handler for this method.
@@ -64,20 +54,6 @@ sub execute {
     my ($self, $http_input, $http_output) = @_;
 
     die "execute() method is not implemented";
-}
-
-# Utility method for extracting the specified parameter from a URL if it exists.
-sub _extract_nice_parameters {
-    my ($self, $http_input, %parameters) = @_;
-
-    $http_input->extract_cgi_parameters();
-
-    my $path_info = $http_input->{query}->path_info();
-    foreach my $nice_parameter (keys %parameters) {
-        if ($path_info =~ m{/$nice_parameter/([^/#]+)}) {
-            $http_input->{$parameters{$nice_parameter}} = CGI::unescape($1);
-        }
-    }
 }
 
 1;

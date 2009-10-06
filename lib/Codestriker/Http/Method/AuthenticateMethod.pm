@@ -15,30 +15,18 @@ use Codestriker::Action::Authenticate;
 
 @Codestriker::Http::Method::AuthenticateMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'authenticate');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=authenticate";
-    } else {
-        return $self->{url_prefix} . "/login/authenticate";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "authenticate") {
-        return 1;
-    } elsif ($path_info =~ m{^/login/authenticate}) {
-        $self->_extract_nice_parameters($http_input);
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 sub requires_authentication {

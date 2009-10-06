@@ -14,33 +14,19 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::CreateTopicMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'create');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, $obsoletes) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=create" .
-          (defined $obsoletes ? "&obsoletes=$obsoletes" : "");
-    } else {
-        return $self->{url_prefix} . "/topics/create" .
-          (defined $obsoletes ? "/obsoletes/$obsoletes" : "");
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "create") {
-        return 1;
-    } elsif ($path_info =~ m{^/topics/create}) {
-        $self->_extract_nice_parameters($http_input,
-                                        obsoletes => 'obsoletes');
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action} .
+      (defined $obsoletes ? "&obsoletes=$obsoletes" : "");
 }
 
 sub execute {

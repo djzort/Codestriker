@@ -14,6 +14,13 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::StaticResourcesMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'static');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self) = @_;
@@ -32,11 +39,7 @@ sub url {
         $htmlurl =~ s/codestriker\/codestriker\.pl/codestrikerhtml/;
     }
 
-    if ($self->{cgi_style}) {
-        return $htmlurl;
-    } else {
-        return $self->{url_prefix} . "/html";
-    }
+    return $htmlurl;
 }
 
 sub requires_authentication {

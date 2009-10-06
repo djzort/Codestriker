@@ -15,35 +15,20 @@ use Codestriker::Action::NewPassword;
 
 @Codestriker::Http::Method::NewPasswordMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'new_password');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=new_password" .
-          "&email=" . CGI::escape($args{email}) .
-          "&challenge=" . CGI::escape($args{challenge});
-    } else {
-        return $self->{url_prefix} . "/user/" . CGI::escape($args{email}) .
-          "/password/new/challenge/" . CGI::escape($args{challenge});
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "new_password") {
-        return 1;
-    } elsif ($path_info =~ m{^/user/.*/password/new/challenge/}) {
-        $self->_extract_nice_parameters($http_input,
-                                        user => 'email',
-                                        challenge => 'challenge');
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action} .
+      "&email=" . CGI::escape($args{email}) .
+        "&challenge=" . CGI::escape($args{challenge});
 }
 
 sub requires_authentication {

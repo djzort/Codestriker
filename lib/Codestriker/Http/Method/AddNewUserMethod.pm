@@ -14,30 +14,18 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::AddNewUserMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'add_new_user');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url() {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=add_new_user";
-    } else {
-        return $self->{url_prefix} . "/users/add";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "add_new_user") {
-        return 1;
-    } elsif ($path_info eq "/users/add") {
-        $self->_extract_nice_parameters($http_input);
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 sub requires_authentication {

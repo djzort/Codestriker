@@ -15,33 +15,18 @@ use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::UpdateTopicMetricsMethod::ISA = ("Codestriker::Http::Method");
 
+sub new {
+    my ($type, $query) = @_;
+
+    my $self = Codestriker::Http::Method->new($query, 'edit_topic_metrics');
+    return bless $self, $type;
+}
+
 # Generate a URL for this method.
 sub url {
     my ($self, %args) = @_;
 
-    if ($self->{cgi_style}) {
-        return $self->{url_prefix} . "?action=edit_topic_metrics";
-    } else {
-        confess "Parameter topicid missing" unless defined $args{topicid};
-        confess "Parameter projectid missing" unless defined $args{projectid};
-        return $self->{url_prefix} . "/project/$args{projectid}/topic/$args{topicid}/metrics/update";
-    }
-}
-
-sub extract_parameters {
-    my ($self, $http_input) = @_;
-
-    my $action = $http_input->{query}->param('action');
-    my $path_info = $http_input->{query}->path_info();
-    if ($self->{cgi_style} && defined $action && $action eq "edit_topic_metrics") {
-        return 1;
-    } elsif ($path_info =~ m{^/project/\d+/topic/\d+/metrics/update}) {
-        $self->_extract_nice_parameters($http_input,
-                                        project => 'projectid', topic => 'topic');
-        return 1;
-    } else {
-        return 0;
-    }
+    return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
 sub execute {
