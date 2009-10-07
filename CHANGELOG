@@ -34,6 +34,10 @@ Version 1.9.10
   email threading will occur at a comment/issue level rather than a
   topic level.  This should allow for better management of outstanding
   issues in email clients such as gmail.
+
+* Added support for creating Perforce topics given the path (module_name),
+  and either two labels or changelists for the start/end tag fields,
+  from Arun Jose <josea111@users.sourceforge.net>.
 	
 Version 1.9.9
 

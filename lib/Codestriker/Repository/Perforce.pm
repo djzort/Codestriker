@@ -97,10 +97,27 @@ sub getDiff ($$$$$) {
     my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
     my @args = $self->_setup_base_p4_args();
-    push @args, 'describe';
-    push @args, 'du';
-    push @args, $tag;
 
+    if ($module_name ne '' && $start_tag ne '' && $end_tag ne '' &&
+        $start_tag ne $end_tag) {
+        my $rev1 = "$module_name\@$start_tag";
+        my $rev2 = "$module_name\@$end_tag";
+
+        push @args, 'diff2';
+        push @args, '-du';
+        push @args, '-u';
+        push @args, $rev1;
+        push @args, $rev2;
+    }
+    else { # original case with just one tag specified.
+        my $tag = $start_tag ne '' ? $start_tag : $end_tag;
+
+        push @args, 'describe';
+        push @args, 'du';
+        push @args, $tag;
+    }
+
+    # Execute the command.
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::p4,
                                  @args);
     return $Codestriker::OK;
