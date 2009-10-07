@@ -59,13 +59,13 @@ sub retrieve ($$$\$) {
     push @ctArgs, $full_element_name;
     Codestriker::execute_command(\*STDERR, \*STDERR, $Codestriker::cleartool, @ctArgs);
 
-    open (CONTENTFILE, "$tempfile");
-    for (my $i = 1; <CONTENTFILE>; $i++) {
+    open(my $input_fh, "<", $tempfile);
+    for (my $i = 1; <$input_fh>; $i++) {
         $_ = Codestriker::decode_topic_text($_);
         chop;
         $$content_array_ref[$i] = $_;
     }
-    close CONTENTFILE;
+    close <$input_fh>;
 
     if (defined($tempdir)) {
         unlink $errorfile;
