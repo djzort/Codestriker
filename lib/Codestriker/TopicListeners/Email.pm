@@ -251,7 +251,8 @@ sub send_topic_changed_email {
     }
 
     # Check for repository change.
-    if ($topic->{repository} ne $topic_orig->{repository}) {
+    if (defined $topic_orig->{repository} && defined $topic->{repository} &&
+        $topic->{repository} ne $topic_orig->{repository}) {
         my $value = $Codestriker::repository_name_map->{$topic->{repository}};
         $changes .= "The repository was changed to $value.\n";
     }
@@ -440,7 +441,11 @@ sub comment_create($$$) {
     # Send the email notification out, if it is allowed in the config file.
     if ( $Codestriker::email_send_options->{comments_sent_to_topic_author} ||
          $comment->{cc} ne "") {
-        return $self->doit(0, $comment->{topicid}, $from, $to,
+        return $self->doit(0, $comment->{topicid},
+                           $comment->{fileline},
+                           $comment->{filenumber},
+                           $comment->{filenew},
+                           $from, $to,
                            join(', ',@cc_recipients), $bcc,
                            $subject, $body);
     }
@@ -489,14 +494,15 @@ sub _send_topic_email {
                   $notes;
 
     # Send the email notification out.
-    return $self->doit($new, $topic->{topicid}, $from, $to, $cc, $bcc,
+    return $self->doit($new, $topic->{topicid}, -1, -1, -1, $from, $to, $cc, $bcc,
                        $subject, $body);
 }
 
 # Send an email with the specified data.  Return a non-empty message if the
 # mail can't be successfully delivered, empty string otherwise.
-sub doit($$$$$$$$$) {
-    my ($type, $new, $topicid, $from, $to, $cc, $bcc, $subject, $body) = @_;
+sub doit {
+    my ($type, $new, $topicid, $fileline, $filenumber, $filenew,
+        $from, $to, $cc, $bcc, $subject, $body) = @_;
 
     return '' if ($DEVNULL_EMAIL);
 
@@ -539,8 +545,11 @@ sub doit($$$$$$$$$) {
 
     # If the message is new, create the appropriate message id, otherwise
     # construct a message which refers to the original message.  This will
-    # allow for threading, for those email clients which support it.
-    my $message_id = "<Codestriker-" . hostname() . "-${topicid}>";
+    # allow for threading, for those email clients which support it.  All
+    # emails relating to a specific comment will be in a specific thread.
+    my $message_id =
+      "<Codestriker.${topicid}.${fileline}.${filenumber}.${filenew}\@" .
+        hostname() . '>';
 
     if ($new) {
         $smtp->datasend("Message-Id: $message_id\n");

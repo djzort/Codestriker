@@ -110,6 +110,7 @@ sub dispatch {
     foreach my $method ( @{$self->{methods}} ) {
         if ($method->can_handle($http_input)) {
             $found_method = $method;
+            last;
         }
     }
 

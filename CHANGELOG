@@ -27,6 +27,13 @@ Version 1.9.10
 
 * Fixed "Parallel View" links for ClearCase repositories, from
   Thomas Yan <yantao@neusoft.com>.
+
+* Make the message ID in Codestriker emails RFC 2822 compliant.
+
+* Changed usage of email References and In-Reply-To headers so that
+  email threading will occur at a comment/issue level rather than a
+  topic level.  This should allow for better management of outstanding
+  issues in email clients such as gmail.
 	
 Version 1.9.9
 

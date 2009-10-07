@@ -59,24 +59,18 @@ sub retrieve ($$$\$) {
     push @ctArgs, $full_element_name;
     Codestriker::execute_command(\*STDERR, \*STDERR, $Codestriker::cleartool, @ctArgs);
 
-    eval {
-        open (CONTENTFILE, "<$tempfile");
-        for (my $i = 1; <CONTENTFILE>; $i++) {
-            $_ = Codestriker::decode_topic_text($_);
-            chop;
-            $$content_array_ref[$i] = $_;
-        }
-        close CONTENTFILE;
-    };
+    open (CONTENTFILE, "$tempfile");
+    for (my $i = 1; <CONTENTFILE>; $i++) {
+        $_ = Codestriker::decode_topic_text($_);
+        chop;
+        $$content_array_ref[$i] = $_;
+    }
+    close CONTENTFILE;
 
     if (defined($tempdir)) {
         unlink $errorfile;
         unlink $tempfile;
         rmdir $tempdir;
-    }
-
-    if ($@) {
-        croak "Unable to get Clearcase file: $full_element_name: $@\n";
     }
 }
 

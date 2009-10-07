@@ -101,8 +101,10 @@ sub process($$$) {
 
     # Indicate what repositories are available, and what the topic's
     # repository is.
-    $vars->{'topic_repository'} = $Codestriker::repository_name_map->{$topic->{repository}};
-    $vars->{'repositories'} = \@Codestriker::valid_repository_names;
+    if (defined $topic->{repository}) {
+        $vars->{'topic_repository'} = $Codestriker::repository_name_map->{$topic->{repository}};
+        $vars->{'repositories'} = \@Codestriker::valid_repository_names;
+    }
 
     # Indicate what projects are available, and what the topic's project is.
     my @projects = Codestriker::Model::Project->list();

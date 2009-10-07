@@ -46,7 +46,8 @@ sub requires_admin {
 sub can_handle {
     my ($self, $http_input) = @_;
 
-    return $http_input->{action} =~ $self->{action};
+    my $regexp = '^' . $self->{action} . '$';
+    return $http_input->{action} =~ m/$regexp/;
 }
 
 # Return the handler for this method.

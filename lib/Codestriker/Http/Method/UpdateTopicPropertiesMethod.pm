@@ -10,7 +10,6 @@
 package Codestriker::Http::Method::UpdateTopicPropertiesMethod;
 
 use strict;
-use Carp;
 use Codestriker::Http::Method;
 
 @Codestriker::Http::Method::UpdateTopicPropertiesMethod::ISA = ("Codestriker::Http::Method");
