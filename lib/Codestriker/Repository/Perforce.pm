@@ -32,6 +32,8 @@ sub new ($$$$$) {
 
 # Setup the common P4 arguments.
 sub _setup_base_p4_args {
+    my $self = shift;
+
     my @args = ();
     push @args, '-p';
     push @args, $self->{hostname} . ':' . $self->{port};
@@ -57,9 +59,9 @@ sub retrieve ($$$\$) {
     my $read_stdout_fh = new FileHandle;
     open($read_stdout_fh, '>', \$read_data);
 
-    my @args = _setup_base_p4_args();
+    my @args = $self->_setup_base_p4_args();
     push @args, 'print';
-    push @args, '-q'
+    push @args, '-q';
     push @args, $filename . "#" . $revision;
 
     Codestriker::execute_command($read_stdout_fh, undef,
@@ -94,7 +96,7 @@ sub getDiff ($$$$$) {
     }
     my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
-    my @args = _setup_base_p4_args();
+    my @args = $self->_setup_base_p4_args();
     push @args, 'describe';
     push @args, 'du';
     push @args, $tag;

@@ -49,13 +49,13 @@ sub retrieve ($$$\$)
       if (! Codestriker::is_windows()) {
           # Set the current view to the repository's dynamic view name.
           $clearcase = ClearCase::CtCmd->new();
-          (my $status, my $stdout, $error_msg) =
+          (my $status, my $stdout, my $error_msg) =
             $clearcase->exec('setview', $self->{dynamic_view_name});
 
           # Check the result of the setview command.
           if ($status) {
-              croak "Failed to open view: " . $self->{dynamic_view_name} .
-                ": $error_msg\n";
+              croak("Failed to open view: " . $self->{dynamic_view_name} .
+                    ": $error_msg\n");
           }
       }
 
@@ -82,16 +82,16 @@ sub retrieve ($$$\$)
       if ($@) {
           # Something went wrong in the above code, record the error message
           # and continue to ensure the view is closed.
-          croak "Failed to retrieve ${full_element_name}: $@\n";
+          croak("Failed to retrieve ${filename}:${revision}: $@\n");
       }
 
       # Close the view.
       if (! Codestriker::is_windows()) {
-          (my $status, my $stdout, $error_msg) =
+          (my $status, my $stdout, my $error_msg) =
             $clearcase->exec('endview', $self->{dynamic_view_name});
           if ($status) {
-              croak "Failed to close view: " . $self->{dynamic_view_name} .
-                ": $error_msg\n";
+              croak("Failed to close view: " . $self->{dynamic_view_name} .
+                    ": $error_msg\n");
           }
       }
   }
