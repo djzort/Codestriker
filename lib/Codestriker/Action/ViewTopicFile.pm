@@ -63,10 +63,7 @@ sub process($$$) {
         $deltas[0]->{new_file} = 1;
         @filedata = ();
     } else {
-        if (!$repository->retrieve($filename, $revision, \@filedata)) {
-            $http_response->error("Couldn't get repository data for $filename " .
-                                  "$revision: $!");
-        }
+        $repository->retrieve($filename, $revision, \@filedata);
     }
 
     # Output the new file, with the deltas applied.

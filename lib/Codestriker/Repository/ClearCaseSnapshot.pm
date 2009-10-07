@@ -11,6 +11,7 @@
 package Codestriker::Repository::ClearCaseSnapshot;
 
 use strict;
+use Fatal qw / open close /;
 use File::Temp qw/ tempdir /;
 use File::Spec;
 
@@ -51,43 +52,22 @@ sub retrieve ($$$\$) {
     my $tempfile = File::Spec->catfile($tempdir, "Temp_YouCanDeleteThis");
     my $errorfile = File::Spec->catfile($tempdir, "Error_YouCanDeleteThis");
 
-    my $error_msg;
-
-    # Call 'cleartool get' to load the element
-    my $command = "\"$Codestriker::cleartool\" get " .
-      "-to \"$tempfile\" \"$full_element_name\" " .
-        "2> \"$errorfile\"";
-    my $ret = system($command);
+    my @ctArgs;
+    push @ctArgs, 'get';
+    push @ctArgs, '-to';
+    push @ctArgs, $tempfile;
+    push @ctArgs, $full_element_name;
+    Codestriker::execute_command(\*STDERR, \*STDERR, $Codestriker::cleartool, @ctArgs);
 
     eval {
-
-        if ($ret != 0) {
-            # If there was an error, the message will be in the error file.
-            # Read in that file and store it in the "$error_msg" variable
-            # so that we can return it to the caller.
-            open (ERRORFILE, "<$errorfile")
-              || die "ClearTool returned an error, but Codestriker couldn't read from the error file.";
-            my (@errorlines) = <ERRORFILE>;
-            $error_msg = "Error from ClearTool: " . join(" ", @errorlines);
-            close ERRORFILE;
-        } else {
-            # Operation was successful.  Load the file into the given array.
-            open (CONTENTFILE, "<$tempfile")
-              || die "ClearTool execution succeeded, but Codestriker couldn't read from the output file.";
-            for (my $i = 1; <CONTENTFILE>; $i++) {
-                $_ = Codestriker::decode_topic_text($_);
-                chop;
-                $$content_array_ref[$i] = $_;
-            }
-            close CONTENTFILE;
+        open (CONTENTFILE, "<$tempfile");
+        for (my $i = 1; <CONTENTFILE>; $i++) {
+            $_ = Codestriker::decode_topic_text($_);
+            chop;
+            $$content_array_ref[$i] = $_;
         }
-
+        close CONTENTFILE;
     };
-
-    # See if anything called 'die' in the 'eval' block.
-    if ($@) {
-        $error_msg = $@;
-    }
 
     if (defined($tempdir)) {
         unlink $errorfile;
@@ -95,8 +75,9 @@ sub retrieve ($$$\$) {
         rmdir $tempdir;
     }
 
-    # If there was no error, this will be undefined
-    return $error_msg;
+    if ($@) {
+        croak "Unable to get Clearcase file: $full_element_name: $@\n";
+    }
 }
 
 # Retrieve the "root" of this repository.

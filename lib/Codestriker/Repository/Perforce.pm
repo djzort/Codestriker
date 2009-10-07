@@ -30,28 +30,48 @@ sub new ($$$$$) {
     bless $self, $type;
 }
 
+# Setup the common P4 arguments.
+sub _setup_base_p4_args {
+    my @args = ();
+    push @args, '-p';
+    push @args, $self->{hostname} . ':' . $self->{port};
+    push @args, '-u';
+    push @args, $self->{user};
+
+    my $password = $self->{password};
+    if (defined $password && $password ne '') {
+        push @args, '-P';
+        push @args, $password;
+    }
+
+    return @args;
+}
+
 # Retrieve the data corresponding to $filename and $revision.  Store each line
 # into $content_array_ref.
 sub retrieve ($$$\$) {
     my ($self, $filename, $revision, $content_array_ref) = @_;
 
-    # Open a pipe to the local CVS repository.
-    my $password = $self->{password};
-    open(P4, "\"$Codestriker::p4\"" .
-         " -p " . $self->{hostname} . ':' . $self->{port} .
-         " -u " . $self->{user} .
-         (defined $password && $password ne '' ?
-          " -P " . $self->{password} : '') .
-         " print -q \"$filename\"" . "#" . "$revision |")
-      || die "Can't retrieve data using p4: $!";
+    # Run the appropriate Perforce command.
+    my $read_data = '';
+    my $read_stdout_fh = new FileHandle;
+    open($read_stdout_fh, '>', \$read_data);
 
-    # Read the data.
-    for (my $i = 1; <P4>; $i++) {
+    my @args = _setup_base_p4_args();
+    push @args, 'print';
+    push @args, '-q'
+    push @args, $filename . "#" . $revision;
+
+    Codestriker::execute_command($read_stdout_fh, undef,
+                                 $Codestriker::p4, @args);
+
+    # Process the data for the topic.
+    open($read_stdout_fh, '<', \$read_data);
+    for (my $i = 1; <$read_stdout_fh>; $i++) {
         $_ = Codestriker::decode_topic_text($_);
         chop;
         $$content_array_ref[$i] = $_;
     }
-    close P4;
 }
 
 # Retrieve the "root" of this repository.
@@ -74,11 +94,13 @@ sub getDiff ($$$$$) {
     }
     my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
+    my @args = _setup_base_p4_args();
+    push @args, 'describe';
+    push @args, 'du';
+    push @args, $tag;
+
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::p4,
-                                 '-p', $self->{hostname} . ':' . $self->{port},
-                                 '-u', $self->{user},
-                                 '-P', $self->{password}, 'describe',
-                                 '-du', $tag);
+                                 @args);
     return $Codestriker::OK;
 }
 

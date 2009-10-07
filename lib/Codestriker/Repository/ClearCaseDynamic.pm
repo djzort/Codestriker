@@ -42,7 +42,6 @@ sub new ($$)
 sub retrieve ($$$\$)
   {
       my ($self, $filename, $revision, $content_array_ref) = @_;
-      my $error_msg = '';
       my $clearcase;
 
       # Check if we are running under Windows, which doesn't support
@@ -55,10 +54,8 @@ sub retrieve ($$$\$)
 
           # Check the result of the setview command.
           if ($status) {
-              $error_msg = "Failed to open view: " . $self->{dynamic_view_name} .
+              croak "Failed to open view: " . $self->{dynamic_view_name} .
                 ": $error_msg\n";
-              print STDERR "$error_msg\n";
-              return $error_msg;
           }
       }
 
@@ -85,8 +82,7 @@ sub retrieve ($$$\$)
       if ($@) {
           # Something went wrong in the above code, record the error message
           # and continue to ensure the view is closed.
-          $error_msg = $@;
-          print STDERR "$error_msg\n";
+          croak "Failed to retrieve ${full_element_name}: $@\n";
       }
 
       # Close the view.
@@ -94,13 +90,10 @@ sub retrieve ($$$\$)
           (my $status, my $stdout, $error_msg) =
             $clearcase->exec('endview', $self->{dynamic_view_name});
           if ($status) {
-              $error_msg = "Failed to close view: " . $self->{dynamic_view_name} .
+              croak "Failed to close view: " . $self->{dynamic_view_name} .
                 ": $error_msg\n";
-              print STDERR "$error_msg\n";
           }
       }
-
-      return $error_msg;
   }
 
 # Retrieve the "root" of this repository.
