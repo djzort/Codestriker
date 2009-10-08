@@ -382,8 +382,7 @@ sub comment_create($$$) {
         $bcc = $comment->{author};
     }
 
-    my $subject = "[REVIEW] Topic \"$topic->{title}\" " .
-      "comment added by $comment->{author}";
+    my $subject = "[REVIEW]";
     my $body =
       "$comment->{author} added a comment to " .
         "Topic \"$topic->{title}\".\n\n" .
@@ -391,6 +390,9 @@ sub comment_create($$$) {
 
     if (defined $comment->{filename} && $comment->{filename} ne '') {
         $body .= "File: " . $comment->{filename};
+        my $filename = $comment->{filename};
+        $filename =~ s/^.*[\\\/](.*)$/$1/;
+        $subject .= " $filename";
     }
 
     if ($comment->{fileline} != -1) {
@@ -404,6 +406,9 @@ sub comment_create($$$) {
                                                $comment->{filenew});
 
         if (defined $delta) {
+            # Update the email subject to contain the linenumber.
+            $subject = $subject . ':' . $comment->{fileline} if $comment->{fileline} != -1;
+
             # Only show the context for a comment made against a specific line
             # in the original review text.
             $body .= "Context:\n$EMAIL_HR\n\n";
@@ -424,6 +429,10 @@ sub comment_create($$$) {
             $body .= "$EMAIL_HR";
         }
     }
+
+    # Append the topic title to the end of the subject.
+    $subject .= ' - ' . $topic->{title};
+
     $body .= "\n\n";
 
     # Now display the comments that have already been submitted.
@@ -560,7 +569,7 @@ sub doit {
 
     # Set the List-Id header if required.
     if (defined $Codestriker::listid && $Codestriker::listid ne '') {
-        $smtp->datasend("ListId: " . $Codestriker::listid . "\n");
+        $smtp->datasend("List-Id: " . $Codestriker::listid . "\n");
     }
 
     # Make sure the subject is appropriately encoded to handle UTF-8
