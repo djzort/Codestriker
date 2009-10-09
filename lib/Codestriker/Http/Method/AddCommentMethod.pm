@@ -28,6 +28,12 @@ sub url {
     return $self->{url_prefix} . "?action=" . $self->{action};
 }
 
+# For now don't require authentication so that automated scripts (such
+# as the email gateway) can add comments.
+sub requires_authentication {
+    return 0;
+}
+
 sub execute {
     my ($self, $http_input, $http_output) = @_;
 

@@ -133,7 +133,7 @@ sub add_comment {
 
     my $rc = $response_content =~ /\<result\>OK\<\/result\>/i;
     print STDERR "Failed to add comment, response: $response_content\n" if !(defined $rc) || $rc == 0;
-    return defined $rc && $rc ? 1 : undef;
+    return defined $rc && $rc ? 1 : 0;
 }
 
 1;
