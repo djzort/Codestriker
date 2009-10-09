@@ -572,6 +572,11 @@ sub doit {
         $smtp->datasend("List-Id: " . $Codestriker::listid . "\n");
     }
 
+    # Set the Reply-To header if required.
+    if (defined $Codestriker::mailreplyto && $Codestriker::mailreplyto ne '') {
+        $smtp->datasend("Reply-To: " . $Codestriker::mailreplyto . "\n");
+    }
+
     # Make sure the subject is appropriately encoded to handle UTF-8
     # characters.
     $subject = encode_qp(encode("UTF-8", $subject), "");

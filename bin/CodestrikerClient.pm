@@ -20,6 +20,15 @@
 #      reviewers => 'root',
 #      email_event => 0,
 #      topic_text => "Here is some text\nHere is some\n\nMore and more...\n"});
+#
+# $client->add_comment({
+#      topic_id => 2138764,
+#      file_number => 2,
+#      file_line => 234,
+#      file_new => 1,
+#      email => 'david.sitsky@gmail.com',
+#      cc => 'fred@email.com, barney@email.com',
+#      comment_text => 'Here is a new comment'});
 
 package CodestrikerClient;
 
@@ -72,8 +81,8 @@ sub create_topic {
     # Indicate if the operation was successful.
     my $response_content = $response->content;
     my $rc = $response_content =~ /Topic URL: \<A HREF=\"(.*)\"/i;
-    print STDERR "Failed to create topic, response: $response_content\n" if $rc == 0;
-    return $rc ? $1 : undef;
+    print STDERR "Failed to create topic, response: $response_content\n" if !(defined $rc) || $rc == 0;
+    return defined $rc && $rc ? $1 : undef;
 }
 
 # Retrieve the details of a topic in XML format
@@ -99,5 +108,32 @@ sub get_topics_xml {
     return $response->content;
 }
 
+# Add a new comment to an existing topic.
+sub add_comment {
+    my ($self, $params) = @_;
+
+    # Perform the HTTP Post.
+    my $ua = new LWP::UserAgent;
+    my $content = [ action => 'submit_comment',
+                    line => $params->{file_line},
+                    topic => $params->{topic_id},
+                    fn => $params->{file_number},
+                    new => $params->{file_new},
+                    email => $params->{email},
+                    comment_cc => $params->{cc},
+                    comments => $params->{comment_text},
+                    format => 'xml' ];
+    my $response =
+	$ua->request(HTTP::Request::Common::POST($self->{url},
+						 Content_Type => 'form-data',
+						 Content => $content));
+
+    # Indicate if the operation was successful.
+    my $response_content = $response->content;
+
+    my $rc = $response_content =~ /\<result\>OK\<\/result\>/i;
+    print STDERR "Failed to add comment, response: $response_content\n" if !(defined $rc) || $rc == 0;
+    return defined $rc && $rc ? 1 : undef;
+}
 
 1;

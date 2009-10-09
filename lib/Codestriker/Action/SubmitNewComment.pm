@@ -51,10 +51,12 @@ sub process($$$) {
         my $metric = {};
         $metric->{name} = $comment_state_metric->{name};
         $metric->{value} = $http_input->get($name);
-        if ($metric->{value} eq "Select Value") {
+        if (defined $metric->{value} && $metric->{value} eq 'Select Value') {
             $http_response->error("Metric value for $metric->{name} unspecified");
         }
-        push @metrics, $metric;
+
+        # Handles the case where a comment is sent via email - metrics should not change.
+        push @metrics, $metric if defined $metric->{value} && $metric->{value} ne '';
     }
 
     # Retrieve the appropriate topic details.
@@ -91,8 +93,8 @@ sub process($$$) {
         $http_response->error($listener_response) if $listener_response ne '';
         # Display a simple screen indicating that the comment has been
         # registered.  Clicking the Close button simply dismisses the
-        # edit popup.  Leaving it # up will ensure the next editing
-        # topic will be handled quickly, as the # overhead of bringing
+        # edit popup.  Leaving it up will ensure the next editing
+        # topic will be handled quickly, as the overhead of bringing
         # up a new window is removed.
         my $reload = $query->param('submit') eq 'Submit+Refresh' ? 1 : 0;
         $http_response->generate_header(topic=>$topic,
