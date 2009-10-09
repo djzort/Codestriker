@@ -41,6 +41,7 @@ for my $cc (@cc_list) {
 my ($text_part) = $email->xpath_findnodes('//plain');
 print $text_part->body;
 
+# TODO: make the codestriker URL a parameter to this script.
 my $client = CodestrikerClient->new('http://192.168.222.61/codestriker/codestriker.pl');
 
 my $rc = $client->add_comment({topic_id => $topic_id,
