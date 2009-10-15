@@ -525,7 +525,7 @@ $use_compression = 0;
 
      # The next example is a GIT repository that is accessed from a local
      # directory.
-     'git:/path/to/git/directory'
+     'git:/path/to/git/directory',
 
      # The next example is for a Perforce repository.  After the
      # leading :perforce identifier, the next two components are the
