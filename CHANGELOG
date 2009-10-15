@@ -35,6 +35,10 @@ Version 1.9.10
   topic level.  This should allow for better management of outstanding
   issues in email clients such as gmail.
 
+* Implementation of email gateway in bin/codestriker-email-gateway.pl,
+  which allows for comments to be added to a topic by simply replying
+  to an email.
+
 * Added support for creating Perforce topics given the path (module_name),
   and either two labels or changelists for the start/end tag fields,
   from Arun Jose <josea111@users.sourceforge.net>.
