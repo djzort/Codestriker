@@ -3,7 +3,7 @@
 <book>
   <bookinfo>
     <title>The Codestriker Guide</title>
-    <subtitle>Version 1.9.9</subtitle>
+    <subtitle>Version 1.9.10</subtitle>
     <legalnotice>
       <para>Copyright (c) 2001 - 2009</para>
     </legalnotice>
@@ -1456,6 +1456,38 @@ C:\Perl\bin\perl.exe "%s" %s
         Further information on setting up IIS with Perl CGI can be
         found from <ulink
 	url="http://support.microsoft.com/kb/q245225">http://support.microsoft.com/kb/q245225</ulink>.
+      </para>
+    </sect1>
+
+    <sect1>
+      <title>Setting up an email gateway</title>
+      <para>
+        Its possible to setup an email gateway on a UNIX platform
+        so that replies to comments can be done directly from an
+        email client, rather than having to go via the web interface.
+        The <filename>bin/codestriker-email-gateway.pl</filename> script
+        is used for this purpose.
+      </para>
+      <para>
+        On my system, I have a <varname>codestriker</varname> user
+        account, and have set its email address to the
+        <varname>$mailreplyto</varname> configuration
+        variable in <filename>codestriker.conf</filename>.  This
+        setting will ensure all emails sent via codestriker will
+        have the Reply-To mail header set to this email address.
+        When people reply to comments within their email client,
+        the email should be sent to this email address.
+      </para>
+      <para>
+        I use procmail within the codestriker account to process these
+        replies to comment emails, and have it set as follows:
+        <programlisting>
+LOGFILE=/home/codestriker/procmail.log
+
+:0:
+* ^TOcodestriker@myhost\.com
+| /home/codestriker/codestriker-email-gateway.pl --codestriker-install-dir /var/www/codestriker --codestriker-url http://codestriker.myhost.com/codestriker/codestriker.pl
+	</programlisting>
       </para>
     </sect1>
 

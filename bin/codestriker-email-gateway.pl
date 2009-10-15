@@ -6,7 +6,25 @@ use Mail::Address;
 use Email::MIME;
 use Email::MIME::XPath;
 
-use CodestrikerClient;
+my $codestriker_url;
+my $codestriker_install_dir;
+
+while (@ARGV) {
+    my $arg = shift @ARGV;
+    if ($arg eq '--codestriker-url') {
+        $codestriker_url = shift @ARGV;
+    }
+    elsif ($arg eq '--codestriker-install-dir') {
+        $codestriker_install_dir = shift @ARGV;
+    }
+}
+
+if ( !(defined $codestriker_url) || !(defined $codestriker_install_dir) ) {
+    die "Usage: codestriker-email-gateway.pl --codestriker-install-dir <dir> --codestriker-url <url>\n";
+}
+
+# Load the CodestrikerClient.pm module.
+require $codestriker_install_dir . '/bin/CodestrikerClient.pm';
 
 # Read the message text from stdin.
 my $data;
@@ -39,11 +57,8 @@ for my $cc (@cc_list) {
 
 # Grab the first text/plain part.
 my ($text_part) = $email->xpath_findnodes('//plain');
-print $text_part->body;
 
-# TODO: make the codestriker URL a parameter to this script.
-my $client = CodestrikerClient->new('http://192.168.222.61/codestriker/codestriker.pl');
-
+my $client = CodestrikerClient->new($codestriker_url);
 my $rc = $client->add_comment({topic_id => $topic_id,
                                file_number => $file_number,
                                file_line => $file_line,
