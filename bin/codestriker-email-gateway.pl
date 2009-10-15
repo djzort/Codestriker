@@ -37,7 +37,7 @@ my $data;
 my $email = Email::MIME->new($data);
 
 # Parse out the parameters from the message ID field.
-$email->header('In-Reply-To') =~ /Codestriker\.(\d+)\.(.*)\.(.*)\.(.*)\@/;
+$email->header('References') =~ /Codestriker\.(\d+)\.(.*?)\.(.*?)\.(.*?)\@/;
 my $topic_id = $1;
 my $file_line = $2;
 my $file_number = $3;
