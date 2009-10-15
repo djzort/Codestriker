@@ -2020,7 +2020,9 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
 	  It is also possible to create Perforce topics from already committed
 	  code.  Simply enter the change number into either the "Start tag" or
 	  "End tag" field, and set "Module" to be //, which corresponds to the
-	  root of the depot.
+	  root of the depot.  It is also possible to create Perforce topics
+          given the path (module_name), and either two labels or changelists
+          for the start/end tag fields.
 	</para>
       </sect2>
       <sect2>
