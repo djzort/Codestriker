@@ -450,7 +450,7 @@ $use_compression = 0;
 	  (there may not be any, if it is just a simple patch or text
 	  file).  For many Codestriker deployments, there may only be
 	  a single SCM system.  There is currently support for CVS,
-	  Subversion, Perforce, Visual Source Safe, and ClearCase.
+	  Subversion, Git, Perforce, Visual Source Safe, and ClearCase.
 	  Here are examples from the codestriker.conf file:
 	  <programlisting>
 # Valid repositories which may be selected at the create topic screen.
@@ -522,6 +522,10 @@ $use_compression = 0;
 
      # Another Win32 CVS repository on the same machine.
      'c:/cvsrep2',
+
+     # The next example is a GIT repository that is accessed from a local
+     # directory.
+     'git:/path/to/git/directory'
 
      # The next example is for a Perforce repository.  After the
      # leading :perforce identifier, the next two components are the
@@ -894,7 +898,7 @@ $allow_comment_email = 1;
 	</para>
       </sect2>
       <sect2>
-        <title>Source Code Hihglighting</title>
+        <title>Source Code Highlighting</title>
 	<para>
 	  Source code highlighting will be performed if the Highlight
 	  program is installed.	
@@ -1990,6 +1994,20 @@ DEFAULT $CVSROOT/CVSROOT/log_accum.pl %s
      --codestriker-install-dir /var/www/codestriker
      "$REPOS" "$REV" engineering@company.com
 </programlisting>  
+	</para>
+      </sect2>
+      <sect2>
+        <title>Creating Git Diff Topics</title>
+	<para>
+	  Similar to CVS, Git diffs are created by going to the
+	  top of your checkout and issuing the git diff command.
+        </para>
+	<para>
+	  It is also possible to create Git topics from already committed
+	  code.  The code which will run will be effectively:
+          <programlisting>
+git diff -U6 --full-index --src-prefix=start_tag/ --dst-prefix=end_tag/ start_tag end_tag -- module
+          </programlisting>
 	</para>
       </sect2>
       <sect2>
