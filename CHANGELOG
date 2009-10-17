@@ -42,6 +42,12 @@ Version 1.9.10
 * Added support for creating Perforce topics given the path (module_name),
   and either two labels or changelists for the start/end tag fields,
   from Arun Jose <josea111@users.sourceforge.net>.
+
+* Added support for creating ClearCase Dynamic topics by specifying
+  a filename in the module field, and either a single version number
+  in either the start or end tag fields, or specifying two versions
+  using both fields, from
+  Lakshmivaragan <lakshmivaragan@users.sourceforge.net>.
 	
 Version 1.9.9
 

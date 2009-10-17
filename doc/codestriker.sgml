@@ -2098,6 +2098,12 @@ git diff -U6 --full-index --src-prefix=start_tag/ --dst-prefix=end_tag/ start_ta
   xargs -n1 cleartool diff -serial_format -predecessor > /tmp/review.txt
 	  </programlisting>
 	</para>
+       <para>
+         With the ClearCase Dynamic repository, it is possible to create
+         a topic dynamically, by specifying the filename in the module
+         field, and either a single version number in either the start
+         or end tag fields, or specifying two versions using both fields.
+       </para>
       </sect2>
       <sect2>
         <title>Creating Visual SourceSafe Topics</title>

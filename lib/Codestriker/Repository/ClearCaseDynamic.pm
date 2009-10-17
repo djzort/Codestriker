@@ -4,9 +4,15 @@
 #
 # This program is free software; you can redistribute it and modify it under
 # the terms of the GPL.
-
+#
 # Handler for ClearCase Dynamic Views.
 # Contributed by "Avinandan Sengupta" <avinna_seng at users.sourceforge.net>.
+# 
+# 22nd July 2009
+# Added support to directly fetch info (diff) from clearcase.
+# Now, no need to manually take diff from clearcase and upload.
+# Just provide versions in 'start-tag' & 'end-tag' and file in 'module'.
+# Contributed by "Lakshmivaragan" <lakshmivaragan at users.sourceforge.net>.
 
 package Codestriker::Repository::ClearCaseDynamic;
 
@@ -108,7 +114,102 @@ sub getRoot ($) {
 sub getDiff ($$$$$$) {
     my ($self, $start_tag, $end_tag, $module_name, $fh, $stderr_fh) = @_;
 
-    return $Codestriker::UNSUPPORTED_OPERATION;
+    # Flag variables to determine the exec type
+    my $compare_previous = 0;
+
+    if ($start_tag eq '' && $end_tag eq '')
+    {
+        # Both tags cannot be empty.
+        print $stderr_fh "Both start tag and end tag cannot be empty.\n";
+        return $Codestriker::OK;
+    }
+
+    # If only a single tag is defined, make end_tag hold the value.
+    if ($start_tag ne '' && $end_tag eq '')
+    {
+        $end_tag = $start_tag;
+        $start_tag = '';
+    }
+
+    # If Start tag is empty, but has valid end tag, take diff with previous version.
+    if ($start_tag eq '' && $end_tag ne '')
+    {
+        $compare_previous = 1;
+    }
+
+    if ($self->{dynamic_view_name} eq '')
+    {
+        # View tag is empty.
+        print $stderr_fh "View tag is empty. Check 'codestriker.conf' for configuration of clearcase.\n";
+        return $Codestriker::OK;
+    }
+
+    if ($self->{vobs_dir} eq '')
+    {
+        # VOBS URL is empty.
+        print $stderr_fh "VOBS URL is empty. Check 'codestriker.conf' for configuration of clearcase.\n";
+        return $Codestriker::OK;
+    }
+
+    my $ctcmd = "";
+
+    $ctcmd = "setview " . $self->{dynamic_view_name};
+    (my $status, my $output, my $errormsg) = ClearCase::CtCmd::exec($ctcmd);
+
+    # $status is set to 1 if ctcmd exec succeeded. Otherwise 0.
+    if ($status)
+    {
+        print $stderr_fh "CtCmd::exec($ctcmd) failed: $errormsg.\n";
+        return $Codestriker::OK;
+    }
+
+    # Check if element exists and if exists, find if it is file / dir.
+    my $filename = $self->{vobs_dir} . '/' . $module_name;
+    $ctcmd = "ls -l -dir " . $filename;
+    ($status, my $output, my $errormsg) = ClearCase::CtCmd::exec($ctcmd);
+
+    # CtCmd status for "ls -l -dir" is set to 0 if success; 1 on failure. CtCmd bug???
+    if ($status)
+    {
+        print $stderr_fh "CtCmd Exec($ctcmd) failed: $errormsg.\n";
+        return $Codestriker::OK;
+    }
+    elsif ($output =~ /^directory version/)
+    {
+        # The element is a directory.
+        print $stderr_fh "At present CC::Dynamic does not support adding all files of a dir if directory is given.\n";
+        return $Codestriker::OK;
+    }
+    elsif ($output =~ /^version/)
+    {
+        # The element is a file.
+    }
+
+    # Next, get the diff between two versions provided.
+    my $secondver = $filename . "@@" . $end_tag;
+    if ($compare_previous == 1)
+    {
+        $ctcmd = "diff -serial_format -pred $secondver";
+    }
+    else
+    {
+        my $firstver = $filename . "@@" . $start_tag;
+        $ctcmd = "diff -serial_format $firstver $secondver";
+    }
+    ($status, my $output, my $errormsg) = ClearCase::CtCmd::exec($ctcmd);
+
+    # CtCmd status for "diff" is set to 0 if success; 1 on failure. CtCmd bug???
+    if (!$status)
+    {
+        print $stderr_fh "CtCmd Exec($ctcmd) failed: $errormsg.\n";
+        return $Codestriker::OK;
+    }
+    else
+    {
+        # Write the diff output to FileHandler.
+        print $fh $output;
+    }
+    return $Codestriker::OK;
 }
 
 1;
