@@ -18,6 +18,11 @@ use IPC::Open3;
 use File::Temp qw/ tempdir /;
 use File::Path;
 use Fatal qw / open close waitpid /;
+use MIME::QuotedPrint qw(encode_qp);
+use Net::SMTP;
+use MIME::Base64;
+use Sys::Hostname;
+use Encode qw(encode);
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $mailuser $mailpasswd $mailreplyto $listid
@@ -632,6 +637,115 @@ sub tabadjust ($$$) {
           (length($&) * $tabwidth - length($`) % $tabwidth)/eo;
     }
     return $_;
+}
+
+
+# Send an email with the specified data.
+sub send_email {
+    my ($type, %args) = @_;
+
+    my $smtp = Net::SMTP->new($Codestriker::mailhost);
+    defined $smtp || return "Unable to connect to mail server: $!";
+
+    # Perform SMTP authentication if required.
+    if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
+        defined $Codestriker::mailpasswd) {
+        eval 'use Authen::SASL';
+        die "Unable to load Authen::SASL module: $@\n" if $@;
+        $smtp->auth($Codestriker::mailuser, $Codestriker::mailpasswd);
+    }
+
+    # Use Codestriker::daemon_email_address as the sender if it is
+    # defined.
+    my $sender = $args{from};
+    if (defined $Codestriker::daemon_email_address &&
+        $Codestriker::daemon_email_address ne '') {
+        $sender = $Codestriker::daemon_email_address;
+    }
+
+    $smtp->mail($sender);
+    $smtp->ok() || return "Couldn't set sender to \"$sender\" $!, " .
+      $smtp->message();
+
+    # $to has to be defined.
+    my $recipients = $args{to};
+    $recipients .= ", $args{cc}" if $args{cc} ne "";
+    $recipients .= ", $args{bcc}" if $args{bcc} ne "";
+    my @receiver = split /, /, $recipients;
+    for (my $i = 0; $i <= $#receiver; $i++) {
+        if ($receiver[$i] ne "") {
+            $smtp->recipient($receiver[$i]);
+            $smtp->ok() || return "Couldn't send email to \"$receiver[$i]\" $!, " .
+              $smtp->message();
+        } else {
+            # Can't track down why, but sometimes an empty email address
+            # pops into here and kills the entire thing. This makes the
+            # problem go away.
+        }
+    }
+
+    $smtp->data();
+    $smtp->datasend("From: $args{from}\n");
+    $smtp->datasend("To: $args{to}\n");
+    $smtp->datasend("Cc: $args{cc}\n") if $args{cc} ne "";
+
+    # If the message is new, create the appropriate message id, otherwise
+    # construct a message which refers to the original message.  This will
+    # allow for threading, for those email clients which support it.  All
+    # emails relating to a specific comment will be in a specific thread.
+    if (defined $args{topicid} && defined $args{fileline} &&
+        defined $args{filenumber} && defined $args{filenew}) {
+        my $message_id =
+          "<Codestriker.$args{topicid}.$args{fileline}.$args{filenumber}.$args{filenew}\@" .
+            hostname() . '>';
+
+        if (defined $args{new} && $args{new}) {
+            $smtp->datasend("Message-Id: $message_id\n");
+        } else {
+            $smtp->datasend("References: $message_id\n");
+            $smtp->datasend("In-Reply-To: $message_id\n");
+        }
+    }
+
+    # Set the List-Id header if required.
+    if (defined $Codestriker::listid && $Codestriker::listid ne '') {
+        $smtp->datasend("List-Id: " . $Codestriker::listid . "\n");
+    }
+
+    # Set the Reply-To header if required.
+    if (defined $Codestriker::mailreplyto && $Codestriker::mailreplyto ne '') {
+        $smtp->datasend("Reply-To: " . $Codestriker::mailreplyto . "\n");
+    }
+
+    # Make sure the subject is appropriately encoded to handle UTF-8
+    # characters.
+    my $subject = encode_qp(encode("UTF-8", $args{subject}), "");
+
+    # RFC 2047 fixup that is a documented deviation from quoted-printable
+    $subject =~ s/\?/=3F/g;
+    $subject =~ s/_/=5F/g;
+    $subject =~ s/ /_/g;
+    $smtp->datasend("Subject: =?UTF-8?Q?${subject}?=\n");
+
+    # Set the content type to be text/plain with UTF8 encoding, to handle
+    # unicode characters.
+    $smtp->datasend("Content-Type: text/plain; charset=\"utf-8\"\n");
+    $smtp->datasend("Content-Transfer-Encoding: quoted-printable\n");
+    $smtp->datasend("MIME-Version: 1.0\n");
+
+    # Insert a blank line for the body.
+    $smtp->datasend("\n");
+
+    # Encode the mail body using quoted-printable to handle unicode
+    # characters.
+    $smtp->datasend(encode_qp(encode("UTF-8", $args{body})));
+    $smtp->dataend();
+    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
+
+    $smtp->quit();
+    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
+
+    return '';
 }
 
 1;

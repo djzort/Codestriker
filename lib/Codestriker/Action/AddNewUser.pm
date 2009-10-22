@@ -82,45 +82,15 @@ END_EMAIL_TEXT
 sub _send_email {
     my ($type, $email, $subject, $body) = @_;
 
-    # Send out an email to the user containing the magic URL so that they
-    # can prove they own this email address.
-    my $smtp = Net::SMTP->new($Codestriker::mailhost);
-    defined $smtp || die "Unable to connect to mail server: $!";
-
-    # Perform SMTP authentication if required.
-    if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
-        defined $Codestriker::mailpasswd) {
-        eval 'use Authen::SASL';
-        die "Unable to load Authen::SASL module: $@\n" if $@;
-        $smtp->auth($Codestriker::mailuser, $Codestriker::mailpasswd);
-    }
-
-    # Set the from/to addresses.
-    if (! defined $Codestriker::daemon_email_address) {
+    # Make sure $Codestriker::daemon_email_address is defined.
+    if (! defined $Codestriker::daemon_email_address ||
+        $Codestriker::daemon_email_address eq '') {
         die '$daemon_email_address is not set in codestriker.conf';
     }
-    $smtp->mail($Codestriker::daemon_email_address);
-    $smtp->ok() || die "Couldn't set sender to \"$Codestriker::daemon_email_address\": $!, " .
-      $smtp->message();
-    $smtp->recipient($email);
-    $smtp->ok() || die "Couldn't set recipient to \"$email\" $!, " .
-      $smtp->message();
 
-    # Set the email text.
-    $smtp->data();
-    $smtp->datasend("From: $Codestriker::daemon_email_address\n");
-    $smtp->datasend("To: $email\n");
-    $smtp->datasend("Subject: $subject\n");
-
-    # Insert the email body.
-    $smtp->datasend("\n");
-    $smtp->datasend($body);
-
-    # Now send the email.
-    $smtp->dataend();
-    $smtp->ok() || die "Couldn't send email $!, " . $smtp->message();
-    $smtp->quit();
-    $smtp->ok() || die "Couldn't send email $!, " . $smtp->message();
+    Codestriker->send_email(from => $Codestriker::daemon_email_address,
+                            to => $email, subject => $subject,
+                            body => $body);
 }
 
 1;

@@ -12,12 +12,6 @@ use strict;
 
 package Codestriker::TopicListeners::Email;
 
-use MIME::QuotedPrint qw(encode_qp);
-use Net::SMTP;
-use MIME::Base64;
-use Sys::Hostname;
-use Encode qw(encode);
-
 use Codestriker::TopicListeners::TopicListener;
 
 # Separator to use in email.
@@ -515,97 +509,10 @@ sub doit {
 
     return '' if ($DEVNULL_EMAIL);
 
-    my $smtp = Net::SMTP->new($Codestriker::mailhost);
-    defined $smtp || return "Unable to connect to mail server: $!";
-
-    # Perform SMTP authentication if required.
-    if (defined $Codestriker::mailuser && $Codestriker::mailuser ne "" &&
-        defined $Codestriker::mailpasswd) {
-        eval 'use Authen::SASL';
-        die "Unable to load Authen::SASL module: $@\n" if $@;
-        $smtp->auth($Codestriker::mailuser, $Codestriker::mailpasswd);
-    }
-
-    $smtp->mail($from);
-    $smtp->ok() || return "Couldn't set sender to \"$from\" $!, " .
-      $smtp->message();
-
-    # $to has to be defined.
-    my $recipients = $to;
-    $recipients .= ", $cc" if $cc ne "";
-    $recipients .= ", $bcc" if $bcc ne "";
-    my @receiver = split /, /, $recipients;
-    for (my $i = 0; $i <= $#receiver; $i++) {
-        if ($receiver[$i] ne "") {
-            $smtp->recipient($receiver[$i]);
-            $smtp->ok() || return "Couldn't send email to \"$receiver[$i]\" $!, " .
-              $smtp->message();
-        } else {
-            # Can't track down why, but sometimes an empty email address
-            # pops into here and kills the entire thing. This makes the
-            # problem go away.
-        }
-    }
-
-    $smtp->data();
-    $smtp->datasend("From: $from\n");
-    $smtp->datasend("To: $to\n");
-    $smtp->datasend("Cc: $cc\n") if $cc ne "";
-
-    # If the message is new, create the appropriate message id, otherwise
-    # construct a message which refers to the original message.  This will
-    # allow for threading, for those email clients which support it.  All
-    # emails relating to a specific comment will be in a specific thread.
-    my $message_id =
-      "<Codestriker.${topicid}.${fileline}.${filenumber}.${filenew}\@" .
-        hostname() . '>';
-
-    if ($new) {
-        $smtp->datasend("Message-Id: $message_id\n");
-    } else {
-        $smtp->datasend("References: $message_id\n");
-        $smtp->datasend("In-Reply-To: $message_id\n");
-    }
-
-    # Set the List-Id header if required.
-    if (defined $Codestriker::listid && $Codestriker::listid ne '') {
-        $smtp->datasend("List-Id: " . $Codestriker::listid . "\n");
-    }
-
-    # Set the Reply-To header if required.
-    if (defined $Codestriker::mailreplyto && $Codestriker::mailreplyto ne '') {
-        $smtp->datasend("Reply-To: " . $Codestriker::mailreplyto . "\n");
-    }
-
-    # Make sure the subject is appropriately encoded to handle UTF-8
-    # characters.
-    $subject = encode_qp(encode("UTF-8", $subject), "");
-
-    # RFC 2047 fixup that is a documented deviation from quoted-printable
-    $subject =~ s/\?/=3F/g;
-    $subject =~ s/_/=5F/g;
-    $subject =~ s/ /_/g;
-    $smtp->datasend("Subject: =?UTF-8?Q?${subject}?=\n");
-
-    # Set the content type to be text/plain with UTF8 encoding, to handle
-    # unicode characters.
-    $smtp->datasend("Content-Type: text/plain; charset=\"utf-8\"\n");
-    $smtp->datasend("Content-Transfer-Encoding: quoted-printable\n");
-    $smtp->datasend("MIME-Version: 1.0\n");
-
-    # Insert a blank line for the body.
-    $smtp->datasend("\n");
-
-    # Encode the mail body using quoted-printable to handle unicode
-    # characters.
-    $smtp->datasend(encode_qp(encode("UTF-8", $body)));
-    $smtp->dataend();
-    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
-
-    $smtp->quit();
-    $smtp->ok() || return "Couldn't send email $!, " . $smtp->message();
-
-    return '';
+    Codestriker->send_email(new => $new, topicid => $topicid, fileline => $fileline,
+                            filenumber => $filenumber, filenew => $filenew,
+                            from => $from, to => $to, cc => $cc, bcc => $bcc,
+                            subject => $subject, body => $body);
 }
 
 1;
