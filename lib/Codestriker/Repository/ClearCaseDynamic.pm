@@ -166,7 +166,7 @@ sub getDiff ($$$$$$) {
     # Check if element exists and if exists, find if it is file / dir.
     my $filename = $self->{vobs_dir} . '/' . $module_name;
     $ctcmd = "ls -l -dir " . $filename;
-    ($status, my $output, my $errormsg) = ClearCase::CtCmd::exec($ctcmd);
+    ($status, $output, $errormsg) = ClearCase::CtCmd::exec($ctcmd);
 
     # CtCmd status for "ls -l -dir" is set to 0 if success; 1 on failure. CtCmd bug???
     if ($status)
@@ -196,7 +196,7 @@ sub getDiff ($$$$$$) {
         my $firstver = $filename . "@@" . $start_tag;
         $ctcmd = "diff -serial_format $firstver $secondver";
     }
-    ($status, my $output, my $errormsg) = ClearCase::CtCmd::exec($ctcmd);
+    ($status, $output, $errormsg) = ClearCase::CtCmd::exec($ctcmd);
 
     # CtCmd status for "diff" is set to 0 if success; 1 on failure. CtCmd bug???
     if (!$status)
