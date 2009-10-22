@@ -542,10 +542,11 @@ sub execute_command {
 
     my $command_tmpdir;
     eval {
-        if (exists $ENV{'MOD_PERL'}) {
+        if (exists $ENV{'MOD_PERL'} ||
+            (defined($ENV{'SERVER_SOFTWARE'}) && $ENV{'SERVER_SOFTWARE'} =~ /IIS/)) {
             # The open3() call doesn't work under mod_perl/apache2,
             # so create a command which stores the stdout and stderr
-            # into temporary files.
+            # into temporary files.  It also seems flacky under IIS.
             if (defined $Codestriker::tmpdir && $Codestriker::tmpdir ne "") {
                 $command_tmpdir = tempdir(DIR => $Codestriker::tmpdir);
             } else {
