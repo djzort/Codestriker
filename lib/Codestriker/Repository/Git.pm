@@ -17,11 +17,10 @@ use Codestriker::Repository;
 @Codestriker::Repository::Git::ISA = ("Codestriker::Repository");
 
 sub new_local ($$$) {
-    my ($type, $path, $is_bare) = @_;
+    my ($type, $path) = @_;
 
     my $self = Codestriker::Repository->new(":git:${path}");
 
-    #$self->{gitdir} = $path . (defined $is_bare ? '' : '/.git');
     $self->{gitdir} = $path . "/.git";
 
     bless $self, $type;
