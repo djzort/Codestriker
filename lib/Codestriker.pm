@@ -573,9 +573,9 @@ sub execute_command {
             while (<TMP_STDOUT>) {
                 print $stdout_fh $_;
             }
-            binmode TMP_STDERR;
 
             open(TMP_STDERR, $stderr_filename);
+            binmode TMP_STDERR;
             while (<TMP_STDERR>) {
                 print $stderr_fh $_;
             }
