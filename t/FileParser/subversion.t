@@ -2,7 +2,7 @@
 
 use strict;
 use Fatal qw / open close /;
-use Test::More tests => 39;
+use Test::More tests => 41;
 use Test::Differences;
 
 use lib '../../lib';
@@ -312,6 +312,19 @@ assert_delta_equals('../../test/testtopictexts/svn-diff2.txt',
 	       revision => '0'
     ),
 );
+
+assert_delta_equals('../../test/testtopictexts/svn-look-diff7.txt',
+    make_delta(filename => 't1.txt',
+	           old_linenumber => '0',
+	           new_linenumber => '1',
+	           revision => '0',
+	           text => <<'END_DELTA',
++line1
++line2
++line3
+END_DELTA
+));
+
 
 # Convenience function for creating a delta object.
 sub make_delta {

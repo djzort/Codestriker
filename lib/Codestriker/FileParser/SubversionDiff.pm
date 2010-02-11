@@ -69,6 +69,9 @@ sub parse ($$$) {
             $line = <$fh>;
         }
 
+        # If a blank line is next, this is an entry we can skip, for example, a directory copy.
+        next if defined $line && $line =~ /^\s*$/o;
+
         # The separator line appears next.
         return () unless defined $line && $line =~ /^===================================================================$/o;
         $line = <$fh>;
