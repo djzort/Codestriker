@@ -113,7 +113,7 @@ sub getDiff ($$$$$) {
         my $tag = $start_tag ne '' ? $start_tag : $end_tag;
 
         push @args, 'describe';
-        push @args, 'du';
+        push @args, '-du';
         push @args, $tag;
     }
 

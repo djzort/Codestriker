@@ -4,6 +4,9 @@
 Version 1.9.11
 
 * Handle Subversion diffs which contain directory copies.
+
+* Fixed issue where Perforce diffs created by just specifying a single tag
+  would not work.
 	
 Version 1.9.10
 
