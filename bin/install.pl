@@ -519,7 +519,7 @@ my $topicbug_table =
         columns => [col(name=>"topicid", type=>$INT32, pk=>1),
                     col(name=>"bugname", type=>$VARCHAR, length=>255, pk=>1)
                    ],
-        indexes => [dbindex(name=>"topicbug_tid_idx",
+        indexes => [dbindex(name=>"topicbug_topicid_idx",
                             column_names=>["topicid"])]);
 
 # This table records which file fragments are associated with a topic.
@@ -609,7 +609,7 @@ sub move_old_table ($$)
       # with a different name, otherwise the create table command below
       # will fail.
       if (defined $pkey_column && $Codestriker::db =~ /^DBI:pg/i) {
-          $dbh->do("DROP INDEX ${tablename}_pkey") ||
+          $dbh->do("ALTER TABLE ${tablename}_old DROP CONSTRAINT ${tablename}_pkey") ||
             die "Could not drop pkey index: " . $dbh->errstr;
           $dbh->do("CREATE UNIQUE INDEX ${tablename}_old_pkey ON " .
                    "${tablename}_old($pkey_column)") ||
@@ -618,6 +618,7 @@ sub move_old_table ($$)
       }
 
       # Now create the table.
+      $database->commit;
       $database->create_table($table);
   }
 
