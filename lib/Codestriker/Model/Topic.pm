@@ -103,7 +103,7 @@ sub _insert_bug_ids($$$) {
     my ($self, $dbh, $bug_ids) = @_;
 
     my $insert_bugs =
-      $dbh->prepare_cached('INSERT INTO topicbug (topicid, bugid) ' .
+      $dbh->prepare_cached('INSERT INTO topicbug (topicid, bugname) ' .
                            'VALUES (?, ?)');
     my $success = defined $insert_bugs;
 
@@ -247,7 +247,7 @@ sub read($$) {
                                             'WHERE topic.id = ? AND ' .
                                             'topic.projectid = project.id');
     my $select_bugs =
-      $dbh->prepare_cached('SELECT bugid FROM topicbug WHERE topicid = ?');
+      $dbh->prepare_cached('SELECT bugname FROM topicbug WHERE topicid = ?');
     my $select_participants =
       $dbh->prepare_cached('SELECT type, email FROM participant ' .
                            'WHERE topicid = ?');
@@ -757,7 +757,7 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
       ($database->case_insensitive_like("participant.email", $scc) .
        " AND type = $Codestriker::PARTICIPANT_CC");
     my $bugid_part = $sbugid eq "" ? "" :
-      ("topicbug.bugid = " . $dbh->quote($sbugid));
+      ("topicbug.bugname = " . $dbh->quote($sbugid));
 
     # Build up the state condition.
     my $state_part = "";
@@ -786,7 +786,7 @@ sub query($$$$$$$$$$$$$$\@\@\@) {
     my $query =
       "SELECT topic.id, topic.title, topic.description, " .
         "topic.author, topic.creation_ts, " .
-          "topic.state, topicbug.bugid, participant.email, participant.type, " .
+          "topic.state, topicbug.bugname, participant.email, participant.type, " .
             "topic.version ";
 
     # Since Oracle < 9i can't handle LEFT OUTER JOIN, determine what tables

@@ -15,6 +15,7 @@ use Codestriker::BugDB::FlysprayConnection;
 use Codestriker::BugDB::MantisConnection;
 use Codestriker::BugDB::NoConnection;
 use Codestriker::BugDB::TestDirectorConnection;
+use Codestriker::BugDB::JIRAConnection;
 
 # Factory method for retrieving a BugDBConnection object.
 sub getBugDBConnection ($) {
@@ -29,6 +30,8 @@ sub getBugDBConnection ($) {
         return Codestriker::BugDB::MantisConnection->get_connection();
     } elsif ($dbtype eq "testdirector") {
         return Codestriker::BugDB::TestDirectorConnection->get_connection();
+    } elsif ($dbtype eq "jira") {
+        return Codestriker::BugDB::JIRAConnection->get_connection();
     } elsif ($dbtype =~ /^noconnect/) {
         return Codestriker::BugDB::NoConnection->get_connection();
     } else {

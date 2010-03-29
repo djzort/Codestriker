@@ -517,7 +517,7 @@ my $participant_table =
 my $topicbug_table =
   table(name => "topicbug",
         columns => [col(name=>"topicid", type=>$INT32, pk=>1),
-                    col(name=>"bugid", type=>$INT32, pk=>1)
+                    col(name=>"bugname", type=>$VARCHAR, length=>255, pk=>1)
                    ],
         indexes => [dbindex(name=>"topicbug_tid_idx",
                             column_names=>["topicid"])]);
@@ -1085,6 +1085,22 @@ if (defined $Codestriker::admin_users) {
     }
 }
 $database->commit() if $user_added;
+
+# Migrate the topic bug table to support non-numeric bug IDs.
+if ($database->column_exists("topicbug", "bugid")) {
+    print "Detected old version of topicbug table, migrating...\n";
+    move_old_table($topicbug_table, "topicid, bugid");
+    my $insert_topicbug =
+      $dbh->prepare_cached("INSERT INTO topicbug (topicid, bugname) VALUES (?, ?)");
+    $stmt = $dbh->prepare_cached("SELECT topicid, bugid FROM topicbug_old");
+    $stmt->execute();
+    while (my ($topicid, $bugid) = $stmt->fetchrow_array()) {
+        $insert_topicbug->execute($topicid, $bugid);
+    }
+    $stmt->finish();
+    $database->commit();
+    $dbh->do('DROP TABLE topicbug_old');
+}
 
 # Now generate the contents of the codestriker.pl file, with the appropriate
 # configuration details set (basically, the location of the lib dir).

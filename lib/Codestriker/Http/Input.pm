@@ -367,7 +367,7 @@ sub _untaint_emails($$) {
 sub _untaint_bug_ids($$) {
     my ($self, $name) = @_;
 
-    $self->_untaint($name, '([0-9]+[\s,;]*){1,100}');
+    $self->_untaint($name, '([A-z0-9\-]+[\s,;]*){1,100}');
 }
 
 1;
