@@ -390,6 +390,12 @@ if ($current_project->{codestriker_url} ne '')
     {
 	$codestriker_author .= '@' . $current_project->{hostname};
     }
+    my $reviewers = $current_project->{codestriker_reviewers};
+    if (! defined $reviewers || $reviewers eq '')
+    {
+	$reviewers = $codestriker_author;
+    }
+
     $codestriker_topic_url = $client->create_topic({
 	topic_title => $topic_title,
 	topic_description => $topic_description,
@@ -397,7 +403,7 @@ if ($current_project->{codestriker_url} ne '')
 	repository => $current_project->{codestriker_repository},
 	bug_ids => join(", ", @bugs),
 	email => $codestriker_author,
-	reviewers => $current_project->{codestriker_reviewers},
+	reviewers => $reviewers,
 	cc => $current_project->{codestriker_cc},
 	topic_state => $current_project->{codestriker_state},
 	email_event => 0,
