@@ -378,8 +378,8 @@ if ($current_project->{codestriker_url} ne '')
     
     # Check for any matching Bug id text.
     my @bugs = ();
-    $bug_ids =~ s/.*[Bb][Uu][Gg]:?(\d+)\b.*/$1 /g;
-    while ($bug_ids =~ /\b[Bb][Uu][Gg]:?\s*(\d+)\b/g)
+    $bug_ids =~ s/.*[Bb][Uu][Gg]:?([0-9A-z\-]+)\b.*/$1 /g;
+    while ($bug_ids =~ /\b[Bb][Uu][Gg]:?\s*([0-9A-z\-]+)\b/g)
     {
 	push @bugs, $1;
     }
