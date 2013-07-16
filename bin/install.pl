@@ -235,6 +235,7 @@ sub have_vers {
 
     $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
     $vnum = -1 if $@;
+    $vnum =~ s/\.\d+$// if $vnum =~ m/.+\..+\./; # strip 2.9.2 style back to 2.9
 
     if ($vnum eq "-1") { # string compare just in case it's non-numeric
         if ( $optional ) {

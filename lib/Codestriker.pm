@@ -23,6 +23,7 @@ use Net::SMTP;
 use MIME::Base64;
 use Sys::Hostname;
 use Encode qw(encode);
+use Carp qw(croak);
 
 # Export codestriker.conf configuration variables.
 use vars qw ( $mailhost $mailuser $mailpasswd $mailreplyto $listid

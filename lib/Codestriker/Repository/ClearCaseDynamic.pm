@@ -18,6 +18,7 @@ package Codestriker::Repository::ClearCaseDynamic;
 
 use strict;
 use File::Spec;
+use Carp qw(Croak);
 
 use Codestriker::Repository;
 @Codestriker::Repository::ClearCaseDynamic::ISA = ("Codestriker::Repository");
