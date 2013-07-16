@@ -23,7 +23,7 @@
 	</tr>
 	[% END %]
     </table>
-    
+
     [%# Make sure all the diffs are aligned in the same table. #%]
     <table width="100%" cellspacing="0" cellpadding="0" border="0">
     [% END %]
@@ -58,7 +58,7 @@
         [% END %]
       [% END %]
       </tr>
-    
+
       [%# Now output the delta itself. #%]
       [% FOREACH line = delta.lines %]
       [% FLUSH IF loop.count() % 10 == 1 %]

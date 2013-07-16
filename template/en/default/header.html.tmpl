@@ -7,21 +7,21 @@
 
 <div id="header">
   <div class="heading">
-    <a href="[% list_url | html_entity %]">[% main_title | html_entity %] - [% subtitle %]</a>
+    <a href="[% list_url | url %]">[% main_title | html_entity %] - [% subtitle %]</a>
   </div>
 
   [% IF displaymenu != 0 %]
   <div class="menu">
-    <a href="[% list_url | html_entity %]">List all open topics</a>
+    <a href="[% list_url | url %]">List all open topics</a>
     [% IF list_open_topics_in_project_url != "" %]
-    | <a href="[% list_open_topics_in_project_url | html_entity %]">List open topics in project</a>
+    | <a href="[% list_open_topics_in_project_url | url %]">List open topics in project</a>
     [% END %]
-    | <a href="[% create_topic_url | html_entity %]">Create new topic</a>
-    [% IF searchlist_enabled != 0 %] | <a href="[% search_url | html_entity %]">Search</a> [% END %]
-    | <a href="[% doc_url | html_entity %]/codestriker.html">Manual</a>
+    | <a href="[% create_topic_url | url %]">Create new topic</a>
+    [% IF searchlist_enabled != 0 %] | <a href="[% search_url | url %]">Search</a> [% END %]
+    | <a href="[% doc_url | url %]/codestriker.html">Manual</a>
     [% IF use_authentication %]
-        [% IF login_name != "" && password_hash != "" %] | <a href="[% logout_url %]">Log out</a> [% login_name %]
-        [% ELSE %] | <a href="[% login_url %]">Log in</a>
+        [% IF login_name != "" && password_hash != "" %] | <a href="[% logout_url | url %]">Log out</a> [% login_name %]
+        [% ELSE %] | <a href="[% login_url | url %]">Log in</a>
         [% END %]
     [% END %]
   </div>
