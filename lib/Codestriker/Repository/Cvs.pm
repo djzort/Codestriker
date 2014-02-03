@@ -81,6 +81,7 @@ sub retrieve {
     open($read_stdout_fh, '>', \$read_data);
     my @args = ();
     push @args, '-q';
+    push @args, '-n';
     push @args, '-d';
     push @args, $self->{repository_string};
     push @args, 'co';
@@ -131,7 +132,7 @@ sub getDiff ($$$$$$) {
     $ENV{'CVS_RSH'} = $Codestriker::ssh if defined $Codestriker::ssh;
 
     Codestriker::execute_command($stdout_fh, $stderr_fh, $Codestriker::cvs,
-                                 '-q', '-d', $self->{repository_string}, 'rdiff',
+                                 '-q', '-n', '-d', $self->{repository_string}, 'rdiff',
                                  $extra_options, '-u', '-r', $start_tag,
                                  '-r', $end_tag, $module_name);
     return $Codestriker::OK;
