@@ -1,6 +1,10 @@
 *** When upgrading, don't forget to: "cd bin ; ./install.pl" ***
 *** Also, it is _highly_ advisable to backup your data before upgrading ***
 
+Version x.x.x
+
+* Add '-n' option to cvs commands, so write access isnt needed to local cvs repos
+
 Version 1.9.11
 
 * Handle Subversion diffs which contain directory copies.
@@ -9,7 +13,7 @@ Version 1.9.11
   would not work.
 
 * Added support for JIRA as an integrated bug-tracker.
-	
+
 Version 1.9.10
 
 * Implemented "log out" action.
@@ -28,7 +32,7 @@ Version 1.9.10
 
 * Support for integration with Mantis bug tracking system.  Code was
   implemented by Gustavo Silva <gramirez@dextratech.com>,
-  <silvagustavo@users.sourceforge.net> with support from Dextra 
+  <silvagustavo@users.sourceforge.net> with support from Dextra
   Technologies <http://www.dextratech.com>.
 
 * Support for git repositories from Jeffrey Middleton
@@ -57,7 +61,7 @@ Version 1.9.10
   in either the start or end tag fields, or specifying two versions
   using both fields, from
   Lakshmivaragan <lakshmivaragan@users.sourceforge.net>.
-	
+
 Version 1.9.9
 
 * Removed incompatible setting from MySQL database driver, which was
@@ -65,7 +69,7 @@ Version 1.9.9
 
 * Fixed regression where selecting state "All" from the search topics
   screen would only return "Open" topics.
-	
+
 Version 1.9.8
 
 * Fixed issue where using Internet Explorer with a Codestriker
@@ -79,36 +83,36 @@ Version 1.9.7
   in codestriker.conf, this contains a list of "admin" users.
   If defined, admin users are the only ones who can
   create/edit/delete projects.
-	
+
 * Created another Subversion post-commit script which is an extension
   of the standard commit-email.pl script which ships with Subversion.
   The email sent also includes an additional line, which is the URL to
   the auto-created topic.
-  
+
 * Updated install.pl so that it can be executed from any directory, not
   just bin.
-  
+
 * Creating Perforce topics directly from already committed files in the
   depot did not work if the depot was on a different machine to the
   web-server.  This has now been fixed.
-  
+
 * Fixed an issue where some Perforce describe diffs were not being
   parsed correctly as reported by shambhu.1980@gmail.com.  This has
-  now been fixed.  
-  
+  now been fixed.
+
 * Added a drop-down on the topic create page where the initial topic
   state can be set.  By default, this is set to "Open", however in
   situations where a review has already been performed but needs to
   be recorded, or a topic is automatically created from a post-commit
   script from an SCM, sometimes another initial state is desirable.
-  
+
 * Updated install.pl to support a separate Apache virtual host per
   Codestriker project as suggested by dmulter@users.sourceforge.net.
   Manual has been updated with the appropriate instructions.
-  
+
 * Help popup text windows on the create topic and search screens
   disappear automatically when the cursor is moved off the (?) link.
-  
+
 * Fixed a bug where Subversion diffs with binary files that contained
   property changes were not handled correctly.
 
@@ -118,7 +122,7 @@ Version 1.9.7
 * Scmbug integration now works correctly when there are multiple
   commits to the same file under the one Bug ID.  Fixed by
   rob_webset@users.sourceforge.net.
-  
+
 * ScmBug integration now works correctly when deleted files are
   present in a Subversion changeset.
 
@@ -136,62 +140,62 @@ Version 1.9.6
   appropriate configuration is set at the start of the file, simply
   add it to your Subversion repos/hooks/post-commit file as the
   following:
-  
+
   /path/to/codestriker/bin/subversion-post-commit.pl "$REPOS" "$REV"
 
 * "Default to head" option for CVS topic creation was not used when
-  selected, but when it was unselected.  This has now been fixed.  
+  selected, but when it was unselected.  This has now been fixed.
   Spotted by mnk26@users.sourceforge.net.
-  
+
 * Fix for "v-string in use/require non-portable" warning when using
   Perl 5.10 from rob_webset@users.sourceforge.net.
-  
+
 * Deleting a topic connected with a TestDirector bug has been fixed
   by rob_webset@users.sourceforge.net.
-  
+
 * Creation of Subversion topics which use a file for the module field
   in the create topic screen may not work correctly for some versions
-  of Subversion.  This has now been fixed by 
+  of Subversion.  This has now been fixed by
   rob_webset@users.sourceforge.net.
-  
+
 * Make sure XML representation of a topic has its data properly escaped.
-  Fixed by rob_webset@users.sourceforge.net.  
-  
+  Fixed by rob_webset@users.sourceforge.net.
+
 * Ability to parse git patches correctly.
 
 * Ability to parse hg diffs (Mercurial SCM) correctly.
 
 * Better detection of filename extensions for highlighting.  This
-  previously caused issues for temporary directories which contained 
+  previously caused issues for temporary directories which contained
   a period, but the filename itself didn't.  Reported by
   rob_webset@users.sourceforge.net.
-  
+
 * Scmbug integration now works correctly if multiple bug IDs are
   specified is the create topic screen.  Fixed by
   rob_webset@users.sourceforge.net.
-  
+
 * Fixed the parsing of Subversion diffs which contained modifications
   within property sets.  Also fixed case where file in diff is empty.
   Reported by clechasseur@users.sourceforge.net.
-  
+
 * Show total added/removed line count after table of contents on view
   topic screen.  Also show same line counts on create topic email.
-  
+
 * Make the topic title in the edit comment page link directly to the
   code location being commented on rather than just the top of the
   view topic page.
-  
-* Use pegged revisions instead of operative revisions when retrieving 
-  files from Subversion to handle situations where files have been moved 
+
+* Use pegged revisions instead of operative revisions when retrieving
+  files from Subversion to handle situations where files have been moved
   within the repository since the review was created.  Fixed by
   clechasseur@users.sourceforge.net.
-  
+
 * In the create topic email, show the URL to the associated bug records
   if $bugtracker is defined in codestriker.conf rather than just the bug
   IDs.
-  
+
 * Allow the Parallel links to work for new files and display them
-  appropriately.    
+  appropriately.
 
 Version 1.9.5
 
@@ -229,43 +233,43 @@ Version 1.9.5
 * Make sure very long filenames don't move the diff display far to the
   right of the view topic page.  Fix suggested by
   rob_webset@users.sourceforge.net.
-  
+
 * The edit comment page has been updated so that the topic name is
   linked back to the associated view topic page.
-  
+
 * Added support for LXR 0.9.5, which renamed the database tables to
   contain an lxr_ prefix by default.  Support for older LXR databases
   will still work by default.  LXR entities are now rendered in black text,
   the same as program code, but an underline is shown when hovered over.
-  
+
 * Updated the Subversion diff parser so that it correctly identifies new
   files, rather than treating them as modified files.
-  
+
 * Removed the "View with minimal screen width" / "View with minimal
   link break" options from the view topic screen.  If the browser window
   is not wide enough, a horizontal scrollbar will appear.
-  
+
 * Provided the ability to create topics for a specific changeset from
   a Perforce repository, from Alis McCutcheon <amccutcheon@nxpna.com>.
   For example, //depot/src/tools/unittests/python/ can be set
   as the module name, and 12736 (the changeset number) can be set
-  in either the start or end tag field.  
-  
+  in either the start or end tag field.
+
 * Updated the Codestriker CSS file significantly based on the work by
-  Kannan Goundan <cakoose@users.sourceforge.net> and Daniel Noll. 
+  Kannan Goundan <cakoose@users.sourceforge.net> and Daniel Noll.
   Also changed the appearance of the application to give it a more
   modern appearance.
-  
+
 * Can now comment on any line of any file in the review, not just those
-  that are a part of the diff file.  
-  
+  that are a part of the diff file.
+
 * Introduced new configuration variable $sort_diffs_by_filename in
   codestriker.conf which indicates whether the diff chunks inside a
   topic should be ordered by filename.  Apparently Subversion can
   produce diff topics in some circumstances in arbitrary order,
   where using this setting would make sense.  Default is for this
   setting to be enabled.
-	
+
 Version 1.9.4
 
 * Emit a javascript warning if the external javascript files could
@@ -319,7 +323,7 @@ Version 1.9.4
 
 * Handle the different text types that may be present in a Perforce diff.
   Submitted by Russell Cattelan <cattelan@thebarn.com>.
-	
+
 * Defined the "noconnection" option for $bug_db in codestriker.conf
   so that it is possible to define what bug IDs are associated with
   a topic, without updating an actual bug database when the topic
@@ -332,7 +336,7 @@ Version 1.9.4
   lines in them.  Submitted by Steve Kinsman
   <skinsman@users.sourceforge.net>.
 
-* Support for using the ClearCase dynamic view under Windows.	
+* Support for using the ClearCase dynamic view under Windows.
   Submitted by Steve Kinsman <skinsman@users.sourceforge.net>.
 
 Version 1.9.3
@@ -381,7 +385,7 @@ Version 1.9.2
   name, which is ignored for these security levels.  The repository
   configuration for Perforce has also been changed to use the password
   in place of the client workspace name.  Perforce users should update
-  their configuration files appropriately.  Submitted by 
+  their configuration files appropriately.  Submitted by
   J Dickon Glanville <jdglanville@users.sourceforge.net>.
 
 * Update CVS diff parser to handle rdiffs which have new/removed files
@@ -453,7 +457,7 @@ Version 1.9.2
   warning text that was not parsed correctly.  This has now been
   fixed.  Contributed by Vladimir Sizikov <vsizikov@gmail.com>.
 
-* Make sure the generated Template Toolkit files are stored in 
+* Make sure the generated Template Toolkit files are stored in
   the web server's temporary directory, or $Codestriker::tmpdir if
   that is defined.  Previously, the temporary files were being stored
   in sub-directories of cgi-bin.
@@ -764,8 +768,8 @@ Version 1.8.3
 * The clearcase diff parser can now handle diffs which describe chunk
   movements such as:
 
-  -----[deleted/moved 40 after 44 (now at 152)]----- 
-  -----[deleted/moved 42-43 after 44 (now at 154-155)]----- 
+  -----[deleted/moved 40 after 44 (now at 152)]-----
+  -----[deleted/moved 42-43 after 44 (now at 154-155)]-----
   -----[after 135 inserted/moved 152 (was at 40)]-----
   -----[after 135 inserted/moved 154-155 (was at 42-43)]-----
 
@@ -1069,7 +1073,7 @@ The following changes below were from Jason Remillard
   the references to the topic bug id (topic list, new topic, view
   topic and search).
 
-* Added some additional help in the create topic page to clarify with 
+* Added some additional help in the create topic page to clarify with
   usage of the start tag, end tag and module fields.
 
 * Hide the project combo box if the user does not have projects
@@ -1583,7 +1587,7 @@ Version 1.4:
 
 * Can download topic text as "text/plain" from view topic screen.
 
-Version 1.3: 
+Version 1.3:
 
 * Included table of contents for coloured diff mode, which allows for
   fast nagivation, and indicates what files are present in the review.
