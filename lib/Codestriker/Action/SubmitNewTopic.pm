@@ -51,6 +51,13 @@ sub process($$$) {
     my $feedback = "";
     my $topic_text = "";
 
+    $start_tag =~ s/^\s+//; # strip leading whitespace
+    $start_tag =~ s/\s+$//; # strip trailing whitepsace
+    $end_tag =~ s/^\s+//; # strip leading whitespace
+    $end_tag =~ s/\s+$//; # strip trailing whitepsace
+    $module =~ s/^\s+//; # strip leading whitespace
+    $module =~ s/\s+$//; # strip trailing whitepsace
+
     my $url_builder = Codestriker::Http::UrlBuilder->new($query);
 
     # Indicate whether the topic text needs to be retrieved by the repository
